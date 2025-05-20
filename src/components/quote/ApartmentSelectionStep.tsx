@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { cn } from "@/lib/utils";
@@ -8,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
-import { Bed, BedDouble, MapPin, Wifi, Users } from "lucide-react";
+import { Bed, BedDouble, MapPin, Sun, ThermometerSun } from "lucide-react";
 import { isApartmentSuitable, getRecommendedApartment, getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -195,11 +194,11 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                     <span>{apartment.name.split(' ')[1]}</span>
                   </h3>
                   
-                  {/* Highlight beds count - Make it more prominent */}
-                  <div className="mt-3 mb-2 bg-primary/10 p-2 rounded-md">
-                    <div className="flex items-center justify-center">
-                      <Bed className="h-5 w-5 text-primary shrink-0 mr-2" />
-                      <span className="font-semibold text-primary">{apartment.beds} posti letto</span>
+                  {/* Posti letto - con enfasi ridotta */}
+                  <div className="mt-2 mb-2 bg-primary/5 p-1 rounded-md">
+                    <div className="flex items-center">
+                      <Bed className="h-4 w-4 text-primary shrink-0 mr-1" />
+                      <span className="text-sm text-primary">{apartment.beds} posti letto</span>
                     </div>
                   </div>
                   
@@ -212,9 +211,19 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                       <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
                       <span>Piano {apartment.floor}</span>
                     </div>
+                    
+                    {/* Sostituito "Vista Mare" con informazioni su terrazza/veranda */}
                     <div className="flex items-center gap-1">
-                      <Wifi className="h-3 w-3 text-muted-foreground shrink-0" />
-                      <span>Vista {apartment.view}</span>
+                      <Sun className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <span>
+                        {apartment.hasVeranda ? 'Ampia Veranda' : apartment.hasTerrace ? 'Terrazza Vista Mare' : ''}
+                      </span>
+                    </div>
+                    
+                    {/* Aggiunto stato del climatizzatore */}
+                    <div className="flex items-center gap-1">
+                      <ThermometerSun className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <span>{apartment.hasAirConditioning ? 'Climatizzatore' : 'Non Climatizzato'}</span>
                     </div>
                   </div>
                   

@@ -18,7 +18,7 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Bed, Home, ArrowRight, ArrowLeft } from "lucide-react";
+import { Bed, Home, ArrowRight, ArrowLeft, Sun, ThermometerSun } from "lucide-react";
 import { apartments } from "@/data/apartments";
 
 const ApartmentGallery = ({ images }: { images: string[] }) => {
@@ -98,6 +98,24 @@ const ApartmentModal = ({ apartment }: { apartment: any }) => {
         
         <div className="mt-4">
           <h3 className="text-lg font-medium mb-2">Caratteristiche</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 mt-2">
+            <div className="flex items-center gap-2">
+              <Bed className="h-5 w-5 text-primary" />
+              <span>{apartment.beds} {apartment.beds === 1 ? 'posto letto' : 'posti letto'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Home className="h-5 w-5 text-primary" />
+              <span>{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Sun className="h-5 w-5 text-primary" />
+              <span>{apartment.hasVeranda ? 'Ampia Veranda' : apartment.hasTerrace ? 'Terrazza Vista Mare' : ''}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ThermometerSun className="h-5 w-5 text-primary" />
+              <span>{apartment.hasAirConditioning ? 'Climatizzatore' : 'Non Climatizzato'}</span>
+            </div>
+          </div>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
             {apartment.services.map((feature: string, index: number) => (
               <li key={index} className="flex items-start gap-2">
@@ -159,6 +177,22 @@ const ApartmentsPage = () => {
                   <span>{apartment.beds} {apartment.beds === 1 ? 'posto letto' : 'posti letto'}</span>
                 </div>
               </div>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <Sun className="h-4 w-4 text-primary" />
+                  <span className="text-sm">
+                    {apartment.hasVeranda ? 'Ampia Veranda' : apartment.hasTerrace ? 'Terrazza Vista Mare' : ''}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ThermometerSun className="h-4 w-4 text-primary" />
+                  <span className="text-sm">
+                    {apartment.hasAirConditioning ? 'Climatizzatore' : 'Non Climatizzato'}
+                  </span>
+                </div>
+              </div>
+              
               <p className="text-muted-foreground line-clamp-3">
                 {apartment.description}
               </p>

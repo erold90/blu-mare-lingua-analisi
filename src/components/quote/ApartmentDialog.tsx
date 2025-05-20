@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Apartment } from "@/data/apartments";
-import { Bed, Home, MapPin, Wifi } from "lucide-react";
+import { Bed, BedDouble, MapPin, Sun, ThermometerSun } from "lucide-react";
 
 interface ApartmentDialogProps {
   apartmentId: string | null;
@@ -54,19 +54,25 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
               <Bed className="h-4 w-4 text-primary" />
-              <span>{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
+              <span>{apartment.beds} posti letto</span>
             </div>
             <div className="flex items-center gap-2">
-              <Home className="h-4 w-4 text-primary" />
-              <span>{apartment.beds} posti letto</span>
+              <BedDouble className="h-4 w-4 text-primary" />
+              <span>{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-primary" />
               <span>Piano {apartment.floor}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Wifi className="h-4 w-4 text-primary" />
-              <span>Vista {apartment.view}</span>
+              <Sun className="h-4 w-4 text-primary" />
+              <span>
+                {apartment.hasVeranda ? 'Ampia Veranda' : apartment.hasTerrace ? 'Terrazza Vista Mare' : ''}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ThermometerSun className="h-4 w-4 text-primary" />
+              <span>{apartment.hasAirConditioning ? 'Climatizzatore' : 'Non Climatizzato'}</span>
             </div>
           </div>
           
