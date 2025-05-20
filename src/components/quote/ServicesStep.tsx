@@ -158,8 +158,9 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
                         
                         {selectedApartments.map((apartment) => (
                           <div key={apartment.id} className="flex items-center justify-between">
-                            <Label htmlFor={`apt-persons-${apartment.id}`} className="text-sm">
-                              {apartment.name}:
+                            <Label htmlFor={`apt-persons-${apartment.id}`} className="text-sm flex-shrink-0 whitespace-nowrap">
+                              <span className="hidden sm:inline">Appartamento </span>
+                              <span>{apartment.name.split(' ')[1]}:</span>
                             </Label>
                             <div className="flex items-center space-x-2">
                               <Button 
@@ -272,7 +273,8 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
                         onCheckedChange={() => togglePetInApartment(apartment.id)}
                       />
                       <Label htmlFor={`pet-apt-${apartment.id}`} className="text-sm cursor-pointer">
-                        {apartment.name}
+                        <span className="hidden sm:inline">Appartamento </span>
+                        <span>{apartment.name.split(' ')[1]}</span>
                       </Label>
                     </div>
                   ))}
