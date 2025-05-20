@@ -35,10 +35,10 @@ const Index = () => {
         <h2 className="text-2xl md:text-3xl font-semibold text-center mb-6">Benvenuti a Villa Mare Blu</h2>
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-lg text-muted-foreground mb-4">
-            Villa Mare Blu è un'elegante struttura situata a Torre delle Stelle, direttamente sul mare cristallino della costa sud-orientale della Sardegna.
+            Situati nel pittoresco Sud del Salento, i nostri appartamenti offrono il rifugio ideale per una fuga tranquilla. Ogni dettaglio è curato per massimo comfort e stile.
           </p>
           <p className="text-lg text-muted-foreground">
-            La villa offre quattro confortevoli appartamenti, ciascuno con accesso indipendente e vista mozzafiato sul Mediterraneo, per una vacanza all'insegna del relax e del benessere.
+            I terrazzi spaziosi regalano panorami mozzafiato sul Mar Ionio, permettendo di godere della brezza marina e ammirare le sfumature di blu nel cielo. Albe e tramonti diventano spettacoli naturali da ammirare comodamente dal vostro rifugio.
           </p>
         </div>
       </div>
@@ -74,7 +74,7 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Servizi */}
+      {/* Servizi e Vantaggi */}
       <div className="container px-4 py-12">
         <h2 className="text-2xl md:text-3xl font-semibold text-center mb-8">I Nostri Servizi</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
@@ -105,6 +105,56 @@ const Index = () => {
             </div>
             <h3 className="text-xl font-medium mb-2">Cucina Attrezzata</h3>
             <p className="text-muted-foreground">Ogni appartamento dispone di una cucina completamente attrezzata.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Caratteristiche aggiuntive */}
+      <div className="bg-primary/5 py-12">
+        <div className="container px-4">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <h2 className="text-2xl md:text-3xl font-semibold mb-6 text-center">L'Esperienza Villa Mare Blu</h2>
+            
+            <div className="bg-card p-6 rounded-md shadow-sm">
+              <h3 className="text-xl font-medium mb-3 flex items-center">
+                <span className="mr-2">🏖️</span> Spiagge da Sogno
+              </h3>
+              <p className="text-muted-foreground">
+                In meno di 5 minuti dalla nostra struttura, troverete le rinomate spiagge del Salento, tra cui le famose "Maldive del Salento". 
+                Sabbia dorata, acque cristalline e paesaggi mozzafiato vi attendono per giornate di puro relax al sole.
+              </p>
+            </div>
+            
+            <div className="bg-card p-6 rounded-md shadow-sm">
+              <h3 className="text-xl font-medium mb-3 flex items-center">
+                <span className="mr-2">🌮</span> Divertimento e Gusto a Torre Vado
+              </h3>
+              <p className="text-muted-foreground">
+                Nella vicina località balneare di Torre Vado, la sera si anima con chioschi di fast food, bancarelle di souvenir e un'area servizi per manifestazioni serali. 
+                Un parco giochi per bambini e un lunapark con ruota panoramica aggiungono un tocco di divertimento per tutta la famiglia.
+              </p>
+            </div>
+            
+            <div className="bg-card p-6 rounded-md shadow-sm">
+              <h3 className="text-xl font-medium mb-3 flex items-center">
+                <span className="mr-2">🚤</span> Esperienze Uniche a Tariffe Speciali
+              </h3>
+              <p className="text-muted-foreground">
+                Presso la nostra struttura, vogliamo rendere la vostra vacanza ancora più indimenticabile offrendovi una speciale convenzione per escursioni in barca 
+                e l'accesso privilegiato a posti nelle rinomate strutture balneari della zona.
+              </p>
+            </div>
+
+            <div className="bg-card p-6 rounded-md shadow-sm">
+              <h3 className="text-xl font-medium mb-3 flex items-center">
+                <span className="mr-2">🏡</span> Comfort All'Aperto
+              </h3>
+              <p className="text-muted-foreground">
+                L'accesso privato porta a una spiaggia di fondale roccioso, lontano dalle spiagge affollate. 
+                Godetevi ampie aree di spazio con parcheggio gratuito in loco, un barbecue e un forno a legna per pizza o grigliate. 
+                L'area esterna offre un tavolo e sedie per pasti con vista mare e brezza marina, oltre a comode sdraio per il vostro relax.
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -51,7 +51,6 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
               <div className="space-y-2">
                 <div className="flex justify-between items-start">
                   <h3 className="font-semibold">{apartment.name}</h3>
-                  <span className="font-semibold text-primary">{apartment.price}€/notte</span>
                 </div>
                 <p className="text-muted-foreground text-sm">{apartment.description}</p>
                 <div className="grid grid-cols-2 gap-2 text-xs">

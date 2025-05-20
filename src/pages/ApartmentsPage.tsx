@@ -19,127 +19,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Bed, Home, ArrowRight, ArrowLeft } from "lucide-react";
-
-type Apartment = {
-  id: number;
-  name: string;
-  image: string;
-  bedrooms: number;
-  beds: number;
-  floor: string;
-  description: string;
-  features: string[];
-  gallery: string[];
-};
-
-// Dati degli appartamenti basati su www.villamareblu.it
-const apartments: Apartment[] = [
-  {
-    id: 1,
-    name: "Genn'e Mari",
-    image: "https://www.villamareblu.it/wp-content/uploads/2024/01/salone-piano-terra-scaled.jpg",
-    bedrooms: 2,
-    beds: 4,
-    floor: "Piano Terra",
-    description: "Ampio e luminoso appartamento al piano terra con terrazza vista mare e accesso diretto al giardino. L'appartamento dispone di due camere da letto, un bagno e un soggiorno con angolo cottura.",
-    features: [
-      "Soggiorno con angolo cottura completamente attrezzato",
-      "Camera matrimoniale",
-      "Camera con due letti singoli",
-      "Bagno con doccia",
-      "Aria condizionata",
-      "TV a schermo piatto",
-      "Terrazza vista mare",
-      "Accesso diretto al giardino",
-      "Wi-Fi gratuito"
-    ],
-    gallery: [
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/salone-piano-terra-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/cucina-piano-terra-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/camera-matrimoniale-piano-terra-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/bagno-piano-terra-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/scale-esterno-scaled.jpg"
-    ]
-  },
-  {
-    id: 2,
-    name: "Cann'e Sisa",
-    image: "https://www.villamareblu.it/wp-content/uploads/2024/01/casa-daniela-soggiorno-1-scaled.jpg",
-    bedrooms: 1,
-    beds: 3,
-    floor: "Piano Terra",
-    description: "Confortevole appartamento al piano terra con spazio esterno privato. Ideale per coppie o piccole famiglie, offre una camera da letto, un divano letto nel soggiorno e un bagno.",
-    features: [
-      "Soggiorno con divano letto e angolo cottura",
-      "Camera matrimoniale",
-      "Bagno con doccia",
-      "Aria condizionata",
-      "TV a schermo piatto",
-      "Spazio esterno privato",
-      "Wi-Fi gratuito"
-    ],
-    gallery: [
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/casa-daniela-soggiorno-1-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/camera-daniela-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/casa-daniela-soggiorno-2-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/bagno-daniela-scaled.jpg"
-    ]
-  },
-  {
-    id: 3,
-    name: "Simius",
-    image: "https://www.villamareblu.it/wp-content/uploads/2024/01/salone-primo-piano-scaled.jpg",
-    bedrooms: 2,
-    beds: 5,
-    floor: "Primo Piano",
-    description: "Spazioso appartamento al primo piano con terrazza panoramica vista mare. Dispone di due camere da letto, un ampio soggiorno con divano letto e un bagno.",
-    features: [
-      "Ampio soggiorno con divano letto",
-      "Cucina completamente attrezzata",
-      "Camera matrimoniale",
-      "Camera con due letti singoli",
-      "Bagno con doccia",
-      "Aria condizionata",
-      "TV a schermo piatto",
-      "Terrazza panoramica vista mare",
-      "Wi-Fi gratuito"
-    ],
-    gallery: [
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/salone-primo-piano-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/cucina-primo-piano-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/camera-matrimoniale-primo-piano-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/terrazzo-primo-piano-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/bagno-primo-piano-scaled.jpg"
-    ]
-  },
-  {
-    id: 4,
-    name: "Solanas",
-    image: "https://www.villamareblu.it/wp-content/uploads/2024/01/esterno5-scaled.jpg",
-    bedrooms: 3,
-    beds: 6,
-    floor: "Primo Piano",
-    description: "Lussuoso appartamento al primo piano con ampia terrazza e vista panoramica sul mare. Ideale per gruppi o famiglie numerose, dispone di tre camere da letto e due bagni.",
-    features: [
-      "Soggiorno spazioso con area pranzo",
-      "Cucina completamente attrezzata",
-      "Camera matrimoniale principale",
-      "Due camere con letti singoli",
-      "Due bagni con doccia",
-      "Aria condizionata",
-      "TV a schermo piatto",
-      "Ampia terrazza panoramica",
-      "Wi-Fi gratuito"
-    ],
-    gallery: [
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/esterno5-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/vista-mare-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/esterno2-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/esterno3-scaled.jpg",
-      "https://www.villamareblu.it/wp-content/uploads/2024/01/esterno4-scaled.jpg"
-    ]
-  }
-];
+import { apartments } from "@/data/apartments";
 
 const ApartmentGallery = ({ images }: { images: string[] }) => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
@@ -189,7 +69,7 @@ const ApartmentGallery = ({ images }: { images: string[] }) => {
   );
 };
 
-const ApartmentModal = ({ apartment }: { apartment: Apartment }) => {
+const ApartmentModal = ({ apartment }: { apartment: any }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -203,12 +83,23 @@ const ApartmentModal = ({ apartment }: { apartment: Apartment }) => {
           <DialogDescription>{apartment.description}</DialogDescription>
         </DialogHeader>
         
-        <ApartmentGallery images={apartment.gallery} />
+        <ApartmentGallery images={apartment.gallery || [apartment.images[0]]} />
         
         <div className="mt-6">
+          <h4 className="font-medium mb-2">Descrizione dettagliata</h4>
+          <p className="text-sm text-muted-foreground">{apartment.longDescription}</p>
+        </div>
+
+        {apartment.CIN && (
+          <div className="text-xs text-muted-foreground">
+            CIN: {apartment.CIN}
+          </div>
+        )}
+        
+        <div className="mt-4">
           <h3 className="text-lg font-medium mb-2">Caratteristiche</h3>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-            {apartment.features.map((feature, index) => (
+            {apartment.services.map((feature: string, index: number) => (
               <li key={index} className="flex items-start gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
                 <span>{feature}</span>
@@ -228,6 +119,11 @@ const ApartmentModal = ({ apartment }: { apartment: Apartment }) => {
 };
 
 const ApartmentsPage = () => {
+  const apartmentData = apartments.map(apt => ({
+    ...apt,
+    gallery: [apt.images[0]],
+  }));
+
   return (
     <div className="container px-4 py-8 md:py-12">
       <div className="text-center mb-12">
@@ -239,18 +135,18 @@ const ApartmentsPage = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {apartments.map((apartment) => (
+        {apartmentData.map((apartment) => (
           <Card key={apartment.id} className="overflow-hidden h-full flex flex-col">
             <div className="aspect-[4/3] relative">
               <img 
-                src={apartment.image} 
+                src={apartment.images[0]} 
                 alt={apartment.name}
                 className="w-full h-full object-cover"
               />
             </div>
             <CardHeader>
               <CardTitle>{apartment.name}</CardTitle>
-              <CardDescription>{apartment.floor}</CardDescription>
+              <CardDescription>Piano {apartment.floor}</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
               <div className="grid grid-cols-2 gap-4 mb-4">
