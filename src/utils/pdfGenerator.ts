@@ -1,6 +1,6 @@
 
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import autoTable, { RowInput } from "jspdf-autotable";
 import { format } from "date-fns";
 import { FormValues } from "./quoteFormSchema";
 import { calculateTotalPrice } from "./quoteCalculator";
@@ -8,7 +8,8 @@ import { Apartment } from "../data/apartments";
 
 export const generateQuotePDF = (
   formValues: FormValues,
-  clientName: string
+  clientName: string,
+  apartmentsList: Apartment[] = []
 ) => {
   // Create PDF instance
   const doc = new jsPDF();
@@ -21,7 +22,7 @@ export const generateQuotePDF = (
   
   // Calculate prices
   const selectedApartments = formValues.selectedApartments || [];
-  const priceInfo = calculateTotalPrice(formValues, [] as Apartment[]);
+  const priceInfo = calculateTotalPrice(formValues, apartmentsList);
   
   // --- Header with Logo and Title ---
   // Logo (placeholder)
@@ -83,18 +84,26 @@ export const generateQuotePDF = (
   });
   
   // Update position for next section
-  yPos = stayTable?.lastRow?.position?.y ? stayTable.lastRow.position.y + 20 : yPos + 40;
+  yPos = (stayTable.lastRow?.position?.y ?? yPos + 20) + 20;
   
   // --- Apartments Section ---
   doc.setFontSize(14);
   doc.setTextColor(0, 85, 164);
   doc.text("Appartamenti", 15, yPos);
   
+  // Find the actual apartment objects from the IDs
+  let selectedApartmentObjects: Apartment[] = [];
+  if (selectedApartments.length > 0 && apartmentsList.length > 0) {
+    selectedApartmentObjects = apartmentsList.filter(apt => 
+      selectedApartments.includes(apt.id)
+    );
+  }
+  
   // Prepare apartment data for table
-  const apartmentData = selectedApartments.map(apt => {
-    // Calculate total price for this apartment (simplified)
+  const apartmentData = selectedApartmentObjects.map(apt => {
+    // Calculate total price for this apartment
     const apartmentDays = priceInfo.nights;
-    const apartmentBasePrice = apt.price || 0;
+    const apartmentBasePrice = apt.price;
     const totalPrice = apartmentBasePrice * apartmentDays;
     
     return [
@@ -116,7 +125,7 @@ export const generateQuotePDF = (
   });
   
   // Update position for next section
-  yPos = apartmentsTable?.lastRow?.position?.y ? apartmentsTable.lastRow.position.y + 20 : yPos + 60;
+  yPos = (apartmentsTable.lastRow?.position?.y ?? yPos + 40) + 20;
   
   // --- Services Section ---
   doc.setFontSize(14);
@@ -139,7 +148,7 @@ export const generateQuotePDF = (
   });
   
   // Update position for next section
-  yPos = servicesTable?.lastRow?.position?.y ? servicesTable.lastRow.position.y + 20 : yPos + 40;
+  yPos = (servicesTable.lastRow?.position?.y ?? yPos + 20) + 20;
   
   // --- Price Summary ---
   doc.setFontSize(14);
@@ -166,7 +175,7 @@ export const generateQuotePDF = (
   });
   
   // Final price in bold
-  const finalY = summaryTable?.lastRow?.position?.y ? summaryTable.lastRow.position.y + 10 : yPos + 50;
+  const finalY = (summaryTable.lastRow?.position?.y ?? yPos + 30) + 10;
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text("Totale soggiorno:", 60, finalY, { align: "right" });
@@ -213,8 +222,8 @@ export const generateQuotePDF = (
   doc.save(`Preventivo_VillaMareBlu_${safeName}_${today}.pdf`);
 };
 
-// Export as downloadPDF to match the import in useQuoteForm.tsx
+// Export for use in useQuoteForm.tsx
 export const downloadPDF = (formValues: FormValues, apartments: Apartment[], name?: string) => {
   // Generate the PDF using the existing function
-  generateQuotePDF(formValues, name || "Cliente");
+  generateQuotePDF(formValues, name || "Cliente", apartments);
 };
