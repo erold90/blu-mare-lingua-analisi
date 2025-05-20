@@ -62,7 +62,6 @@ const RequestQuotePage = () => {
           <GuestInfoStep 
             form={form}
             childrenArray={childrenArray}
-            setChildrenArray={setChildrenArray}
             openGroupDialog={openGroupDialog}
             incrementAdults={incrementAdults}
             decrementAdults={decrementAdults}
@@ -135,14 +134,14 @@ const RequestQuotePage = () => {
       {/* Dialog per la composizione del gruppo */}
       <GroupDialog
         open={groupDialog}
-        onOpenChange={setGroupDialog}
+        onOpenChange={closeGroupDialog}
         familyGroups={familyGroups}
         groupType={form.getValues("groupType")}
         onGroupTypeChange={(value) => form.setValue("groupType", value)}
         onFamilyGroupsChange={setFamilyGroups}
         onConfirm={closeGroupDialog}
         onCancel={() => {
-          setGroupDialog(false);
+          closeGroupDialog();
           form.setValue("isGroupBooking", false);
         }}
       />

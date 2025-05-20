@@ -12,7 +12,6 @@ import { FormValues } from "@/utils/quoteFormSchema";
 interface GuestInfoStepProps {
   form: UseFormReturn<FormValues>;
   childrenArray: { age: number; sleepsWithParents: boolean }[];
-  setChildrenArray: React.Dispatch<React.SetStateAction<{ age: number; sleepsWithParents: boolean }[]>>;
   openGroupDialog: () => void;
   incrementAdults: () => void;
   decrementAdults: () => void;
