@@ -1,5 +1,5 @@
 
-import React, { useMemo } from "react";
+import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { format, differenceInDays } from "date-fns";
 import { it } from 'date-fns/locale';
@@ -24,51 +24,42 @@ interface DateSelectionStepProps {
 }
 
 const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, nextStep }) => {
-  // Get current values from form
-  const checkIn = form.watch("checkIn");
-  const checkOut = form.watch("checkOut");
-  
-  // Create a date range object for the DayPicker component
-  const dateRange = useMemo<DateRange | undefined>(() => {
-    if (checkIn && checkOut) {
-      return {
-        from: new Date(checkIn),
-        to: new Date(checkOut)
-      };
-    }
-    return undefined;
-  }, [checkIn, checkOut]);
-  
-  // Calculate number of nights based on selected dates
-  const numberOfNights = useMemo(() => {
-    if (checkIn && checkOut) {
-      return differenceInDays(new Date(checkOut), new Date(checkIn));
-    }
-    return 0;
-  }, [checkIn, checkOut]);
-  
-  // Handle date range selection from calendar
-  const handleDateRangeSelect = (selectedRange: DateRange | undefined) => {
-    if (selectedRange?.from) {
-      form.setValue("checkIn", selectedRange.from);
+  // Ottieni la data di check-in e check-out dal form
+  const checkInDate = form.watch("checkIn");
+  const checkOutDate = form.watch("checkOut");
+
+  // Crea un oggetto DateRange per il calendario
+  const dateRange = checkInDate && checkOutDate
+    ? { from: new Date(checkInDate), to: new Date(checkOutDate) }
+    : undefined;
+
+  // Calcola il numero di notti
+  const numberOfNights = checkInDate && checkOutDate
+    ? differenceInDays(new Date(checkOutDate), new Date(checkInDate))
+    : 0;
+
+  // Gestisce la selezione delle date
+  const handleDateRangeSelect = (range: DateRange | undefined) => {
+    if (range?.from) {
+      form.setValue("checkIn", range.from);
     } else {
       form.setValue("checkIn", undefined as any);
     }
-    
-    if (selectedRange?.to) {
-      form.setValue("checkOut", selectedRange.to);
+
+    if (range?.to) {
+      form.setValue("checkOut", range.to);
     } else {
       form.setValue("checkOut", undefined as any);
     }
-    
-    // Trigger form validation
+
+    // Trigger validation
     form.trigger(["checkIn", "checkOut"]);
   };
 
-  // Filter function for selectable days (only Saturday, Sunday, Monday)
+  // Funzione che disabilita tutti i giorni tranne sabato, domenica e lunedì
   const isDateDisabled = (date: Date) => {
     const day = date.getDay();
-    // 0 = Sunday, 1 = Monday, 6 = Saturday
+    // 0 = domenica, 1 = lunedì, 6 = sabato
     return day !== 0 && day !== 1 && day !== 6;
   };
 
@@ -79,11 +70,11 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
         <CardDescription>Indica le date di check-in e check-out del tuo soggiorno</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Date selection button */}
+        {/* Pulsante di selezione date */}
         <Popover>
           <PopoverTrigger asChild>
             <Button
-              variant={"outline"}
+              variant="outline"
               className={cn(
                 "w-full justify-start text-left font-normal",
                 !dateRange && "text-muted-foreground"
@@ -112,7 +103,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
           </PopoverContent>
         </Popover>
 
-        {/* Information alert - moved below date selection button as requested */}
+        {/* Avviso informativo */}
         <Alert>
           <InfoIcon className="h-4 w-4 mr-2" />
           <AlertDescription>
@@ -120,21 +111,21 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
           </AlertDescription>
         </Alert>
 
-        {/* Date summary */}
-        {checkIn && checkOut && (
+        {/* Riepilogo date */}
+        {checkInDate && checkOutDate && (
           <div className="border rounded-lg p-4 bg-muted/30">
             <h3 className="font-semibold mb-2">Riepilogo del soggiorno</h3>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <p className="text-muted-foreground text-sm">Check-in</p>
                 <p className="font-medium">
-                  {format(new Date(checkIn), "EEEE d MMMM yyyy", { locale: it })}
+                  {format(new Date(checkInDate), "EEEE d MMMM yyyy", { locale: it })}
                 </p>
               </div>
               <div>
                 <p className="text-muted-foreground text-sm">Check-out</p>
                 <p className="font-medium">
-                  {format(new Date(checkOut), "EEEE d MMMM yyyy", { locale: it })}
+                  {format(new Date(checkOutDate), "EEEE d MMMM yyyy", { locale: it })}
                 </p>
               </div>
             </div>
@@ -151,7 +142,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
         <Button 
           type="button" 
           onClick={nextStep} 
-          disabled={!checkIn || !checkOut}
+          disabled={!checkInDate || !checkOutDate}
         >
           Avanti
         </Button>

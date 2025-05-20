@@ -55,14 +55,14 @@ function Calendar({
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
+        IconLeft: () => <ChevronLeft className="h-4 w-4" />,
+        IconRight: () => <ChevronRight className="h-4 w-4" />,
       }}
       locale={it}
       weekStartsOn={1} // Lunedì come primo giorno della settimana
       formatters={{
         formatWeekdayName: (day) => format(day, 'EEEEEE', { locale: it }).toUpperCase(),
-        formatCaption: (date, options) => format(date, 'MMMM yyyy', { locale: it }),
+        formatCaption: (date) => format(date, 'MMMM yyyy', { locale: it }),
       }}
       {...props}
     />
