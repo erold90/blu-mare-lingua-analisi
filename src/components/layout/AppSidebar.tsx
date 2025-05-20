@@ -34,8 +34,8 @@ export function AppSidebar() {
   return (
     <Sidebar variant="floating">
       <SidebarHeader className="border-b">
-        <Link to="/" className="flex items-center gap-2 px-4 py-2" onClick={handleLinkClick}>
-          <span className="text-xl font-semibold text-black">Villa MareBlu</span>
+        <Link to="/" className={`flex items-center gap-2 px-4 py-2 ${isMobile ? "justify-center" : ""}`} onClick={handleLinkClick}>
+          <span className={`text-xl font-semibold text-black ${isMobile ? "text-center" : ""}`}>Villa MareBlu</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
