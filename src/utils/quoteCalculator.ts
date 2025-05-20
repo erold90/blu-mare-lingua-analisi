@@ -51,35 +51,41 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
   }, 0);
   
   // Aggiungo eventuali extra
-  const linenOption = formValues.linenOption;
+  let totalExtras = 0;
   
   // Calcolo il costo della biancheria (15€ per persona)
-  let extraForLinen = 0;
-  if (linenOption === "extra") {
-    const adults = formValues.adults || 0;
-    const childrenDetails = formValues.childrenDetails || [];
-    const independentChildren = childrenDetails.filter(child => !child.sleepsWithParents).length;
-    const totalPeople = adults + independentChildren;
-    
-    extraForLinen = totalPeople * 15; // 15€ per persona
+  if (formValues.linenOption === "extra") {
+    if (selectedApartments.length === 1 || !formValues.personsPerApartment) {
+      // Se c'è un solo appartamento o non sono state specificate le persone per appartamento
+      const adults = formValues.adults || 0;
+      const childrenDetails = formValues.childrenDetails || [];
+      const independentChildren = childrenDetails.filter(child => !child.sleepsWithParents).length;
+      const totalPeople = adults + independentChildren;
+      
+      totalExtras += totalPeople * 15; // 15€ per persona
+    } else {
+      // Se ci sono più appartamenti, calcolo in base alle persone per appartamento
+      Object.values(formValues.personsPerApartment).forEach(personCount => {
+        totalExtras += personCount * 15;
+      });
+    }
   }
   
   // Calcolo il prezzo degli animali domestici (50€ per appartamento con animali)
-  let petPrice = 0;
   if (formValues.hasPets) {
     if (selectedApartments.length === 1) {
       // Prezzo fisso di 50€ per un solo appartamento
-      petPrice = 50;
+      totalExtras += 50;
     } else if (selectedApartments.length > 1 && formValues.petsInApartment) {
       // 50€ per ogni appartamento con animali
       const apartmentsWithPets = Object.entries(formValues.petsInApartment)
         .filter(([_, hasPet]) => hasPet)
         .length;
       
-      petPrice = apartmentsWithPets * 50;
+      totalExtras += apartmentsWithPets * 50;
     } else {
       // Default se non è specificato quale appartamento ha animali
-      petPrice = 50;
+      totalExtras += 50;
     }
   }
   
@@ -88,14 +94,14 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
   const touristTax = adults * nights * 2; // € 2 per persona per notte
   
   // Prezzo totale (esclusa tassa di soggiorno)
-  const totalPrice = basePrice + extraForLinen + petPrice;
+  const totalPrice = basePrice + totalExtras;
   
   // Arrotondamento per difetto al multiplo di 50 più vicino
   const roundedPrice = Math.floor(totalPrice / 50) * 50;
   
   return {
     basePrice,
-    extras: extraForLinen + petPrice,
+    extras: totalExtras,
     touristTax,
     totalBeforeDiscount: totalPrice,
     totalAfterDiscount: roundedPrice,

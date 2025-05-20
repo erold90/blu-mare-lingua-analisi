@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
+import { Separator } from "@/components/ui/separator";
 
 interface SummaryStepProps {
   form: UseFormReturn<FormValues>;
@@ -18,14 +19,31 @@ interface SummaryStepProps {
 const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, nextStep }) => {
   const formValues = form.getValues();
   const priceInfo = calculateTotalPrice(formValues, apartments);
-  const selectedApartments = formValues.selectedApartments || [];
+  const selectedApartmentIds = formValues.selectedApartments || [formValues.selectedApartment];
+  const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
   
   // If only one apartment is selected, make sure it's the main selectedApartment
   React.useEffect(() => {
-    if (selectedApartments.length === 1 && formValues.selectedApartment !== selectedApartments[0]) {
-      form.setValue("selectedApartment", selectedApartments[0]);
+    if (selectedApartmentIds.length === 1 && formValues.selectedApartment !== selectedApartmentIds[0]) {
+      form.setValue("selectedApartment", selectedApartmentIds[0]);
     }
-  }, [selectedApartments, form, formValues.selectedApartment]);
+  }, [selectedApartmentIds, form, formValues.selectedApartment]);
+
+  // Helper to get persons per apartment
+  const getPersonsInApartment = (apartmentId: string) => {
+    if (formValues.personsPerApartment && formValues.personsPerApartment[apartmentId]) {
+      return formValues.personsPerApartment[apartmentId];
+    }
+    return 0;
+  };
+
+  // Helper to check if an apartment has pets
+  const hasPetsInApartment = (apartmentId: string) => {
+    if (formValues.petsInApartment && formValues.petsInApartment[apartmentId]) {
+      return true;
+    }
+    return false;
+  };
   
   return (
     <Card>
@@ -64,55 +82,90 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
             </div>
           </div>
           
-          {/* Appartamenti selezionati */}
-          <div className="border rounded-md p-4 space-y-2">
-            <h3 className="font-medium">Appartamenti selezionati</h3>
-            <div className="space-y-3">
-              {selectedApartments.length > 0 ? (
-                selectedApartments.map(aptId => {
-                  const apartment = apartments.find(a => a.id === aptId);
-                  if (!apartment) return null;
+          {/* Appartamenti selezionati con costi per appartamento */}
+          <div className="border rounded-md p-4 space-y-3">
+            <h3 className="font-medium">Appartamenti e costi</h3>
+            
+            {selectedApartments.length > 0 ? (
+              <div className="space-y-4">
+                {selectedApartments.map((apartment, index) => {
+                  const personsCount = getPersonsInApartment(apartment.id);
+                  const hasPets = hasPetsInApartment(apartment.id);
+                  const isLastItem = index === selectedApartments.length - 1;
+                  
+                  // Calcolo del costo base per appartamento
+                  const baseApartmentCost = apartment.price * priceInfo.nights;
+                  
+                  // Costo biancheria
+                  const linenCost = formValues.linenOption === "extra" && personsCount > 0 
+                    ? personsCount * 15 
+                    : 0;
+                  
+                  // Costo animali
+                  const petsCost = hasPets ? 50 : 0;
+                  
+                  // Totale per appartamento
+                  const apartmentTotal = baseApartmentCost + linenCost + petsCost;
                   
                   return (
-                    <div key={apartment.id} className="border-b pb-2 last:border-b-0 last:pb-0">
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <span className="text-muted-foreground">Nome:</span>
-                        <span>{apartment.name}</span>
-                        <span className="text-muted-foreground">Capacità:</span>
-                        <span>{apartment.capacity} persone</span>
-                        <span className="text-muted-foreground">Posizione:</span>
-                        <span>Piano {apartment.floor}</span>
+                    <div key={apartment.id} className={`pb-4 ${!isLastItem ? 'border-b' : ''}`}>
+                      <div className="flex flex-col space-y-2">
+                        <div className="flex justify-between items-center">
+                          <h4 className="font-semibold text-md">{apartment.name}</h4>
+                          <span className="text-primary font-semibold">{baseApartmentCost}€</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <span className="text-muted-foreground">Capacità:</span>
+                          <span>{apartment.capacity} persone</span>
+                          <span className="text-muted-foreground">Posizione:</span>
+                          <span>Piano {apartment.floor}</span>
+                          
+                          {personsCount > 0 && (
+                            <>
+                              <span className="text-muted-foreground">Persone:</span>
+                              <span>{personsCount}</span>
+                            </>
+                          )}
+                          
+                          {hasPets && (
+                            <>
+                              <span className="text-muted-foreground">Animali:</span>
+                              <span>Sì</span>
+                            </>
+                          )}
+                        </div>
+                        
+                        {/* Costi aggiuntivi per appartamento */}
+                        {(linenCost > 0 || petsCost > 0) && (
+                          <div className="mt-2 space-y-1">
+                            <p className="text-sm font-medium">Costi aggiuntivi:</p>
+                            {linenCost > 0 && (
+                              <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Biancheria ({personsCount} persone):</span>
+                                <span>{linenCost}€</span>
+                              </div>
+                            )}
+                            {petsCost > 0 && (
+                              <div className="flex justify-between text-sm">
+                                <span className="text-muted-foreground">Animali domestici:</span>
+                                <span>{petsCost}€</span>
+                              </div>
+                            )}
+                            <div className="flex justify-between text-sm font-medium pt-1">
+                              <span>Totale appartamento:</span>
+                              <span>{apartmentTotal}€</span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );
-                })
-              ) : (
-                <p className="text-sm text-muted-foreground">Nessun appartamento selezionato</p>
-              )}
-            </div>
-          </div>
-          
-          {/* Servizi extra */}
-          <div className="border rounded-md p-4 space-y-2">
-            <h3 className="font-medium">Servizi extra</h3>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <span className="text-muted-foreground">Biancheria:</span>
-              <span>
-                {form.getValues("linenOption") === "standard" && "Standard (incluso)"}
-                {form.getValues("linenOption") === "extra" && "Extra (+30€)"}
-                {form.getValues("linenOption") === "deluxe" && "Deluxe (+60€)"}
-              </span>
-              <span className="text-muted-foreground">Animali:</span>
-              <span>
-                {form.getValues("hasPets") 
-                  ? `${form.getValues("petsCount")} ${form.getValues("petsCount") === 1 ? "animale" : "animali"} di taglia ${
-                      form.getValues("petSize") === "small" ? "piccola" : 
-                      form.getValues("petSize") === "medium" ? "media" : "grande"
-                    }`
-                  : "No"
-                }
-              </span>
-            </div>
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">Nessun appartamento selezionato</p>
+            )}
           </div>
           
           {/* Riepilogo costi */}
@@ -120,30 +173,36 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
             <h3 className="font-medium">Riepilogo costi</h3>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Costo appartamento ({priceInfo.nights} notti):</span>
+                <span className="text-muted-foreground">Costo appartamenti ({priceInfo.nights} notti):</span>
                 <span>{priceInfo.basePrice}€</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Servizi extra:</span>
-                <span>{priceInfo.extras}€</span>
-              </div>
+              {priceInfo.extras > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Servizi extra:</span>
+                  <span>{priceInfo.extras}€</span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotale:</span>
                 <span>{priceInfo.totalBeforeDiscount}€</span>
               </div>
-              <div className="flex justify-between text-sm font-medium border-t pt-2">
+              <Separator className="my-2" />
+              <div className="flex justify-between text-sm font-medium">
                 <span>Totale con sconto applicato:</span>
                 <span className="text-primary">{priceInfo.totalAfterDiscount}€</span>
               </div>
-              <div className="flex justify-between text-sm text-green-600">
-                <span>Risparmio:</span>
-                <span>{priceInfo.savings}€</span>
-              </div>
-              <div className="flex justify-between text-sm border-t pt-2">
+              {priceInfo.savings > 0 && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Risparmio:</span>
+                  <span>{priceInfo.savings}€</span>
+                </div>
+              )}
+              <Separator className="my-2" />
+              <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Tassa di soggiorno:</span>
                 <span>{priceInfo.touristTax}€</span>
               </div>
-              <div className="flex justify-between font-semibold text-base border-t pt-2">
+              <div className="flex justify-between font-semibold text-base pt-2">
                 <span>Totale da pagare:</span>
                 <span>{priceInfo.totalAfterDiscount + priceInfo.touristTax}€</span>
               </div>
