@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useActivityLog } from "./hooks/useActivityLog";
+import { useEffect } from "react";
 
 import { AppLayout } from "./components/layout/AppLayout";
 import Index from "./pages/Index";
@@ -20,7 +21,6 @@ import { ReservationsProvider } from "./hooks/useReservations";
 import { PricesProvider } from "./hooks/usePrices";
 import { SettingsProvider } from "./hooks/useSettings";
 import { ActivityLogProvider } from "./hooks/useActivityLog";
-import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
@@ -29,16 +29,21 @@ const PageViewTracker = () => {
   const location = useLocation();
   const { addSiteVisit, clearOldData } = useActivityLog();
   
-  // Track the current page visit
+  // Track the current page visit - with proper dependency array
   useEffect(() => {
-    addSiteVisit(location.pathname);
-  }, [location, addSiteVisit]);
+    // Only track if path actually exists
+    if (location.pathname) {
+      addSiteVisit(location.pathname);
+    }
+    // Only depend on pathname changes, not the function reference
+  }, [location.pathname]);
   
   // Clear old data periodically - once per session is enough
   useEffect(() => {
     // Only run once when component mounts
     clearOldData();
-  }, [clearOldData]);
+    // Empty dependency array ensures this only runs once
+  }, []);
   
   return null;
 };
