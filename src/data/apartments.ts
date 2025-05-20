@@ -1,4 +1,3 @@
-
 // Dati degli appartamenti
 export interface Apartment {
   id: string;
@@ -32,7 +31,7 @@ export const apartments: Apartment[] = [
     longDescription: "L'appartamento, con ingresso privato, dispone di due accoglienti camere da letto. La prima camera è arredata con letto matrimoniale e un letto a castello, ideale per famiglie o gruppi di amici. La seconda camera è dotata di un elegante letto matrimoniale. Il soggiorno, luminoso e spazioso, include un pratico angolo cottura completamente attrezzato e una zona pranzo per piacevoli momenti conviviali. L'esterno dell'appartamento è una vera oasi di tranquillità: sotto la tettoia, troverai un comodo tavolo da pranzo, sedie e sdraio per goderti al massimo la vista panoramica sul Mar Ionio. Un luogo perfetto per cene romantiche al tramonto o semplicemente per rilassarti sotto il cielo stellato.",
     CIN: "IT075060C200036553",
     bedrooms: 2,
-    beds: 4
+    beds: 5
   },
   {
     id: "appartamento-2",

@@ -34,10 +34,10 @@ function calculateApartmentFitScore(apartment: Apartment, formValues: FormValues
   
   // Children handling
   if (children > 0) {
-    // Check if there are bunk beds for children
-    // This is simplified since we don't have explicit bunk bed data
-    const hasEnoughSingleBeds = (apartment.beds || 0) - (apartment.bedrooms || 1) >= children;
-    score += hasEnoughSingleBeds ? 8 : 0;
+    // Check if there are enough beds for children
+    // Updated to account for correct bed counts
+    const hasEnoughBeds = (apartment.beds || 0) >= totalGuests;
+    score += hasEnoughBeds ? 8 : 0;
     
     // Check for children sleeping with parents
     if (childrenDetails) {

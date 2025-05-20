@@ -104,7 +104,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                 onClick={() => toggleApartmentSelection(apartment.id)}
               >
                 {apartment.id === recommendedApartmentId && (
-                  <Badge variant="default" className="absolute top-2 right-2 bg-green-600 z-10">
+                  <Badge variant="default" className="absolute top-2 right-2 bg-green-600">
                     Consigliato
                   </Badge>
                 )}
@@ -144,9 +144,11 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                   </Button>
                   
                   <Checkbox 
+                    id={`apartment-checkbox-${apartment.id}`}
                     checked={isApartmentSelected(apartment.id)}
                     onCheckedChange={() => toggleApartmentSelection(apartment.id)}
                     onClick={(e) => e.stopPropagation()}
+                    className="cursor-pointer"
                   />
                 </div>
               </div>
@@ -154,7 +156,6 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
           </div>
         )}
         
-        {/* Avviso di errore se nessun appartamento è selezionato */}
         {form.formState.errors.selectedApartment && (
           <p className="text-destructive text-sm">
             {form.formState.errors.selectedApartment.message}
@@ -166,7 +167,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
         <Button 
           type="button" 
           onClick={nextStep} 
-          disabled={suitableApartments.length === 0 || form.getValues("selectedApartments")?.length === 0}
+          disabled={suitableApartments.length === 0 || (form.getValues("selectedApartments")?.length === 0)}
         >
           Avanti
         </Button>
