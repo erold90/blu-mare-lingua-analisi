@@ -2,7 +2,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Gallery, Image } from "lucide-react";
+import { Images } from "lucide-react";
 
 const GalleryPage = () => {
   // Use state for images, initialize with fallback images
@@ -117,7 +117,7 @@ const GalleryPage = () => {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <Gallery className="h-16 w-16 text-muted-foreground opacity-30" />
+          <Images className="h-16 w-16 text-muted-foreground opacity-30" />
           <h2 className="mt-4 text-xl font-medium">Nessuna immagine disponibile</h2>
           <p className="mt-2 text-muted-foreground">
             Non ci sono ancora immagini nella galleria.
