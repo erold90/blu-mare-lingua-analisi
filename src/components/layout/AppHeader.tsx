@@ -14,11 +14,7 @@ export function AppHeader() {
         <div className={`flex items-center ${open ? "ml-[16rem]" : "ml-2"} mt-2 transition-all duration-300`}>
           <SidebarTrigger />
         </div>
-        {isMobile && (
-          <div className="flex items-center ml-2">
-            <span className="text-xl font-semibold text-white">Villa MareBlu</span>
-          </div>
-        )}
+        {/* Removed the Villa MareBlu text that was here */}
       </div>
     </header>
   );
