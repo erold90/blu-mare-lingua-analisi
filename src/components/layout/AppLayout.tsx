@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { AppHeader } from "./AppHeader";
 import { AppSidebar } from "./AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { CookieConsent } from "@/components/CookieConsent";
 
 export function AppLayout() {
   return (
@@ -17,6 +18,7 @@ export function AppLayout() {
             </main>
           </SidebarInset>
         </div>
+        <CookieConsent />
       </div>
     </SidebarProvider>
   );
