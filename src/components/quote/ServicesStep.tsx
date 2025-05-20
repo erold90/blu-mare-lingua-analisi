@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { 
   FormField, 
   FormItem, 
@@ -123,6 +122,18 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
     );
   };
   
+  // Check if an apartment has reached its capacity
+  const hasReachedApartmentCapacity = (apartmentId: string) => {
+    const apartment = apartments.find(apt => apt.id === apartmentId);
+    if (!apartment) return true;
+    
+    // Get current assigned persons for this apartment
+    const currentAssigned = personsPerApartment[apartmentId] || 0;
+    
+    // Return true if we've reached the maximum capacity of this apartment
+    return currentAssigned >= apartment.beds;
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -201,11 +212,14 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
                                 size="icon"
                                 onClick={() => {
                                   const current = personsPerApartment[apartment.id] || 0;
-                                  if (totalAssignedPersons < totalPeopleForLinen) {
+                                  // Check both that we haven't assigned all people and that the apartment isn't at capacity
+                                  if (totalAssignedPersons < totalPeopleForLinen && 
+                                      !hasReachedApartmentCapacity(apartment.id)) {
                                     updatePersonsPerApartment(apartment.id, current + 1);
                                   }
                                 }}
-                                disabled={totalAssignedPersons >= totalPeopleForLinen}
+                                disabled={totalAssignedPersons >= totalPeopleForLinen || 
+                                          hasReachedApartmentCapacity(apartment.id)}
                               >
                                 +
                               </Button>
