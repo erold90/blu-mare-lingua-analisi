@@ -67,9 +67,12 @@ export const generateQuotePDF = (
   const checkInDate = format(formValues.checkIn, "dd/MM/yyyy");
   const checkOutDate = format(formValues.checkOut, "dd/MM/yyyy");
   
+  let yPos = 70;
+  
   doc.setFontSize(10);
-  autoTable(doc, {
-    startY: 70,
+  // Create stay details table and get its final position
+  const stayTable = autoTable(doc, {
+    startY: yPos,
     head: [["Periodo", "Durata", "Ospiti"]],
     body: [
       [
@@ -82,10 +85,13 @@ export const generateQuotePDF = (
     headStyles: { fillColor: [0, 85, 164] },
   });
   
+  // Update position for next section
+  yPos = (stayTable.lastRow?.position?.y || 70) + 20;
+  
   // --- Apartments Section ---
   doc.setFontSize(14);
   doc.setTextColor(0, 85, 164);
-  doc.text("Appartamenti", 15, doc.lastAutoTable.finalY + 20);
+  doc.text("Appartamenti", 15, yPos);
   
   // Prepare apartment data for table
   const apartmentData = selectedApartments.map(apt => {
@@ -105,18 +111,22 @@ export const generateQuotePDF = (
     ];
   });
   
-  autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 25,
+  // Create apartments table and get its final position
+  const apartmentsTable = autoTable(doc, {
+    startY: yPos + 5,
     head: [["Appartamento", "Capacità", "Occupazione", "Prezzo", "Totale"]],
     body: apartmentData,
     theme: "grid",
     headStyles: { fillColor: [0, 85, 164] },
   });
   
+  // Update position for next section
+  yPos = (apartmentsTable.lastRow?.position?.y || yPos + 50) + 20;
+  
   // --- Services Section ---
   doc.setFontSize(14);
   doc.setTextColor(0, 85, 164);
-  doc.text("Servizi extra", 15, doc.lastAutoTable.finalY + 20);
+  doc.text("Servizi extra", 15, yPos);
   
   // Calculate services data
   const servicesData = [];
@@ -136,18 +146,22 @@ export const generateQuotePDF = (
   // Tourist tax
   servicesData.push(["Tassa di soggiorno", "1€ per notte per persona", `${priceInfo.touristTax}€`]);
   
-  autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 25,
+  // Create services table and get its final position
+  const servicesTable = autoTable(doc, {
+    startY: yPos + 5,
     head: [["Servizio", "Descrizione", "Totale"]],
     body: servicesData,
     theme: "grid",
     headStyles: { fillColor: [0, 85, 164] },
   });
   
+  // Update position for next section
+  yPos = (servicesTable.lastRow?.position?.y || yPos + 50) + 20;
+  
   // --- Price Summary ---
   doc.setFontSize(14);
   doc.setTextColor(0, 85, 164);
-  doc.text("Riepilogo costi", 15, doc.lastAutoTable.finalY + 20);
+  doc.text("Riepilogo costi", 15, yPos);
   
   // Create summary table
   const summaryData = [
@@ -160,15 +174,16 @@ export const generateQuotePDF = (
     summaryData.push(["Sconto applicato", `-${priceInfo.savings}€`]);
   }
   
-  autoTable(doc, {
-    startY: doc.lastAutoTable.finalY + 25,
+  // Create summary table and get its final position
+  const summaryTable = autoTable(doc, {
+    startY: yPos + 5,
     body: summaryData,
     theme: "grid",
     styles: { fontSize: 10 },
   });
   
   // Final price in bold
-  const finalY = doc.lastAutoTable.finalY + 10;
+  const finalY = (summaryTable.lastRow?.position?.y || yPos + 50) + 10;
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text("Totale soggiorno:", 60, finalY, { align: "right" });
@@ -222,4 +237,3 @@ export const downloadPDF = (
   // Save the PDF
   doc.save(`Preventivo_VillaMareBlu_${safeName}_${today}.pdf`);
 };
-
