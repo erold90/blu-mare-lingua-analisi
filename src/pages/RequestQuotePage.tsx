@@ -11,6 +11,7 @@ import ContactStep from "@/components/quote/ContactStep";
 import GroupDialog from "@/components/quote/GroupDialog";
 import ApartmentDialog from "@/components/quote/ApartmentDialog";
 import ProgressBar from "@/components/quote/ProgressBar";
+import { Form } from "@/components/ui/form";
 
 // Utils and Data
 import { apartments } from "@/data/apartments";
@@ -56,72 +57,74 @@ const RequestQuotePage = () => {
       {/* Progress bar */}
       <ProgressBar step={step} totalSteps={totalSteps} />
       
-      <form onSubmit={form.handleSubmit(onSubmitHandler)} className="space-y-8">
-        {/* STEP 1: Informazioni sugli ospiti */}
-        {step === 1 && (
-          <GuestInfoStep 
-            form={form}
-            childrenArray={childrenArray}
-            openGroupDialog={openGroupDialog}
-            incrementAdults={incrementAdults}
-            decrementAdults={decrementAdults}
-            incrementChildren={incrementChildren}
-            decrementChildren={decrementChildren}
-            updateChildDetails={updateChildDetails}
-            nextStep={nextStep}
-          />
-        )}
-        
-        {/* STEP 2: Selezione date */}
-        {step === 2 && (
-          <DateSelectionStep 
-            form={form}
-            prevStep={prevStep}
-            nextStep={nextStep}
-          />
-        )}
-        
-        {/* STEP 3: Selezione appartamento */}
-        {step === 3 && (
-          <ApartmentSelectionStep 
-            form={form}
-            apartments={apartments}
-            openApartmentDialog={openApartmentDialog}
-            prevStep={prevStep}
-            nextStep={nextStep}
-          />
-        )}
-        
-        {/* STEP 4: Servizi extra */}
-        {step === 4 && (
-          <ServicesStep 
-            form={form}
-            prevStep={prevStep}
-            nextStep={nextStep}
-          />
-        )}
-        
-        {/* STEP 5: Riepilogo e calcolo finale */}
-        {step === 5 && (
-          <SummaryStep 
-            form={form}
-            apartments={apartments}
-            prevStep={prevStep}
-            nextStep={nextStep}
-          />
-        )}
-        
-        {/* STEP 6: Finalizzazione preventivo */}
-        {step === 6 && (
-          <ContactStep 
-            form={form}
-            prevStep={prevStep}
-            onSubmit={handleSubmitWrapper}
-            downloadQuote={downloadQuote}
-            sendWhatsApp={sendWhatsApp}
-          />
-        )}
-      </form>
+      <Form {...form.formState}>
+        <form onSubmit={form.handleSubmit(onSubmitHandler)} className="space-y-8">
+          {/* STEP 1: Informazioni sugli ospiti */}
+          {step === 1 && (
+            <GuestInfoStep 
+              form={form}
+              childrenArray={childrenArray}
+              openGroupDialog={openGroupDialog}
+              incrementAdults={incrementAdults}
+              decrementAdults={decrementAdults}
+              incrementChildren={incrementChildren}
+              decrementChildren={decrementChildren}
+              updateChildDetails={updateChildDetails}
+              nextStep={nextStep}
+            />
+          )}
+          
+          {/* STEP 2: Selezione date */}
+          {step === 2 && (
+            <DateSelectionStep 
+              form={form}
+              prevStep={prevStep}
+              nextStep={nextStep}
+            />
+          )}
+          
+          {/* STEP 3: Selezione appartamento */}
+          {step === 3 && (
+            <ApartmentSelectionStep 
+              form={form}
+              apartments={apartments}
+              openApartmentDialog={openApartmentDialog}
+              prevStep={prevStep}
+              nextStep={nextStep}
+            />
+          )}
+          
+          {/* STEP 4: Servizi extra */}
+          {step === 4 && (
+            <ServicesStep 
+              form={form}
+              prevStep={prevStep}
+              nextStep={nextStep}
+            />
+          )}
+          
+          {/* STEP 5: Riepilogo e calcolo finale */}
+          {step === 5 && (
+            <SummaryStep 
+              form={form}
+              apartments={apartments}
+              prevStep={prevStep}
+              nextStep={nextStep}
+            />
+          )}
+          
+          {/* STEP 6: Finalizzazione preventivo */}
+          {step === 6 && (
+            <ContactStep 
+              form={form}
+              prevStep={prevStep}
+              onSubmit={handleSubmitWrapper}
+              downloadQuote={downloadQuote}
+              sendWhatsApp={sendWhatsApp}
+            />
+          )}
+        </form>
+      </Form>
       
       {/* Dialog per i dettagli dell'appartamento */}
       <ApartmentDialog
