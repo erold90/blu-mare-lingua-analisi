@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,8 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { 
+import {
   Form,
   FormControl,
   FormDescription,
@@ -149,15 +149,15 @@ const AdminReservations = () => {
         updateReservation({
           ...data,
           id: editingId,
-          // Ensure all required fields are present
+          // Ensure all required fields are present and convert Date objects to strings
           guestName: data.guestName,
           adults: data.adults,
           children: data.children,
           cribs: data.cribs,
           hasPets: data.hasPets,
           apartmentIds: data.apartmentIds,
-          startDate: data.startDate,
-          endDate: data.endDate,
+          startDate: data.startDate.toISOString(), // Convert Date to ISO string
+          endDate: data.endDate.toISOString(), // Convert Date to ISO string
           finalPrice: data.finalPrice,
           paymentMethod: data.paymentMethod,
           paymentStatus: data.paymentStatus
@@ -165,15 +165,15 @@ const AdminReservations = () => {
         toast.success("Prenotazione aggiornata con successo!");
       } else {
         addReservation({
-          // Ensure all required fields are present
+          // Ensure all required fields are present and convert Date objects to strings
           guestName: data.guestName,
           adults: data.adults,
           children: data.children,
           cribs: data.cribs,
           hasPets: data.hasPets,
           apartmentIds: data.apartmentIds,
-          startDate: data.startDate,
-          endDate: data.endDate,
+          startDate: data.startDate.toISOString(), // Convert Date to ISO string
+          endDate: data.endDate.toISOString(), // Convert Date to ISO string
           finalPrice: data.finalPrice,
           paymentMethod: data.paymentMethod,
           paymentStatus: data.paymentStatus,
