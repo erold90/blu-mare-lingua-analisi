@@ -98,11 +98,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
                 <span className="text-muted-foreground">Durata:</span>
                 <span>{priceInfo.nights} notti</span>
                 
-                {isHighSeason && (
-                  <div className="col-span-2 mt-2 text-xs bg-amber-50 p-2 rounded border border-amber-200">
-                    <strong>Nota:</strong> Nel periodo estivo (giugno-settembre) i prezzi sono settimanali. Anche per soggiorni di durata inferiore, viene applicata la tariffa settimanale.
-                  </div>
-                )}
+                {/* Removed the warning note about summer pricing here */}
               </div>
             </div>
             
