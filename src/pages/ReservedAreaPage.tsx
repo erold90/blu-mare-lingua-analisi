@@ -25,13 +25,16 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (login(username, password)) {
       toast.success("Login effettuato con successo");
-      // Immediate navigation without setTimeout
-      navigate("/area-riservata/dashboard");
+      
+      // Force a small delay before navigation to ensure state updates
+      setTimeout(() => {
+        navigate("/area-riservata/dashboard", { replace: true });
+      }, 100);
     } else {
       toast.error("Credenziali non valide");
     }
@@ -79,6 +82,11 @@ const LoginForm = () => {
 
 const ReservedAreaPage = () => {
   const { isAuthenticated } = useAuth();
+  
+  // Added console log for debugging authentication state
+  React.useEffect(() => {
+    console.log("Authentication state:", isAuthenticated);
+  }, [isAuthenticated]);
   
   return (
     <Routes>

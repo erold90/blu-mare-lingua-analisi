@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 
-// Import settings hook
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem("adminAuth") === "true";
