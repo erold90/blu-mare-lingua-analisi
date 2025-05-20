@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -141,14 +142,20 @@ export function useQuoteForm() {
     // Se non ci sono già gruppi familiari, ne creiamo uno di default
     if (familyGroups.length === 0) {
       const adultsCount = form.getValues("adults");
+      const childrenCount = form.getValues("children");
+      
+      // Creiamo un array di dettagli bambini con ogni elemento come un nuovo oggetto
+      const childrenDetailsArray = [];
+      for (let i = 0; i < childrenCount; i++) {
+        childrenDetailsArray.push({ isUnder12: false, sleepsWithParents: false });
+      }
+      
       const initialGroups = [{ 
         adults: adultsCount, 
-        children: form.getValues("children"), 
-        // Assicuriamoci di impostare entrambi i valori a false per i dettagli dei bambini
-        childrenDetails: form.getValues("children") > 0 
-          ? Array(form.getValues("children")).fill().map(() => ({ isUnder12: false, sleepsWithParents: false }))
-          : [] 
+        children: childrenCount, 
+        childrenDetails: childrenDetailsArray
       }];
+      
       setFamilyGroups(initialGroups);
     }
     

@@ -8,6 +8,7 @@ import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
 import { Separator } from "@/components/ui/separator";
+import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
 
 interface SummaryStepProps {
   form: UseFormReturn<FormValues>;
@@ -21,6 +22,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
   const priceInfo = calculateTotalPrice(formValues, apartments);
   const selectedApartmentIds = formValues.selectedApartments || [formValues.selectedApartment];
   const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
+  const { totalGuests, effectiveGuestCount, sleepingWithParents } = getEffectiveGuestCount(formValues);
   
   // If only one apartment is selected, make sure it's the main selectedApartment
   React.useEffect(() => {
@@ -68,16 +70,31 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
               </div>
             </div>
             
-            {/* Ospiti */}
+            {/* Ospiti con informazioni sui bambini che dormono con i genitori */}
             <div className="border rounded-md p-4 space-y-2">
               <h3 className="font-medium">Ospiti</h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <span className="text-muted-foreground">Adulti:</span>
-                <span>{form.getValues("adults")}</span>
+                <span>{formValues.adults}</span>
                 <span className="text-muted-foreground">Bambini:</span>
-                <span>{form.getValues("children")}</span>
+                <span>{formValues.children}</span>
+                
+                {sleepingWithParents > 0 && (
+                  <>
+                    <span className="text-muted-foreground">Bambini che dormono con i genitori:</span>
+                    <span>{sleepingWithParents}</span>
+                  </>
+                )}
+                
                 <span className="text-muted-foreground">Totale ospiti:</span>
-                <span>{form.getValues("adults") + form.getValues("children")}</span>
+                <span>{totalGuests}</span>
+                
+                {sleepingWithParents > 0 && (
+                  <>
+                    <span className="text-muted-foreground font-medium">Posti letto effettivi necessari:</span>
+                    <span className="font-medium">{effectiveGuestCount}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -118,6 +135,8 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <span className="text-muted-foreground">Capacità:</span>
                           <span>{apartment.capacity} persone</span>
+                          <span className="text-muted-foreground">Posti letto:</span>
+                          <span>{apartment.beds}</span>
                           <span className="text-muted-foreground">Posizione:</span>
                           <span>Piano {apartment.floor}</span>
                           

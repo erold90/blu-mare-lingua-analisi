@@ -1,7 +1,7 @@
 
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
-import { Plus, Minus, Users } from "lucide-react";
+import { Plus, Minus, Users, BedDouble } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Badge } from "@/components/ui/badge";
 
 interface GuestInfoStepProps {
   form: UseFormReturn<FormValues>;
@@ -34,6 +35,9 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
   nextStep
 }) => {
   const isMobile = useIsMobile();
+  
+  // Count children sleeping with parents
+  const childrenSleepingWithParents = childrenArray.filter(child => child.sleepsWithParents).length;
   
   return (
     <Card>
@@ -110,7 +114,17 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
         
         {/* Numero di bambini */}
         <div className="space-y-2">
-          <Label htmlFor="children">Numero di bambini</Label>
+          <div className="flex justify-between items-center">
+            <Label htmlFor="children">Numero di bambini</Label>
+            
+            {/* Badge showing children sleeping with parents */}
+            {childrenSleepingWithParents > 0 && (
+              <Badge variant="outline" className="text-blue-600 border-blue-300 bg-blue-50">
+                <BedDouble className="h-3 w-3 mr-1" />
+                {childrenSleepingWithParents} {childrenSleepingWithParents === 1 ? "bambino dorme" : "bambini dormono"} con i genitori
+              </Badge>
+            )}
+          </div>
           <div className="flex items-center space-x-4">
             <Button 
               type="button" 
@@ -165,11 +179,27 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
                         updateChildDetails(index, 'sleepsWithParents', checked === true);
                       }}
                     />
-                    <Label htmlFor={`sleeps-with-parents-${index}`}>Dorme con i genitori</Label>
+                    <Label 
+                      htmlFor={`sleeps-with-parents-${index}`} 
+                      className={child.sleepsWithParents ? "font-medium text-blue-600" : ""}
+                    >
+                      Dorme con i genitori
+                      {child.sleepsWithParents && " (non occupa posto letto)"}
+                    </Label>
                   </div>
                 </div>
               </div>
             ))}
+            
+            {/* Add explanation about bed occupancy */}
+            {childrenSleepingWithParents > 0 && (
+              <div className="mt-4 pt-4 border-t text-sm text-blue-600">
+                <p className="flex items-center">
+                  <BedDouble className="h-4 w-4 mr-2" />
+                  I bambini che dormono con i genitori non occupano un posto letto aggiuntivo.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </CardContent>
