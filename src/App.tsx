@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useActivityLog } from "./hooks/useActivityLog";
 
 import { AppLayout } from "./components/layout/AppLayout";
 import Index from "./pages/Index";
@@ -26,7 +27,7 @@ const queryClient = new QueryClient();
 // Component to track page views
 const PageViewTracker = () => {
   const location = useLocation();
-  const { addSiteVisit } = require("./hooks/useActivityLog").useActivityLog();
+  const { addSiteVisit } = useActivityLog();
   
   useEffect(() => {
     addSiteVisit(location.pathname);
