@@ -66,13 +66,15 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
     useWeeklyPrice = true;
   }
   
+  // Get the year for seasonal pricing
+  const year = checkIn.getFullYear();
+  
   // Try to get seasonal pricing from localStorage
   let seasonalPrices: any[] = [];
   try {
     const savedPricing = localStorage.getItem("seasonalPricing");
     if (savedPricing) {
       const allPricing = JSON.parse(savedPricing);
-      const year = checkIn.getFullYear();
       const yearPricing = allPricing.find((season: any) => season.year === year);
       if (yearPricing) {
         seasonalPrices = yearPricing.prices;
