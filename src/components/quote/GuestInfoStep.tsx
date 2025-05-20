@@ -196,13 +196,7 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
                             }
                           }}
                         />
-                        <Label 
-                          htmlFor={`sleeps-with-parents-${index}`} 
-                          className={child.sleepsWithParents ? "font-medium text-blue-600" : ""}
-                        >
-                          Dorme con i genitori
-                          {child.sleepsWithParents && " (non occupa posto letto)"}
-                        </Label>
+                        <Label htmlFor={`sleeps-with-parents-${index}`}>Dorme con i genitori</Label>
                       </div>
                       
                       <div className="flex items-center space-x-2">
@@ -218,13 +212,7 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
                             }
                           }}
                         />
-                        <Label 
-                          htmlFor={`sleeps-in-crib-${index}`} 
-                          className={child.sleepsInCrib ? "font-medium text-green-600" : ""}
-                        >
-                          Dorme in culla
-                          {child.sleepsInCrib && " (gratuito, non occupa posto letto)"}
-                        </Label>
+                        <Label htmlFor={`sleeps-in-crib-${index}`}>Dorme in culla</Label>
                       </div>
                     </div>
                   )}

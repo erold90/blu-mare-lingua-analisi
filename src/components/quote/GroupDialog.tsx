@@ -228,12 +228,8 @@ const GroupDialog: React.FC<GroupDialogProps> = ({
                                     updateGroupChildDetails(groupIndex, childIndex, 'sleepsWithParents', checked === true);
                                   }}
                                 />
-                                <Label 
-                                  htmlFor={`group-${groupIndex}-sleeps-with-parents-${childIndex}`}
-                                  className={child.sleepsWithParents ? "font-medium text-blue-600" : ""}
-                                >
+                                <Label htmlFor={`group-${groupIndex}-sleeps-with-parents-${childIndex}`}>
                                   Dorme con i genitori
-                                  {child.sleepsWithParents && " (non occupa posto letto)"}
                                 </Label>
                               </div>
                               
@@ -245,12 +241,8 @@ const GroupDialog: React.FC<GroupDialogProps> = ({
                                     updateGroupChildDetails(groupIndex, childIndex, 'sleepsInCrib', checked === true);
                                   }}
                                 />
-                                <Label 
-                                  htmlFor={`group-${groupIndex}-sleeps-in-crib-${childIndex}`}
-                                  className={child.sleepsInCrib ? "font-medium text-green-600" : ""}
-                                >
+                                <Label htmlFor={`group-${groupIndex}-sleeps-in-crib-${childIndex}`}>
                                   Dorme in culla
-                                  {child.sleepsInCrib && " (gratuito, non occupa posto letto)"}
                                 </Label>
                               </div>
                             </div>
