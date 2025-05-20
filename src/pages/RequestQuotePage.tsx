@@ -61,7 +61,7 @@ const RequestQuotePage = () => {
       <div className="text-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold mb-4">Richiedi un Preventivo</h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Compila il form per ricevere un preventivo personalizzato per il tuo soggiorno a Villa MareBlu.
+          Compila il form per ricevere un preventivo personalizzato.
         </p>
       </div>
       

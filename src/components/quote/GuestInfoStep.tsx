@@ -51,7 +51,7 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
     <Card>
       <CardHeader>
         <CardTitle>Informazioni sugli ospiti</CardTitle>
-        <CardDescription>Indica il numero di ospiti che soggiorneranno a Villa MareBlu</CardDescription>
+        <CardDescription>Indica il numero di ospiti che soggiorneranno</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Numero di adulti */}
