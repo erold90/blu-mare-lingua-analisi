@@ -42,7 +42,8 @@ export function useQuoteForm() {
       if (childrenCount > updatedArray.length) {
         const diff = childrenCount - updatedArray.length;
         for (let i = 0; i < diff; i++) {
-          updatedArray.push({ isUnder12: true, sleepsWithParents: false });
+          // Aggiungiamo nuovi bambini con entrambi i valori impostati a false
+          updatedArray.push({ isUnder12: false, sleepsWithParents: false });
         }
       }
       // Rimuovo bambini in eccesso
@@ -132,7 +133,14 @@ export function useQuoteForm() {
     // Se non ci sono già gruppi familiari, ne creiamo uno di default
     if (familyGroups.length === 0) {
       const adultsCount = form.getValues("adults");
-      const initialGroups = [{ adults: adultsCount, children: form.getValues("children"), childrenDetails: [...childrenArray] }];
+      const initialGroups = [{ 
+        adults: adultsCount, 
+        children: form.getValues("children"), 
+        // Assicuriamoci di impostare entrambi i valori a false per i dettagli dei bambini
+        childrenDetails: form.getValues("children") > 0 
+          ? Array(form.getValues("children")).fill({ isUnder12: false, sleepsWithParents: false }) 
+          : [] 
+      }];
       setFamilyGroups(initialGroups);
     }
     
