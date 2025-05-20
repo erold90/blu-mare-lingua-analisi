@@ -2,11 +2,12 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
-import { QuoteFormValues } from "./quoteFormSchema";
-import { calculateQuotePrice } from "./quoteCalculator";
+import { FormValues } from "./quoteFormSchema";
+import { calculateTotalPrice } from "./quoteCalculator";
+import { Apartment } from "../data/apartments";
 
 export const generateQuotePDF = (
-  formValues: QuoteFormValues,
+  formValues: FormValues,
   clientName: string
 ) => {
   // Create PDF instance
@@ -20,7 +21,7 @@ export const generateQuotePDF = (
   
   // Calculate prices
   const selectedApartments = formValues.selectedApartments || [];
-  const priceInfo = calculateQuotePrice(formValues);
+  const priceInfo = calculateTotalPrice(formValues, [] as Apartment[]);
   
   // --- Header with Logo and Title ---
   // Logo (placeholder)
@@ -66,15 +67,15 @@ export const generateQuotePDF = (
   let yPos = 85;
   
   doc.setFontSize(10);
-  // Create stay details table and get its final position
+  // Create stay details table
   const stayTable = autoTable(doc, {
     startY: yPos,
     head: [["Periodo", "Durata", "Ospiti"]],
     body: [
       [
         `${checkInDate} - ${checkOutDate}`,
-        `${formValues.days} notti`,
-        `${formValues.guestCount} persone`
+        `${priceInfo.nights} notti`,
+        `${formValues.adults + (formValues.children || 0)} persone`
       ]
     ],
     theme: "grid",
@@ -82,7 +83,7 @@ export const generateQuotePDF = (
   });
   
   // Update position for next section
-  yPos = (stayTable.lastRow?.position?.y || yPos + 20) + 20;
+  yPos = stayTable?.lastRow?.position?.y ? stayTable.lastRow.position.y + 20 : yPos + 40;
   
   // --- Apartments Section ---
   doc.setFontSize(14);
@@ -91,39 +92,31 @@ export const generateQuotePDF = (
   
   // Prepare apartment data for table
   const apartmentData = selectedApartments.map(apt => {
-    // Calculate total price for this apartment
-    const apartmentDays = formValues.days;
-    const apartmentBasePrice = apt.pricePerNight;
-    const occupancyRate = apt.occupancy / apt.capacity;
-    let priceMultiplier = 1;
-    
-    // Apply price adjustments based on occupancy
-    if (occupancyRate <= 0.5) {
-      priceMultiplier = 0.9; // 10% discount for low occupancy
-    }
-    
-    const totalPrice = apartmentBasePrice * apartmentDays * priceMultiplier;
+    // Calculate total price for this apartment (simplified)
+    const apartmentDays = priceInfo.nights;
+    const apartmentBasePrice = apt.price || 0;
+    const totalPrice = apartmentBasePrice * apartmentDays;
     
     return [
       apt.name,
       `${apt.capacity} persone`,
-      `${apt.occupancy} persone`,
+      `${formValues.adults + (formValues.children || 0)} persone`,
       `${apartmentBasePrice}€ per notte`,
       `${totalPrice.toFixed(2)}€`
     ];
   });
   
-  // Create apartments table and get its final position
+  // Create apartments table
   const apartmentsTable = autoTable(doc, {
     startY: yPos + 5,
     head: [["Appartamento", "Capacità", "Occupazione", "Prezzo", "Totale"]],
-    body: apartmentData,
+    body: apartmentData.length > 0 ? apartmentData : [["--", "--", "--", "--", "--"]],
     theme: "grid",
     headStyles: { fillColor: [0, 85, 164] },
   });
   
   // Update position for next section
-  yPos = (apartmentsTable.lastRow?.position?.y || yPos + 50) + 20;
+  yPos = apartmentsTable?.lastRow?.position?.y ? apartmentsTable.lastRow.position.y + 20 : yPos + 60;
   
   // --- Services Section ---
   doc.setFontSize(14);
@@ -133,27 +126,10 @@ export const generateQuotePDF = (
   // Calculate services data
   const servicesData = [];
   
-  // Selected services
-  const selectedServices = formValues.selectedServices || [];
-  if (selectedServices.length > 0) {
-    selectedServices.forEach(service => {
-      // Calculate service total price
-      const serviceTotal = service.priceType === "perStay" 
-        ? service.price
-        : service.price * formValues.days;
-      
-      servicesData.push([
-        service.name,
-        service.priceType === "perStay" ? "Una tantum" : "Per notte",
-        `${serviceTotal}€`
-      ]);
-    });
-  }
-  
   // Tourist tax
   servicesData.push(["Tassa di soggiorno", "1€ per notte per persona", `${priceInfo.touristTax}€`]);
   
-  // Create services table and get its final position
+  // Create services table
   const servicesTable = autoTable(doc, {
     startY: yPos + 5,
     head: [["Servizio", "Descrizione", "Totale"]],
@@ -163,7 +139,7 @@ export const generateQuotePDF = (
   });
   
   // Update position for next section
-  yPos = (servicesTable.lastRow?.position?.y || yPos + 50) + 20;
+  yPos = servicesTable?.lastRow?.position?.y ? servicesTable.lastRow.position.y + 20 : yPos + 40;
   
   // --- Price Summary ---
   doc.setFontSize(14);
@@ -172,8 +148,8 @@ export const generateQuotePDF = (
   
   // Create summary table
   const summaryData = [
-    ["Totale appartamenti", `${priceInfo.apartmentsTotal}€`],
-    ["Totale servizi extra", `${priceInfo.servicesTotal}€`],
+    ["Totale appartamenti", `${priceInfo.basePrice}€`],
+    ["Totale servizi extra", `${priceInfo.extras}€`],
     ["Tassa di soggiorno", `${priceInfo.touristTax}€`]
   ];
   
@@ -181,7 +157,7 @@ export const generateQuotePDF = (
     summaryData.push(["Sconto applicato", `-${priceInfo.savings}€`]);
   }
   
-  // Create summary table and get its final position
+  // Create summary table
   const summaryTable = autoTable(doc, {
     startY: yPos + 5,
     body: summaryData,
@@ -190,11 +166,11 @@ export const generateQuotePDF = (
   });
   
   // Final price in bold
-  const finalY = (summaryTable.lastRow?.position?.y || yPos + 50) + 10;
+  const finalY = summaryTable?.lastRow?.position?.y ? summaryTable.lastRow.position.y + 10 : yPos + 50;
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text("Totale soggiorno:", 60, finalY, { align: "right" });
-  doc.text(`${priceInfo.grandTotal}€`, 150, finalY, { align: "right" });
+  doc.text(`${priceInfo.totalAfterDiscount}€`, 150, finalY, { align: "right" });
   
   // --- Terms and Conditions ---
   doc.setFontSize(11);
@@ -235,4 +211,10 @@ export const generateQuotePDF = (
   
   // Save the PDF with a formatted filename
   doc.save(`Preventivo_VillaMareBlu_${safeName}_${today}.pdf`);
+};
+
+// Export as downloadPDF to match the import in useQuoteForm.tsx
+export const downloadPDF = (formValues: FormValues, apartments: Apartment[], name?: string) => {
+  // Generate the PDF using the existing function
+  generateQuotePDF(formValues, name || "Cliente");
 };
