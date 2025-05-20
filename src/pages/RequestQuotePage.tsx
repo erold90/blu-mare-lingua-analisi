@@ -1,8 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 // Components
@@ -197,8 +195,8 @@ const RequestQuotePage = () => {
     toast.success("Apertura di WhatsApp con messaggio precompilato");
   };
   
-  // Invio del form
-  const onSubmit = (data: FormValues) => {
+  // Invio del form - Fix the function signature to match the expected type
+  const onSubmitHandler = (data: FormValues) => {
     if (step < totalSteps) {
       nextStep();
     } else {
@@ -206,6 +204,11 @@ const RequestQuotePage = () => {
       toast.success("Preventivo inviato con successo!");
       // In una implementazione reale, qui si invierebbe il preventivo
     }
+  };
+
+  // We create a wrapper function with no arguments that calls onSubmitHandler with form.getValues()
+  const handleSubmitWrapper = () => {
+    onSubmitHandler(form.getValues());
   };
   
   // Render del form basato sullo step corrente
@@ -236,7 +239,7 @@ const RequestQuotePage = () => {
         </div>
       </div>
       
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmitHandler)} className="space-y-8">
         {/* STEP 1: Informazioni sugli ospiti */}
         {step === 1 && (
           <GuestInfoStep 
@@ -297,7 +300,7 @@ const RequestQuotePage = () => {
           <ContactStep 
             form={form}
             prevStep={prevStep}
-            onSubmit={onSubmit}
+            onSubmit={handleSubmitWrapper}
             downloadQuote={downloadQuote}
             sendWhatsApp={sendWhatsApp}
           />

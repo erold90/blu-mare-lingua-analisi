@@ -95,7 +95,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
   // Creo il messaggio per WhatsApp
   const name = formValues.name;
   let message = `${name ? `Salve ${name}, ` : "Salve, "}desidero prenotare a Villa MareBlu:\n`;
-  message += `- Periodo: dal ${format(formValues.checkIn, "dd/MM/yyyy")} al ${format(formValues.checkOut, "dd/MM/yyyy")} (${priceInfo.nights} notti)\n`;
+  message += `- Periodo: dal ${formatDate(formValues.checkIn)} al ${formatDate(formValues.checkOut)} (${priceInfo.nights} notti)\n`;
   message += `- Ospiti: ${formValues.adults} adulti`;
   
   if (formValues.children > 0) {
@@ -108,11 +108,11 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
   return message;
 };
 
-// Helper function to format dates
-function format(date: Date, formatStr: string): string {
+// Helper function to format dates correctly
+function formatDate(date: Date): string {
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const year = date.getFullYear();
   
-  return formatStr.replace('dd', day).replace('MM', month).replace('yyyy', year);
+  return `${day}/${month}/${year}`;
 }
