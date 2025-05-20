@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
-import { Bed, BedDouble, MapPin, Wifi, Users } from "lucide-react";
+import { Bed, BedDouble, MapPin, Wifi, Users, Baby } from "lucide-react";
 import { isApartmentSuitable, getRecommendedApartment, getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -28,7 +28,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   nextStep
 }) => {
   const formValues = form.getValues();
-  const { totalGuests, effectiveGuestCount, sleepingWithParents } = getEffectiveGuestCount(formValues);
+  const { totalGuests, effectiveGuestCount, sleepingWithParents, sleepingInCribs } = getEffectiveGuestCount(formValues);
   const [selectedBedsCount, setSelectedBedsCount] = useState(0);
   const [hasEnoughBeds, setHasEnoughBeds] = useState(false);
   
@@ -112,12 +112,17 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
         <Alert variant="default" className="bg-blue-50 border-blue-200 mb-4 overflow-hidden">
           <Users className="h-4 w-4 text-blue-500 shrink-0" />
           <AlertDescription className="text-blue-700 break-words">
-            {sleepingWithParents > 0 ? (
+            {sleepingWithParents > 0 || sleepingInCribs > 0 ? (
               <div className="flex flex-col">
                 <span>
-                  Il tuo gruppo è di {totalGuests} ospiti ({formValues.adults} adulti, {formValues.children} bambini), 
-                  di cui {sleepingWithParents} {sleepingWithParents === 1 ? 'bambino dorme' : 'bambini dormono'} con i genitori.
+                  Il tuo gruppo è di {totalGuests} ospiti ({formValues.adults} adulti, {formValues.children} bambini)
                 </span>
+                {sleepingWithParents > 0 && (
+                  <span>di cui {sleepingWithParents} {sleepingWithParents === 1 ? 'bambino dorme' : 'bambini dormono'} con i genitori</span>
+                )}
+                {sleepingInCribs > 0 && (
+                  <span>{sleepingInCribs} {sleepingInCribs === 1 ? 'bambino dorme' : 'bambini dormono'} in culla (gratis)</span>
+                )}
                 <span className="font-medium mt-1">Posti letto necessari: {effectiveGuestCount}</span>
               </div>
             ) : (

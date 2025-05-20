@@ -22,7 +22,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
   const priceInfo = calculateTotalPrice(formValues, apartments);
   const selectedApartmentIds = formValues.selectedApartments || [formValues.selectedApartment];
   const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
-  const { totalGuests, effectiveGuestCount, sleepingWithParents } = getEffectiveGuestCount(formValues);
+  const { totalGuests, effectiveGuestCount, sleepingWithParents, sleepingInCribs } = getEffectiveGuestCount(formValues);
   
   // If only one apartment is selected, make sure it's the main selectedApartment
   React.useEffect(() => {
@@ -70,7 +70,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
               </div>
             </div>
             
-            {/* Ospiti con informazioni sui bambini che dormono con i genitori */}
+            {/* Ospiti con informazioni sui bambini che dormono con i genitori o in culla */}
             <div className="border rounded-md p-4 space-y-2">
               <h3 className="font-medium">Ospiti</h3>
               <div className="grid grid-cols-2 gap-2 text-sm">
@@ -86,10 +86,17 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
                   </>
                 )}
                 
+                {sleepingInCribs > 0 && (
+                  <>
+                    <span className="text-muted-foreground">Bambini in culla:</span>
+                    <span>{sleepingInCribs} <span className="text-green-600">(gratuito)</span></span>
+                  </>
+                )}
+                
                 <span className="text-muted-foreground">Totale ospiti:</span>
                 <span>{totalGuests}</span>
                 
-                {sleepingWithParents > 0 && (
+                {(sleepingWithParents > 0 || sleepingInCribs > 0) && (
                   <>
                     <span className="text-muted-foreground font-medium">Posti letto effettivi necessari:</span>
                     <span className="font-medium">{effectiveGuestCount}</span>
@@ -199,6 +206,12 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Servizi extra:</span>
                   <span>{priceInfo.extras}€</span>
+                </div>
+              )}
+              {sleepingInCribs > 0 && (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Culle per bambini ({sleepingInCribs}):</span>
+                  <span>Gratuito</span>
                 </div>
               )}
               <div className="flex justify-between text-sm">

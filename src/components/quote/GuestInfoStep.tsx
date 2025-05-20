@@ -1,7 +1,7 @@
 
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
-import { Plus, Minus, Users, BedDouble } from "lucide-react";
+import { Plus, Minus, Users, BedDouble, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,13 +13,13 @@ import { Badge } from "@/components/ui/badge";
 
 interface GuestInfoStepProps {
   form: UseFormReturn<FormValues>;
-  childrenArray: { isUnder12: boolean; sleepsWithParents: boolean }[];
+  childrenArray: { isUnder12: boolean; sleepsWithParents: boolean; sleepsInCrib: boolean; };
   openGroupDialog: () => void;
   incrementAdults: () => void;
   decrementAdults: () => void;
   incrementChildren: () => void;
   decrementChildren: () => void;
-  updateChildDetails: (index: number, field: 'isUnder12' | 'sleepsWithParents', value: boolean) => void;
+  updateChildDetails: (index: number, field: 'isUnder12' | 'sleepsWithParents' | 'sleepsInCrib', value: boolean) => void;
   nextStep: () => void;
 }
 
@@ -36,8 +36,10 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
-  // Count children sleeping with parents
+  // Count children sleeping with parents or in cribs
   const childrenSleepingWithParents = childrenArray.filter(child => child.sleepsWithParents).length;
+  const childrenSleepingInCribs = childrenArray.filter(child => child.sleepsInCrib).length;
+  const childrenNotOccupyingBed = childrenSleepingWithParents + childrenSleepingInCribs;
   
   return (
     <Card>
@@ -117,11 +119,11 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
           <div className="flex justify-between items-center">
             <Label htmlFor="children">Numero di bambini</Label>
             
-            {/* Badge showing children sleeping with parents */}
-            {childrenSleepingWithParents > 0 && (
+            {/* Badge showing children sleeping with parents or in cribs */}
+            {childrenNotOccupyingBed > 0 && (
               <Badge variant="outline" className="text-blue-600 border-blue-300 bg-blue-50">
                 <BedDouble className="h-3 w-3 mr-1" />
-                {childrenSleepingWithParents} {childrenSleepingWithParents === 1 ? "bambino dorme" : "bambini dormono"} con i genitori
+                {childrenNotOccupyingBed} {childrenNotOccupyingBed === 1 ? "bambino non" : "bambini non"} occupa posto letto
               </Badge>
             )}
           </div>
@@ -160,7 +162,7 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
             {childrenArray.map((child, index) => (
               <div key={`child-${index}`} className="space-y-4 pt-4 border-t first:border-t-0 first:pt-0">
                 <h4>Bambino {index + 1}</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox 
                       id={`under-12-${index}`}
@@ -171,33 +173,74 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
                     />
                     <Label htmlFor={`under-12-${index}`}>Minore di 12 anni</Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`sleeps-with-parents-${index}`}
-                      checked={child.sleepsWithParents}
-                      onCheckedChange={(checked) => {
-                        updateChildDetails(index, 'sleepsWithParents', checked === true);
-                      }}
-                    />
-                    <Label 
-                      htmlFor={`sleeps-with-parents-${index}`} 
-                      className={child.sleepsWithParents ? "font-medium text-blue-600" : ""}
-                    >
-                      Dorme con i genitori
-                      {child.sleepsWithParents && " (non occupa posto letto)"}
-                    </Label>
-                  </div>
+                  
+                  {/* Opzioni aggiuntive solo per bambini sotto i 12 anni */}
+                  {child.isUnder12 && (
+                    <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`sleeps-with-parents-${index}`}
+                          checked={child.sleepsWithParents}
+                          onCheckedChange={(checked) => {
+                            const newValue = checked === true;
+                            updateChildDetails(index, 'sleepsWithParents', newValue);
+                            // Se selezionato, deseleziona l'opzione culla
+                            if (newValue && child.sleepsInCrib) {
+                              updateChildDetails(index, 'sleepsInCrib', false);
+                            }
+                          }}
+                        />
+                        <Label 
+                          htmlFor={`sleeps-with-parents-${index}`} 
+                          className={child.sleepsWithParents ? "font-medium text-blue-600" : ""}
+                        >
+                          Dorme con i genitori
+                          {child.sleepsWithParents && " (non occupa posto letto)"}
+                        </Label>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`sleeps-in-crib-${index}`}
+                          checked={child.sleepsInCrib}
+                          onCheckedChange={(checked) => {
+                            const newValue = checked === true;
+                            updateChildDetails(index, 'sleepsInCrib', newValue);
+                            // Se selezionato, deseleziona l'opzione dorme con i genitori
+                            if (newValue && child.sleepsWithParents) {
+                              updateChildDetails(index, 'sleepsWithParents', false);
+                            }
+                          }}
+                        />
+                        <Label 
+                          htmlFor={`sleeps-in-crib-${index}`} 
+                          className={child.sleepsInCrib ? "font-medium text-green-600" : ""}
+                        >
+                          Dorme in culla
+                          {child.sleepsInCrib && " (gratuito, non occupa posto letto)"}
+                        </Label>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
             
             {/* Add explanation about bed occupancy */}
-            {childrenSleepingWithParents > 0 && (
-              <div className="mt-4 pt-4 border-t text-sm text-blue-600">
-                <p className="flex items-center">
-                  <BedDouble className="h-4 w-4 mr-2" />
-                  I bambini che dormono con i genitori non occupano un posto letto aggiuntivo.
-                </p>
+            {childrenNotOccupyingBed > 0 && (
+              <div className="mt-4 pt-4 border-t text-sm">
+                {childrenSleepingWithParents > 0 && (
+                  <p className="flex items-center text-blue-600 mb-2">
+                    <BedDouble className="h-4 w-4 mr-2" />
+                    {childrenSleepingWithParents} {childrenSleepingWithParents === 1 ? "bambino dorme" : "bambini dormono"} con i genitori (non occupa posto letto).
+                  </p>
+                )}
+                {childrenSleepingInCribs > 0 && (
+                  <p className="flex items-center text-green-600">
+                    <Baby className="h-4 w-4 mr-2" />
+                    {childrenSleepingInCribs} {childrenSleepingInCribs === 1 ? "bambino dorme" : "bambini dormono"} in culla (gratuito, non occupa posto letto).
+                  </p>
+                )}
               </div>
             )}
           </div>

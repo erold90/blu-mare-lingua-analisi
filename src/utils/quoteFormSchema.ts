@@ -5,6 +5,7 @@ import { z } from "zod";
 export const childDetailSchema = z.object({
   isUnder12: z.boolean().default(false),
   sleepsWithParents: z.boolean().default(false),
+  sleepsInCrib: z.boolean().default(false), // Aggiungiamo l'opzione per la culla
 });
 
 // Schema per il gruppo familiare

@@ -4,14 +4,15 @@ import { FormValues } from "@/utils/quoteFormSchema";
 
 // Check if an apartment is suitable for a booking
 export function isApartmentSuitable(apartment: Apartment, formValues: FormValues): boolean {
-  // Calculate effective guest count considering children sleeping with parents
+  // Calculate effective guest count considering children sleeping with parents or in cribs
   const { adults, children, childrenDetails } = formValues;
   
-  // Count children who sleep with parents
+  // Count children who sleep with parents or in cribs
   const sleepingWithParents = (childrenDetails || []).filter(child => child.sleepsWithParents).length;
+  const sleepingInCribs = (childrenDetails || []).filter(child => child.sleepsInCrib).length;
   
-  // Calculate actual beds needed (adults + children - children sleeping with parents)
-  const effectiveGuestCount = adults + children - sleepingWithParents;
+  // Calculate actual beds needed (adults + children - children not needing beds)
+  const effectiveGuestCount = adults + children - sleepingWithParents - sleepingInCribs;
   
   // Per gruppi numerosi, non controlliamo la capacità totale perché potrebbero selezionare più appartamenti
   const totalGuests = adults + children;
@@ -23,7 +24,7 @@ export function isApartmentSuitable(apartment: Apartment, formValues: FormValues
   }
   
   // Altrimenti, controlliamo se il singolo appartamento può ospitare il gruppo
-  // Utilizziamo effectiveGuestCount invece di totalGuests per considerare i bambini che dormono con i genitori
+  // Utilizziamo effectiveGuestCount invece di totalGuests per considerare i bambini che dormono con i genitori o in culle
   if (apartment.capacity < effectiveGuestCount) {
     return false;
   }
@@ -40,9 +41,10 @@ function calculateApartmentFitScore(apartment: Apartment, formValues: FormValues
   
   let score = 0;
   
-  // Calculate effective guest count considering children sleeping with parents
+  // Calculate effective guest count considering children sleeping with parents or in cribs
   const sleepingWithParents = (childrenDetails || []).filter(child => child.sleepsWithParents).length;
-  const effectiveGuestCount = adults + children - sleepingWithParents;
+  const sleepingInCribs = (childrenDetails || []).filter(child => child.sleepsInCrib).length;
+  const effectiveGuestCount = adults + children - sleepingWithParents - sleepingInCribs;
   const totalGuests = adults + children;
   
   // Base score: Capacity efficiency (don't want too many empty beds)
@@ -51,7 +53,7 @@ function calculateApartmentFitScore(apartment: Apartment, formValues: FormValues
   
   // Calculate ideal bedrooms based on effective guest count
   const adultsNeededRooms = Math.ceil(adults / 2);
-  const childrenNeededRooms = Math.ceil((children - sleepingWithParents) / 2);
+  const childrenNeededRooms = Math.ceil((children - sleepingWithParents - sleepingInCribs) / 2);
   const idealBedrooms = adultsNeededRooms + (childrenNeededRooms > 0 ? childrenNeededRooms : 0);
   
   // Prefer apartments with the right number of bedrooms
@@ -64,8 +66,8 @@ function calculateApartmentFitScore(apartment: Apartment, formValues: FormValues
     const hasEnoughBeds = (apartment.beds || 0) >= effectiveGuestCount;
     score += hasEnoughBeds ? 8 : 0;
     
-    // Bonus for apartments that can accommodate children sleeping with parents
-    if (sleepingWithParents > 0) {
+    // Bonus for apartments that can accommodate children sleeping with parents or in cribs
+    if (sleepingWithParents > 0 || sleepingInCribs > 0) {
       score += 5;
     }
   }
@@ -106,11 +108,13 @@ export function getEffectiveGuestCount(formValues: FormValues): {
   totalGuests: number;
   effectiveGuestCount: number;
   sleepingWithParents: number;
+  sleepingInCribs: number;
 } {
   const { adults, children, childrenDetails } = formValues;
   const totalGuests = adults + children;
   const sleepingWithParents = (childrenDetails || []).filter(child => child.sleepsWithParents).length;
-  const effectiveGuestCount = adults + children - sleepingWithParents;
+  const sleepingInCribs = (childrenDetails || []).filter(child => child.sleepsInCrib).length;
+  const effectiveGuestCount = adults + children - sleepingWithParents - sleepingInCribs;
   
-  return { totalGuests, effectiveGuestCount, sleepingWithParents };
+  return { totalGuests, effectiveGuestCount, sleepingWithParents, sleepingInCribs };
 }

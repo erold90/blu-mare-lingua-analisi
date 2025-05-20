@@ -11,10 +11,10 @@ export function useQuoteForm() {
   const [step, setStep] = useState(1);
   const totalSteps = 6;
   
-  const [childrenArray, setChildrenArray] = useState<{ isUnder12: boolean; sleepsWithParents: boolean }[]>([]);
+  const [childrenArray, setChildrenArray] = useState<{ isUnder12: boolean; sleepsWithParents: boolean; sleepsInCrib: boolean }[]>([]);
   const [apartmentDialog, setApartmentDialog] = useState<string | null>(null);
   const [groupDialog, setGroupDialog] = useState(false);
-  const [familyGroups, setFamilyGroups] = useState<{ adults: number; children: number; childrenDetails: { isUnder12: boolean; sleepsWithParents: boolean }[] }[]>([]);
+  const [familyGroups, setFamilyGroups] = useState<{ adults: number; children: number; childrenDetails: { isUnder12: boolean; sleepsWithParents: boolean; sleepsInCrib: boolean }[] }[]>([]);
   
   // Inizializzo il form con valori predefiniti
   const form = useForm<FormValues>({
@@ -43,8 +43,8 @@ export function useQuoteForm() {
       if (childrenCount > updatedArray.length) {
         const diff = childrenCount - updatedArray.length;
         for (let i = 0; i < diff; i++) {
-          // Aggiungiamo nuovi bambini con entrambi i valori impostati a false
-          updatedArray.push({ isUnder12: false, sleepsWithParents: false });
+          // Aggiungiamo nuovi bambini con tutti i valori impostati a false
+          updatedArray.push({ isUnder12: false, sleepsWithParents: false, sleepsInCrib: false });
         }
       }
       // Rimuovo bambini in eccesso
@@ -83,7 +83,7 @@ export function useQuoteForm() {
   };
   
   // Aggiorna i dettagli di un bambino specifico
-  const updateChildDetails = (index: number, field: 'isUnder12' | 'sleepsWithParents', value: boolean) => {
+  const updateChildDetails = (index: number, field: 'isUnder12' | 'sleepsWithParents' | 'sleepsInCrib', value: boolean) => {
     // Creo una copia profonda dell'array per evitare che le modifiche a un bambino influenzino gli altri
     const updatedArray = childrenArray.map((child, i) => {
       if (i === index) {
@@ -147,7 +147,7 @@ export function useQuoteForm() {
       // Creiamo un array di dettagli bambini con ogni elemento come un nuovo oggetto
       const childrenDetailsArray = [];
       for (let i = 0; i < childrenCount; i++) {
-        childrenDetailsArray.push({ isUnder12: false, sleepsWithParents: false });
+        childrenDetailsArray.push({ isUnder12: false, sleepsWithParents: false, sleepsInCrib: false });
       }
       
       const initialGroups = [{ 
@@ -174,7 +174,7 @@ export function useQuoteForm() {
       form.setValue("children", totalChildren);
       
       // Aggiorniamo anche i dettagli dei bambini se necessario
-      const allChildrenDetails: { isUnder12: boolean; sleepsWithParents: boolean }[] = [];
+      const allChildrenDetails: { isUnder12: boolean; sleepsWithParents: boolean; sleepsInCrib: boolean }[] = [];
       familyGroups.forEach(group => {
         if (group.childrenDetails && group.childrenDetails.length > 0) {
           allChildrenDetails.push(...group.childrenDetails);
