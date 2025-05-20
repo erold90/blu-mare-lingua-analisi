@@ -212,6 +212,22 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     
     return currentSeason;
   };
+
+  // Make sure we have a 2025 season
+  useEffect(() => {
+    const has2025Season = seasonalPricing.some(season => season.year === 2025);
+    
+    if (!has2025Season) {
+      // Add 2025 season with default prices
+      setSeasonalPricing(prevPricing => [
+        ...prevPricing,
+        {
+          year: 2025,
+          prices: generateDefaultPricesForYear(2025)
+        }
+      ]);
+    }
+  }, []);
   
   return (
     <PricesContext.Provider value={{

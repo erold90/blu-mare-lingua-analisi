@@ -12,6 +12,7 @@ import { usePrices } from "@/hooks/usePrices";
 import { apartments } from "@/data/apartments";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { euro } from "lucide-react";
 
 const AdminPrices = () => {
   const { weeklyPrices, updateWeeklyPrice, generateWeeksForSeason, getCurrentSeason } = usePrices();
