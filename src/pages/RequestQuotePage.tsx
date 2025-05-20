@@ -1,10 +1,9 @@
-
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Plus, Minus, Download, MessageSquare, WhatsApp } from "lucide-react";
+import { Calendar as CalendarIcon, Plus, Minus, Download, MessageSquare, MessageCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -261,12 +260,30 @@ const RequestQuotePage = () => {
     const selectedApartmentId = form.getValues("selectedApartment");
     const apartment = apartments.find(apt => apt.id === selectedApartmentId);
     
-    if (!apartment) return 0;
+    if (!apartment) return { 
+      basePrice: 0, 
+      extras: 0, 
+      touristTax: 0, 
+      totalBeforeDiscount: 0, 
+      totalAfterDiscount: 0, 
+      savings: 0, 
+      deposit: 0, 
+      nights: 0 
+    };
     
     const checkIn = form.getValues("checkIn");
     const checkOut = form.getValues("checkOut");
     
-    if (!checkIn || !checkOut) return 0;
+    if (!checkIn || !checkOut) return { 
+      basePrice: 0, 
+      extras: 0, 
+      touristTax: 0, 
+      totalBeforeDiscount: 0, 
+      totalAfterDiscount: 0, 
+      savings: 0, 
+      deposit: 0, 
+      nights: 0 
+    };
     
     // Calcolo il numero di notti
     const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
@@ -1063,7 +1080,7 @@ const RequestQuotePage = () => {
                     className="gap-2 bg-green-600 hover:bg-green-700"
                     onClick={sendWhatsApp}
                   >
-                    <WhatsApp className="h-4 w-4" />
+                    <MessageCircle className="h-4 w-4" />
                     Richiedi su WhatsApp
                   </Button>
                 </div>
