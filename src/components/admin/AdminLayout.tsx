@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Calendar, LayoutDashboard, LogOut, Menu } from "lucide-react";
 import { useAuth } from "@/pages/ReservedAreaPage";
@@ -18,6 +18,7 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = React.useState(false);
 
@@ -25,14 +26,18 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     logout();
     navigate("/area-riservata");
   };
+  
+  const isActive = (path: string) => {
+    return location.pathname.includes(path);
+  };
 
   const NavItems = () => (
-    <nav className="space-y-2">
+    <nav className="space-y-1">
       <NavLink
         to="/area-riservata/dashboard"
         className={({ isActive }) =>
-          `flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-accent ${
-            isActive ? "bg-accent font-medium" : ""
+          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
+            isActive ? "bg-accent font-medium" : "hover:bg-muted"
           }`
         }
         onClick={() => setMenuOpen(false)}
@@ -43,8 +48,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <NavLink
         to="/area-riservata/prenotazioni"
         className={({ isActive }) =>
-          `flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-accent ${
-            isActive ? "bg-accent font-medium" : ""
+          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
+            isActive ? "bg-accent font-medium" : "hover:bg-muted"
           }`
         }
         onClick={() => setMenuOpen(false)}
@@ -56,48 +61,52 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   );
 
   return (
-    <div className="px-2 py-4 md:px-4">
-      <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-col h-full min-h-[calc(100vh-1rem)] py-3">
+      <div className="flex items-center justify-between px-3 mb-4">
         <div className="flex flex-col">
-          <h1 className="text-xl md:text-2xl font-bold">Area Amministrazione</h1>
-          <p className="text-muted-foreground text-xs md:text-sm">Gestisci le prenotazioni</p>
+          <h1 className="text-xl font-bold">Area Amministrazione</h1>
+          <p className="text-muted-foreground text-xs">
+            {isActive('dashboard') ? 'Statistiche e metriche' : 'Gestione prenotazioni'}
+          </p>
         </div>
-        <Button variant="outline" onClick={handleLogout} size="sm">
+        <Button variant="outline" onClick={handleLogout} size="sm" className="h-9">
           <LogOut className="h-4 w-4 mr-2" />
           <span className="hidden md:inline">Logout</span>
         </Button>
       </div>
 
-      <div className="flex flex-col">
-        {/* Mobile navigation */}
+      <div className="flex flex-1">
         {isMobile ? (
-          <div className="mb-4">
+          <div className="w-full px-2 pb-2">
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="w-full flex justify-between items-center">
-                  <span>Menu di navigazione</span>
+                <Button variant="outline" className="w-full flex justify-between items-center mb-3">
+                  <span>{isActive('dashboard') ? 'Dashboard' : 'Prenotazioni'}</span>
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[240px]">
-                <div className="py-4">
-                  <h2 className="text-lg font-medium mb-4">Menu</h2>
+              <SheetContent side="left" className="w-64 pt-8">
+                <div className="py-2">
+                  <h2 className="text-lg font-medium mx-3 mb-4">Menu</h2>
                   <NavItems />
                 </div>
               </SheetContent>
             </Sheet>
+            
+            <div className="border rounded-lg p-3 h-full overflow-hidden">
+              {children}
+            </div>
           </div>
         ) : (
-          /* Desktop sidebar navigation */
-          <aside className="w-64 shrink-0">
-            <NavItems />
-          </aside>
+          <div className="flex h-full w-full gap-4 px-4">
+            <aside className="w-56 shrink-0">
+              <NavItems />
+            </aside>
+            <main className="flex-1 border rounded-lg p-6 overflow-auto">
+              {children}
+            </main>
+          </div>
         )}
-
-        {/* Main content */}
-        <main className="flex-1 border rounded-lg p-2 md:p-6">
-          {children}
-        </main>
       </div>
     </div>
   );

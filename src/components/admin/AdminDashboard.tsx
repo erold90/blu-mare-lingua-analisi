@@ -13,6 +13,11 @@ import {
   ResponsiveContainer 
 } from "recharts";
 import { useReservations } from "@/hooks/useReservations";
+import { 
+  ChartContainer, 
+  ChartTooltip, 
+  ChartTooltipContent 
+} from "@/components/ui/chart";
 
 const AdminDashboard = () => {
   const { reservations, apartments } = useReservations();
@@ -22,20 +27,6 @@ const AdminDashboard = () => {
     return reservations.reduce((acc, reservation) => {
       return acc + (reservation.finalPrice || 0);
     }, 0);
-  }, [reservations]);
-
-  // Calculate total reservations per apartment
-  const reservationsPerApartment = React.useMemo(() => {
-    const counts: Record<string, number> = {};
-    
-    reservations.forEach(reservation => {
-      reservation.apartmentIds.forEach(id => {
-        if (!counts[id]) counts[id] = 0;
-        counts[id]++;
-      });
-    });
-    
-    return counts;
   }, [reservations]);
 
   // Calculate occupancy percentage for summer season (June to September)
@@ -103,10 +94,10 @@ const AdminDashboard = () => {
   }, [reservations]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <h2 className="text-2xl font-bold">Dashboard</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Total Revenue */}
         <Card>
           <CardHeader className="pb-2">
@@ -140,8 +131,8 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {summerOccupancy.reduce((acc, curr) => acc + curr.occupancy, 0) / 
-                (summerOccupancy.length || 1)}%
+              {Math.round(summerOccupancy.reduce((acc, curr) => acc + curr.occupancy, 0) / 
+                (summerOccupancy.length || 1))}%
             </div>
           </CardContent>
         </Card>
@@ -154,9 +145,9 @@ const AdminDashboard = () => {
           <CardDescription>Percentuale di occupazione da giugno a settembre</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {summerOccupancy.map((item) => (
-              <div key={item.name} className="space-y-2">
+              <div key={item.name} className="space-y-1">
                 <div className="flex items-center justify-between">
                   <div className="font-medium">{item.name}</div>
                   <div className="text-sm text-muted-foreground">{item.occupancy}%</div>
@@ -169,25 +160,38 @@ const AdminDashboard = () => {
       </Card>
       
       {/* Monthly Revenue Chart */}
-      <Card>
+      <Card className="overflow-hidden">
         <CardHeader>
           <CardTitle>Guadagno Mensile</CardTitle>
           <CardDescription>Distribuzione mensile delle entrate</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyRevenue}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip 
-                  formatter={(value: number) => [`€${value}`, 'Guadagno']}
+        <CardContent className="px-0 pb-0">
+          <div className="h-[300px] w-full mt-4">
+            <ChartContainer 
+              config={{
+                revenue: { theme: { light: "#34d399", dark: "#34d399" } },
+              }}
+            >
+              <BarChart data={monthlyRevenue} margin={{ left: 30, right: 15, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 12 }} tickMargin={8} />
+                <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `€${value}`} />
+                <ChartTooltip 
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <ChartTooltipContent
+                          className="bg-background border-border"
+                          formatter={(value) => [`€${value}`, 'Guadagno']}
+                        />
+                      );
+                    }
+                    return null;
+                  }}
                 />
-                <Legend />
-                <Bar dataKey="revenue" name="Guadagno" fill="#34d399" />
+                <Bar dataKey="revenue" name="Guadagno" fill="var(--color-revenue)" radius={[4, 4, 0, 0]} />
               </BarChart>
-            </ResponsiveContainer>
+            </ChartContainer>
           </div>
         </CardContent>
       </Card>

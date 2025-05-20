@@ -1,6 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
+import { apartments } from "@/data/apartments";
 
 // Type definitions
 export interface Apartment {
@@ -25,13 +25,11 @@ export interface Reservation {
   notes?: string;
 }
 
-// Default sample apartments
-const defaultApartments: Apartment[] = [
-  { id: "apt1", name: "Appartamento Mare" },
-  { id: "apt2", name: "Appartamento Giardino" },
-  { id: "apt3", name: "Appartamento Terrazza" },
-  { id: "apt4", name: "Appartamento Vista" }
-];
+// Get apartments from the data file instead of hardcoded values
+const defaultApartments: Apartment[] = apartments.map(apt => ({
+  id: apt.id,
+  name: apt.name
+}));
 
 interface ReservationsContextType {
   reservations: Reservation[];
