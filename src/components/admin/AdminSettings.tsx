@@ -136,7 +136,13 @@ const AdminSettings = () => {
                   <Calendar
                     mode="multiple"
                     selected={selectedDates}
-                    onSelect={(date) => handleDateSelect(date)}
+                    onSelect={(date) => {
+                      if (Array.isArray(date)) {
+                        setSelectedDates(date);
+                      } else {
+                        handleDateSelect(date);
+                      }
+                    }}
                     className="rounded-md border max-w-full"
                     locale={it}
                     disabled={(date) => isDateBlocked(date)}
