@@ -2,7 +2,15 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { MapPin, Wifi, Car, Coffee, UtensilsCrossed } from "lucide-react";
+import { MapPin, Wifi, Car, Coffee, UtensilsCrossed, Navigation } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const Index = () => {
   return (
@@ -16,8 +24,8 @@ const Index = () => {
           />
           <div className="absolute inset-0 bg-black/30" />
           <div className="absolute inset-0 flex flex-col justify-center items-center text-white p-4 text-center">
-            <h1 className="text-3xl md:text-5xl font-bold mb-4">Villa Mare Blu</h1>
-            <p className="text-lg md:text-xl mb-6 max-w-2xl">La tua vacanza da sogno sul mare cristallino della Sardegna</p>
+            <h1 className="text-3xl md:text-5xl font-bold mb-4">Villa MareBlu</h1>
+            <p className="text-lg md:text-xl mb-6 max-w-2xl">La tua vacanza da sogno sul mare cristallino del Salento</p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="lg" asChild>
                 <Link to="/appartamenti">I Nostri Appartamenti</Link>
@@ -32,7 +40,7 @@ const Index = () => {
 
       {/* Introduzione */}
       <div className="container px-4 py-8">
-        <h2 className="text-2xl md:text-3xl font-semibold text-center mb-6">Benvenuti a Villa Mare Blu</h2>
+        <h2 className="text-2xl md:text-3xl font-semibold text-center mb-6">Benvenuti a Villa MareBlu</h2>
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-lg text-muted-foreground mb-4">
             Situati nel pittoresco Sud del Salento, i nostri appartamenti offrono il rifugio ideale per una fuga tranquilla. Ogni dettaglio è curato per massimo comfort e stile.
@@ -52,22 +60,30 @@ const Index = () => {
               <div className="flex items-start space-x-2 mb-4">
                 <MapPin className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                 <p className="text-muted-foreground">
-                  Torre delle Stelle, Maracalagonis (CA), Sardegna - A soli 35 km da Cagliari e 20 minuti dall'aeroporto internazionale.
+                  Via Marco Polo 112, Patù (LE), Salento, Puglia - A soli 100 metri dal mare con accesso privato su scogliera bassa.
                 </p>
               </div>
               <p className="text-muted-foreground mb-4">
-                La villa gode di una posizione privilegiata, con accesso diretto alla spiaggia di Genn'e Mari e a breve distanza dalla spiaggia di Cann'e Sisa, due delle più belle calette della zona.
+                Villa MareBlu si trova in una posizione privilegiata, tra le località di Torre Vado e Santa Maria di Leuca, nel cuore del Salento.
               </p>
               <p className="text-muted-foreground">
-                Il centro abitato di Torre delle Stelle offre tutti i servizi essenziali: ristoranti, market, farmacia e attività ricreative, facilmente raggiungibili a piedi.
+                La zona offre tutti i servizi essenziali: ristoranti, market, farmacia e attività ricreative, facilmente raggiungibili in pochi minuti di auto.
               </p>
+              <div className="mt-4">
+                <Button variant="outline" className="mt-2" size="sm" asChild>
+                  <a href="https://maps.app.goo.gl/MSrp991xGGpaPhdM8" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                    <Navigation className="h-4 w-4" />
+                    Indicazioni stradali
+                  </a>
+                </Button>
+              </div>
             </div>
             <div className="flex-1 h-64 md:h-80 w-full rounded-lg overflow-hidden">
               <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12286.858187875444!2d9.400768617837902!3d39.179621764766895!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x12e73189ab7c73d9%3A0xe243f78fe914c7cd!2sTorre%20delle%20Stelle%2C%2009040%20Maracalagonis%20CA!5e0!3m2!1sit!2sit!4v1644234965647!5m2!1sit!2sit" 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.2286008529195!2d18.29282087704548!3d39.82353447131548!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x13442aef4bc92ee3%3A0xc5a77b4b7764eed3!2sVia%20Marco%20Polo%2C%20112%2C%2073053%20Pat%C3%B9%20LE!5e0!3m2!1sit!2sit!4v1716927634793!5m2!1sit!2sit" 
                 className="w-full h-full border-0" 
                 loading="lazy"
-                title="Mappa di Villa Mare Blu"
+                title="Mappa di Villa MareBlu"
               ></iframe>
             </div>
           </div>
@@ -109,53 +125,78 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Caratteristiche aggiuntive */}
-      <div className="bg-primary/5 py-12">
+      {/* Caratteristiche aggiuntive - Redesigned to be more elegant */}
+      <div className="bg-primary/5 py-16">
         <div className="container px-4">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <h2 className="text-2xl md:text-3xl font-semibold mb-6 text-center">L'Esperienza Villa Mare Blu</h2>
-            
-            <div className="bg-card p-6 rounded-md shadow-sm">
-              <h3 className="text-xl font-medium mb-3 flex items-center">
-                <span className="mr-2">🏖️</span> Spiagge da Sogno
-              </h3>
-              <p className="text-muted-foreground">
-                In meno di 5 minuti dalla nostra struttura, troverete le rinomate spiagge del Salento, tra cui le famose "Maldive del Salento". 
-                Sabbia dorata, acque cristalline e paesaggi mozzafiato vi attendono per giornate di puro relax al sole.
-              </p>
+          <h2 className="text-2xl md:text-3xl font-semibold mb-10 text-center">L'Esperienza Villa MareBlu</h2>
+          
+          <Carousel className="max-w-5xl mx-auto">
+            <CarouselContent>
+              <CarouselItem>
+                <Card className="border-0 shadow-lg overflow-hidden bg-white">
+                  <div className="grid grid-cols-1 md:grid-cols-2">
+                    <div className="h-64 md:h-auto bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1551038247-3d9af20df552')" }}></div>
+                    <CardContent className="p-8 flex flex-col justify-center">
+                      <h3 className="text-xl font-medium mb-4">Spiagge da Sogno</h3>
+                      <p className="text-muted-foreground">
+                        A soli 100 metri dalla nostra struttura, troverete l'accesso privato al mare cristallino del Salento.
+                        Acque turchesi, scogliere basse e insenature nascoste vi attendono per giornate di puro relax al sole.
+                      </p>
+                    </CardContent>
+                  </div>
+                </Card>
+              </CarouselItem>
+              
+              <CarouselItem>
+                <Card className="border-0 shadow-lg overflow-hidden bg-white">
+                  <div className="grid grid-cols-1 md:grid-cols-2">
+                    <div className="h-64 md:h-auto bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1487958449943-2429e8be8625')" }}></div>
+                    <CardContent className="p-8 flex flex-col justify-center">
+                      <h3 className="text-xl font-medium mb-4">Relax e Divertimento</h3>
+                      <p className="text-muted-foreground">
+                        Nelle vicine località di Torre Vado e Santa Maria di Leuca, troverete spiagge attrezzate, ristoranti tipici 
+                        e un'animata vita notturna per rendere la vostra vacanza indimenticabile.
+                      </p>
+                    </CardContent>
+                  </div>
+                </Card>
+              </CarouselItem>
+              
+              <CarouselItem>
+                <Card className="border-0 shadow-lg overflow-hidden bg-white">
+                  <div className="grid grid-cols-1 md:grid-cols-2">
+                    <div className="h-64 md:h-auto bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1483058712412-e9573fc25ebb')" }}></div>
+                    <CardContent className="p-8 flex flex-col justify-center">
+                      <h3 className="text-xl font-medium mb-4">Esperienze Uniche</h3>
+                      <p className="text-muted-foreground">
+                        La nostra struttura vi offre convenzioni speciali per escursioni in barca 
+                        alle famose grotte marine e l'accesso privilegiato ai migliori lidi della costa salentina.
+                      </p>
+                    </CardContent>
+                  </div>
+                </Card>
+              </CarouselItem>
+              
+              <CarouselItem>
+                <Card className="border-0 shadow-lg overflow-hidden bg-white">
+                  <div className="grid grid-cols-1 md:grid-cols-2">
+                    <div className="h-64 md:h-auto bg-cover bg-center" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1721322800607-8c38375eef04')" }}></div>
+                    <CardContent className="p-8 flex flex-col justify-center">
+                      <h3 className="text-xl font-medium mb-4">Comfort All'Aperto</h3>
+                      <p className="text-muted-foreground">
+                        Godetevi le ampie aree esterne con barbecue, forno a legna e zone relax arredate con eleganti 
+                        sedute. Cene all'aperto con vista sul mare e brezza marina, per vivere il Salento in tutto il suo splendore.
+                      </p>
+                    </CardContent>
+                  </div>
+                </Card>
+              </CarouselItem>
+            </CarouselContent>
+            <div className="flex justify-center mt-8">
+              <CarouselPrevious className="static mx-2 transform-none" />
+              <CarouselNext className="static mx-2 transform-none" />
             </div>
-            
-            <div className="bg-card p-6 rounded-md shadow-sm">
-              <h3 className="text-xl font-medium mb-3 flex items-center">
-                <span className="mr-2">🌮</span> Divertimento e Gusto a Torre Vado
-              </h3>
-              <p className="text-muted-foreground">
-                Nella vicina località balneare di Torre Vado, la sera si anima con chioschi di fast food, bancarelle di souvenir e un'area servizi per manifestazioni serali. 
-                Un parco giochi per bambini e un lunapark con ruota panoramica aggiungono un tocco di divertimento per tutta la famiglia.
-              </p>
-            </div>
-            
-            <div className="bg-card p-6 rounded-md shadow-sm">
-              <h3 className="text-xl font-medium mb-3 flex items-center">
-                <span className="mr-2">🚤</span> Esperienze Uniche a Tariffe Speciali
-              </h3>
-              <p className="text-muted-foreground">
-                Presso la nostra struttura, vogliamo rendere la vostra vacanza ancora più indimenticabile offrendovi una speciale convenzione per escursioni in barca 
-                e l'accesso privilegiato a posti nelle rinomate strutture balneari della zona.
-              </p>
-            </div>
-
-            <div className="bg-card p-6 rounded-md shadow-sm">
-              <h3 className="text-xl font-medium mb-3 flex items-center">
-                <span className="mr-2">🏡</span> Comfort All'Aperto
-              </h3>
-              <p className="text-muted-foreground">
-                L'accesso privato porta a una spiaggia di fondale roccioso, lontano dalle spiagge affollate. 
-                Godetevi ampie aree di spazio con parcheggio gratuito in loco, un barbecue e un forno a legna per pizza o grigliate. 
-                L'area esterna offre un tavolo e sedie per pasti con vista mare e brezza marina, oltre a comode sdraio per il vostro relax.
-              </p>
-            </div>
-          </div>
+          </Carousel>
         </div>
       </div>
       
