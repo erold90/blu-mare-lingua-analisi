@@ -3,20 +3,13 @@ import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { format, differenceInDays } from "date-fns";
 import { it } from 'date-fns/locale';
-import { Calendar as CalendarIcon, InfoIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { InfoIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { DateRange } from "react-day-picker";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DateSelectionStepProps {
   form: UseFormReturn<FormValues>;
@@ -39,9 +32,6 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
     
     return undefined;
   });
-  
-  // State to control the popover visibility
-  const [open, setOpen] = useState(false);
   
   // Calculate number of nights
   const numberOfNights = dateRange?.from && dateRange?.to
@@ -74,8 +64,6 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
     
     if (range.to) {
       form.setValue("checkOut", range.to);
-      // Close the calendar after selecting the check-out date
-      setOpen(false);
     }
     
     // Trigger validation
@@ -89,49 +77,28 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
         <CardDescription>Indica le date di check-in e check-out del tuo soggiorno</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Date selection button */}
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !dateRange?.from && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {dateRange?.from && dateRange?.to ? (
-                <span>
-                  {format(dateRange.from, "dd/MM/yyyy", { locale: it })} - {format(dateRange.to, "dd/MM/yyyy", { locale: it })}
-                </span>
-              ) : (
-                <span>Seleziona le date</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent align="center" className="w-auto p-0 flex justify-center" sideOffset={12}>
-            <ScrollArea className="max-h-[350px]">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={new Date()}
-                selected={dateRange}
-                onSelect={handleDateChange}
-                disabled={isDateDisabled}
-                numberOfMonths={1}
-                fixedWeeks={true}
-              />
-            </ScrollArea>
-          </PopoverContent>
-        </Popover>
-
-        {/* Information alert - with more concise text */}
+        {/* Information alert */}
         <Alert className="bg-muted/50 py-2">
           <InfoIcon className="h-4 w-4 mr-2" />
           <AlertDescription className="text-xs">
             Check-in/out disponibili solo sabato, domenica e lunedì.
           </AlertDescription>
         </Alert>
+        
+        {/* Calendar displayed directly on the page */}
+        <div className="flex justify-center">
+          <Calendar
+            initialFocus
+            mode="range"
+            defaultMonth={new Date()}
+            selected={dateRange}
+            onSelect={handleDateChange}
+            disabled={isDateDisabled}
+            numberOfMonths={1}
+            fixedWeeks={true}
+            className="border rounded-lg p-2 bg-background shadow-sm"
+          />
+        </div>
 
         {/* Stay summary */}
         {dateRange?.from && dateRange?.to && (
