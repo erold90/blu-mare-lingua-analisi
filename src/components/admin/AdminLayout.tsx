@@ -1,8 +1,7 @@
 
 import * as React from "react";
-import { NavLink, useNavigate, useLocation, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Calendar, LayoutDashboard, Home, Menu, Image, Settings, EuroIcon, History } from "lucide-react";
+import { NavLink, useLocation, Link } from "react-router-dom";
+import { Calendar, LayoutDashboard, Image, Settings, EuroIcon, History } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
@@ -10,6 +9,7 @@ import {
   SheetContent,
   SheetTrigger
 } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -17,7 +17,6 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const { logout } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -117,12 +116,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
              isActive('log') ? 'Log attività' : ''}
           </p>
         </div>
-        <Button variant="outline" size="sm" className="h-9" asChild>
-          <Link to="/">
-            <Home className="h-4 w-4 mr-2" />
-            <span className="hidden md:inline">Home</span>
-          </Link>
-        </Button>
+        
+        <div className="flex space-x-4">
+          <Link to="/" className="text-black hover:underline">Home</Link>
+          <Link to="/appartamenti" className="text-black hover:underline">Appartamenti</Link>
+          <Link to="/preventivo" className="text-black hover:underline">Preventivo</Link>
+        </div>
       </div>
 
       <div className="flex flex-1">
@@ -139,7 +138,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                      isActive('impostazioni') ? 'Impostazioni' :
                      isActive('log') ? 'Log' : ''}
                   </span>
-                  <Menu className="h-5 w-5" />
+                  <span className="h-5 w-5">≡</span>
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-64 pt-8">
