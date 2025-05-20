@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,6 +5,7 @@ import { toast } from "sonner";
 import { FormValues, formSchema } from "@/utils/quoteFormSchema";
 import { createWhatsAppMessage, calculateTotalPrice } from "@/utils/quoteCalculator";
 import { apartments } from "@/data/apartments";
+import { downloadPDF } from "@/utils/pdfGenerator";
 
 export function useQuoteForm() {
   const [step, setStep] = useState(1);
@@ -189,22 +189,15 @@ export function useQuoteForm() {
   // Funzione per scaricare il preventivo come PDF
   const downloadQuote = (name?: string) => {
     const formValues = form.getValues();
-    const priceInfo = calculateTotalPrice(formValues, apartments);
     
-    // Nome del cliente, se fornito
-    const clientName = name || formValues.name || "Cliente";
-    
-    toast.success(`Download del preventivo per ${clientName} avviato!`);
-    
-    // Log per debug
-    console.log("Creazione PDF per:", clientName);
-    console.log("Dati preventivo:", { formValues, priceInfo });
-    
-    // In una implementazione reale, qui si genererebbe il PDF utilizzando
-    // una libreria come jsPDF o pdfmake
-    setTimeout(() => {
-      toast.info("PDF generato con successo! In un'implementazione reale verrebbe scaricato automaticamente.");
-    }, 1500);
+    try {
+      // Use our new PDF generator
+      downloadPDF(formValues, apartments, name);
+      toast.success(`Preventivo per ${name || "cliente"} scaricato con successo!`);
+    } catch (error) {
+      console.error("Errore durante la generazione del PDF:", error);
+      toast.error("Si è verificato un errore durante la generazione del PDF");
+    }
   };
   
   // Funzione per inviare il preventivo via WhatsApp
