@@ -52,7 +52,10 @@ const LoginForm = () => {
     
     if (login(username, password)) {
       toast.success("Login effettuato con successo");
-      navigate("/area-riservata/dashboard");
+      // Delay navigation slightly to allow toast to be visible
+      setTimeout(() => {
+        navigate("/area-riservata/dashboard");
+      }, 300);
     } else {
       toast.error("Credenziali non valide");
     }
@@ -103,7 +106,7 @@ const ReservedAreaPage = () => {
   
   return (
     <Routes>
-      <Route path="/" element={!isAuthenticated ? <LoginForm /> : <Navigate to="/area-riservata/dashboard" />} />
+      <Route path="/" element={!isAuthenticated ? <LoginForm /> : <Navigate to="/area-riservata/dashboard" replace />} />
       <Route 
         path="/*" 
         element={
@@ -116,7 +119,7 @@ const ReservedAreaPage = () => {
               </Routes>
             </AdminLayout>
           ) : (
-            <Navigate to="/area-riservata" />
+            <Navigate to="/area-riservata" replace />
           )
         } 
       />
