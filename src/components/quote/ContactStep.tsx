@@ -18,7 +18,7 @@ import { FormValues } from "@/utils/quoteFormSchema";
 interface ContactStepProps {
   form: UseFormReturn<FormValues>;
   prevStep: () => void;
-  onSubmit: () => void;
+  onSubmit: () => void;  // Updated type to match the handler
   downloadQuote: () => void;
   sendWhatsApp: () => void;
 }
@@ -26,6 +26,7 @@ interface ContactStepProps {
 const ContactStep: React.FC<ContactStepProps> = ({ 
   form, 
   prevStep, 
+  onSubmit,
   downloadQuote, 
   sendWhatsApp 
 }) => {
