@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -45,7 +44,7 @@ import { it } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useReservations } from "@/hooks/useReservations";
+import { useReservations, Reservation } from "@/hooks/useReservations";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -145,14 +144,49 @@ const AdminReservations = () => {
 
   // Function to handle form submission
   const onSubmit = (data: ReservationFormData) => {
-    if (editingId) {
-      updateReservation({ ...data, id: editingId });
-      toast.success("Prenotazione aggiornata con successo!");
-    } else {
-      addReservation(data);
-      toast.success("Nuova prenotazione aggiunta con successo!");
+    try {
+      if (editingId) {
+        updateReservation({
+          ...data,
+          id: editingId,
+          // Ensure all required fields are present
+          guestName: data.guestName,
+          adults: data.adults,
+          children: data.children,
+          cribs: data.cribs,
+          hasPets: data.hasPets,
+          apartmentIds: data.apartmentIds,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          finalPrice: data.finalPrice,
+          paymentMethod: data.paymentMethod,
+          paymentStatus: data.paymentStatus
+        });
+        toast.success("Prenotazione aggiornata con successo!");
+      } else {
+        addReservation({
+          // Ensure all required fields are present
+          guestName: data.guestName,
+          adults: data.adults,
+          children: data.children,
+          cribs: data.cribs,
+          hasPets: data.hasPets,
+          apartmentIds: data.apartmentIds,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          finalPrice: data.finalPrice,
+          paymentMethod: data.paymentMethod,
+          paymentStatus: data.paymentStatus,
+          depositAmount: data.depositAmount,
+          notes: data.notes
+        });
+        toast.success("Nuova prenotazione aggiunta con successo!");
+      }
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.error("Error saving reservation:", error);
+      toast.error("Errore nel salvare la prenotazione");
     }
-    setIsDialogOpen(false);
   };
 
   return (
