@@ -83,8 +83,9 @@ export const generateQuotePDF = (
     headStyles: { fillColor: [0, 85, 164] },
   });
   
-  // Update position for next section
-  yPos = (stayTable.lastRow?.position?.y ?? yPos + 20) + 20;
+  // Update position for next section - Safely handle potentially undefined lastRow
+  const stayTableY = stayTable?.lastRow?.position?.y;
+  yPos = (stayTableY !== undefined ? stayTableY : yPos + 20) + 20;
   
   // --- Apartments Section ---
   doc.setFontSize(14);
@@ -124,8 +125,9 @@ export const generateQuotePDF = (
     headStyles: { fillColor: [0, 85, 164] },
   });
   
-  // Update position for next section
-  yPos = (apartmentsTable.lastRow?.position?.y ?? yPos + 40) + 20;
+  // Update position for next section - Safely handle potentially undefined lastRow
+  const apartmentsTableY = apartmentsTable?.lastRow?.position?.y;
+  yPos = (apartmentsTableY !== undefined ? apartmentsTableY : yPos + 40) + 20;
   
   // --- Services Section ---
   doc.setFontSize(14);
@@ -147,8 +149,9 @@ export const generateQuotePDF = (
     headStyles: { fillColor: [0, 85, 164] },
   });
   
-  // Update position for next section
-  yPos = (servicesTable.lastRow?.position?.y ?? yPos + 20) + 20;
+  // Update position for next section - Safely handle potentially undefined lastRow
+  const servicesTableY = servicesTable?.lastRow?.position?.y;
+  yPos = (servicesTableY !== undefined ? servicesTableY : yPos + 20) + 20;
   
   // --- Price Summary ---
   doc.setFontSize(14);
@@ -174,8 +177,9 @@ export const generateQuotePDF = (
     styles: { fontSize: 10 },
   });
   
-  // Final price in bold
-  const finalY = (summaryTable.lastRow?.position?.y ?? yPos + 30) + 10;
+  // Final price in bold - Safely handle potentially undefined lastRow
+  const summaryTableY = summaryTable?.lastRow?.position?.y;
+  const finalY = (summaryTableY !== undefined ? summaryTableY : yPos + 30) + 10;
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text("Totale soggiorno:", 60, finalY, { align: "right" });
