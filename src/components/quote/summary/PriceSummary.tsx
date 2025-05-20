@@ -20,7 +20,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   // Calculate the subtotal correctly (basePrice + extras + cleaningFee)
   const subtotal = priceInfo.basePrice + priceInfo.extras + priceInfo.cleaningFee;
 
-  // Make sure the total to pay is the same as totalAfterDiscount
+  // The total to pay should be the final amount after all discounts and inclusions
   const totalToPay = priceInfo.totalAfterDiscount;
 
   // Calculate deposit as 30% of the total

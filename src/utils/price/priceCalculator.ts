@@ -61,7 +61,7 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   const touristTax = calculateTouristTax(formValues, nights);
   
   // Calculate total before discount
-  const totalBeforeDiscount = basePrice + extrasCost + touristTax + cleaningFee;
+  const totalBeforeDiscount = basePrice + extrasCost + cleaningFee + touristTax;
   
   // Round down to the nearest 50€
   const roundedPrice = Math.floor(totalBeforeDiscount / 50) * 50;
