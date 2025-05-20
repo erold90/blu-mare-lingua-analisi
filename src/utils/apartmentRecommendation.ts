@@ -4,8 +4,16 @@ import { FormValues } from "@/utils/quoteFormSchema";
 
 // Check if an apartment is suitable for a booking
 export function isApartmentSuitable(apartment: Apartment, formValues: FormValues): boolean {
-  // Check if the apartment can accommodate all guests
+  // Per gruppi numerosi, non controlliamo la capacità totale perché potrebbero selezionare più appartamenti
   const totalGuests = formValues.adults + formValues.children;
+  
+  // Se il totalGuests è maggiore della capacità massima di qualsiasi appartamento singolo
+  // (es. > 8), allora mostriamo tutti gli appartamenti disponibili
+  if (totalGuests > 8) {
+    return true;
+  }
+  
+  // Altrimenti, controlliamo se il singolo appartamento può ospitare il gruppo
   if (apartment.capacity < totalGuests) {
     return false;
   }

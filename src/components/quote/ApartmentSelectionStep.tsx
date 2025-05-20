@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
-import { Bed, Home, MapPin, Wifi } from "lucide-react";
+import { Bed, Home, MapPin, Wifi, Users } from "lucide-react";
 import { isApartmentSuitable, getRecommendedApartment } from "@/utils/apartmentRecommendation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ApartmentSelectionStepProps {
   form: UseFormReturn<FormValues>;
@@ -78,6 +79,9 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
     return currentSelected.includes(apartmentId);
   };
   
+  // Check if group is too large for a single apartment
+  const isLargeGroup = totalGuests > 8;
+  
   return (
     <Card>
       <CardHeader>
@@ -85,6 +89,15 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
         <CardDescription>Seleziona l'appartamento o gli appartamenti che preferisci per il tuo soggiorno</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {isLargeGroup && (
+          <Alert variant="default" className="bg-blue-50 border-blue-200 mb-4">
+            <Users className="h-4 w-4 text-blue-500" />
+            <AlertDescription className="text-blue-700">
+              Il tuo gruppo è numeroso ({totalGuests} ospiti). Puoi selezionare più appartamenti per ospitare tutti.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         {suitableApartments.length === 0 ? (
           <div className="p-4 border rounded-md bg-muted/50">
             <p className="text-center">
