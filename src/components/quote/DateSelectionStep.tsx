@@ -28,11 +28,11 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
   const checkOut = form.watch("checkOut");
   
   // Combina le date di check-in e check-out in un range
-  const date: DateRange | undefined = useMemo(() => {
+  const date = useMemo<DateRange | undefined>(() => {
     if (checkIn && checkOut) {
       return {
-        from: checkIn,
-        to: checkOut,
+        from: new Date(checkIn),
+        to: new Date(checkOut)
       };
     }
     return undefined;
@@ -59,10 +59,13 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
     } else {
       form.setValue("checkOut", undefined as any);
     }
+    
+    // Forza l'aggiornamento del form
+    form.trigger(["checkIn", "checkOut"]);
   };
 
   // Funzione per verificare se un giorno è disabilitato (solo sabato, domenica e lunedì sono selezionabili)
-  const disabledDays = (date: Date) => {
+  const isDateDisabled = (date: Date) => {
     const day = date.getDay();
     // 0 = domenica, 1 = lunedì, 6 = sabato
     return day !== 0 && day !== 1 && day !== 6;
@@ -100,7 +103,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
               mode="range"
               selected={date}
               onSelect={handleDateRangeSelect}
-              disabled={disabledDays}
+              disabled={isDateDisabled}
               numberOfMonths={1}
               initialFocus
             />
