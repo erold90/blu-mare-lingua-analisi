@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { usePrices } from "@/hooks/usePrices";
 import YearTabs from "./prices/YearTabs";
@@ -16,26 +17,42 @@ const AdminPrices = () => {
   // Keep track of whether we've already initialized the 2025 prices
   const [prices2025Initialized, setPrices2025Initialized] = React.useState<boolean>(false);
 
-  // Initialize 2025 prices on first load
+  // Initialize 2025 prices on first load only if needed
   React.useEffect(() => {
     // Only run this once, when the component mounts and selectedYear is 2025
     if (selectedYear === 2025 && !prices2025Initialized) {
       console.log("Initializing 2025 prices...");
       
-      // Set all apartment prices to 120€ for every week
-      const apartmentIds = apartments.map(apt => apt.id);
+      // Check if 2025 prices already exist in localStorage
+      const savedPricing = localStorage.getItem("seasonalPricing");
+      let has2025Prices = false;
       
-      // Get all weeks for 2025 season
-      const weeks2025 = generateWeeksForSeason(2025, 6, 9);
+      if (savedPricing) {
+        try {
+          const allPricing = JSON.parse(savedPricing);
+          has2025Prices = allPricing.some((season: any) => season.year === 2025);
+        } catch (error) {
+          console.error("Failed to parse saved seasonal pricing:", error);
+        }
+      }
       
-      // For each apartment and week, set the price to 120€
-      apartmentIds.forEach(aptId => {
-        weeks2025.forEach(week => {
-          const weekStartIso = week.start.toISOString();
-          updateWeeklyPrice(aptId, weekStartIso, 120);
-          console.log(`Updated price for ${aptId}, week ${weekStartIso}: 120€`);
+      // Only initialize if no 2025 prices exist
+      if (!has2025Prices) {
+        // Set all apartment prices to 120€ for every week
+        const apartmentIds = apartments.map(apt => apt.id);
+        
+        // Get all weeks for 2025 season
+        const weeks2025 = generateWeeksForSeason(2025, 6, 9);
+        
+        // For each apartment and week, set the price to 120€
+        apartmentIds.forEach(aptId => {
+          weeks2025.forEach(week => {
+            const weekStartIso = week.start.toISOString();
+            updateWeeklyPrice(aptId, weekStartIso, 120);
+            console.log(`Updated price for ${aptId}, week ${weekStartIso}: 120€`);
+          });
         });
-      });
+      }
       
       // Mark as initialized so we don't do it again
       setPrices2025Initialized(true);

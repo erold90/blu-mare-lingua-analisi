@@ -11,11 +11,6 @@ export const PricesContext = createContext<PricesContextType | undefined>(undefi
 export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { seasonalPricing, setSeasonalPricing, weeklyPrices, setWeeklyPrices } = useProviderState();
   
-  // Save pricing to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem("seasonalPricing", JSON.stringify(seasonalPricing));
-  }, [seasonalPricing]);
-  
   // Initialize 2025 season if it doesn't exist
   useEffect(() => {
     initializeYearPricing(seasonalPricing, setSeasonalPricing);

@@ -1,4 +1,3 @@
-
 import { Dispatch, SetStateAction } from "react";
 import { WeeklyPrice, SeasonalPricing } from "./types";
 import { generateDefaultPricesForYear, generateWeeksForSeason } from "./priceUtils";
@@ -16,79 +15,66 @@ export const updateWeeklyPrice = (
 ) => {
   const currentYear = new Date(weekStart).getFullYear();
   
-  setSeasonalPricing(prevPricing => {
-    // Find the current year's pricing or create it
-    const yearIndex = prevPricing.findIndex(season => season.year === currentYear);
+  // Create a copy of the current pricing to work with
+  let updatedPricing = [...seasonalPricing];
+  
+  // Find or create the year pricing
+  let yearIndex = updatedPricing.findIndex(season => season.year === currentYear);
+  
+  if (yearIndex === -1) {
+    // Year not found, create new year entry
+    const newYearPricing = {
+      year: currentYear,
+      prices: generateDefaultPricesForYear(currentYear)
+    };
     
-    if (yearIndex === -1) {
-      // Year not found, create new year entry
-      const newYearPricing = {
-        year: currentYear,
-        prices: generateDefaultPricesForYear(currentYear)
-      };
-      
-      // Update the specific price
-      const priceIndex = newYearPricing.prices.findIndex(
-        p => p.apartmentId === apartmentId && p.weekStart.substring(0, 10) === weekStart.substring(0, 10)
-      );
-      
-      if (priceIndex !== -1) {
-        newYearPricing.prices[priceIndex].price = price;
-      } else {
-        // Add new price entry if not found
-        const weekEndDate = new Date(weekStart);
-        weekEndDate.setDate(weekEndDate.getDate() + 6); // End is 6 days later
-        
-        newYearPricing.prices.push({
-          apartmentId,
-          weekStart: weekStart,
-          weekEnd: weekEndDate.toISOString(),
-          price
-        });
-      }
-      
-      return [...prevPricing, newYearPricing];
-    } else {
-      // Year found, update the specific price
-      const updatedPricing = [...prevPricing];
-      const priceIndex = updatedPricing[yearIndex].prices.findIndex(
-        p => p.apartmentId === apartmentId && p.weekStart.substring(0, 10) === weekStart.substring(0, 10)
-      );
-      
-      if (priceIndex !== -1) {
-        updatedPricing[yearIndex].prices[priceIndex].price = price;
-      } else {
-        // Add new price entry if not found
-        const weekEndDate = new Date(weekStart);
-        weekEndDate.setDate(weekEndDate.getDate() + 6); // End is 6 days later
-        
-        updatedPricing[yearIndex].prices.push({
-          apartmentId,
-          weekStart: weekStart,
-          weekEnd: weekEndDate.toISOString(),
-          price
-        });
-      }
-      
-      return updatedPricing;
-    }
-  });
+    // Add the new year pricing to the updated pricing
+    updatedPricing = [...updatedPricing, newYearPricing];
+    yearIndex = updatedPricing.length - 1;
+  }
+  
+  // Update the specific price
+  const priceIndex = updatedPricing[yearIndex].prices.findIndex(
+    p => p.apartmentId === apartmentId && p.weekStart.substring(0, 10) === weekStart.substring(0, 10)
+  );
+  
+  if (priceIndex !== -1) {
+    // Price exists, update it
+    updatedPricing[yearIndex].prices[priceIndex].price = price;
+  } else {
+    // Add new price entry if not found
+    const weekEndDate = new Date(weekStart);
+    weekEndDate.setDate(weekEndDate.getDate() + 6); // End is 6 days later
+    
+    updatedPricing[yearIndex].prices.push({
+      apartmentId,
+      weekStart: weekStart,
+      weekEnd: weekEndDate.toISOString(),
+      price
+    });
+  }
+  
+  // Save to state
+  setSeasonalPricing(updatedPricing);
+  
+  // Save to localStorage immediately
+  localStorage.setItem("seasonalPricing", JSON.stringify(updatedPricing));
   
   // Also update weekly prices if they're for the current year
   setWeeklyPrices(prevPrices => {
-    const updatedPrices = [...prevPrices];
-    const priceIndex = updatedPrices.findIndex(
+    const updatedWeeklyPrices = [...prevPrices];
+    const weeklyPriceIndex = updatedWeeklyPrices.findIndex(
       p => p.apartmentId === apartmentId && p.weekStart.substring(0, 10) === weekStart.substring(0, 10)
     );
     
-    if (priceIndex !== -1) {
-      updatedPrices[priceIndex].price = price;
+    if (weeklyPriceIndex !== -1) {
+      updatedWeeklyPrices[weeklyPriceIndex].price = price;
     } else {
       // Add new price entry if not found
       const weekEndDate = new Date(weekStart);
       weekEndDate.setDate(weekEndDate.getDate() + 6); // End is 6 days later
       
-      updatedPrices.push({
+      updatedWeeklyPrices.push({
         apartmentId,
         weekStart: weekStart,
         weekEnd: weekEndDate.toISOString(),
@@ -96,13 +82,8 @@ export const updateWeeklyPrice = (
       });
     }
     
-    return updatedPrices;
+    return updatedWeeklyPrices;
   });
-  
-  // Force save to localStorage immediately
-  setTimeout(() => {
-    localStorage.setItem("seasonalPricing", JSON.stringify(seasonalPricing));
-  }, 100);
 };
 
 /**
