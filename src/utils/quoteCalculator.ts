@@ -135,51 +135,80 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
   
   const priceInfo = calculateTotalPrice(formValues, apartments);
   
-  // Creo il messaggio per WhatsApp
-  const name = formValues.name;
-  let message = `${name ? `Salve ${name}, ` : "Salve, "}desidero prenotare a Villa MareBlu:\n`;
-  message += `- Periodo: dal ${formatDate(formValues.checkIn)} al ${formatDate(formValues.checkOut)} (${priceInfo.nights} notti)\n`;
-  message += `- Ospiti: ${formValues.adults} adulti`;
+  // Creo il messaggio per WhatsApp con informazioni di riepilogo complete per l'host
+  const clientName = formValues.name || "Cliente";
+  const clientContact = formValues.phone || formValues.email || "Contatto non specificato";
+  
+  let message = `*Richiesta Preventivo Villa MareBlu*\n\n`;
+  message += `Da: ${clientName}\n`;
+  message += `Contatto: ${clientContact}\n\n`;
+  message += `*Dettagli soggiorno:*\n`;
+  message += `- Check-in: ${formatDate(formValues.checkIn)}\n`;
+  message += `- Check-out: ${formatDate(formValues.checkOut)}\n`;
+  message += `- Durata: ${priceInfo.nights} notti\n\n`;
+  
+  message += `*Ospiti:*\n`;
+  message += `- ${formValues.adults} adulti\n`;
   
   if (formValues.children > 0) {
-    message += `, ${formValues.children} bambini`;
-    
-    // Aggiungo informazioni su bambini che dormono con i genitori
     const childrenDetails = formValues.childrenDetails || [];
     const sleepingWithParents = childrenDetails.filter(child => child.sleepsWithParents).length;
+    const sleepingInCribs = childrenDetails.filter(child => child.sleepsInCrib).length;
+    const normalChildren = formValues.children - sleepingWithParents - sleepingInCribs;
+    
+    message += `- ${formValues.children} bambini totali\n`;
     
     if (sleepingWithParents > 0) {
-      message += ` (di cui ${sleepingWithParents} ${sleepingWithParents === 1 ? 'dorme' : 'dormono'} con i genitori)`;
+      message += `  * ${sleepingWithParents} dormono con i genitori\n`;
+    }
+    
+    if (sleepingInCribs > 0) {
+      message += `  * ${sleepingInCribs} in culla\n`;
+    }
+    
+    if (normalChildren > 0) {
+      message += `  * ${normalChildren} in letto normale\n`;
     }
   }
   
-  message += "\n- Appartamenti:";
+  message += `\n*Appartamenti:*\n`;
   selectedApartments.forEach(apartment => {
-    message += `\n  * ${apartment.name}`;
+    let personsCount = 0;
+    if (formValues.personsPerApartment && formValues.personsPerApartment[apartment.id]) {
+      personsCount = formValues.personsPerApartment[apartment.id];
+    }
+    
+    const hasPets = formValues.petsInApartment && formValues.petsInApartment[apartment.id];
+    
+    message += `- ${apartment.name} (${personsCount} persone${hasPets ? ', con animali' : ''})\n`;
   });
   
-  // Aggiungo informazioni su servizi extra
-  message += "\n- Servizi extra:";
+  message += `\n*Servizi extra:*\n`;
   
   // Biancheria
   if (formValues.linenOption === "extra") {
-    message += "\n  * Servizio biancheria incluso";
+    message += `- Servizio biancheria: Sì\n`;
+  } else {
+    message += `- Servizio biancheria: No\n`;
   }
   
   // Animali
   if (formValues.hasPets) {
-    message += "\n  * Con animali domestici";
-    
-    if (selectedApartments.length > 1 && formValues.petsInApartment) {
-      const apartmentsWithPets = Object.entries(formValues.petsInApartment)
-        .filter(([id, hasPet]) => hasPet)
-        .map(([id]) => selectedApartments.find(apt => apt.id === id)?.name || id);
-      
-      message += ` (in ${apartmentsWithPets.join(", ")})`;
-    }
+    message += `- Animali domestici: Sì\n`;
+  } else {
+    message += `- Animali domestici: No\n`;
   }
   
-  message += `\n- Totale preventivo: ${priceInfo.totalAfterDiscount}€ (+ ${priceInfo.touristTax}€ tassa di soggiorno)`;
+  // Note aggiuntive
+  if (formValues.notes && formValues.notes.trim()) {
+    message += `\n*Note:*\n${formValues.notes}\n`;
+  }
+  
+  message += `\n*Riepilogo costi:*\n`;
+  message += `- Totale: ${priceInfo.totalAfterDiscount}€\n`;
+  message += `- Caparra (30%): ${priceInfo.deposit}€\n`;
+  message += `- Cauzione: 200€ (restituibile)\n`;
+  message += `- Tassa di soggiorno: inclusa\n`;
   
   return message;
 };

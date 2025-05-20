@@ -187,13 +187,29 @@ export function useQuoteForm() {
   };
   
   // Funzione per scaricare il preventivo come PDF
-  const downloadQuote = () => {
-    toast.success("Download del preventivo avviato!");
-    // In una implementazione reale, qui si genererebbe e scaricherebbe il PDF
+  const downloadQuote = (name?: string) => {
+    const formValues = form.getValues();
+    const priceInfo = calculateTotalPrice(formValues, apartments);
+    
+    // Nome del cliente, se fornito
+    const clientName = name || formValues.name || "Cliente";
+    
+    toast.success(`Download del preventivo per ${clientName} avviato!`);
+    
+    // Log per debug
+    console.log("Creazione PDF per:", clientName);
+    console.log("Dati preventivo:", { formValues, priceInfo });
+    
+    // In una implementazione reale, qui si genererebbe il PDF utilizzando
+    // una libreria come jsPDF o pdfmake
+    setTimeout(() => {
+      toast.info("PDF generato con successo! In un'implementazione reale verrebbe scaricato automaticamente.");
+    }, 1500);
   };
   
   // Funzione per inviare il preventivo via WhatsApp
   const sendWhatsApp = () => {
+    const phoneNumber = "+393937767749"; // Numero di telefono dell'host
     const message = createWhatsAppMessage(form.getValues(), apartments);
     
     if (!message) {
@@ -205,7 +221,7 @@ export function useQuoteForm() {
     const encodedMessage = encodeURIComponent(message);
     
     // Apro WhatsApp con il messaggio precompilato
-    window.open(`https://wa.me/+393123456789?text=${encodedMessage}`, "_blank");
+    window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, "_blank");
     
     toast.success("Apertura di WhatsApp con messaggio precompilato");
   };

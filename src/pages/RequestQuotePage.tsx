@@ -129,6 +129,7 @@ const RequestQuotePage = () => {
           {step === 6 && (
             <ContactStep 
               form={form}
+              apartments={apartments}
               prevStep={prevStep}
               onSubmit={handleSubmitWrapper}
               downloadQuote={downloadQuote}
