@@ -94,7 +94,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
           <AlertDescription className="text-blue-700">
             {sleepingWithParents > 0 ? (
               <>
-                Il tuo gruppo è di {totalGuests} ospiti ({adults} adulti, {children} bambini), 
+                Il tuo gruppo è di {totalGuests} ospiti ({formValues.adults} adulti, {formValues.children} bambini), 
                 di cui {sleepingWithParents} {sleepingWithParents === 1 ? 'bambino dorme' : 'bambini dormono'} con i genitori.
                 <br />
                 <span className="font-medium">Posti letto necessari: {effectiveGuestCount}</span>
