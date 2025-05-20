@@ -96,7 +96,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {suitableApartments.map((apartment) => (
               <div 
                 key={apartment.id} 
@@ -139,7 +139,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                   <Button 
                     type="button" 
                     variant="link" 
-                    className="text-primary p-0 h-auto text-xs" 
+                    className="text-primary p-0 h-auto text-xs z-20" 
                     onClick={(e) => {
                       e.stopPropagation();
                       openApartmentDialog(apartment.id);
@@ -152,7 +152,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                     id={`apartment-checkbox-${apartment.id}`}
                     checked={isApartmentSelected(apartment.id)}
                     onCheckedChange={() => toggleApartmentSelection(apartment.id)}
-                    className="cursor-pointer"
+                    className="cursor-pointer z-20"
                   />
                 </div>
                 
