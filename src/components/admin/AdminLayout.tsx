@@ -117,10 +117,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
           </p>
         </div>
         
+        {/* Show only Home link on mobile, all links on desktop */}
         <div className="flex space-x-4">
-          <Link to="/" className="text-black hover:underline">Home</Link>
-          <Link to="/appartamenti" className="text-black hover:underline">Appartamenti</Link>
-          <Link to="/preventivo" className="text-black hover:underline">Preventivo</Link>
+          {isMobile ? (
+            <Link to="/" className="text-black hover:underline">Home</Link>
+          ) : (
+            <>
+              <Link to="/" className="text-black hover:underline">Home</Link>
+              <Link to="/appartamenti" className="text-black hover:underline">Appartamenti</Link>
+              <Link to="/preventivo" className="text-black hover:underline">Preventivo</Link>
+            </>
+          )}
         </div>
       </div>
 
