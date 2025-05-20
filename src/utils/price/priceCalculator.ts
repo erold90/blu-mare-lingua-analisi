@@ -54,10 +54,10 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
     totalBeforeDiscount,
     totalAfterDiscount,
     discount,
-    savings,
+    savings: discount, // For consistency, savings is same as discount
     deposit,
     nights,
-    totalPrice: totalAfterDiscount,
+    totalPrice: totalAfterDiscount, // Make sure totalPrice is always the same as totalAfterDiscount
     subtotal
   };
 }

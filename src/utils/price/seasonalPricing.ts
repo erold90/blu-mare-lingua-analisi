@@ -38,13 +38,27 @@ export function getWeeklyPrice(apartment: Apartment, checkInDate: Date, seasonal
   
   // Format check-in date to compare with seasonal prices
   const checkInStr = checkInDate.toISOString().split('T')[0];
+  console.log(`Looking for seasonal price for ${apartment.id} on date ${checkInStr}`);
   
   // Look for a matching seasonal price
-  const seasonalPrice = seasonalPrices.find(
-    p => p.apartmentId === apartment.id && 
-         new Date(p.weekStart) <= checkInDate && 
-         new Date(p.weekEnd) >= checkInDate
-  );
+  const seasonalPrice = seasonalPrices.find(p => {
+    // Compare apartment ID first
+    if (p.apartmentId !== apartment.id) return false;
+    
+    // Then check if the check-in date falls within the week range
+    const weekStartDate = new Date(p.weekStart);
+    const weekEndDate = new Date(p.weekEnd);
+    const checkIn = new Date(checkInDate);
+    
+    // Remove time component for accurate date comparison
+    weekStartDate.setHours(0, 0, 0, 0);
+    weekEndDate.setHours(0, 0, 0, 0);
+    checkIn.setHours(0, 0, 0, 0);
+    
+    const isInRange = checkIn >= weekStartDate && checkIn <= weekEndDate;
+    console.log(`Week ${p.weekStart} to ${p.weekEnd}: ${isInRange ? 'MATCH' : 'no match'}`);
+    return isInRange;
+  });
   
   if (seasonalPrice) {
     // Use the seasonal price if found

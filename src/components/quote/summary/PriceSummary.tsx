@@ -72,10 +72,10 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
           <span>Totale con sconto applicato:</span>
           <span className="text-primary">{totalToPay}€</span>
         </div>
-        {priceInfo.savings > 0 && (
+        {priceInfo.discount > 0 && (
           <div className="flex justify-between text-sm text-green-600">
-            <span>Risparmio (sconto + tassa di soggiorno):</span>
-            <span>{priceInfo.savings}€</span>
+            <span>Risparmio (sconto):</span>
+            <span>{priceInfo.discount}€</span>
           </div>
         )}
         <Separator className="my-2" />
