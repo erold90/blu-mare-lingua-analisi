@@ -16,7 +16,7 @@ export function useQuoteForm() {
   const [groupDialog, setGroupDialog] = useState(false);
   const [familyGroups, setFamilyGroups] = useState<{ adults: number; children: number; childrenDetails: { isUnder12: boolean; sleepsWithParents: boolean; sleepsInCrib: boolean }[] }[]>([]);
   
-  // Inizializzo il form con valori predefiniti
+  // Initialize form with default values
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -191,7 +191,7 @@ export function useQuoteForm() {
     const formValues = form.getValues();
     
     try {
-      // Use our new PDF generator
+      // Pass the form values and apartments separately to the downloadPDF function
       downloadPDF(formValues, apartments, name);
       toast.success(`Preventivo per ${name || "cliente"} scaricato con successo!`);
     } catch (error) {

@@ -3,11 +3,12 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { FormValues } from "./quoteFormSchema";
-import { calculateTotalPrice } from "./quoteCalculator";
+import { calculateTotalPrice, PriceCalculation } from "./quoteCalculator";
+import { Apartment } from "@/data/apartments";
 
 export const generatePDF = (
   formData: FormValues,
-  priceInfo: ReturnType<typeof calculateTotalPrice>,
+  priceInfo: PriceCalculation,
   quoteId: string
 ) => {
   // Create PDF instance
@@ -41,14 +42,16 @@ export const generatePDF = (
   
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  doc.text(`Nome: ${formData.firstName} ${formData.lastName}`, 14, yPos);
+  doc.text(`Nome: ${formData.name || "Cliente"}`, 14, yPos);
   yPos += 5;
   
-  doc.text(`Email: ${formData.email}`, 14, yPos);
+  doc.text(`Email: ${formData.email || ""}`, 14, yPos);
   yPos += 5;
   
-  doc.text(`Telefono: ${formData.phone}`, 14, yPos);
-  yPos += 5;
+  if (formData.phone) {
+    doc.text(`Telefono: ${formData.phone}`, 14, yPos);
+    yPos += 5;
+  }
   
   if (formData.notes) {
     doc.text(`Note: ${formData.notes}`, 14, yPos);
@@ -70,9 +73,9 @@ export const generatePDF = (
     head: [["Periodo", "Durata", "Ospiti"]],
     body: [
       [
-        `Dal ${format(formData.startDate, "dd/MM/yyyy")} al ${format(formData.endDate, "dd/MM/yyyy")}`,
+        `Dal ${format(formData.checkIn || new Date(), "dd/MM/yyyy")} al ${format(formData.checkOut || new Date(), "dd/MM/yyyy")}`,
         `${priceInfo.nights} notti`,
-        `${priceInfo.totalGuests} persone`
+        `${formData.adults || 0} adulti, ${formData.children || 0} bambini`
       ]
     ],
     theme: "grid",
@@ -80,7 +83,7 @@ export const generatePDF = (
   });
   
   // Update position for next section
-  yPos = (stayTable?.finalY ?? yPos) + 20;
+  yPos = (stayTable.lastAutoTable?.finalY || yPos) + 20;
   
   // --- Apartments Section ---
   doc.setFontSize(12);
@@ -91,29 +94,25 @@ export const generatePDF = (
   // Prepare apartment data for table
   const apartmentData = [];
   
-  // Add apartments if selected
-  if (formData.apartments && formData.apartments.length > 0) {
-    for (const apt of formData.apartments) {
-      const subTotal = apt.pricePerNight * priceInfo.nights;
-      
+  // Add selected apartments if any
+  if (formData.selectedApartments && formData.selectedApartments.length > 0) {
+    for (const aptId of formData.selectedApartments) {
+      // This is just for the PDF display, actual price calculation is done elsewhere
       apartmentData.push([
-        apt.name,
-        `${apt.maxGuests} persone`,
-        `${apt.assignedGuests} ${apt.assignedGuests === 1 ? "persona" : "persone"}`,
-        `${apt.pricePerNight}€ per notte`,
-        `${subTotal}€`
+        aptId, // Apartment ID/name
+        "Vedere dettagli", // Placeholder for capacity
+        "Vedere dettagli", // Placeholder for occupancy
+        "Vedere dettagli", // Placeholder for price
+        "Vedere dettagli" // Placeholder for total
       ]);
     }
-  }
-  
-  // Add a line for groups if selected
-  if (formData.selectedGroup) {
+  } else if (formData.selectedApartment) {
     apartmentData.push([
-      `Gruppo: ${formData.selectedGroup.name}`,
-      `${formData.selectedGroup.maxGuests} persone`,
-      `${priceInfo.totalGuests} ${priceInfo.totalGuests === 1 ? "persona" : "persone"}`,
-      `${formData.selectedGroup.pricePerNight}€ per notte`,
-      `${formData.selectedGroup.pricePerNight * priceInfo.nights}€`
+      formData.selectedApartment,
+      "Vedere dettagli", // Placeholder for capacity
+      "Vedere dettagli", // Placeholder for occupancy
+      "Vedere dettagli", // Placeholder for price
+      "Vedere dettagli" // Placeholder for total
     ]);
   }
   
@@ -127,7 +126,7 @@ export const generatePDF = (
   });
   
   // Update position for next section
-  yPos = (apartmentsTable?.finalY ?? yPos) + 20;
+  yPos = (apartmentsTable.lastAutoTable?.finalY || yPos) + 20;
   
   // --- Services Section ---
   doc.setFontSize(12);
@@ -139,7 +138,7 @@ export const generatePDF = (
   const servicesData = [];
   
   // Add cleaning fee
-  servicesData.push(["Pulizia finale", "Obbligatoria", `${priceInfo.cleaningFee}€`]);
+  servicesData.push(["Pulizia finale", "Obbligatoria", `${priceInfo.extras}€`]);
   servicesData.push(["Tassa di soggiorno", "1€ per notte per persona", `${priceInfo.touristTax}€`]);
   
   // Create services table
@@ -152,7 +151,7 @@ export const generatePDF = (
   });
   
   // Update position for next section
-  yPos = (servicesTable?.finalY ?? yPos) + 20;
+  yPos = (servicesTable.lastAutoTable?.finalY || yPos) + 20;
   
   // --- Price Summary ---
   doc.setFontSize(12);
@@ -164,14 +163,14 @@ export const generatePDF = (
   const summaryData = [];
   
   // Add subtotal row
-  summaryData.push(["Subtotale alloggio", "", `${priceInfo.accommodationSubtotal}€`]);
+  summaryData.push(["Subtotale alloggio", "", `${priceInfo.basePrice}€`]);
   
   // Add additional costs if any
-  if (priceInfo.cleaningFee > 0) {
-    summaryData.push(["Pulizia finale", "", `${priceInfo.cleaningFee}€`]);
+  if (priceInfo.extras > 0) {
+    summaryData.push(["Servizi extra", "", `${priceInfo.extras}€`]);
   }
   summaryData.push(["Tassa di soggiorno", "", `${priceInfo.touristTax}€`]);
-  summaryData.push(["TOTALE", "", `${priceInfo.totalPrice}€`]);
+  summaryData.push(["TOTALE", "", `${priceInfo.totalAfterDiscount}€`]);
   
   // Create summary table
   const summaryTable = autoTable(doc, {
@@ -182,7 +181,7 @@ export const generatePDF = (
   });
   
   // Final price in bold
-  const finalY = (summaryTable?.finalY ?? yPos) + 10;
+  const finalY = (summaryTable.lastAutoTable?.finalY || yPos) + 10;
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text("Grazie per aver scelto Villa MareBlu!", 105, finalY + 10, { align: "center" });
@@ -196,13 +195,28 @@ export const generatePDF = (
   return doc;
 };
 
-// Funzione per il download del PDF
+// Function for downloading the PDF
 export const downloadPDF = (
   formData: FormValues,
-  priceInfo: ReturnType<typeof calculateTotalPrice>,
-  quoteId: string
+  apartments: Apartment[],
+  name?: string
 ) => {
+  // Generate a simple quote ID
+  const quoteId = `Q${Date.now().toString().slice(-6)}`;
+  
+  // Calculate price info
+  const priceInfo = calculateTotalPrice(formData, apartments);
+  
+  // Create the PDF
   const doc = generatePDF(formData, priceInfo, quoteId);
-  doc.save(`Preventivo_VillaMareBlu_${quoteId}.pdf`);
+  
+  // Generate filename with client name if provided
+  const filename = name 
+    ? `Preventivo_VillaMareBlu_${name.replace(/\s+/g, '')}_${quoteId}.pdf`
+    : `Preventivo_VillaMareBlu_${quoteId}.pdf`;
+  
+  // Save the PDF
+  doc.save(filename);
+  
   return doc;
 };
