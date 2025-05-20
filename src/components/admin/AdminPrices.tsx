@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
@@ -20,7 +21,7 @@ const AdminPrices = () => {
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
   
-  const [selectedYear, setSelectedYear] = React.useState<number>(currentYear);
+  const [selectedYear, setSelectedYear] = React.useState<number>(2025);
   const [weeks, setWeeks] = React.useState<{ start: Date, end: Date }[]>(
     generateWeeksForSeason(selectedYear, 6, 9) // June to September
   );
@@ -102,21 +103,9 @@ const AdminPrices = () => {
   
   return (
     <div className="space-y-6">
-      <Tabs defaultValue={currentYear.toString()}>
+      <Tabs defaultValue="2025">
         <div className="flex justify-between items-center mb-4">
           <TabsList>
-            <TabsTrigger 
-              value={currentYear.toString()}
-              onClick={() => setSelectedYear(currentYear)}
-            >
-              {currentYear}
-            </TabsTrigger>
-            <TabsTrigger 
-              value={nextYear.toString()}
-              onClick={() => setSelectedYear(nextYear)}
-            >
-              {nextYear}
-            </TabsTrigger>
             <TabsTrigger 
               value="2025"
               onClick={() => setSelectedYear(2025)}
@@ -129,186 +118,20 @@ const AdminPrices = () => {
             >
               2026
             </TabsTrigger>
+            <TabsTrigger 
+              value="2027"
+              onClick={() => setSelectedYear(2027)}
+            >
+              2027
+            </TabsTrigger>
+            <TabsTrigger 
+              value="2028"
+              onClick={() => setSelectedYear(2028)}
+            >
+              2028
+            </TabsTrigger>
           </TabsList>
         </div>
-        
-        <TabsContent value={currentYear.toString()} className="mt-6 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Prezzi Settimanali {currentYear}</CardTitle>
-            </CardHeader>
-            <CardContent className="overflow-auto">
-              <div className="text-sm text-muted-foreground mb-4">
-                <p>I prezzi sono da intendersi per settimana (da sabato a sabato).</p>
-                <p>Anche per soggiorni più brevi verrà applicato il prezzo settimanale.</p>
-              </div>
-              
-              {isMobile ? (
-                // Mobile view with vertical layout
-                <div className="space-y-8">
-                  {apartments.map(apartment => (
-                    <div key={apartment.id} className="border rounded-lg p-4">
-                      <h3 className="font-bold mb-2">{apartment.name}</h3>
-                      <div className="space-y-3">
-                        {weeks.map((week, idx) => (
-                          <div key={idx} className="grid grid-cols-2 gap-2 items-center">
-                            <Label className="text-xs">
-                              {format(week.start, "d MMM", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
-                            </Label>
-                            <div className="flex items-center">
-                              <Input
-                                type="number"
-                                min="0"
-                                value={getPriceForWeek(apartment.id, week.start)}
-                                onChange={(e) => handlePriceChange(
-                                  apartment.id, 
-                                  week.start.toISOString(), 
-                                  e.target.value
-                                )}
-                                className="w-20 text-right"
-                              />
-                              <span className="ml-1">€</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                // Desktop view with table
-                <Table className="min-w-[600px]">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[180px]">Settimana</TableHead>
-                      {apartments.map(apartment => (
-                        <TableHead key={apartment.id}>
-                          {apartment.name}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {weeks.map((week, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-medium">
-                          {format(week.start, "d MMM", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
-                        </TableCell>
-                        {apartments.map(apartment => (
-                          <TableCell key={apartment.id}>
-                            <div className="flex items-center">
-                              <Input
-                                type="number"
-                                min="0"
-                                value={getPriceForWeek(apartment.id, week.start)}
-                                onChange={(e) => handlePriceChange(
-                                  apartment.id, 
-                                  week.start.toISOString(), 
-                                  e.target.value
-                                )}
-                                className="w-20 text-right"
-                              />
-                              <span className="ml-1">€</span>
-                            </div>
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value={nextYear.toString()} className="mt-6 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Prezzi Settimanali {nextYear}</CardTitle>
-            </CardHeader>
-            <CardContent className="overflow-auto">
-              <div className="text-sm text-muted-foreground mb-4">
-                <p>I prezzi sono da intendersi per settimana (da sabato a sabato).</p>
-                <p>Anche per soggiorni più brevi verrà applicato il prezzo settimanale.</p>
-              </div>
-              
-              {isMobile ? (
-                // Mobile view with vertical layout
-                <div className="space-y-8">
-                  {apartments.map(apartment => (
-                    <div key={apartment.id} className="border rounded-lg p-4">
-                      <h3 className="font-bold mb-2">{apartment.name}</h3>
-                      <div className="space-y-3">
-                        {weeks.map((week, idx) => (
-                          <div key={idx} className="grid grid-cols-2 gap-2 items-center">
-                            <Label className="text-xs">
-                              {format(week.start, "d MMM", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
-                            </Label>
-                            <div className="flex items-center">
-                              <Input
-                                type="number"
-                                min="0"
-                                value={getPriceForWeek(apartment.id, week.start)}
-                                onChange={(e) => handlePriceChange(
-                                  apartment.id, 
-                                  week.start.toISOString(), 
-                                  e.target.value
-                                )}
-                                className="w-20 text-right"
-                              />
-                              <span className="ml-1">€</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                // Desktop view with table
-                <Table className="min-w-[600px]">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[180px]">Settimana</TableHead>
-                      {apartments.map(apartment => (
-                        <TableHead key={apartment.id}>
-                          {apartment.name}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {weeks.map((week, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell className="font-medium">
-                          {format(week.start, "d MMM", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
-                        </TableCell>
-                        {apartments.map(apartment => (
-                          <TableCell key={apartment.id}>
-                            <div className="flex items-center">
-                              <Input
-                                type="number"
-                                min="0"
-                                value={getPriceForWeek(apartment.id, week.start)}
-                                onChange={(e) => handlePriceChange(
-                                  apartment.id, 
-                                  week.start.toISOString(), 
-                                  e.target.value
-                                )}
-                                className="w-20 text-right"
-                              />
-                              <span className="ml-1">€</span>
-                            </div>
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
         
         <TabsContent value="2025" className="mt-6 space-y-6">
           <Card>
@@ -403,6 +226,184 @@ const AdminPrices = () => {
           <Card>
             <CardHeader>
               <CardTitle>Prezzi Settimanali 2026</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-auto">
+              <div className="text-sm text-muted-foreground mb-4">
+                <p>I prezzi sono da intendersi per settimana (da sabato a sabato).</p>
+                <p>Anche per soggiorni più brevi verrà applicato il prezzo settimanale.</p>
+              </div>
+              
+              {isMobile ? (
+                // Mobile view with vertical layout
+                <div className="space-y-8">
+                  {apartments.map(apartment => (
+                    <div key={apartment.id} className="border rounded-lg p-4">
+                      <h3 className="font-bold mb-2">{apartment.name}</h3>
+                      <div className="space-y-3">
+                        {weeks.map((week, idx) => (
+                          <div key={idx} className="grid grid-cols-2 gap-2 items-center">
+                            <Label className="text-xs">
+                              {format(week.start, "d MMM", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
+                            </Label>
+                            <div className="flex items-center">
+                              <Input
+                                type="number"
+                                min="0"
+                                value={getPriceForWeek(apartment.id, week.start)}
+                                onChange={(e) => handlePriceChange(
+                                  apartment.id, 
+                                  week.start.toISOString(), 
+                                  e.target.value
+                                )}
+                                className="w-20 text-right"
+                              />
+                              <span className="ml-1">€</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // Desktop view with table
+                <Table className="min-w-[600px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[180px]">Settimana</TableHead>
+                      {apartments.map(apartment => (
+                        <TableHead key={apartment.id}>
+                          {apartment.name}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {weeks.map((week, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-medium">
+                          {format(week.start, "d MMM", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
+                        </TableCell>
+                        {apartments.map(apartment => (
+                          <TableCell key={apartment.id}>
+                            <div className="flex items-center">
+                              <Input
+                                type="number"
+                                min="0"
+                                value={getPriceForWeek(apartment.id, week.start)}
+                                onChange={(e) => handlePriceChange(
+                                  apartment.id, 
+                                  week.start.toISOString(), 
+                                  e.target.value
+                                )}
+                                className="w-20 text-right"
+                              />
+                              <span className="ml-1">€</span>
+                            </div>
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="2027" className="mt-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Prezzi Settimanali 2027</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-auto">
+              <div className="text-sm text-muted-foreground mb-4">
+                <p>I prezzi sono da intendersi per settimana (da sabato a sabato).</p>
+                <p>Anche per soggiorni più brevi verrà applicato il prezzo settimanale.</p>
+              </div>
+              
+              {isMobile ? (
+                // Mobile view with vertical layout
+                <div className="space-y-8">
+                  {apartments.map(apartment => (
+                    <div key={apartment.id} className="border rounded-lg p-4">
+                      <h3 className="font-bold mb-2">{apartment.name}</h3>
+                      <div className="space-y-3">
+                        {weeks.map((week, idx) => (
+                          <div key={idx} className="grid grid-cols-2 gap-2 items-center">
+                            <Label className="text-xs">
+                              {format(week.start, "d MMM", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
+                            </Label>
+                            <div className="flex items-center">
+                              <Input
+                                type="number"
+                                min="0"
+                                value={getPriceForWeek(apartment.id, week.start)}
+                                onChange={(e) => handlePriceChange(
+                                  apartment.id, 
+                                  week.start.toISOString(), 
+                                  e.target.value
+                                )}
+                                className="w-20 text-right"
+                              />
+                              <span className="ml-1">€</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // Desktop view with table
+                <Table className="min-w-[600px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[180px]">Settimana</TableHead>
+                      {apartments.map(apartment => (
+                        <TableHead key={apartment.id}>
+                          {apartment.name}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {weeks.map((week, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-medium">
+                          {format(week.start, "d MMM", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
+                        </TableCell>
+                        {apartments.map(apartment => (
+                          <TableCell key={apartment.id}>
+                            <div className="flex items-center">
+                              <Input
+                                type="number"
+                                min="0"
+                                value={getPriceForWeek(apartment.id, week.start)}
+                                onChange={(e) => handlePriceChange(
+                                  apartment.id, 
+                                  week.start.toISOString(), 
+                                  e.target.value
+                                )}
+                                className="w-20 text-right"
+                              />
+                              <span className="ml-1">€</span>
+                            </div>
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="2028" className="mt-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Prezzi Settimanali 2028</CardTitle>
             </CardHeader>
             <CardContent className="overflow-auto">
               <div className="text-sm text-muted-foreground mb-4">
