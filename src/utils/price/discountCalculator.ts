@@ -1,0 +1,29 @@
+
+// Calculate discounts and final price
+interface DiscountResult {
+  totalAfterDiscount: number;
+  discount: number;
+  savings: number;
+  deposit: number;
+}
+
+export function calculateDiscount(totalBeforeDiscount: number, touristTax: number): DiscountResult {
+  // Round down to the nearest 50€
+  const roundedPrice = Math.floor(totalBeforeDiscount / 50) * 50;
+  
+  // Calculate the discount amount (difference between original total and rounded total)
+  const discount = totalBeforeDiscount - roundedPrice;
+  
+  // The savings should include both the rounding discount and the tourist tax (since it's "included")
+  const savings = discount + touristTax;
+  
+  // Calculate deposit (30%)
+  const deposit = Math.ceil(roundedPrice * 0.3);
+  
+  return {
+    totalAfterDiscount: roundedPrice,
+    discount,
+    savings,
+    deposit
+  };
+}
