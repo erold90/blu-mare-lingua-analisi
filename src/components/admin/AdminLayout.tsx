@@ -1,8 +1,9 @@
+
 import * as React from "react";
 import { NavLink, useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Calendar, LayoutDashboard, Home, Menu } from "lucide-react";
-import { useAuth } from "@/pages/ReservedAreaPage";
+import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   Sheet,
