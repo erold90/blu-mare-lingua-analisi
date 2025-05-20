@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -37,7 +36,7 @@ import {
   FormLabel,
   FormMessage
 } from "@/components/ui/form";
-import { Pencil, Plus, Trash2, CalendarIcon } from "lucide-react";
+import { Pencil, Plus, Trash2, CalendarIcon, Info } from "lucide-react";
 import { format } from "date-fns";
 import { it } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -48,6 +47,13 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 // Define the form schema
 const reservationSchema = z.object({
@@ -74,12 +80,167 @@ const reservationSchema = z.object({
 
 type ReservationFormData = z.infer<typeof reservationSchema>;
 
+// Separate dialog component for reservation details on mobile
+const ReservationDetailsDialog = ({ reservation, apartments, onClose, onEdit }) => {
+  if (!reservation) return null;
+
+  // Find apartment names
+  const apartmentNames = reservation.apartmentIds.map(id => {
+    const apartment = apartments.find(a => a.id === id);
+    return apartment?.name || '';
+  }).join(", ");
+
+  // Format payment status for display
+  const getPaymentStatusText = () => {
+    switch (reservation.paymentStatus) {
+      case "notPaid": return "Non Pagato";
+      case "deposit": return `Caparra: €${reservation.depositAmount}`;
+      case "paid": return "Pagato";
+      default: return "";
+    }
+  };
+
+  return (
+    <Dialog open={!!reservation} onOpenChange={() => onClose()}>
+      <DialogContent className="w-[95vw] p-4 max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Dettagli Prenotazione</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-semibold">{reservation.guestName}</h3>
+            <p className="text-muted-foreground">
+              {reservation.adults} {reservation.adults === 1 ? 'adulto' : 'adulti'}
+              {reservation.children > 0 && `, ${reservation.children} ${reservation.children === 1 ? 'bambino' : 'bambini'}`}
+              {reservation.cribs > 0 && `, ${reservation.cribs} ${reservation.cribs === 1 ? 'culla' : 'culle'}`}
+              {reservation.hasPets && ', con animali'}
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-sm font-medium">Check-in</p>
+              <p>{format(new Date(reservation.startDate), 'dd/MM/yyyy')}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Check-out</p>
+              <p>{format(new Date(reservation.endDate), 'dd/MM/yyyy')}</p>
+            </div>
+          </div>
+          
+          <div>
+            <p className="text-sm font-medium">Appartamento</p>
+            <p>{apartmentNames}</p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <p className="text-sm font-medium">Prezzo Totale</p>
+              <p>€{reservation.finalPrice}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Stato Pagamento</p>
+              <p>{getPaymentStatusText()}</p>
+            </div>
+          </div>
+          
+          {reservation.notes && (
+            <div>
+              <p className="text-sm font-medium">Note</p>
+              <p className="text-sm">{reservation.notes}</p>
+            </div>
+          )}
+        </div>
+        <DialogFooter>
+          <Button 
+            variant="outline"
+            onClick={() => onClose()}
+            className="w-full"
+          >
+            Chiudi
+          </Button>
+          <Button onClick={() => onEdit(reservation.id)} className="w-full">
+            <Pencil className="h-4 w-4 mr-2" />
+            Modifica
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const MobileReservationCard = ({ reservation, apartments, onEdit, onDelete, onViewDetails }) => {
+  // Find apartment names
+  const apartmentNames = reservation.apartmentIds.map(id => {
+    const apartment = apartments.find(a => a.id === id);
+    return apartment?.name || '';
+  }).join(", ");
+
+  // Calculate number of nights
+  const startDate = new Date(reservation.startDate);
+  const endDate = new Date(reservation.endDate);
+  const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
+
+  // Get payment status icon/color
+  let statusColor = "bg-gray-200";
+  if (reservation.paymentStatus === "paid") {
+    statusColor = "bg-green-200";
+  } else if (reservation.paymentStatus === "deposit") {
+    statusColor = "bg-yellow-200";
+  } else {
+    statusColor = "bg-red-200";
+  }
+
+  return (
+    <Card className="mb-3">
+      <CardHeader className="px-4 py-2 flex flex-row items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <div className={`w-3 h-3 rounded-full ${statusColor}`} />
+          <CardTitle className="text-base">{reservation.guestName}</CardTitle>
+        </div>
+        <div className="text-sm font-medium">€{reservation.finalPrice}</div>
+      </CardHeader>
+      <CardContent className="px-4 py-2">
+        <div className="text-sm">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Check-in:</span>
+            <span>{format(startDate, 'dd/MM/yyyy')}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Check-out:</span>
+            <span>{format(endDate, 'dd/MM/yyyy')}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Durata:</span>
+            <span>{nights} {nights === 1 ? 'notte' : 'notti'}</span>
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground truncate">
+            {apartmentNames}
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter className="px-2 py-2 flex justify-between gap-1">
+        <Button variant="ghost" size="sm" onClick={() => onViewDetails(reservation)}>
+          <Info className="h-4 w-4" />
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => onEdit(reservation.id)}>
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => onDelete(reservation.id)} className="text-destructive">
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+};
+
 const AdminReservations = () => {
   const { reservations, apartments, addReservation, updateReservation, deleteReservation } = useReservations();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [reservationToDelete, setReservationToDelete] = React.useState<string | null>(null);
+  const [selectedReservation, setSelectedReservation] = React.useState<Reservation | null>(null);
   const isMobile = useIsMobile();
 
   const form = useForm<ReservationFormData>({
@@ -130,6 +291,7 @@ const AdminReservations = () => {
       depositAmount: reservation.depositAmount || 0,
       notes: reservation.notes
     });
+    setSelectedReservation(null); // Close details dialog if open
     setIsDialogOpen(true);
   };
 
@@ -141,6 +303,17 @@ const AdminReservations = () => {
       setIsDeleteDialogOpen(false);
       setReservationToDelete(null);
     }
+  };
+
+  // Function to handle deletion process
+  const handleDelete = (id: string) => {
+    setReservationToDelete(id);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Function to view reservation details (mobile only)
+  const handleViewDetails = (reservation: Reservation) => {
+    setSelectedReservation(reservation);
   };
 
   // Function to handle form submission
@@ -191,33 +364,63 @@ const AdminReservations = () => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold">Gestione Prenotazioni</h2>
-        <Button onClick={handleAddNew} size={isMobile ? "sm" : "default"}>
+        <h2 className="text-lg md:text-xl font-bold">Gestione Prenotazioni</h2>
+        <Button onClick={handleAddNew} size="sm">
           <Plus className="mr-2 h-4 w-4" />
           {!isMobile && "Nuova Prenotazione"}
           {isMobile && "Nuovo"}
         </Button>
       </div>
 
-      {/* Reservations Table */}
-      <div className="rounded-md border overflow-hidden">
-        <div className="overflow-x-auto">
+      {/* Mobile view */}
+      {isMobile && (
+        <div className="mt-4">
+          {reservations.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nessuna prenotazione trovata
+            </div>
+          ) : (
+            reservations.map(reservation => (
+              <MobileReservationCard
+                key={reservation.id}
+                reservation={reservation}
+                apartments={apartments}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onViewDetails={handleViewDetails}
+              />
+            ))
+          )}
+          
+          {/* Mobile reservation details dialog */}
+          <ReservationDetailsDialog 
+            reservation={selectedReservation}
+            apartments={apartments}
+            onClose={() => setSelectedReservation(null)}
+            onEdit={handleEdit}
+          />
+        </div>
+      )}
+
+      {/* Desktop view */}
+      {!isMobile && (
+        <div className="rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Cliente</TableHead>
-                <TableHead className={isMobile ? "hidden" : ""}>Appartamenti</TableHead>
+                <TableHead>Appartamenti</TableHead>
                 <TableHead>Check-in</TableHead>
                 <TableHead>Check-out</TableHead>
-                <TableHead className={isMobile ? "hidden" : ""}>Prezzo</TableHead>
-                <TableHead className={isMobile ? "hidden" : ""}>Stato Pagamento</TableHead>
+                <TableHead>Prezzo</TableHead>
+                <TableHead>Stato Pagamento</TableHead>
                 <TableHead className="text-right">Azioni</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {reservations.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isMobile ? 4 : 7} className="text-center py-4 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
                     Nessuna prenotazione trovata
                   </TableCell>
                 </TableRow>
@@ -226,17 +429,8 @@ const AdminReservations = () => {
                   <TableRow key={reservation.id}>
                     <TableCell className="font-medium">
                       {reservation.guestName}
-                      {isMobile && (
-                        <div className="text-xs text-muted-foreground">
-                          {reservation.apartmentIds.map(id => {
-                            const apartment = apartments.find(a => a.id === id);
-                            return apartment?.name;
-                          }).join(", ")}
-                          <div>€{reservation.finalPrice}</div>
-                        </div>
-                      )}
                     </TableCell>
-                    <TableCell className={isMobile ? "hidden" : ""}>
+                    <TableCell>
                       {reservation.apartmentIds.map(id => {
                         const apartment = apartments.find(a => a.id === id);
                         return apartment?.name;
@@ -248,8 +442,8 @@ const AdminReservations = () => {
                     <TableCell>
                       {format(new Date(reservation.endDate), 'dd/MM/yyyy')}
                     </TableCell>
-                    <TableCell className={isMobile ? "hidden" : ""}>€{reservation.finalPrice}</TableCell>
-                    <TableCell className={isMobile ? "hidden" : ""}>
+                    <TableCell>€{reservation.finalPrice}</TableCell>
+                    <TableCell>
                       {reservation.paymentStatus === "notPaid" && "Non Pagato"}
                       {reservation.paymentStatus === "deposit" && 
                         `Caparra: €${reservation.depositAmount}`}
@@ -268,10 +462,7 @@ const AdminReservations = () => {
                           variant="outline"
                           size="icon"
                           className="text-destructive hover:text-destructive"
-                          onClick={() => {
-                            setReservationToDelete(reservation.id);
-                            setIsDeleteDialogOpen(true);
-                          }}
+                          onClick={() => handleDelete(reservation.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -283,9 +474,9 @@ const AdminReservations = () => {
             </TableBody>
           </Table>
         </div>
-      </div>
+      )}
 
-      {/* Reservation Form Dialog */}
+      {/* Reservation Form Dialog - Same for mobile and desktop with responsive adjustments */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className={cn(
           "max-w-2xl max-h-[90vh] overflow-y-auto",
@@ -306,7 +497,7 @@ const AdminReservations = () => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               {/* Guest Information */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Informazioni Ospite</h3>
+                <h3 className="text-base font-medium">Informazioni Ospite</h3>
                 
                 <FormField
                   control={form.control}
@@ -323,8 +514,8 @@ const AdminReservations = () => {
                 />
 
                 <div className={cn(
-                  "grid gap-4",
-                  isMobile ? "grid-cols-1" : "grid-cols-3"
+                  "grid gap-2",
+                  isMobile ? "grid-cols-3" : "grid-cols-3"
                 )}>
                   <FormField
                     control={form.control}
@@ -385,7 +576,7 @@ const AdminReservations = () => {
                   control={form.control}
                   name="hasPets"
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-4">
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0 rounded-md border p-3">
                       <FormControl>
                         <Checkbox 
                           checked={field.value} 
@@ -393,10 +584,7 @@ const AdminReservations = () => {
                         />
                       </FormControl>
                       <div className="space-y-1 leading-none">
-                        <FormLabel>Animali Domestici</FormLabel>
-                        <FormDescription>
-                          L'ospite porta animali domestici
-                        </FormDescription>
+                        <FormLabel className="text-sm">Animali Domestici</FormLabel>
                       </div>
                     </FormItem>
                   )}
@@ -405,7 +593,7 @@ const AdminReservations = () => {
 
               {/* Reservation Details */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Dettagli Soggiorno</h3>
+                <h3 className="text-base font-medium">Dettagli Soggiorno</h3>
 
                 <FormField
                   control={form.control}
@@ -413,12 +601,12 @@ const AdminReservations = () => {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Appartamenti</FormLabel>
-                      <FormDescription>
-                        Seleziona uno o più appartamenti per questa prenotazione
+                      <FormDescription className="text-xs">
+                        Seleziona uno o più appartamenti
                       </FormDescription>
                       <div className={cn(
                         "grid gap-2 mt-2",
-                        isMobile ? "grid-cols-1" : "grid-cols-2"
+                        isMobile ? "grid-cols-2" : "grid-cols-2"
                       )}>
                         {apartments.map((apartment) => (
                           <div 
@@ -438,7 +626,7 @@ const AdminReservations = () => {
                                 }
                               }}
                             />
-                            <Label htmlFor={`apartment-${apartment.id}`}>
+                            <Label htmlFor={`apartment-${apartment.id}`} className="text-sm">
                               {apartment.name}
                             </Label>
                           </div>
@@ -450,27 +638,27 @@ const AdminReservations = () => {
                 />
 
                 <div className={cn(
-                  "grid gap-4",
-                  isMobile ? "grid-cols-1" : "grid-cols-2"
+                  "grid gap-3",
+                  "grid-cols-2"
                 )}>
                   <FormField
                     control={form.control}
                     name="startDate"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Data Check-in</FormLabel>
+                        <FormLabel>Check-in</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
                                 variant="outline"
                                 className={cn(
-                                  "pl-3 text-left font-normal",
+                                  "pl-3 text-left font-normal text-sm",
                                   !field.value && "text-muted-foreground"
                                 )}
                               >
                                 {field.value ? (
-                                  format(field.value, "PPP", { locale: it })
+                                  format(field.value, "dd/MM/yyyy")
                                 ) : (
                                   <span>Seleziona data</span>
                                 )}
@@ -486,6 +674,7 @@ const AdminReservations = () => {
                               disabled={(date) =>
                                 date < new Date(new Date().setHours(0, 0, 0, 0))
                               }
+                              initialFocus
                             />
                           </PopoverContent>
                         </Popover>
@@ -499,19 +688,19 @@ const AdminReservations = () => {
                     name="endDate"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
-                        <FormLabel>Data Check-out</FormLabel>
+                        <FormLabel>Check-out</FormLabel>
                         <Popover>
                           <PopoverTrigger asChild>
                             <FormControl>
                               <Button
                                 variant="outline"
                                 className={cn(
-                                  "pl-3 text-left font-normal",
+                                  "pl-3 text-left font-normal text-sm",
                                   !field.value && "text-muted-foreground"
                                 )}
                               >
                                 {field.value ? (
-                                  format(field.value, "PPP", { locale: it })
+                                  format(field.value, "dd/MM/yyyy")
                                 ) : (
                                   <span>Seleziona data</span>
                                 )}
@@ -526,8 +715,9 @@ const AdminReservations = () => {
                               onSelect={field.onChange}
                               disabled={(date) => {
                                 const startDate = form.getValues("startDate");
-                                return date < startDate;
+                                return date <= startDate;
                               }}
+                              initialFocus
                             />
                           </PopoverContent>
                         </Popover>
@@ -540,7 +730,7 @@ const AdminReservations = () => {
 
               {/* Payment Details */}
               <div className="space-y-4">
-                <h3 className="text-lg font-medium">Dettagli Pagamento</h3>
+                <h3 className="text-base font-medium">Dettagli Pagamento</h3>
                 
                 <FormField
                   control={form.control}
@@ -561,29 +751,26 @@ const AdminReservations = () => {
                   )}
                 />
 
-                <div className={cn(
-                  "grid gap-4",
-                  isMobile ? "grid-cols-1" : "grid-cols-2"
-                )}>
+                <div className="grid grid-cols-2 gap-3">
                   <FormField
                     control={form.control}
                     name="paymentMethod"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Metodo di Pagamento</FormLabel>
+                        <FormLabel>Metodo Pagamento</FormLabel>
                         <Select 
                           onValueChange={field.onChange} 
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleziona metodo di pagamento" />
+                            <SelectTrigger className="text-sm">
+                              <SelectValue placeholder="Seleziona metodo" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="cash">Contanti</SelectItem>
-                            <SelectItem value="bankTransfer">Bonifico Bancario</SelectItem>
-                            <SelectItem value="creditCard">Carta di Credito</SelectItem>
+                            <SelectItem value="bankTransfer">Bonifico</SelectItem>
+                            <SelectItem value="creditCard">Carta</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -596,7 +783,7 @@ const AdminReservations = () => {
                     name="paymentStatus"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Stato del Pagamento</FormLabel>
+                        <FormLabel>Stato Pagamento</FormLabel>
                         <Select 
                           onValueChange={(value) => {
                             field.onChange(value);
@@ -608,14 +795,14 @@ const AdminReservations = () => {
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Seleziona stato del pagamento" />
+                            <SelectTrigger className="text-sm">
+                              <SelectValue placeholder="Seleziona stato" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
                             <SelectItem value="notPaid">Non Pagato</SelectItem>
-                            <SelectItem value="deposit">Caparra Versata</SelectItem>
-                            <SelectItem value="paid">Pagamento Completo</SelectItem>
+                            <SelectItem value="deposit">Caparra</SelectItem>
+                            <SelectItem value="paid">Pagato</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -658,7 +845,7 @@ const AdminReservations = () => {
                       <textarea 
                         className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         {...field}
-                        placeholder="Note aggiuntive sulla prenotazione..."
+                        placeholder="Note aggiuntive..."
                       />
                     </FormControl>
                     <FormMessage />
@@ -676,7 +863,7 @@ const AdminReservations = () => {
                   Annulla
                 </Button>
                 <Button type="submit" className={isMobile ? "w-full" : ""}>
-                  {editingId ? "Aggiorna" : "Salva"} Prenotazione
+                  {editingId ? "Aggiorna" : "Salva"}
                 </Button>
               </DialogFooter>
             </form>
@@ -686,7 +873,7 @@ const AdminReservations = () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className={isMobile ? "w-[95vw]" : ""}>
+        <DialogContent className={isMobile ? "w-[95vw] p-4" : ""}>
           <DialogHeader>
             <DialogTitle>Conferma Eliminazione</DialogTitle>
             <DialogDescription>

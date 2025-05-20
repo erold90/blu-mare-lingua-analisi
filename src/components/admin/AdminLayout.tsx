@@ -56,19 +56,19 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   );
 
   return (
-    <div className="px-4 py-4">
-      <div className="flex flex-col mb-4 gap-2">
+    <div className="px-2 py-4 md:px-4">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex flex-col">
-          <h1 className="text-2xl font-bold">Area Amministrazione</h1>
-          <p className="text-muted-foreground text-sm">Gestisci le prenotazioni e visualizza le statistiche</p>
+          <h1 className="text-xl md:text-2xl font-bold">Area Amministrazione</h1>
+          <p className="text-muted-foreground text-xs md:text-sm">Gestisci le prenotazioni</p>
         </div>
-        <Button variant="outline" onClick={handleLogout} size={isMobile ? "sm" : "default"} className="self-start">
-          <LogOut className="mr-2 h-4 w-4" />
-          Logout
+        <Button variant="outline" onClick={handleLogout} size="sm">
+          <LogOut className="h-4 w-4 mr-2" />
+          <span className="hidden md:inline">Logout</span>
         </Button>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col">
         {/* Mobile navigation */}
         {isMobile ? (
           <div className="mb-4">
@@ -95,7 +95,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         )}
 
         {/* Main content */}
-        <main className="flex-1 border rounded-lg p-3 md:p-6 overflow-auto">
+        <main className="flex-1 border rounded-lg p-2 md:p-6">
           {children}
         </main>
       </div>
