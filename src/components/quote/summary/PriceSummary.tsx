@@ -16,6 +16,9 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   // Check if reservation is during high season (June-September)
   const isHighSeason = formValues.checkIn ? 
     (formValues.checkIn.getMonth() >= 5 && formValues.checkIn.getMonth() <= 8) : false;
+    
+  // Calculate the subtotal correctly (basePrice + extras + cleaningFee)
+  const subtotal = priceInfo.basePrice + priceInfo.extras + priceInfo.cleaningFee;
 
   return (
     <div className="border rounded-md p-4 space-y-4">
@@ -48,7 +51,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Subtotale:</span>
-          <span>{priceInfo.basePrice + priceInfo.extras + priceInfo.cleaningFee}€</span>
+          <span>{subtotal}€</span>
         </div>
         
         <div className="flex justify-between text-sm">

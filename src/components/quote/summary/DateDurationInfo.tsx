@@ -27,6 +27,13 @@ const DateDurationInfo: React.FC<DateDurationInfoProps> = ({ formValues, priceIn
         <span>{formValues.checkOut ? format(formValues.checkOut, "dd/MM/yyyy") : "-"}</span>
         <span className="text-muted-foreground">Durata:</span>
         <span>{priceInfo.nights} notti</span>
+        
+        {isHighSeason && (
+          <>
+            <span className="text-muted-foreground">Periodo:</span>
+            <span className="text-amber-600">Alta stagione</span>
+          </>
+        )}
       </div>
     </div>
   );
