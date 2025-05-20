@@ -11,6 +11,7 @@ import { FormValues } from "@/utils/quoteFormSchema";
 import { Bed, BedDouble, MapPin, Wifi, Users, Baby } from "lucide-react";
 import { isApartmentSuitable, getRecommendedApartment, getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ApartmentSelectionStepProps {
   form: UseFormReturn<FormValues>;
@@ -31,6 +32,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   const { totalGuests, effectiveGuestCount, sleepingWithParents, sleepingInCribs } = getEffectiveGuestCount(formValues);
   const [selectedBedsCount, setSelectedBedsCount] = useState(0);
   const [hasEnoughBeds, setHasEnoughBeds] = useState(false);
+  const isMobile = useIsMobile();
   
   // Initialize selectedApartments in form if not already set
   useEffect(() => {
@@ -114,39 +116,45 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
         <CardDescription>Seleziona l'appartamento o gli appartamenti che preferisci per il tuo soggiorno</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Alert for guest count */}
-        <Alert variant="default" className="bg-blue-50 border-blue-200 mb-4 overflow-hidden">
+        {/* Alert for guest count - Fixed overflow issue */}
+        <Alert variant="default" className="bg-blue-50 border-blue-200 mb-4">
           <Users className="h-4 w-4 text-blue-500 shrink-0" />
-          <AlertDescription className="text-blue-700 break-words">
+          <AlertDescription className="text-blue-700 break-words whitespace-normal">
             {sleepingWithParents > 0 || sleepingInCribs > 0 ? (
               <div className="flex flex-col">
-                <span>
+                <span className="w-full break-words">
                   Il tuo gruppo è di {totalGuests} ospiti ({formValues.adults} adulti, {formValues.children} bambini)
                 </span>
                 {sleepingWithParents > 0 && (
-                  <span>di cui {sleepingWithParents} {sleepingWithParents === 1 ? 'bambino dorme' : 'bambini dormono'} con i genitori</span>
+                  <span className="w-full break-words">
+                    di cui {sleepingWithParents} {sleepingWithParents === 1 ? 'bambino dorme' : 'bambini dormono'} con i genitori
+                  </span>
                 )}
                 {sleepingInCribs > 0 && (
-                  <span>{sleepingInCribs} {sleepingInCribs === 1 ? 'bambino dorme' : 'bambini dormono'} in culla</span>
+                  <span className="w-full break-words">
+                    {sleepingInCribs} {sleepingInCribs === 1 ? 'bambino dorme' : 'bambini dormono'} in culla
+                  </span>
                 )}
-                <span className="font-medium mt-1">Posti letto necessari: {effectiveGuestCount}</span>
+                <span className="font-medium mt-1 w-full break-words">
+                  Posti letto necessari: {effectiveGuestCount}
+                </span>
               </div>
             ) : (
-              <>
+              <span className="w-full break-words">
                 Il tuo gruppo è di {totalGuests} ospiti ({formValues.adults} adulti, {formValues.children} bambini)
-              </>
+              </span>
             )}
           </AlertDescription>
         </Alert>
         
-        {/* Feedback about bed selection */}
+        {/* Feedback about bed selection - Fixed overflow issue */}
         <div className={cn(
-          "p-3 rounded-md transition-colors overflow-hidden",
+          "p-3 rounded-md transition-colors",
           hasEnoughBeds ? "bg-green-50 border border-green-200" : "bg-amber-50 border border-amber-200"
         )}>
-          <div className="flex items-center">
+          <div className="flex items-center flex-wrap">
             <Bed className={cn("h-4 w-4 mr-2 shrink-0", hasEnoughBeds ? "text-green-600" : "text-amber-600")} />
-            <p className={cn("text-sm font-medium", hasEnoughBeds ? "text-green-700" : "text-amber-700")}>
+            <p className={cn("text-sm font-medium break-words", hasEnoughBeds ? "text-green-700" : "text-amber-700")}>
               {hasEnoughBeds 
                 ? `Hai selezionato appartamenti con ${selectedBedsCount} posti letto (sufficienti).` 
                 : `Hai selezionato ${selectedBedsCount} posti letto su ${effectiveGuestCount} necessari. Seleziona altri appartamenti.`}
@@ -165,7 +173,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {availableApartments.map((apartment) => {
               const isBooked = !!apartment.booked;
               const isSuitableForGroup = isSuitable(apartment);
