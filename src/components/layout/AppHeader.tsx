@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { Menu, User } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -35,14 +35,6 @@ export function AppHeader() {
             </Link>
           </nav>
         )}
-
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/area-riservata">
-              <User className="h-4 w-4 mr-1" /> Area Riservata
-            </Link>
-          </Button>
-        </div>
       </div>
     </header>
   );

@@ -1,4 +1,3 @@
-
 import { jsPDF } from "jspdf";
 import autoTable, { RowInput } from "jspdf-autotable";
 import { format } from "date-fns";
@@ -69,7 +68,7 @@ export const generateQuotePDF = (
   
   doc.setFontSize(10);
   // Create stay details table
-  const stayTable = autoTable(doc, {
+  const stayTableResult = doc.autoTable({
     startY: yPos,
     head: [["Periodo", "Durata", "Ospiti"]],
     body: [
@@ -84,8 +83,10 @@ export const generateQuotePDF = (
   });
   
   // Update position for next section - Safely handle potentially undefined lastRow
-  const stayTableY = stayTable?.lastRow?.position?.y;
-  yPos = (stayTableY !== undefined ? stayTableY : yPos + 20) + 20;
+  const stayTableY = stayTableResult && typeof stayTableResult === 'object' && 'lastRow' in stayTableResult ? 
+    stayTableResult.lastRow?.position?.y : 
+    yPos + 20;
+  yPos = stayTableY + 20;
   
   // --- Apartments Section ---
   doc.setFontSize(14);
@@ -117,7 +118,7 @@ export const generateQuotePDF = (
   });
   
   // Create apartments table
-  const apartmentsTable = autoTable(doc, {
+  const apartmentsTableResult = doc.autoTable({
     startY: yPos + 5,
     head: [["Appartamento", "Capacità", "Occupazione", "Prezzo", "Totale"]],
     body: apartmentData.length > 0 ? apartmentData : [["--", "--", "--", "--", "--"]],
@@ -126,8 +127,10 @@ export const generateQuotePDF = (
   });
   
   // Update position for next section - Safely handle potentially undefined lastRow
-  const apartmentsTableY = apartmentsTable?.lastRow?.position?.y;
-  yPos = (apartmentsTableY !== undefined ? apartmentsTableY : yPos + 40) + 20;
+  const apartmentsTableY = apartmentsTableResult && typeof apartmentsTableResult === 'object' && 'lastRow' in apartmentsTableResult ? 
+    apartmentsTableResult.lastRow?.position?.y : 
+    yPos + 40;
+  yPos = apartmentsTableY + 20;
   
   // --- Services Section ---
   doc.setFontSize(14);
@@ -141,7 +144,7 @@ export const generateQuotePDF = (
   servicesData.push(["Tassa di soggiorno", "1€ per notte per persona", `${priceInfo.touristTax}€`]);
   
   // Create services table
-  const servicesTable = autoTable(doc, {
+  const servicesTableResult = doc.autoTable({
     startY: yPos + 5,
     head: [["Servizio", "Descrizione", "Totale"]],
     body: servicesData,
@@ -150,8 +153,10 @@ export const generateQuotePDF = (
   });
   
   // Update position for next section - Safely handle potentially undefined lastRow
-  const servicesTableY = servicesTable?.lastRow?.position?.y;
-  yPos = (servicesTableY !== undefined ? servicesTableY : yPos + 20) + 20;
+  const servicesTableY = servicesTableResult && typeof servicesTableResult === 'object' && 'lastRow' in servicesTableResult ? 
+    servicesTableResult.lastRow?.position?.y : 
+    yPos + 20;
+  yPos = servicesTableY + 20;
   
   // --- Price Summary ---
   doc.setFontSize(14);
@@ -170,7 +175,7 @@ export const generateQuotePDF = (
   }
   
   // Create summary table
-  const summaryTable = autoTable(doc, {
+  const summaryTableResult = doc.autoTable({
     startY: yPos + 5,
     body: summaryData,
     theme: "grid",
@@ -178,8 +183,10 @@ export const generateQuotePDF = (
   });
   
   // Final price in bold - Safely handle potentially undefined lastRow
-  const summaryTableY = summaryTable?.lastRow?.position?.y;
-  const finalY = (summaryTableY !== undefined ? summaryTableY : yPos + 30) + 10;
+  const summaryTableY = summaryTableResult && typeof summaryTableResult === 'object' && 'lastRow' in summaryTableResult ? 
+    summaryTableResult.lastRow?.position?.y : 
+    yPos + 30;
+  const finalY = summaryTableY + 10;
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
   doc.text("Totale soggiorno:", 60, finalY, { align: "right" });
