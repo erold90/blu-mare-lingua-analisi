@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { format, differenceInDays } from "date-fns";
 import { it } from 'date-fns/locale';
@@ -24,30 +24,29 @@ interface DateSelectionStepProps {
 }
 
 const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, nextStep }) => {
-  // State for the date range
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
-  
-  // Update the date range when the form values change
-  useEffect(() => {
+  // State for the date range with direct initialization from form values
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     const checkIn = form.getValues("checkIn");
     const checkOut = form.getValues("checkOut");
     
     if (checkIn && checkOut) {
-      setDateRange({
+      return {
         from: new Date(checkIn),
         to: new Date(checkOut)
-      });
+      };
     }
-  }, [form]);
+    
+    return undefined;
+  });
   
   // Calculate number of nights
   const numberOfNights = dateRange?.from && dateRange?.to
     ? differenceInDays(dateRange.to, dateRange.from)
     : 0;
   
-  // Function to disable days that are not Saturday, Sunday, or Monday
-  const disabledDays = (date: Date) => {
-    const day = date.getDay();
+  // Function to check if a date is disabled (not Sat, Sun, or Mon)
+  const isDateDisabled = (date: Date): boolean => {
+    const day = date.getDay(); 
     // 0 = Sunday, 1 = Monday, 6 = Saturday
     return day !== 0 && day !== 1 && day !== 6;
   };
@@ -104,14 +103,14 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0 z-50" align="center">
+          <PopoverContent align="center" className="w-auto p-0">
             <Calendar
               initialFocus
               mode="range"
               defaultMonth={new Date()}
               selected={dateRange}
               onSelect={handleDateChange}
-              disabled={disabledDays}
+              disabled={isDateDisabled}
               numberOfMonths={1}
             />
           </PopoverContent>
