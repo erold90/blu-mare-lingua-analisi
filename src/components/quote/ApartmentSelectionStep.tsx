@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
-import { Bed, BedDouble, Home, MapPin, Wifi, Users } from "lucide-react";
+import { Bed, BedDouble, MapPin, Wifi, Users } from "lucide-react";
 import { isApartmentSuitable, getRecommendedApartment, getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -108,16 +108,18 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
         <CardDescription>Seleziona l'appartamento o gli appartamenti che preferisci per il tuo soggiorno</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Alert variant="default" className="bg-blue-50 border-blue-200 mb-4">
-          <Users className="h-4 w-4 text-blue-500" />
-          <AlertDescription className="text-blue-700">
+        {/* Modifica dell'alert per evitare overflow */}
+        <Alert variant="default" className="bg-blue-50 border-blue-200 mb-4 overflow-hidden">
+          <Users className="h-4 w-4 text-blue-500 shrink-0" />
+          <AlertDescription className="text-blue-700 break-words">
             {sleepingWithParents > 0 ? (
-              <>
-                Il tuo gruppo è di {totalGuests} ospiti ({formValues.adults} adulti, {formValues.children} bambini), 
-                di cui {sleepingWithParents} {sleepingWithParents === 1 ? 'bambino dorme' : 'bambini dormono'} con i genitori.
-                <br />
-                <span className="font-medium">Posti letto necessari: {effectiveGuestCount}</span>
-              </>
+              <div className="flex flex-col">
+                <span>
+                  Il tuo gruppo è di {totalGuests} ospiti ({formValues.adults} adulti, {formValues.children} bambini), 
+                  di cui {sleepingWithParents} {sleepingWithParents === 1 ? 'bambino dorme' : 'bambini dormono'} con i genitori.
+                </span>
+                <span className="font-medium mt-1">Posti letto necessari: {effectiveGuestCount}</span>
+              </div>
             ) : (
               <>
                 Il tuo gruppo è di {totalGuests} ospiti ({formValues.adults} adulti, {formValues.children} bambini).
@@ -129,11 +131,11 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
         
         {/* Feedback about bed selection */}
         <div className={cn(
-          "p-3 rounded-md transition-colors",
+          "p-3 rounded-md transition-colors overflow-hidden",
           hasEnoughBeds ? "bg-green-50 border border-green-200" : "bg-amber-50 border border-amber-200"
         )}>
           <div className="flex items-center">
-            <Bed className={cn("h-4 w-4 mr-2", hasEnoughBeds ? "text-green-600" : "text-amber-600")} />
+            <Bed className={cn("h-4 w-4 mr-2 shrink-0", hasEnoughBeds ? "text-green-600" : "text-amber-600")} />
             <p className={cn("text-sm font-medium", hasEnoughBeds ? "text-green-700" : "text-amber-700")}>
               {hasEnoughBeds 
                 ? `Hai selezionato appartamenti con ${selectedBedsCount} posti letto (sufficienti).` 
@@ -175,19 +177,19 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                 
                 <div className="grid grid-cols-1 gap-1 text-xs mt-2">
                   <div className="flex items-center gap-1">
-                    <BedDouble className="h-3 w-3 text-primary" />
+                    <BedDouble className="h-3 w-3 text-primary shrink-0" />
                     <span>{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Bed className="h-3 w-3 text-primary" />
+                    <Bed className="h-3 w-3 text-primary shrink-0" />
                     <span>{apartment.beds} posti letto</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-primary" />
+                    <MapPin className="h-3 w-3 text-primary shrink-0" />
                     <span>Piano {apartment.floor}</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Wifi className="h-3 w-3 text-primary" />
+                    <Wifi className="h-3 w-3 text-primary shrink-0" />
                     <span>Vista {apartment.view}</span>
                   </div>
                 </div>
