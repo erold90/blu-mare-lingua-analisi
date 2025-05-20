@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,9 +29,11 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
 }) => {
   const formValues = form.getValues();
   const { totalGuests, effectiveGuestCount, sleepingWithParents } = getEffectiveGuestCount(formValues);
+  const [selectedBedsCount, setSelectedBedsCount] = useState(0);
+  const [hasEnoughBeds, setHasEnoughBeds] = useState(false);
   
   // Initialize selectedApartments in form if not already set
-  React.useEffect(() => {
+  useEffect(() => {
     if (!form.getValues("selectedApartments") || !Array.isArray(form.getValues("selectedApartments"))) {
       form.setValue("selectedApartments", [], { shouldValidate: true });
     }
@@ -44,6 +46,16 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   
   // Get recommended apartment ID
   const recommendedApartmentId = getRecommendedApartment(suitableApartments, formValues);
+  
+  // Calculate total beds in selected apartments
+  useEffect(() => {
+    const selectedApartmentIds = form.getValues("selectedApartments") || [];
+    const selectedApts = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
+    const totalBeds = selectedApts.reduce((total, apt) => total + apt.beds, 0);
+    
+    setSelectedBedsCount(totalBeds);
+    setHasEnoughBeds(totalBeds >= effectiveGuestCount);
+  }, [form.watch("selectedApartments"), apartments, effectiveGuestCount]);
   
   // Handle apartment selection (toggle selection)
   const toggleApartmentSelection = (apartmentId: string) => {
@@ -82,6 +94,13 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   // Check if group is too large for a single apartment
   const isLargeGroup = effectiveGuestCount > 8;
   
+  // Handle next step with validation
+  const handleNextStep = () => {
+    if (hasEnoughBeds) {
+      nextStep();
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -107,6 +126,21 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
             )}
           </AlertDescription>
         </Alert>
+        
+        {/* Feedback about bed selection */}
+        <div className={cn(
+          "p-3 rounded-md transition-colors",
+          hasEnoughBeds ? "bg-green-50 border border-green-200" : "bg-amber-50 border border-amber-200"
+        )}>
+          <div className="flex items-center">
+            <Bed className={cn("h-4 w-4 mr-2", hasEnoughBeds ? "text-green-600" : "text-amber-600")} />
+            <p className={cn("text-sm font-medium", hasEnoughBeds ? "text-green-700" : "text-amber-700")}>
+              {hasEnoughBeds 
+                ? `Hai selezionato appartamenti con ${selectedBedsCount} posti letto (sufficienti).` 
+                : `Hai selezionato ${selectedBedsCount} posti letto su ${effectiveGuestCount} necessari. Seleziona altri appartamenti.`}
+            </p>
+          </div>
+        </div>
         
         {suitableApartments.length === 0 ? (
           <div className="p-4 border rounded-md bg-muted/50">
@@ -199,10 +233,12 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
         <Button type="button" variant="outline" onClick={prevStep}>Indietro</Button>
         <Button 
           type="button" 
-          onClick={nextStep} 
-          disabled={suitableApartments.length === 0 || (form.getValues("selectedApartments")?.length === 0)}
+          onClick={handleNextStep}
+          disabled={suitableApartments.length === 0 || (form.getValues("selectedApartments")?.length === 0) || !hasEnoughBeds}
         >
-          Avanti
+          {!hasEnoughBeds && form.getValues("selectedApartments")?.length > 0 
+            ? `Seleziona altri appartamenti (${selectedBedsCount}/${effectiveGuestCount})` 
+            : 'Avanti'}
         </Button>
       </CardFooter>
     </Card>
