@@ -12,10 +12,9 @@ export function calculateDiscount(totalBeforeDiscount: number, touristTax: numbe
   const roundedPrice = Math.floor(totalBeforeDiscount / 50) * 50;
   
   // Calculate the discount amount (difference between original total and rounded total)
-  // Total before discount already includes tourist tax, so we don't need to add it again
   const discount = totalBeforeDiscount - roundedPrice;
   
-  // The savings should include both the discount and the tourist tax
+  // The savings include both the discount and the tourist tax
   const savings = discount + touristTax;
   
   // Calculate deposit (30%)
