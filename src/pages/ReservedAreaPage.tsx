@@ -30,10 +30,8 @@ const LoginForm = () => {
     
     if (login(username, password)) {
       toast.success("Login effettuato con successo");
-      // Delay navigation slightly to allow toast to be visible
-      setTimeout(() => {
-        navigate("/area-riservata/dashboard");
-      }, 300);
+      // Immediate navigation without setTimeout
+      navigate("/area-riservata/dashboard");
     } else {
       toast.error("Credenziali non valide");
     }
