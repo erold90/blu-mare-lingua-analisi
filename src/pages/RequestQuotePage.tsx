@@ -1,3 +1,4 @@
+
 import React from "react";
 
 // Components
@@ -16,12 +17,6 @@ import { Form } from "@/components/ui/form";
 import { apartments } from "@/data/apartments";
 import { useQuoteForm } from "@/hooks/useQuoteForm";
 import { FamilyGroup } from "@/hooks/quote/useGroupManagement";
-
-interface FamilyGroup {
-  adults: number;
-  children: number;
-  childrenDetails: { isUnder12: boolean; sleepsWithParents: boolean; sleepsInCrib: boolean; }[];
-}
 
 const RequestQuotePage = () => {
   const {
