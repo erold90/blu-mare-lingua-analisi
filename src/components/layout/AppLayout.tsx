@@ -15,7 +15,7 @@ export function AppLayout() {
         <AppHeader />
         <div className="flex flex-1">
           <AppSidebar />
-          <SidebarInset className="flex-1 md:ml-14 transition-all duration-300">
+          <SidebarInset className="flex-1 transition-all duration-300">
             <main className="flex-1">
               <Outlet />
             </main>

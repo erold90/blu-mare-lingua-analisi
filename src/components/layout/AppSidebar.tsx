@@ -44,7 +44,7 @@ export function AppSidebar() {
   return (
     <div 
       className={`md:fixed md:left-0 md:top-0 md:bottom-0 md:z-30 transition-all duration-300 ease-in-out ${
-        !isMobile && isHovered ? "md:w-64" : "md:w-14"
+        !isMobile && isHovered ? "md:w-64" : "md:w-0"
       }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -53,24 +53,20 @@ export function AppSidebar() {
         <SidebarHeader className="border-b">
           <Link to="/" className="flex items-center gap-2 px-4 py-2" onClick={handleLinkClick}>
             <span className={`text-xl font-semibold transition-opacity duration-200 ${
-              !isMobile && !isHovered ? "md:opacity-0" : "md:opacity-100"
+              !isMobile ? "" : ""
             }`}>Villa Mare Blu</span>
           </Link>
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel className={`transition-opacity duration-200 ${
-              !isMobile && !isHovered ? "md:opacity-0" : "md:opacity-100"
-            }`}>Menu</SidebarGroupLabel>
+            <SidebarGroupLabel>Menu</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <Link to="/" onClick={handleLinkClick} className="flex items-center">
                       <Home className="shrink-0" />
-                      <span className={`ml-2 transition-opacity duration-200 ${
-                        !isMobile && !isHovered ? "md:opacity-0 md:w-0 md:overflow-hidden" : "md:opacity-100 md:w-auto"
-                      }`}>Home</span>
+                      <span className="ml-2">Home</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -78,9 +74,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <Link to="/appartamenti" onClick={handleLinkClick} className="flex items-center">
                       <Building className="shrink-0" />
-                      <span className={`ml-2 transition-opacity duration-200 ${
-                        !isMobile && !isHovered ? "md:opacity-0 md:w-0 md:overflow-hidden" : "md:opacity-100 md:w-auto"
-                      }`}>Appartamenti</span>
+                      <span className="ml-2">Appartamenti</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -88,9 +82,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <Link to="/preventivo" onClick={handleLinkClick} className="flex items-center">
                       <Calculator className="shrink-0" />
-                      <span className={`ml-2 transition-opacity duration-200 ${
-                        !isMobile && !isHovered ? "md:opacity-0 md:w-0 md:overflow-hidden" : "md:opacity-100 md:w-auto"
-                      }`}>Preventivo</span>
+                      <span className="ml-2">Preventivo</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -98,9 +90,7 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <Link to="/contatti" onClick={handleLinkClick} className="flex items-center">
                       <Mail className="shrink-0" />
-                      <span className={`ml-2 transition-opacity duration-200 ${
-                        !isMobile && !isHovered ? "md:opacity-0 md:w-0 md:overflow-hidden" : "md:opacity-100 md:w-auto"
-                      }`}>Contatti</span>
+                      <span className="ml-2">Contatti</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -114,9 +104,7 @@ export function AppSidebar() {
               <SidebarMenuButton asChild>
                 <Link to="/area-riservata" onClick={handleLinkClick} className="flex items-center">
                   <User className="shrink-0" />
-                  <span className={`ml-2 transition-opacity duration-200 ${
-                    !isMobile && !isHovered ? "md:opacity-0 md:w-0 md:overflow-hidden" : "md:opacity-100 md:w-auto"
-                  }`}>Area Riservata</span>
+                  <span className="ml-2">Area Riservata</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -125,9 +113,7 @@ export function AppSidebar() {
               <SidebarMenuButton asChild>
                 <Link to="/privacy-policy" onClick={handleLinkClick} className="flex items-center">
                   <Shield className="shrink-0" />
-                  <span className={`ml-2 transition-opacity duration-200 ${
-                    !isMobile && !isHovered ? "md:opacity-0 md:w-0 md:overflow-hidden" : "md:opacity-100 md:w-auto"
-                  }`}>Privacy Policy</span>
+                  <span className="ml-2">Privacy Policy</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -135,16 +121,12 @@ export function AppSidebar() {
               <SidebarMenuButton asChild>
                 <Link to="/cookie-policy" onClick={handleLinkClick} className="flex items-center">
                   <Cookie className="shrink-0" />
-                  <span className={`ml-2 transition-opacity duration-200 ${
-                    !isMobile && !isHovered ? "md:opacity-0 md:w-0 md:overflow-hidden" : "md:opacity-100 md:w-auto"
-                  }`}>Cookie Policy</span>
+                  <span className="ml-2">Cookie Policy</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-          <div className={`mt-4 text-xs text-muted-foreground transition-opacity duration-200 ${
-            !isMobile && !isHovered ? "md:opacity-0" : "md:opacity-100"
-          }`}>
+          <div className="mt-4 text-xs text-muted-foreground">
             <div>© Villa Mare Blu {new Date().getFullYear()}</div>
             <div>Tutti i diritti riservati</div>
           </div>
