@@ -121,11 +121,11 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
           </PopoverContent>
         </Popover>
 
-        {/* Information alert */}
-        <Alert className="bg-muted/50">
+        {/* Information alert - with more concise text */}
+        <Alert className="bg-muted/50 py-2">
           <InfoIcon className="h-4 w-4 mr-2" />
-          <AlertDescription>
-            Per garantire un'esperienza ottimale, accettiamo prenotazioni con arrivi e partenze solo di sabato, domenica o lunedì.
+          <AlertDescription className="text-xs">
+            Check-in/out disponibili solo sabato, domenica e lunedì.
           </AlertDescription>
         </Alert>
 
