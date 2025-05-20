@@ -3,6 +3,7 @@ import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import { it } from 'date-fns/locale';
+import { format } from "date-fns";
 
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -59,6 +60,10 @@ function Calendar({
       }}
       locale={it}
       weekStartsOn={1} // Lunedì come primo giorno della settimana (domenica sarà l'ultimo)
+      formatters={{
+        formatWeekdayName: (day) => format(day, 'EEEEEE', { locale: it }).toUpperCase(),
+        formatCaption: (date, options) => format(date, 'MMMM yyyy', { locale: it }),
+      }}
       {...props}
     />
   );

@@ -73,14 +73,6 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
         <CardDescription>Indica le date di check-in e check-out del tuo soggiorno</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Avviso informativo per le date disponibili */}
-        <Alert>
-          <InfoIcon className="h-4 w-4 mr-2" />
-          <AlertDescription>
-            Per garantire un'esperienza ottimale, accettiamo prenotazioni con arrivi e partenze solo di sabato, domenica o lunedì.
-          </AlertDescription>
-        </Alert>
-
         {/* Pulsante per selezionare le date */}
         <Popover>
           <PopoverTrigger asChild>
@@ -103,13 +95,17 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
               disabled={disabledDays}
               numberOfMonths={1}
               initialFocus
-              formatters={{
-                formatWeekdayName: (day) => format(day, 'EEEEEE', { locale: it }).toUpperCase(),
-                formatCaption: (date, options) => format(date, 'MMMM yyyy', { locale: it }),
-              }}
             />
           </PopoverContent>
         </Popover>
+
+        {/* Avviso informativo per le date disponibili */}
+        <Alert>
+          <InfoIcon className="h-4 w-4 mr-2" />
+          <AlertDescription>
+            Per garantire un'esperienza ottimale, accettiamo prenotazioni con arrivi e partenze solo di sabato, domenica o lunedì.
+          </AlertDescription>
+        </Alert>
 
         {/* Riepilogo date selezionate e conteggio notti */}
         {checkIn && checkOut && (
