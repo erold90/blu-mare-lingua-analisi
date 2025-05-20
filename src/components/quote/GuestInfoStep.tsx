@@ -11,9 +11,15 @@ import { FormValues } from "@/utils/quoteFormSchema";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 
+interface ChildDetail {
+  isUnder12: boolean;
+  sleepsWithParents: boolean;
+  sleepsInCrib: boolean;
+}
+
 interface GuestInfoStepProps {
   form: UseFormReturn<FormValues>;
-  childrenArray: { isUnder12: boolean; sleepsWithParents: boolean; sleepsInCrib: boolean; };
+  childrenArray: ChildDetail[];
   openGroupDialog: () => void;
   incrementAdults: () => void;
   decrementAdults: () => void;

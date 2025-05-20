@@ -17,6 +17,12 @@ import { Form } from "@/components/ui/form";
 import { apartments } from "@/data/apartments";
 import { useQuoteForm } from "@/hooks/useQuoteForm";
 
+interface FamilyGroup {
+  adults: number;
+  children: number;
+  childrenDetails: { isUnder12: boolean; sleepsWithParents: boolean; sleepsInCrib: boolean; }[];
+}
+
 const RequestQuotePage = () => {
   const {
     form,
@@ -44,6 +50,11 @@ const RequestQuotePage = () => {
     onSubmitHandler,
     handleSubmitWrapper
   } = useQuoteForm();
+  
+  // Adapter function to ensure type compatibility
+  const handleFamilyGroupsChange = (groups: FamilyGroup[]) => {
+    setFamilyGroups(groups as any);
+  };
   
   return (
     <div className="container px-4 py-8 md:py-12 max-w-full overflow-x-hidden">
@@ -139,10 +150,10 @@ const RequestQuotePage = () => {
       <GroupDialog
         open={groupDialog}
         onOpenChange={closeGroupDialog}
-        familyGroups={familyGroups}
+        familyGroups={familyGroups as FamilyGroup[]}
         groupType={form.getValues("groupType")}
         onGroupTypeChange={(value) => form.setValue("groupType", value)}
-        onFamilyGroupsChange={setFamilyGroups}
+        onFamilyGroupsChange={handleFamilyGroupsChange}
         onConfirm={closeGroupDialog}
         onCancel={() => {
           closeGroupDialog();

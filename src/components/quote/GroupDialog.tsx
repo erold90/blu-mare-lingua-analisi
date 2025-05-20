@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, Baby } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +17,7 @@ import {
 interface FamilyGroup {
   adults: number;
   children: number;
-  childrenDetails: { isUnder12: boolean; sleepsWithParents: boolean }[];
+  childrenDetails: { isUnder12: boolean; sleepsWithParents: boolean; sleepsInCrib: boolean; }[];
 }
 
 interface GroupDialogProps {
@@ -68,7 +68,7 @@ const GroupDialog: React.FC<GroupDialogProps> = ({
         // Aggiungiamo nuovi bambini
         const diff = value - details.length;
         for (let i = 0; i < diff; i++) {
-          details.push({ isUnder12: true, sleepsWithParents: false });
+          details.push({ isUnder12: true, sleepsWithParents: false, sleepsInCrib: false });
         }
       } else if (value < details.length) {
         // Rimuoviamo i bambini in eccesso
@@ -82,11 +82,18 @@ const GroupDialog: React.FC<GroupDialogProps> = ({
   };
   
   // Aggiorna i dettagli di un bambino in un gruppo specifico
-  const updateGroupChildDetails = (groupIndex: number, childIndex: number, field: 'isUnder12' | 'sleepsWithParents', value: boolean) => {
+  const updateGroupChildDetails = (groupIndex: number, childIndex: number, field: 'isUnder12' | 'sleepsWithParents' | 'sleepsInCrib', value: boolean) => {
     const updatedGroups = [...familyGroups];
     const details = updatedGroups[groupIndex].childrenDetails || [];
     
     details[childIndex][field] = value;
+    
+    // Se si seleziona sleepsWithParents, deselezionare sleepsInCrib e viceversa
+    if (field === 'sleepsWithParents' && value === true && details[childIndex].sleepsInCrib) {
+      details[childIndex].sleepsInCrib = false;
+    } else if (field === 'sleepsInCrib' && value === true && details[childIndex].sleepsWithParents) {
+      details[childIndex].sleepsWithParents = false;
+    }
     
     updatedGroups[groupIndex].childrenDetails = details;
     onFamilyGroupsChange(updatedGroups);
@@ -198,7 +205,7 @@ const GroupDialog: React.FC<GroupDialogProps> = ({
                     {(group.childrenDetails || []).map((child, childIndex) => (
                       <div key={childIndex} className="space-y-4 pt-4 border-t first:border-t-0 first:pt-0">
                         <h5>Bambino {childIndex + 1}</h5>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4">
                           <div className="flex items-center space-x-2">
                             <Checkbox 
                               id={`group-${groupIndex}-is-under-12-${childIndex}`}
@@ -209,16 +216,45 @@ const GroupDialog: React.FC<GroupDialogProps> = ({
                             />
                             <Label htmlFor={`group-${groupIndex}-is-under-12-${childIndex}`}>Minore di 12 anni</Label>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <Checkbox 
-                              id={`group-${groupIndex}-sleeps-with-parents-${childIndex}`}
-                              checked={child.sleepsWithParents}
-                              onCheckedChange={(checked) => {
-                                updateGroupChildDetails(groupIndex, childIndex, 'sleepsWithParents', checked === true);
-                              }}
-                            />
-                            <Label htmlFor={`group-${groupIndex}-sleeps-with-parents-${childIndex}`}>Dorme con i genitori</Label>
-                          </div>
+                          
+                          {/* Opzioni aggiuntive solo per bambini sotto i 12 anni */}
+                          {child.isUnder12 && (
+                            <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id={`group-${groupIndex}-sleeps-with-parents-${childIndex}`}
+                                  checked={child.sleepsWithParents}
+                                  onCheckedChange={(checked) => {
+                                    updateGroupChildDetails(groupIndex, childIndex, 'sleepsWithParents', checked === true);
+                                  }}
+                                />
+                                <Label 
+                                  htmlFor={`group-${groupIndex}-sleeps-with-parents-${childIndex}`}
+                                  className={child.sleepsWithParents ? "font-medium text-blue-600" : ""}
+                                >
+                                  Dorme con i genitori
+                                  {child.sleepsWithParents && " (non occupa posto letto)"}
+                                </Label>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id={`group-${groupIndex}-sleeps-in-crib-${childIndex}`}
+                                  checked={child.sleepsInCrib}
+                                  onCheckedChange={(checked) => {
+                                    updateGroupChildDetails(groupIndex, childIndex, 'sleepsInCrib', checked === true);
+                                  }}
+                                />
+                                <Label 
+                                  htmlFor={`group-${groupIndex}-sleeps-in-crib-${childIndex}`}
+                                  className={child.sleepsInCrib ? "font-medium text-green-600" : ""}
+                                >
+                                  Dorme in culla
+                                  {child.sleepsInCrib && " (gratuito, non occupa posto letto)"}
+                                </Label>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
