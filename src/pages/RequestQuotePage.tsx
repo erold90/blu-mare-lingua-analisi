@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Plus, Minus, Download, MessageSquare, MessageCircle } from "lucide-react";
+import { Calendar as CalendarIcon, Plus, Minus, Download, MessageSquare, MessageCircle, Users } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -45,16 +45,27 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
+// Schema per i dettagli bambini
+const childDetailSchema = z.object({
+  age: z.number().min(0).max(17),
+  sleepsWithParents: z.boolean().default(false),
+});
+
+// Schema per il gruppo familiare
+const familyGroupSchema = z.object({
+  adults: z.number().min(1, { message: "Almeno un adulto per famiglia" }),
+  children: z.number().min(0),
+  childrenDetails: z.array(childDetailSchema).optional(),
+});
+
 // Schema dello step 1: Informazioni sugli ospiti
 const guestSchema = z.object({
   adults: z.number().min(1, { message: "È richiesto almeno un adulto" }),
   children: z.number().min(0),
-  childrenDetails: z.array(
-    z.object({
-      age: z.number().min(0).max(17),
-      sleepsWithParents: z.boolean().default(false),
-    })
-  ).optional(),
+  childrenDetails: z.array(childDetailSchema).optional(),
+  isGroupBooking: z.boolean().default(false),
+  groupType: z.enum(["families", "couples"]).optional(),
+  familyGroups: z.array(familyGroupSchema).optional(),
 });
 
 // Schema dello step 2: Date del soggiorno
@@ -155,6 +166,8 @@ const RequestQuotePage = () => {
   
   const [childrenArray, setChildrenArray] = React.useState<{ age: number; sleepsWithParents: boolean }[]>([]);
   const [apartmentDialog, setApartmentDialog] = React.useState<string | null>(null);
+  const [groupDialog, setGroupDialog] = React.useState(false);
+  const [familyGroups, setFamilyGroups] = React.useState<{ adults: number; children: number; childrenDetails: { age: number; sleepsWithParents: boolean }[] }[]>([]);
   
   // Inizializzo il form con valori predefiniti
   const form = useForm<z.infer<typeof formSchema>>({
@@ -167,29 +180,33 @@ const RequestQuotePage = () => {
       linenOption: "standard",
       hasPets: false,
       petsCount: 0,
+      isGroupBooking: false,
     },
   });
   
   // Gestisco i cambiamenti nel numero di bambini
   React.useEffect(() => {
-    const childrenCount = form.getValues("children");
-    let updatedArray = [...childrenArray];
-    
-    // Aggiungo nuovi bambini se necessario
-    if (childrenCount > updatedArray.length) {
-      const diff = childrenCount - updatedArray.length;
-      for (let i = 0; i < diff; i++) {
-        updatedArray.push({ age: 0, sleepsWithParents: false });
+    // Se non è una prenotazione di gruppo, gestisco i bambini normalmente
+    if (!form.getValues("isGroupBooking")) {
+      const childrenCount = form.getValues("children");
+      let updatedArray = [...childrenArray];
+      
+      // Aggiungo nuovi bambini se necessario
+      if (childrenCount > updatedArray.length) {
+        const diff = childrenCount - updatedArray.length;
+        for (let i = 0; i < diff; i++) {
+          updatedArray.push({ age: 0, sleepsWithParents: false });
+        }
       }
+      // Rimuovo bambini in eccesso
+      else if (childrenCount < updatedArray.length) {
+        updatedArray = updatedArray.slice(0, childrenCount);
+      }
+      
+      setChildrenArray(updatedArray);
+      form.setValue("childrenDetails", updatedArray);
     }
-    // Rimuovo bambini in eccesso
-    else if (childrenCount < updatedArray.length) {
-      updatedArray = updatedArray.slice(0, childrenCount);
-    }
-    
-    setChildrenArray(updatedArray);
-    form.setValue("childrenDetails", updatedArray);
-  }, [form.watch("children")]);
+  }, [form.watch("children"), form.watch("isGroupBooking")]);
   
   // Funzioni per incrementare/decrementare il numero di adulti e bambini
   const incrementAdults = () => {
@@ -242,6 +259,101 @@ const RequestQuotePage = () => {
       setStep(step - 1);
       form.setValue("step", step - 1);
     }
+  };
+  
+  // Gestione gruppi familiari
+  const openGroupDialog = () => {
+    setGroupDialog(true);
+    
+    // Se non ci sono già gruppi familiari, ne creiamo uno di default
+    if (familyGroups.length === 0) {
+      const adultsCount = form.getValues("adults");
+      const initialGroups = [{ adults: adultsCount, children: form.getValues("children"), childrenDetails: [...childrenArray] }];
+      setFamilyGroups(initialGroups);
+    }
+    
+    form.setValue("isGroupBooking", true);
+  };
+  
+  const closeGroupDialog = () => {
+    setGroupDialog(false);
+    
+    // Aggiorniamo i totali in base ai gruppi definiti
+    if (familyGroups.length > 0) {
+      const totalAdults = familyGroups.reduce((sum, group) => sum + group.adults, 0);
+      const totalChildren = familyGroups.reduce((sum, group) => sum + group.children, 0);
+      
+      form.setValue("adults", totalAdults);
+      form.setValue("children", totalChildren);
+      
+      // Aggiorniamo anche i dettagli dei bambini se necessario
+      const allChildrenDetails: { age: number; sleepsWithParents: boolean }[] = [];
+      familyGroups.forEach(group => {
+        if (group.childrenDetails && group.childrenDetails.length > 0) {
+          allChildrenDetails.push(...group.childrenDetails);
+        }
+      });
+      
+      setChildrenArray(allChildrenDetails);
+      form.setValue("childrenDetails", allChildrenDetails);
+    }
+  };
+  
+  // Aggiunge un nuovo gruppo familiare
+  const addFamilyGroup = () => {
+    setFamilyGroups([...familyGroups, { adults: 2, children: 0, childrenDetails: [] }]);
+  };
+  
+  // Rimuove un gruppo familiare
+  const removeFamilyGroup = (index: number) => {
+    if (familyGroups.length > 1) {
+      const newGroups = [...familyGroups];
+      newGroups.splice(index, 1);
+      setFamilyGroups(newGroups);
+    } else {
+      toast.error("È necessario almeno un gruppo familiare");
+    }
+  };
+  
+  // Aggiorna i dettagli di un gruppo familiare
+  const updateFamilyGroup = (index: number, field: 'adults' | 'children', value: number) => {
+    const updatedGroups = [...familyGroups];
+    updatedGroups[index][field] = value;
+    
+    // Se cambiamo il numero di bambini, aggiorniamo anche i loro dettagli
+    if (field === 'children') {
+      let details = updatedGroups[index].childrenDetails || [];
+      
+      if (value > details.length) {
+        // Aggiungiamo nuovi bambini
+        const diff = value - details.length;
+        for (let i = 0; i < diff; i++) {
+          details.push({ age: 0, sleepsWithParents: false });
+        }
+      } else if (value < details.length) {
+        // Rimuoviamo i bambini in eccesso
+        details = details.slice(0, value);
+      }
+      
+      updatedGroups[index].childrenDetails = details;
+    }
+    
+    setFamilyGroups(updatedGroups);
+  };
+  
+  // Aggiorna i dettagli di un bambino in un gruppo specifico
+  const updateGroupChildDetails = (groupIndex: number, childIndex: number, field: 'age' | 'sleepsWithParents', value: number | boolean) => {
+    const updatedGroups = [...familyGroups];
+    const details = updatedGroups[groupIndex].childrenDetails || [];
+    
+    if (field === 'age') {
+      details[childIndex].age = value as number;
+    } else {
+      details[childIndex].sleepsWithParents = value as boolean;
+    }
+    
+    updatedGroups[groupIndex].childrenDetails = details;
+    setFamilyGroups(updatedGroups);
   };
   
   // Invio del form
@@ -444,6 +556,38 @@ const RequestQuotePage = () => {
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
+                    
+                    {/* Mostra il pulsante per i gruppi se ci sono più di 3 adulti */}
+                    {form.watch("adults") > 3 && !form.watch("isGroupBooking") && (
+                      <Button 
+                        type="button"
+                        variant="outline"
+                        className="ml-4 flex items-center gap-2"
+                        onClick={openGroupDialog}
+                      >
+                        <Users className="h-4 w-4" />
+                        Specifica composizione gruppo
+                      </Button>
+                    )}
+                    
+                    {/* Badge che indica che è una prenotazione di gruppo */}
+                    {form.watch("isGroupBooking") && (
+                      <div className="flex items-center ml-4">
+                        <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          Gruppo definito
+                        </span>
+                        <Button 
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={openGroupDialog}
+                          className="ml-1 h-auto p-1"
+                        >
+                          Modifica
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -478,8 +622,8 @@ const RequestQuotePage = () => {
                   </div>
                 </div>
                 
-                {/* Dettagli dei bambini */}
-                {childrenArray.length > 0 && (
+                {/* Dettagli dei bambini - mostrati solo se non è una prenotazione di gruppo */}
+                {childrenArray.length > 0 && !form.watch("isGroupBooking") && (
                   <div className="space-y-4 mt-4 border rounded-lg p-4">
                     <h3 className="font-medium">Dettagli bambini</h3>
                     {childrenArray.map((child, index) => (
@@ -1141,6 +1285,208 @@ const RequestQuotePage = () => {
           </DialogContent>
         </Dialog>
       )}
+      
+      {/* Dialog per la composizione del gruppo */}
+      <Dialog open={groupDialog} onOpenChange={setGroupDialog}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Composizione del gruppo</DialogTitle>
+            <DialogDescription>
+              Specifica la composizione del tuo gruppo per un preventivo più accurato
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 my-4 max-h-[60vh] overflow-y-auto pr-2">
+            {/* Selezione del tipo di gruppo */}
+            <div className="space-y-3">
+              <Label>Tipo di gruppo</Label>
+              <RadioGroup
+                value={form.getValues("groupType") || "families"}
+                onValueChange={(value) => form.setValue("groupType", value as "families" | "couples")}
+                className="flex flex-col space-y-1"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="families" id="group-families" />
+                  <Label htmlFor="group-families" className="cursor-pointer">
+                    Famiglie
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="couples" id="group-couples" />
+                  <Label htmlFor="group-couples" className="cursor-pointer">
+                    Coppie
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+            
+            {/* Lista dei gruppi familiari */}
+            <div className="space-y-6">
+              {familyGroups.map((group, groupIndex) => (
+                <div key={groupIndex} className="border rounded-lg p-4 space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-medium">
+                      {form.getValues("groupType") === "couples" ? `Coppia ${groupIndex + 1}` : `Famiglia ${groupIndex + 1}`}
+                    </h3>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => removeFamilyGroup(groupIndex)}
+                      className="h-8 px-2 text-destructive"
+                      disabled={familyGroups.length <= 1}
+                    >
+                      Rimuovi
+                    </Button>
+                  </div>
+                  
+                  {/* Numero di adulti */}
+                  <div className="space-y-2">
+                    <Label>Adulti</Label>
+                    <div className="flex items-center space-x-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => {
+                          if (group.adults > 1) {
+                            updateFamilyGroup(groupIndex, 'adults', group.adults - 1);
+                          }
+                        }}
+                        disabled={group.adults <= 1}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Input
+                        type="number"
+                        className="w-20 text-center"
+                        value={group.adults}
+                        readOnly
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => updateFamilyGroup(groupIndex, 'adults', group.adults + 1)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Numero di bambini */}
+                  <div className="space-y-2">
+                    <Label>Bambini</Label>
+                    <div className="flex items-center space-x-4">
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => {
+                          if (group.children > 0) {
+                            updateFamilyGroup(groupIndex, 'children', group.children - 1);
+                          }
+                        }}
+                        disabled={group.children <= 0}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Input
+                        type="number"
+                        className="w-20 text-center"
+                        value={group.children}
+                        readOnly
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={() => updateFamilyGroup(groupIndex, 'children', group.children + 1)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Dettagli dei bambini per questo gruppo */}
+                  {group.children > 0 && (
+                    <div className="space-y-4 mt-2 border-t pt-4">
+                      <h4 className="font-medium">Dettagli bambini</h4>
+                      {(group.childrenDetails || []).map((child, childIndex) => (
+                        <div key={childIndex} className="space-y-4 pt-4 border-t first:border-t-0 first:pt-0">
+                          <h5>Bambino {childIndex + 1}</h5>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor={`group-${groupIndex}-child-age-${childIndex}`}>Età</Label>
+                              <select
+                                id={`group-${groupIndex}-child-age-${childIndex}`}
+                                value={child.age}
+                                onChange={(e) => updateGroupChildDetails(groupIndex, childIndex, 'age', parseInt(e.target.value))}
+                                className="w-full h-10 px-3 rounded-md border border-input bg-background focus-visible:outline-none"
+                              >
+                                {Array.from({ length: 18 }, (_, i) => (
+                                  <option key={i} value={i}>{i} {i === 1 ? "anno" : "anni"}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`group-${groupIndex}-sleeps-with-parents-${childIndex}`}
+                                checked={child.sleepsWithParents}
+                                onCheckedChange={(checked) => {
+                                  updateGroupChildDetails(groupIndex, childIndex, 'sleepsWithParents', checked === true);
+                                }}
+                              />
+                              <Label htmlFor={`group-${groupIndex}-sleeps-with-parents-${childIndex}`}>Dorme con i genitori</Label>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+            
+            {/* Pulsante per aggiungere un nuovo gruppo */}
+            <Button 
+              type="button"
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={addFamilyGroup}
+            >
+              <Plus className="h-4 w-4" />
+              Aggiungi {form.getValues("groupType") === "couples" ? "coppia" : "famiglia"}
+            </Button>
+            
+            {/* Riepilogo */}
+            <div className="border rounded-lg p-4 bg-muted/50">
+              <h4 className="font-medium mb-2">Riepilogo</h4>
+              <div className="space-y-1 text-sm">
+                <p>
+                  <span className="font-medium">Totale adulti:</span> {familyGroups.reduce((sum, group) => sum + group.adults, 0)}
+                </p>
+                <p>
+                  <span className="font-medium">Totale bambini:</span> {familyGroups.reduce((sum, group) => sum + group.children, 0)}
+                </p>
+                <p>
+                  <span className="font-medium">Totale ospiti:</span> {
+                    familyGroups.reduce((sum, group) => sum + group.adults + group.children, 0)
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => {
+              setGroupDialog(false);
+              form.setValue("isGroupBooking", false);
+            }}>Annulla</Button>
+            <Button type="button" onClick={closeGroupDialog}>Conferma</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
