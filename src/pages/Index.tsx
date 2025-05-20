@@ -15,16 +15,16 @@ import {
 const Index = () => {
   return (
     <div className="flex flex-col">
-      {/* Hero Section - Improved spacing for mobile */}
+      {/* Hero Section - Migliorato per occupare tutto lo spazio */}
       <div className="relative w-full">
-        <div className="w-full h-[40vh] md:h-[60vh] bg-blue-200 relative overflow-hidden">
+        <div className="w-full h-[50vh] md:h-[70vh] relative overflow-hidden">
           <div 
             className="absolute inset-0 bg-cover bg-center" 
             style={{backgroundImage: "url('https://www.villamareblu.it/wp-content/uploads/2024/01/esterno5-scaled.jpg')"}}
           />
           <div className="absolute inset-0 bg-black/30" />
           <div className="absolute inset-0 flex flex-col justify-center items-center text-white p-6 text-center">
-            <h1 className="text-3xl md:text-5xl font-bold mb-4">Villa MareBlu</h1>
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">Villa MareBlu</h1>
             <p className="text-lg md:text-xl mb-8 max-w-md">La tua vacanza da sogno sul mare cristallino del Salento</p>
             <div className="flex flex-col sm:flex-row gap-4 w-full max-w-xs sm:max-w-md">
               <Button size="lg" className="w-full" asChild>

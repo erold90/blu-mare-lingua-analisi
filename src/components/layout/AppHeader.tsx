@@ -10,28 +10,22 @@ export function AppHeader() {
   const isMobile = useIsMobile();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-2">
+    <header className="sticky top-0 z-40 w-full backdrop-blur bg-transparent">
+      <div className="container flex h-16 items-center">
+        <div className="flex items-center">
           <SidebarTrigger className="md:hidden" />
-          <Link to="/" className="flex items-center gap-2 text-xl font-semibold">
-            <span className="text-primary">Villa Mare Blu</span>
-          </Link>
         </div>
         
         {!isMobile && (
-          <nav className="hidden md:flex items-center gap-6">
-            <Link to="/" className="font-medium hover:text-primary transition-colors">
+          <nav className="flex items-center gap-6 ml-auto">
+            <Link to="/" className="font-medium text-white hover:text-primary transition-colors">
               Home
             </Link>
-            <Link to="/appartamenti" className="font-medium hover:text-primary transition-colors">
+            <Link to="/appartamenti" className="font-medium text-white hover:text-primary transition-colors">
               Appartamenti
             </Link>
-            <Link to="/preventivo" className="font-medium hover:text-primary transition-colors">
+            <Link to="/preventivo" className="font-medium text-white hover:text-primary transition-colors">
               Preventivo
-            </Link>
-            <Link to="/area-riservata" className="font-medium hover:text-primary transition-colors">
-              Area Riservata
             </Link>
           </nav>
         )}
