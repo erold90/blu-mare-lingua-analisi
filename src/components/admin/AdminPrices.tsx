@@ -123,6 +123,12 @@ const AdminPrices = () => {
             >
               2025
             </TabsTrigger>
+            <TabsTrigger 
+              value="2026"
+              onClick={() => setSelectedYear(2026)}
+            >
+              2026
+            </TabsTrigger>
           </TabsList>
         </div>
         
@@ -308,6 +314,95 @@ const AdminPrices = () => {
           <Card>
             <CardHeader>
               <CardTitle>Prezzi Settimanali 2025</CardTitle>
+            </CardHeader>
+            <CardContent className="overflow-auto">
+              <div className="text-sm text-muted-foreground mb-4">
+                <p>I prezzi sono da intendersi per settimana (da sabato a sabato).</p>
+                <p>Anche per soggiorni più brevi verrà applicato il prezzo settimanale.</p>
+              </div>
+              
+              {isMobile ? (
+                // Mobile view with vertical layout
+                <div className="space-y-8">
+                  {apartments.map(apartment => (
+                    <div key={apartment.id} className="border rounded-lg p-4">
+                      <h3 className="font-bold mb-2">{apartment.name}</h3>
+                      <div className="space-y-3">
+                        {weeks.map((week, idx) => (
+                          <div key={idx} className="grid grid-cols-2 gap-2 items-center">
+                            <Label className="text-xs">
+                              {format(week.start, "d MMM", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
+                            </Label>
+                            <div className="flex items-center">
+                              <Input
+                                type="number"
+                                min="0"
+                                value={getPriceForWeek(apartment.id, week.start)}
+                                onChange={(e) => handlePriceChange(
+                                  apartment.id, 
+                                  week.start.toISOString(), 
+                                  e.target.value
+                                )}
+                                className="w-20 text-right"
+                              />
+                              <span className="ml-1">€</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // Desktop view with table
+                <Table className="min-w-[600px]">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[180px]">Settimana</TableHead>
+                      {apartments.map(apartment => (
+                        <TableHead key={apartment.id}>
+                          {apartment.name}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {weeks.map((week, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell className="font-medium">
+                          {format(week.start, "d MMM", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
+                        </TableCell>
+                        {apartments.map(apartment => (
+                          <TableCell key={apartment.id}>
+                            <div className="flex items-center">
+                              <Input
+                                type="number"
+                                min="0"
+                                value={getPriceForWeek(apartment.id, week.start)}
+                                onChange={(e) => handlePriceChange(
+                                  apartment.id, 
+                                  week.start.toISOString(), 
+                                  e.target.value
+                                )}
+                                className="w-20 text-right"
+                              />
+                              <span className="ml-1">€</span>
+                            </div>
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="2026" className="mt-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Prezzi Settimanali 2026</CardTitle>
             </CardHeader>
             <CardContent className="overflow-auto">
               <div className="text-sm text-muted-foreground mb-4">
