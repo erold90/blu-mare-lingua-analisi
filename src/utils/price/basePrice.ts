@@ -20,15 +20,22 @@ export function calculateBasePrice(
   const year = checkIn.getFullYear();
   const seasonalPrices = getSeasonalPrices(year);
   
+  console.log(`Calculating base price for ${selectedApartments.length} apartments, high season: ${useWeeklyPrice}`);
+  
   selectedApartments.forEach(apartment => {
     if (useWeeklyPrice) {
       // Get the weekly price based on season
-      basePrice += getWeeklyPrice(apartment, checkIn, seasonalPrices);
+      const weeklyPrice = getWeeklyPrice(apartment, checkIn, seasonalPrices);
+      basePrice += weeklyPrice;
+      console.log(`Weekly price for ${apartment.name}: ${weeklyPrice}€`);
     } else {
       // Regular nightly pricing
-      basePrice += (apartment.price * nights);
+      const nightlyTotal = apartment.price * nights;
+      basePrice += nightlyTotal;
+      console.log(`Nightly price for ${apartment.name}: ${apartment.price}€ x ${nights} nights = ${nightlyTotal}€`);
     }
   });
   
+  console.log(`Total base price: ${basePrice}€`);
   return basePrice;
 }
