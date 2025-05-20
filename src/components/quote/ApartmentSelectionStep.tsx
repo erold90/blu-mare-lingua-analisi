@@ -96,7 +96,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {suitableApartments.map((apartment) => (
               <div 
                 key={apartment.id} 
@@ -106,12 +106,12 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                 )}
               >
                 {apartment.id === recommendedApartmentId && (
-                  <Badge variant="default" className="absolute top-2 right-2 bg-green-600">
+                  <Badge variant="default" className="absolute top-1 left-1 bg-green-600 text-xs">
                     Consigliato
                   </Badge>
                 )}
                 
-                <h3 className="font-medium mt-2 text-base md:text-lg flex items-center">
+                <h3 className="font-medium mt-6 text-sm md:text-base flex flex-nowrap items-center">
                   <span className="mr-1">Appartamento</span>
                   <span>{apartment.name.split(' ')[1]}</span>
                 </h3>
