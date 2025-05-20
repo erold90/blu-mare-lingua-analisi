@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
@@ -12,7 +11,7 @@ import { usePrices } from "@/hooks/usePrices";
 import { apartments } from "@/data/apartments";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { euro } from "lucide-react";
+import { Euro } from "lucide-react";
 
 const AdminPrices = () => {
   const { weeklyPrices, updateWeeklyPrice, generateWeeksForSeason, getCurrentSeason } = usePrices();
