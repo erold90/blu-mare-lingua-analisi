@@ -1,4 +1,3 @@
-
 import React from "react";
 
 // Components
@@ -16,6 +15,7 @@ import { Form } from "@/components/ui/form";
 // Utils and Data
 import { apartments } from "@/data/apartments";
 import { useQuoteForm } from "@/hooks/useQuoteForm";
+import { FamilyGroup } from "@/hooks/quote/useGroupManagement";
 
 interface FamilyGroup {
   adults: number;
