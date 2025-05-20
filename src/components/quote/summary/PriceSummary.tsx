@@ -20,6 +20,12 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   // Calculate the subtotal correctly (basePrice + extras + cleaningFee)
   const subtotal = priceInfo.basePrice + priceInfo.extras + priceInfo.cleaningFee;
 
+  // Make sure the total to pay is the same as totalAfterDiscount
+  const totalToPay = priceInfo.totalAfterDiscount;
+
+  // Calculate deposit as 30% of the total
+  const deposit = Math.ceil(totalToPay * 0.3);
+
   return (
     <div className="border rounded-md p-4 space-y-4">
       <h3 className="font-medium">Riepilogo costi</h3>
@@ -62,7 +68,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         <Separator className="my-2" />
         <div className="flex justify-between text-sm font-medium">
           <span>Totale con sconto applicato:</span>
-          <span className="text-primary">{priceInfo.totalAfterDiscount}€</span>
+          <span className="text-primary">{totalToPay}€</span>
         </div>
         {priceInfo.savings > 0 && (
           <div className="flex justify-between text-sm text-green-600">
@@ -73,11 +79,11 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         <Separator className="my-2" />
         <div className="flex justify-between font-semibold text-base pt-2">
           <span>Totale da pagare:</span>
-          <span>{priceInfo.totalAfterDiscount}€</span>
+          <span>{totalToPay}€</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Caparra (30%):</span>
-          <span>{priceInfo.deposit}€</span>
+          <span>{deposit}€</span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Cauzione (restituibile):</span>
