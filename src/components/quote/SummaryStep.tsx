@@ -1,17 +1,19 @@
 
 import React, { useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
-import { Separator } from "@/components/ui/separator";
-import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
-import { usePrices } from "@/hooks/usePrices";
 import { v4 as uuidv4 } from "uuid";
 import { useActivityLog } from "@/hooks/useActivityLog";
+
+// Componenti separati per ogni sezione
+import DateDurationInfo from "./summary/DateDurationInfo";
+import GuestInfo from "./summary/GuestInfo";
+import ApartmentList from "./summary/ApartmentList";
+import PriceSummary from "./summary/PriceSummary";
 
 interface SummaryStepProps {
   form: UseFormReturn<FormValues>;
@@ -25,7 +27,6 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
   const priceInfo = calculateTotalPrice(formValues, apartments);
   const selectedApartmentIds = formValues.selectedApartments || [formValues.selectedApartment];
   const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
-  const { totalGuests, effectiveGuestCount, sleepingWithParents, sleepingInCribs } = getEffectiveGuestCount(formValues);
   const { addQuoteLog } = useActivityLog();
   
   // If only one apartment is selected, make sure it's the main selectedApartment
@@ -53,29 +54,6 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
     
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Helper to get persons per apartment
-  const getPersonsInApartment = (apartmentId: string) => {
-    if (formValues.personsPerApartment && formValues.personsPerApartment[apartmentId]) {
-      return formValues.personsPerApartment[apartmentId];
-    }
-    return 0;
-  };
-
-  // Helper to check if an apartment has pets
-  const hasPetsInApartment = (apartmentId: string) => {
-    if (formValues.petsInApartment && formValues.petsInApartment[apartmentId]) {
-      return true;
-    }
-    return false;
-  };
-  
-  // Check if reservation is during high season (June-September)
-  const isHighSeason = formValues.checkIn ? 
-    (formValues.checkIn.getMonth() >= 5 && formValues.checkIn.getMonth() <= 8) : false;
-  
-  // Check if check-in is on Saturday
-  const isCheckInSaturday = formValues.checkIn ? formValues.checkIn.getDay() === 6 : false;
   
   return (
     <Card>
@@ -88,209 +66,21 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Date e durata */}
-            <div className="border rounded-md p-4 space-y-2">
-              <h3 className="font-medium">Date del soggiorno</h3>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <span className="text-muted-foreground">Check-in:</span>
-                <span>{form.getValues("checkIn") ? format(form.getValues("checkIn"), "dd/MM/yyyy") : "-"}</span>
-                <span className="text-muted-foreground">Check-out:</span>
-                <span>{form.getValues("checkOut") ? format(form.getValues("checkOut"), "dd/MM/yyyy") : "-"}</span>
-                <span className="text-muted-foreground">Durata:</span>
-                <span>{priceInfo.nights} notti</span>
-                
-                {/* Removed the warning note about summer pricing here */}
-              </div>
-            </div>
+            <DateDurationInfo formValues={formValues} priceInfo={priceInfo} />
             
-            {/* Ospiti con informazioni sui bambini che dormono con i genitori o in culla */}
-            <div className="border rounded-md p-4 space-y-2">
-              <h3 className="font-medium">Ospiti</h3>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <span className="text-muted-foreground">Adulti:</span>
-                <span>{formValues.adults}</span>
-                <span className="text-muted-foreground">Bambini:</span>
-                <span>{formValues.children}</span>
-                
-                {sleepingWithParents > 0 && (
-                  <>
-                    <span className="text-muted-foreground">Bambini che dormono con i genitori:</span>
-                    <span>{sleepingWithParents}</span>
-                  </>
-                )}
-                
-                {sleepingInCribs > 0 && (
-                  <>
-                    <span className="text-muted-foreground">Bambini in culla:</span>
-                    <span>{sleepingInCribs} <span className="text-green-600">(gratuito)</span></span>
-                  </>
-                )}
-                
-                <span className="text-muted-foreground">Totale ospiti:</span>
-                <span>{totalGuests}</span>
-                
-                {(sleepingWithParents > 0 || sleepingInCribs > 0) && (
-                  <>
-                    <span className="text-muted-foreground font-medium">Posti letto effettivi necessari:</span>
-                    <span className="font-medium">{effectiveGuestCount}</span>
-                  </>
-                )}
-              </div>
-            </div>
+            {/* Ospiti */}
+            <GuestInfo formValues={formValues} />
           </div>
           
-          {/* Appartamenti selezionati con costi per appartamento */}
-          <div className="border rounded-md p-4 space-y-3">
-            <h3 className="font-medium">Appartamenti e costi</h3>
-            
-            {selectedApartments.length > 0 ? (
-              <div className="space-y-4">
-                {selectedApartments.map((apartment, index) => {
-                  const personsCount = getPersonsInApartment(apartment.id);
-                  const hasPets = hasPetsInApartment(apartment.id);
-                  const isLastItem = index === selectedApartments.length - 1;
-                  
-                  // Calcolo del costo base per appartamento
-                  const baseApartmentCost = apartment.price * priceInfo.nights;
-                  
-                  // Costo biancheria
-                  const linenCost = formValues.linenOption === "extra" && personsCount > 0 
-                    ? personsCount * 15 
-                    : 0;
-                  
-                  // Costo animali
-                  const petsCost = hasPets ? 50 : 0;
-                  
-                  // Totale per appartamento
-                  const apartmentTotal = baseApartmentCost + linenCost + petsCost;
-                  
-                  return (
-                    <div key={apartment.id} className={`pb-4 ${!isLastItem ? 'border-b' : ''}`}>
-                      <div className="flex flex-col space-y-2">
-                        <div className="flex justify-between items-center">
-                          <h4 className="font-semibold text-md">{apartment.name}</h4>
-                          <span className="text-primary font-semibold">{baseApartmentCost}€</span>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-2 text-sm">
-                          <span className="text-muted-foreground">Capacità:</span>
-                          <span>{apartment.capacity} persone</span>
-                          <span className="text-muted-foreground">Posti letto:</span>
-                          <span>{apartment.beds}</span>
-                          <span className="text-muted-foreground">Posizione:</span>
-                          <span>Piano {apartment.floor}</span>
-                          
-                          {personsCount > 0 && (
-                            <>
-                              <span className="text-muted-foreground">Persone:</span>
-                              <span>{personsCount}</span>
-                            </>
-                          )}
-                          
-                          {hasPets && (
-                            <>
-                              <span className="text-muted-foreground">Animali:</span>
-                              <span>Sì</span>
-                            </>
-                          )}
-                        </div>
-                        
-                        {/* Costi aggiuntivi per appartamento */}
-                        {(linenCost > 0 || petsCost > 0) && (
-                          <div className="mt-2 space-y-1">
-                            <p className="text-sm font-medium">Costi aggiuntivi:</p>
-                            {linenCost > 0 && (
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Biancheria ({personsCount} persone):</span>
-                                <span>{linenCost}€</span>
-                              </div>
-                            )}
-                            {petsCost > 0 && (
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Animali domestici:</span>
-                                <span>{petsCost}€</span>
-                              </div>
-                            )}
-                            <div className="flex justify-between text-sm font-medium pt-1">
-                              <span>Totale appartamento:</span>
-                              <span>{apartmentTotal}€</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Nessun appartamento selezionato</p>
-            )}
-          </div>
+          {/* Appartamenti selezionati */}
+          <ApartmentList 
+            apartments={apartments} 
+            selectedApartments={selectedApartments} 
+            formValues={formValues} 
+          />
           
           {/* Riepilogo costi */}
-          <div className="border rounded-md p-4 space-y-4">
-            <h3 className="font-medium">Riepilogo costi</h3>
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Costo appartamenti {isHighSeason ? '(settimanale)' : `(${priceInfo.nights} notti)`}:</span>
-                <span>{priceInfo.basePrice}€</span>
-              </div>
-              
-              {/* Display the cleaning fee */}
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Pulizia finale:</span>
-                <span>{priceInfo.cleaningFee}€ <span className="text-green-600">(inclusa)</span></span>
-              </div>
-              
-              {priceInfo.extras > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Servizi extra:</span>
-                  <span>{priceInfo.extras}€</span>
-                </div>
-              )}
-              
-              {sleepingInCribs > 0 && (
-                <div className="flex justify-between text-sm text-green-600">
-                  <span>Culle per bambini ({sleepingInCribs}):</span>
-                  <span>Gratuito</span>
-                </div>
-              )}
-              
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Subtotale:</span>
-                <span>{priceInfo.basePrice + priceInfo.extras + priceInfo.cleaningFee}€</span>
-              </div>
-              
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Tassa di soggiorno:</span>
-                <span className="text-green-600">Inclusa</span>
-              </div>
-              
-              <Separator className="my-2" />
-              <div className="flex justify-between text-sm font-medium">
-                <span>Totale con sconto applicato:</span>
-                <span className="text-primary">{priceInfo.totalAfterDiscount}€</span>
-              </div>
-              {priceInfo.savings > 0 && (
-                <div className="flex justify-between text-sm text-green-600">
-                  <span>Risparmio (sconto + tassa di soggiorno):</span>
-                  <span>{priceInfo.savings}€</span>
-                </div>
-              )}
-              <Separator className="my-2" />
-              <div className="flex justify-between font-semibold text-base pt-2">
-                <span>Totale da pagare:</span>
-                <span>{priceInfo.totalAfterDiscount}€</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Caparra (30%):</span>
-                <span>{priceInfo.deposit}€</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Cauzione (restituibile):</span>
-                <span>200€</span>
-              </div>
-            </div>
-          </div>
+          <PriceSummary priceInfo={priceInfo} formValues={formValues} />
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
