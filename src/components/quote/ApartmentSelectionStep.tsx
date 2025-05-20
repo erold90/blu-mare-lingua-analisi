@@ -32,7 +32,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   // Initialize selectedApartments in form if not already set
   React.useEffect(() => {
     if (!form.getValues("selectedApartments") || !Array.isArray(form.getValues("selectedApartments"))) {
-      form.setValue("selectedApartments", []);
+      form.setValue("selectedApartments", [], { shouldValidate: true });
     }
   }, [form]);
   
@@ -104,7 +104,6 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                   "border rounded-lg p-3 cursor-pointer transition-all hover:border-primary relative", 
                   isApartmentSelected(apartment.id) ? "border-primary border-2" : ""
                 )}
-                onClick={() => toggleApartmentSelection(apartment.id)}
               >
                 {apartment.id === recommendedApartmentId && (
                   <Badge variant="default" className="absolute top-2 right-2 bg-green-600">
@@ -153,10 +152,15 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                     id={`apartment-checkbox-${apartment.id}`}
                     checked={isApartmentSelected(apartment.id)}
                     onCheckedChange={() => toggleApartmentSelection(apartment.id)}
-                    onClick={(e) => e.stopPropagation()}
                     className="cursor-pointer"
                   />
                 </div>
+                
+                {/* Create a clickable overlay for the entire card */}
+                <div 
+                  className="absolute inset-0 z-10 cursor-pointer" 
+                  onClick={() => toggleApartmentSelection(apartment.id)}
+                />
               </div>
             ))}
           </div>
