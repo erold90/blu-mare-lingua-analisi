@@ -184,7 +184,11 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
               )}
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotale:</span>
-                <span>{priceInfo.totalBeforeDiscount}€</span>
+                <span>{priceInfo.basePrice + priceInfo.extras}€</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Tassa di soggiorno:</span>
+                <span className="text-green-600">Inclusa</span>
               </div>
               <Separator className="my-2" />
               <div className="flex justify-between text-sm font-medium">
@@ -193,18 +197,14 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
               </div>
               {priceInfo.savings > 0 && (
                 <div className="flex justify-between text-sm text-green-600">
-                  <span>Risparmio:</span>
+                  <span>Risparmio (sconto + tassa di soggiorno):</span>
                   <span>{priceInfo.savings}€</span>
                 </div>
               )}
               <Separator className="my-2" />
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Tassa di soggiorno:</span>
-                <span>{priceInfo.touristTax}€</span>
-              </div>
               <div className="flex justify-between font-semibold text-base pt-2">
                 <span>Totale da pagare:</span>
-                <span>{priceInfo.totalAfterDiscount + priceInfo.touristTax}€</span>
+                <span>{priceInfo.totalAfterDiscount}€</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Caparra (30%):</span>

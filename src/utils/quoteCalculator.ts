@@ -89,15 +89,27 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
     }
   }
   
-  // Calcolo della tassa di soggiorno
-  const adults = formValues.adults;
-  const touristTax = adults * nights * 2; // € 2 per persona per notte
+  // Calcolo della tassa di soggiorno (1€ per persona per notte, esclusi bambini < 12 anni)
+  const adults = formValues.adults || 0;
+  const childrenDetails = formValues.childrenDetails || [];
   
-  // Prezzo totale (esclusa tassa di soggiorno)
-  const totalPrice = basePrice + totalExtras;
+  // Conto solo i bambini con età >= 12 anni per la tassa di soggiorno
+  const childrenOver12 = childrenDetails.filter(child => (child.age >= 12)).length;
+  
+  // Totale persone che pagano la tassa di soggiorno
+  const peoplePayingTax = adults + childrenOver12;
+  
+  // Calcolo tassa: 1€ per persona per notte
+  const touristTax = peoplePayingTax * nights * 1;
+  
+  // Prezzo totale (inclusa tassa di soggiorno)
+  const totalPrice = basePrice + totalExtras + touristTax;
   
   // Arrotondamento per difetto al multiplo di 50 più vicino
   const roundedPrice = Math.floor(totalPrice / 50) * 50;
+  
+  // Il risparmio ora include anche la tassa di soggiorno
+  const savings = totalPrice - roundedPrice;
   
   return {
     basePrice,
@@ -105,7 +117,7 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
     touristTax,
     totalBeforeDiscount: totalPrice,
     totalAfterDiscount: roundedPrice,
-    savings: totalPrice - roundedPrice,
+    savings: savings,
     deposit: Math.ceil(roundedPrice * 0.3), // 30% di caparra
     nights
   };
