@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { format, differenceInDays } from "date-fns";
 import { it } from 'date-fns/locale';
@@ -24,43 +24,57 @@ interface DateSelectionStepProps {
 }
 
 const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, nextStep }) => {
-  // Ottieni la data di check-in e check-out dal form
-  const checkInDate = form.watch("checkIn");
-  const checkOutDate = form.watch("checkOut");
-
-  // Crea un oggetto DateRange per il calendario
-  const dateRange = checkInDate && checkOutDate
-    ? { from: new Date(checkInDate), to: new Date(checkOutDate) }
-    : undefined;
-
-  // Calcola il numero di notti
-  const numberOfNights = checkInDate && checkOutDate
-    ? differenceInDays(new Date(checkOutDate), new Date(checkInDate))
+  // State for the date range
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  
+  // Update the date range when the form values change
+  useEffect(() => {
+    const checkIn = form.getValues("checkIn");
+    const checkOut = form.getValues("checkOut");
+    
+    if (checkIn && checkOut) {
+      setDateRange({
+        from: new Date(checkIn),
+        to: new Date(checkOut)
+      });
+    }
+  }, [form]);
+  
+  // Calculate number of nights
+  const numberOfNights = dateRange?.from && dateRange?.to
+    ? differenceInDays(dateRange.to, dateRange.from)
     : 0;
-
-  // Gestisce la selezione delle date
-  const handleDateRangeSelect = (range: DateRange | undefined) => {
-    if (range?.from) {
-      form.setValue("checkIn", range.from);
-    } else {
+  
+  // Function to disable days that are not Saturday, Sunday, or Monday
+  const disabledDays = (date: Date) => {
+    const day = date.getDay();
+    // 0 = Sunday, 1 = Monday, 6 = Saturday
+    return day !== 0 && day !== 1 && day !== 6;
+  };
+  
+  // Handle date range selection
+  const handleDateChange = (range: DateRange | undefined) => {
+    if (!range) {
       form.setValue("checkIn", undefined as any);
-    }
-
-    if (range?.to) {
-      form.setValue("checkOut", range.to);
-    } else {
       form.setValue("checkOut", undefined as any);
+      setDateRange(undefined);
+      return;
     }
-
+    
+    // Update the date range state
+    setDateRange(range);
+    
+    // Update form values
+    if (range.from) {
+      form.setValue("checkIn", range.from);
+    }
+    
+    if (range.to) {
+      form.setValue("checkOut", range.to);
+    }
+    
     // Trigger validation
     form.trigger(["checkIn", "checkOut"]);
-  };
-
-  // Funzione che disabilita tutti i giorni tranne sabato, domenica e lunedì
-  const isDateDisabled = (date: Date) => {
-    const day = date.getDay();
-    // 0 = domenica, 1 = lunedì, 6 = sabato
-    return day !== 0 && day !== 1 && day !== 6;
   };
 
   return (
@@ -70,14 +84,14 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
         <CardDescription>Indica le date di check-in e check-out del tuo soggiorno</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Pulsante di selezione date */}
+        {/* Date selection button */}
         <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               className={cn(
                 "w-full justify-start text-left font-normal",
-                !dateRange && "text-muted-foreground"
+                !dateRange?.from && "text-muted-foreground"
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
@@ -96,36 +110,36 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
               mode="range"
               defaultMonth={new Date()}
               selected={dateRange}
-              onSelect={handleDateRangeSelect}
-              disabled={isDateDisabled}
+              onSelect={handleDateChange}
+              disabled={disabledDays}
               numberOfMonths={1}
             />
           </PopoverContent>
         </Popover>
 
-        {/* Avviso informativo */}
-        <Alert>
+        {/* Information alert */}
+        <Alert className="bg-muted/50">
           <InfoIcon className="h-4 w-4 mr-2" />
           <AlertDescription>
             Per garantire un'esperienza ottimale, accettiamo prenotazioni con arrivi e partenze solo di sabato, domenica o lunedì.
           </AlertDescription>
         </Alert>
 
-        {/* Riepilogo date */}
-        {checkInDate && checkOutDate && (
+        {/* Stay summary */}
+        {dateRange?.from && dateRange?.to && (
           <div className="border rounded-lg p-4 bg-muted/30">
             <h3 className="font-semibold mb-2">Riepilogo del soggiorno</h3>
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <p className="text-muted-foreground text-sm">Check-in</p>
                 <p className="font-medium">
-                  {format(new Date(checkInDate), "EEEE d MMMM yyyy", { locale: it })}
+                  {format(dateRange.from, "EEEE d MMMM yyyy", { locale: it })}
                 </p>
               </div>
               <div>
                 <p className="text-muted-foreground text-sm">Check-out</p>
                 <p className="font-medium">
-                  {format(new Date(checkOutDate), "EEEE d MMMM yyyy", { locale: it })}
+                  {format(dateRange.to, "EEEE d MMMM yyyy", { locale: it })}
                 </p>
               </div>
             </div>
@@ -142,7 +156,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
         <Button 
           type="button" 
           onClick={nextStep} 
-          disabled={!checkInDate || !checkOutDate}
+          disabled={!dateRange?.from || !dateRange?.to}
         >
           Avanti
         </Button>

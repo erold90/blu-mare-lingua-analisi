@@ -59,7 +59,7 @@ function Calendar({
         IconRight: () => <ChevronRight className="h-4 w-4" />,
       }}
       locale={it}
-      weekStartsOn={1} // Lunedì come primo giorno della settimana
+      weekStartsOn={1}
       formatters={{
         formatWeekdayName: (day) => format(day, 'EEEEEE', { locale: it }).toUpperCase(),
         formatCaption: (date) => format(date, 'MMMM yyyy', { locale: it }),
