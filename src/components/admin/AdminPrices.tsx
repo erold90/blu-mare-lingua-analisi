@@ -1,6 +1,5 @@
 import * as React from "react";
 import { usePrices } from "@/hooks/usePrices";
-import { toast } from "sonner";
 import YearTabs from "./prices/YearTabs";
 
 const AdminPrices = () => {
@@ -40,7 +39,6 @@ const AdminPrices = () => {
       
       // Mark as initialized so we don't do it again
       setPrices2025Initialized(true);
-      toast.success("Prezzi 2025 aggiornati con successo");
     }
   }, [selectedYear, prices2025Initialized, updateWeeklyPrice, generateWeeksForSeason]);
   
@@ -57,7 +55,6 @@ const AdminPrices = () => {
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue > 0) {
       updateWeeklyPrice(apartmentId, weekStartStr, numValue);
-      toast.success(`Prezzo aggiornato con successo`);
     }
   };
   
