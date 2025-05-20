@@ -24,6 +24,7 @@ import {
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { Separator } from "@/components/ui/separator";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ServicesStepProps {
   form: UseFormReturn<FormValues>;
@@ -33,6 +34,7 @@ interface ServicesStepProps {
 }
 
 const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, apartments }) => {
+  const isMobile = useIsMobile();
   const selectedApartmentIds = form.watch("selectedApartments") || [];
   const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
   const multipleApartments = selectedApartments.length > 1;
@@ -110,6 +112,17 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
       50) : 
     0;
   
+  // Funzione per ottenere il testo dell'etichetta per l'appartamento
+  const getApartmentLabel = (apartmentName: string) => {
+    const apartmentNumber = apartmentName.split(' ')[1];
+    
+    return (
+      <span className="whitespace-nowrap flex-shrink-0">
+        {isMobile ? `App. ${apartmentNumber}` : `Appartamento ${apartmentNumber}`}
+      </span>
+    );
+  };
+  
   return (
     <Card>
       <CardHeader>
@@ -158,9 +171,8 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
                         
                         {selectedApartments.map((apartment) => (
                           <div key={apartment.id} className="flex items-center justify-between">
-                            <Label htmlFor={`apt-persons-${apartment.id}`} className="text-sm flex-shrink-0 whitespace-nowrap">
-                              <span className="hidden sm:inline">Appartamento </span>
-                              <span>{apartment.name.split(' ')[1]}:</span>
+                            <Label htmlFor={`apt-persons-${apartment.id}`} className="text-sm flex-shrink-0">
+                              {getApartmentLabel(apartment.name)}:
                             </Label>
                             <div className="flex items-center space-x-2">
                               <Button 
@@ -273,8 +285,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
                         onCheckedChange={() => togglePetInApartment(apartment.id)}
                       />
                       <Label htmlFor={`pet-apt-${apartment.id}`} className="text-sm cursor-pointer">
-                        <span className="hidden sm:inline">Appartamento </span>
-                        <span>{apartment.name.split(' ')[1]}</span>
+                        {getApartmentLabel(apartment.name)}
                       </Label>
                     </div>
                   ))}
