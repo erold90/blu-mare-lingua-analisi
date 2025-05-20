@@ -155,29 +155,9 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
           </AlertDescription>
         </Alert>
         
-        {/* Feedback about bed selection - Fixed overflow issue */}
-        <div className={cn(
-          "p-3 rounded-md transition-colors w-full max-w-full",
-          hasEnoughBeds ? "bg-green-50 border border-green-200" : "bg-amber-50 border border-amber-200"
-        )}>
-          <div className="flex items-center flex-wrap">
-            <Bed className={cn("h-4 w-4 mr-2 shrink-0", hasEnoughBeds ? "text-green-600" : "text-amber-600")} />
-            <p className={cn("text-sm font-medium text-balance", hasEnoughBeds ? "text-green-700" : "text-amber-700")}>
-              {hasEnoughBeds 
-                ? `Hai selezionato appartamenti con ${selectedBedsCount} posti letto (sufficienti).` 
-                : `Hai selezionato ${selectedBedsCount} posti letto su ${effectiveGuestCount} necessari. Seleziona altri appartamenti.`}
-            </p>
-          </div>
-        </div>
-
-        {/* Avviso disponibilità aggiornate in base alle prenotazioni */}
-        {formValues.checkIn && formValues.checkOut && (
-          <Alert variant="default" className="bg-yellow-50 border-yellow-200">
-            <AlertDescription className="text-yellow-800">
-              La disponibilità degli appartamenti è aggiornata in base alle prenotazioni esistenti per il periodo selezionato.
-            </AlertDescription>
-          </Alert>
-        )}
+        {/* Removed the feedback about bed selection alert */}
+        
+        {/* Removed the availability alert */}
         
         {availableApartments.length === 0 ? (
           <div className="p-4 border rounded-md bg-muted/50">
