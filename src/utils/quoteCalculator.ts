@@ -1,3 +1,4 @@
+import { format, parseISO } from "date-fns";
 import { Apartment } from "../data/apartments";
 import { FormValues } from "./quoteFormSchema";
 
@@ -53,10 +54,62 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
   // Calcolo il numero di notti
   const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
   
+  // Check if we should use weekly pricing
+  // If check-in is not on Saturday, still use the weekly price
+  let useWeeklyPrice = false;
+  const dayOfWeek = checkIn.getDay();
+  const isCheckInSaturday = dayOfWeek === 6; // 6 is Saturday
+  
+  // If check-in is in June through September, use weekly pricing
+  const month = checkIn.getMonth(); // 0-indexed, 5 = June, 8 = September
+  if (month >= 5 && month <= 8) {
+    useWeeklyPrice = true;
+  }
+  
+  // Try to get seasonal pricing from localStorage
+  let seasonalPrices: any[] = [];
+  try {
+    const savedPricing = localStorage.getItem("seasonalPricing");
+    if (savedPricing) {
+      const allPricing = JSON.parse(savedPricing);
+      const year = checkIn.getFullYear();
+      const yearPricing = allPricing.find((season: any) => season.year === year);
+      if (yearPricing) {
+        seasonalPrices = yearPricing.prices;
+      }
+    }
+  } catch (error) {
+    console.error("Failed to parse seasonal pricing:", error);
+  }
+  
   // Calcolo il prezzo base degli appartamenti
-  let basePrice = selectedApartments.reduce((total, apartment) => {
-    return total + (apartment.price * nights);
-  }, 0);
+  let basePrice = 0;
+  
+  selectedApartments.forEach(apartment => {
+    if (useWeeklyPrice) {
+      // Check if we have a seasonal price for this apartment and week
+      let weeklyPrice = apartment.price * 7; // Default weekly price
+      
+      // Format check-in date to compare with seasonal prices
+      const checkInStr = checkIn.toISOString().split('T')[0];
+      
+      // Look for a matching seasonal price
+      const seasonalPrice = seasonalPrices.find(
+        p => p.apartmentId === apartment.id && 
+             p.weekStart.substring(0, 10) <= checkInStr && 
+             p.weekEnd.substring(0, 10) >= checkInStr
+      );
+      
+      if (seasonalPrice) {
+        weeklyPrice = seasonalPrice.price;
+      }
+      
+      basePrice += weeklyPrice;
+    } else {
+      // Otherwise use nightly pricing
+      basePrice += (apartment.price * nights);
+    }
+  });
   
   // Calculate cleaning fee for each apartment
   let cleaningFee = selectedApartments.reduce((total, apartment) => {

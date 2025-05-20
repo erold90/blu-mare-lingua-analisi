@@ -12,6 +12,10 @@ import { useAuth } from "@/hooks/useAuth";
 // Admin components imports
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminReservations from "@/components/admin/AdminReservations";
+import AdminPrices from "@/components/admin/AdminPrices";
+import AdminApartments from "@/components/admin/AdminApartments";
+import AdminSettings from "@/components/admin/AdminSettings";
+import AdminLog from "@/components/admin/AdminLog";
 import AdminLayout from "@/components/admin/AdminLayout";
 
 const LoginForm = () => {
@@ -89,6 +93,10 @@ const ReservedAreaPage = () => {
               <Routes>
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="prenotazioni" element={<AdminReservations />} />
+                <Route path="prezzi" element={<AdminPrices />} />
+                <Route path="appartamenti" element={<AdminApartments />} />
+                <Route path="impostazioni" element={<AdminSettings />} />
+                <Route path="log" element={<AdminLog />} />
                 <Route path="*" element={<Navigate to="/area-riservata/dashboard" />} />
               </Routes>
             </AdminLayout>

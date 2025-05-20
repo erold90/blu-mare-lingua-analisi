@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
 import { AppLayout } from "./components/layout/AppLayout";
 import Index from "./pages/Index";
@@ -15,29 +15,59 @@ import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import CookiePolicyPage from "./pages/CookiePolicyPage";
 import NotFound from "./pages/NotFound";
 import { ReservationsProvider } from "./hooks/useReservations";
+import { PricesProvider } from "./hooks/usePrices";
+import { SettingsProvider } from "./hooks/useSettings";
+import { ActivityLogProvider } from "./hooks/useActivityLog";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
+
+// Component to track page views
+const PageViewTracker = () => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    // Import here to avoid circular dependency
+    import("./hooks/useActivityLog").then(({ useActivityLog }) => {
+      try {
+        const { addSiteVisit } = useActivityLog();
+        addSiteVisit(location.pathname);
+      } catch (error) {
+        console.error("Failed to log page visit", error);
+      }
+    });
+  }, [location]);
+  
+  return null;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <ReservationsProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route element={<AppLayout />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/appartamenti" element={<ApartmentsPage />} />
-              <Route path="/preventivo" element={<RequestQuotePage />} />
-              <Route path="/area-riservata/*" element={<ReservedAreaPage />} />
-              <Route path="/contatti" element={<ContactsPage />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-              <Route path="/cookie-policy" element={<CookiePolicyPage />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <PricesProvider>
+          <SettingsProvider>
+            <ActivityLogProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <PageViewTracker />
+                <Routes>
+                  <Route element={<AppLayout />}>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/appartamenti" element={<ApartmentsPage />} />
+                    <Route path="/preventivo" element={<RequestQuotePage />} />
+                    <Route path="/area-riservata/*" element={<ReservedAreaPage />} />
+                    <Route path="/contatti" element={<ContactsPage />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                    <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+                  </Route>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </ActivityLogProvider>
+          </SettingsProvider>
+        </PricesProvider>
       </ReservationsProvider>
     </TooltipProvider>
   </QueryClientProvider>

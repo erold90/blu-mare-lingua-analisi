@@ -2,7 +2,7 @@
 import * as React from "react";
 import { NavLink, useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Calendar, LayoutDashboard, Home, Menu } from "lucide-react";
+import { Calendar, LayoutDashboard, Home, Menu, Image, Settings, EuroIcon, History } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
@@ -52,6 +52,54 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <Calendar className="h-5 w-5" />
         <span>Prenotazioni</span>
       </NavLink>
+      <NavLink
+        to="/area-riservata/prezzi"
+        className={({ isActive }) =>
+          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
+            isActive ? "bg-accent font-medium" : "hover:bg-muted"
+          }`
+        }
+        onClick={() => setMenuOpen(false)}
+      >
+        <EuroIcon className="h-5 w-5" />
+        <span>Prezzi</span>
+      </NavLink>
+      <NavLink
+        to="/area-riservata/appartamenti"
+        className={({ isActive }) =>
+          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
+            isActive ? "bg-accent font-medium" : "hover:bg-muted"
+          }`
+        }
+        onClick={() => setMenuOpen(false)}
+      >
+        <Image className="h-5 w-5" />
+        <span>Appartamenti</span>
+      </NavLink>
+      <NavLink
+        to="/area-riservata/impostazioni"
+        className={({ isActive }) =>
+          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
+            isActive ? "bg-accent font-medium" : "hover:bg-muted"
+          }`
+        }
+        onClick={() => setMenuOpen(false)}
+      >
+        <Settings className="h-5 w-5" />
+        <span>Impostazioni</span>
+      </NavLink>
+      <NavLink
+        to="/area-riservata/log"
+        className={({ isActive }) =>
+          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
+            isActive ? "bg-accent font-medium" : "hover:bg-muted"
+          }`
+        }
+        onClick={() => setMenuOpen(false)}
+      >
+        <History className="h-5 w-5" />
+        <span>Log</span>
+      </NavLink>
     </nav>
   );
 
@@ -61,7 +109,12 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <div className="flex flex-col">
           <h1 className="text-xl font-bold">Area Amministrazione</h1>
           <p className="text-muted-foreground text-xs">
-            {isActive('dashboard') ? 'Statistiche e metriche' : 'Gestione prenotazioni'}
+            {isActive('dashboard') ? 'Statistiche e metriche' : 
+             isActive('prenotazioni') ? 'Gestione prenotazioni' : 
+             isActive('prezzi') ? 'Gestione prezzi stagionali' :
+             isActive('appartamenti') ? 'Gestione appartamenti' :
+             isActive('impostazioni') ? 'Impostazioni generali' :
+             isActive('log') ? 'Log attività' : ''}
           </p>
         </div>
         <Button variant="outline" size="sm" className="h-9" asChild>
@@ -78,7 +131,14 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" className="w-full flex justify-between items-center mb-3">
-                  <span>{isActive('dashboard') ? 'Dashboard' : 'Prenotazioni'}</span>
+                  <span>
+                    {isActive('dashboard') ? 'Dashboard' : 
+                     isActive('prenotazioni') ? 'Prenotazioni' :
+                     isActive('prezzi') ? 'Prezzi' :
+                     isActive('appartamenti') ? 'Appartamenti' :
+                     isActive('impostazioni') ? 'Impostazioni' :
+                     isActive('log') ? 'Log' : ''}
+                  </span>
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>

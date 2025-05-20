@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { format } from "date-fns";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,9 @@ import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
 import { Separator } from "@/components/ui/separator";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
+import { usePrices } from "@/hooks/usePrices";
+import { v4 as uuidv4 } from "uuid";
+import { useActivityLog } from "@/hooks/useActivityLog";
 
 interface SummaryStepProps {
   form: UseFormReturn<FormValues>;
@@ -22,13 +26,33 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
   const selectedApartmentIds = formValues.selectedApartments || [formValues.selectedApartment];
   const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
   const { totalGuests, effectiveGuestCount, sleepingWithParents, sleepingInCribs } = getEffectiveGuestCount(formValues);
+  const { addQuoteLog } = useActivityLog();
   
   // If only one apartment is selected, make sure it's the main selectedApartment
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedApartmentIds.length === 1 && formValues.selectedApartment !== selectedApartmentIds[0]) {
       form.setValue("selectedApartment", selectedApartmentIds[0]);
     }
   }, [selectedApartmentIds, form, formValues.selectedApartment]);
+  
+  // Log the quote when this component mounts
+  useEffect(() => {
+    const quoteLogId = localStorage.getItem('currentQuoteLogId') || uuidv4();
+    
+    // Save the quote log
+    addQuoteLog({
+      id: quoteLogId,
+      timestamp: new Date().toISOString(),
+      formValues: formValues,
+      step: 5, // We're on step 5
+      completed: false
+    });
+    
+    // Save the ID for later use
+    localStorage.setItem('currentQuoteLogId', quoteLogId);
+    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Helper to get persons per apartment
   const getPersonsInApartment = (apartmentId: string) => {
@@ -45,6 +69,13 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
     }
     return false;
   };
+  
+  // Check if reservation is during high season (June-September)
+  const isHighSeason = formValues.checkIn ? 
+    (formValues.checkIn.getMonth() >= 5 && formValues.checkIn.getMonth() <= 8) : false;
+  
+  // Check if check-in is on Saturday
+  const isCheckInSaturday = formValues.checkIn ? formValues.checkIn.getDay() === 6 : false;
   
   return (
     <Card>
@@ -66,6 +97,12 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
                 <span>{form.getValues("checkOut") ? format(form.getValues("checkOut"), "dd/MM/yyyy") : "-"}</span>
                 <span className="text-muted-foreground">Durata:</span>
                 <span>{priceInfo.nights} notti</span>
+                
+                {isHighSeason && (
+                  <div className="col-span-2 mt-2 text-xs bg-amber-50 p-2 rounded border border-amber-200">
+                    <strong>Nota:</strong> Nel periodo estivo (giugno-settembre) i prezzi sono settimanali. Anche per soggiorni di durata inferiore, viene applicata la tariffa settimanale.
+                  </div>
+                )}
               </div>
             </div>
             
@@ -198,7 +235,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
             <h3 className="font-medium">Riepilogo costi</h3>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Costo appartamenti ({priceInfo.nights} notti):</span>
+                <span className="text-muted-foreground">Costo appartamenti {isHighSeason ? '(settimanale)' : `(${priceInfo.nights} notti)`}:</span>
                 <span>{priceInfo.basePrice}€</span>
               </div>
               
