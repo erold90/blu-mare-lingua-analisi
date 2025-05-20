@@ -8,10 +8,10 @@ export function AppHeader() {
   const isMobile = useIsMobile();
 
   return (
-    <header className="sticky top-0 z-40 w-full bg-transparent">
-      <div className="container flex h-16 items-center">
+    <header className={`fixed top-0 z-40 w-full ${isMobile ? "" : "h-16"}`}>
+      <div className={`container ${isMobile ? "p-0" : ""} flex items-center ${isMobile ? "h-12" : "h-16"}`}>
         {isMobile ? (
-          <div className="flex items-center ml-2">
+          <div className="flex items-center ml-2 mt-2">
             <SidebarTrigger />
           </div>
         ) : (

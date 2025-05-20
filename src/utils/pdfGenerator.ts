@@ -1,222 +1,187 @@
 
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import { format } from "date-fns";
-import { FormValues } from "./quoteFormSchema";
-import { calculateTotalPrice, PriceCalculation } from "./quoteCalculator";
-import { Apartment } from "@/data/apartments";
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
+import { QuoteFormData } from './quoteFormSchema';
+import { PriceCalculation } from './quoteCalculator';
+import { Apartment } from '@/data/apartments';
 
-export const generatePDF = (
-  formData: FormValues,
-  priceInfo: PriceCalculation,
-  quoteId: string
+// Extend jsPDF to include the autoTable plugin with TypeScript
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: typeof autoTable;
+    lastAutoTable: {
+      finalY: number;
+    };
+  }
+}
+
+/**
+ * Generate and download a PDF quote based on the form data and price calculation
+ */
+export const downloadPDF = (
+  formData: QuoteFormData,
+  priceCalculation: PriceCalculation,
+  apartments?: Apartment[]
 ) => {
-  // Create PDF instance
+  // Initialize PDF document
   const doc = new jsPDF();
   
-  // Format today's date
-  const today = format(new Date(), "dd-MM-yyyy");
+  // Set font
+  doc.setFont('helvetica');
   
-  // Initial position for content
-  let yPos = 20;
+  // Add header with logo (you would need to add a real logo)
+  doc.setFontSize(24);
+  doc.setTextColor(33, 33, 33);
+  doc.text('Villa MareBlu', 105, 20, { align: 'center' });
   
-  // --- Header ---
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text("Villa MareBlu - Preventivo", 105, yPos, { align: "center" });
-  yPos += 10;
-  
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Data: ${today}`, 105, yPos, { align: "center" });
-  yPos += 5;
-  
-  doc.text(`Preventivo N°: ${quoteId}`, 105, yPos, { align: "center" });
-  yPos += 15;
-  
-  // --- Customer Information ---
   doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Dati Cliente", 14, yPos);
-  yPos += 7;
+  doc.setTextColor(100, 100, 100);
+  doc.text('Preventivo di Soggiorno', 105, 30, { align: 'center' });
+  
+  // Add date
+  const today = format(new Date(), 'dd MMMM yyyy', { locale: it });
+  doc.setFontSize(10);
+  doc.text(`Data preventivo: ${today}`, 20, 40);
+  
+  // Customer details
+  doc.setFontSize(14);
+  doc.setTextColor(33, 33, 33);
+  doc.text('Dati Cliente', 20, 50);
   
   doc.setFontSize(10);
-  doc.setFont("helvetica", "normal");
-  doc.text(`Nome: ${formData.name || "Cliente"}`, 14, yPos);
-  yPos += 5;
+  doc.setTextColor(100, 100, 100);
   
-  doc.text(`Email: ${formData.email || ""}`, 14, yPos);
-  yPos += 5;
+  const customerName = `${formData.firstName || ''} ${formData.lastName || ''}`;
+  doc.text(`Nome: ${customerName}`, 20, 60);
+  doc.text(`Email: ${formData.email || ''}`, 20, 65);
+  doc.text(`Telefono: ${formData.phone || ''}`, 20, 70);
   
-  if (formData.phone) {
-    doc.text(`Telefono: ${formData.phone}`, 14, yPos);
-    yPos += 5;
+  // Booking details
+  doc.setFontSize(14);
+  doc.setTextColor(33, 33, 33);
+  doc.text('Dettagli Soggiorno', 20, 80);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  
+  let checkInDate = 'Non specificata';
+  let checkOutDate = 'Non specificata';
+  
+  if (formData.startDate && formData.endDate) {
+    checkInDate = format(new Date(formData.startDate), 'dd MMMM yyyy', { locale: it });
+    checkOutDate = format(new Date(formData.endDate), 'dd MMMM yyyy', { locale: it });
   }
   
-  if (formData.notes) {
-    doc.text(`Note: ${formData.notes}`, 14, yPos);
-    yPos += 5;
-  }
+  doc.text(`Check-in: ${checkInDate}`, 20, 90);
+  doc.text(`Check-out: ${checkOutDate}`, 20, 95);
+  doc.text(`Numero ospiti: ${priceCalculation.guests || 0}`, 20, 100);
   
-  yPos += 10;
+  // Apartment details
+  doc.setFontSize(14);
+  doc.setTextColor(33, 33, 33);
+  doc.text('Alloggio', 20, 110);
   
-  // --- Stay Details ---
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Dettagli del Soggiorno", 14, yPos);
-  yPos += 10;
+  // Create a starting y position for tables
+  let yPosition = 120;
   
-  doc.setFontSize(10);
-  // Create stay details table
-  const stayTable = autoTable(doc, {
-    startY: yPos,
-    head: [["Periodo", "Durata", "Ospiti"]],
-    body: [
-      [
-        `Dal ${format(formData.checkIn || new Date(), "dd/MM/yyyy")} al ${format(formData.checkOut || new Date(), "dd/MM/yyyy")}`,
-        `${priceInfo.nights} notti`,
-        `${formData.adults || 0} adulti, ${formData.children || 0} bambini`
-      ]
-    ],
-    theme: "grid",
-    headStyles: { fillColor: [0, 85, 164] },
-  });
-  
-  // Update position for next section
-  yPos = (stayTable.lastAutoTable?.finalY || yPos) + 20;
-  
-  // --- Apartments Section ---
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Appartamenti Selezionati", 14, yPos);
-  yPos += 10;
-  
-  // Prepare apartment data for table
-  const apartmentData = [];
-  
-  // Add selected apartments if any
-  if (formData.selectedApartments && formData.selectedApartments.length > 0) {
-    for (const aptId of formData.selectedApartments) {
-      // This is just for the PDF display, actual price calculation is done elsewhere
-      apartmentData.push([
-        aptId, // Apartment ID/name
-        "Vedere dettagli", // Placeholder for capacity
-        "Vedere dettagli", // Placeholder for occupancy
-        "Vedere dettagli", // Placeholder for price
-        "Vedere dettagli" // Placeholder for total
-      ]);
-    }
-  } else if (formData.selectedApartment) {
-    apartmentData.push([
-      formData.selectedApartment,
-      "Vedere dettagli", // Placeholder for capacity
-      "Vedere dettagli", // Placeholder for occupancy
-      "Vedere dettagli", // Placeholder for price
-      "Vedere dettagli" // Placeholder for total
+  if (apartments && apartments.length > 0) {
+    // Use autoTable for apartments
+    const apartmentsTableData = apartments.map(apt => [
+      apt.name,
+      `${apt.bedrooms} camere`,
+      `${apt.maxGuests} ospiti max`,
+      `${apt.pricePerNight}€ / notte`
     ]);
+    
+    doc.autoTable({
+      startY: yPosition,
+      head: [['Nome', 'Camere', 'Ospiti', 'Prezzo']],
+      body: apartmentsTableData,
+      theme: 'striped',
+      headStyles: { fillColor: [41, 128, 185] }
+    });
+    
+    yPosition = doc.lastAutoTable.finalY + 10;
   }
   
-  // Create apartments table
-  const apartmentsTable = autoTable(doc, {
-    startY: yPos + 5,
-    head: [["Appartamento", "Capacità", "Occupazione", "Prezzo", "Totale"]],
-    body: apartmentData.length > 0 ? apartmentData : [["--", "--", "--", "--", "--"]],
-    theme: "grid",
-    headStyles: { fillColor: [0, 85, 164] },
-  });
-  
-  // Update position for next section
-  yPos = (apartmentsTable.lastAutoTable?.finalY || yPos) + 20;
-  
-  // --- Services Section ---
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Servizi e Costi Aggiuntivi", 14, yPos);
-  yPos += 10;
-  
-  // Prepare services data for table
-  const servicesData = [];
-  
-  // Add cleaning fee
-  servicesData.push(["Pulizia finale", "Obbligatoria", `${priceInfo.extras}€`]);
-  servicesData.push(["Tassa di soggiorno", "1€ per notte per persona", `${priceInfo.touristTax}€`]);
-  
-  // Create services table
-  const servicesTable = autoTable(doc, {
-    startY: yPos + 5,
-    head: [["Servizio", "Descrizione", "Totale"]],
-    body: servicesData,
-    theme: "grid",
-    headStyles: { fillColor: [0, 85, 164] },
-  });
-  
-  // Update position for next section
-  yPos = (servicesTable.lastAutoTable?.finalY || yPos) + 20;
-  
-  // --- Price Summary ---
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Riepilogo Costi", 14, yPos);
-  yPos += 10;
-  
-  // Prepare summary data for table
-  const summaryData = [];
-  
-  // Add subtotal row
-  summaryData.push(["Subtotale alloggio", "", `${priceInfo.basePrice}€`]);
-  
-  // Add additional costs if any
-  if (priceInfo.extras > 0) {
-    summaryData.push(["Servizi extra", "", `${priceInfo.extras}€`]);
+  // Group details if applicable
+  if (formData.isGroupBooking && formData.selectedGroup) {
+    doc.setFontSize(14);
+    doc.setTextColor(33, 33, 33);
+    doc.text('Dettagli Gruppo', 20, yPosition);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    
+    doc.text(`Tipo di gruppo: ${formData.selectedGroup.name || ''}`, 20, yPosition + 10);
+    doc.text(`Numero totale ospiti: ${formData.selectedGroup.totalGuests || 0}`, 20, yPosition + 15);
+    doc.text(`Adulti: ${formData.selectedGroup.adults || 0}`, 20, yPosition + 20);
+    doc.text(`Bambini: ${formData.selectedGroup.children || 0}`, 20, yPosition + 25);
+    
+    yPosition = yPosition + 35;
   }
-  summaryData.push(["Tassa di soggiorno", "", `${priceInfo.touristTax}€`]);
-  summaryData.push(["TOTALE", "", `${priceInfo.totalAfterDiscount}€`]);
   
-  // Create summary table
-  const summaryTable = autoTable(doc, {
-    startY: yPos + 5,
-    body: summaryData,
-    theme: "grid",
-    styles: { fontSize: 10 },
+  // Services if applicable
+  if (formData.selectedServices && formData.selectedServices.length > 0) {
+    doc.setFontSize(14);
+    doc.setTextColor(33, 33, 33);
+    doc.text('Servizi Selezionati', 20, yPosition);
+    
+    // Use autoTable for services
+    const servicesTableData = formData.selectedServices.map(service => [
+      service.name,
+      service.description,
+      `${service.price}€`
+    ]);
+    
+    doc.autoTable({
+      startY: yPosition + 10,
+      head: [['Servizio', 'Descrizione', 'Prezzo']],
+      body: servicesTableData,
+      theme: 'striped',
+      headStyles: { fillColor: [41, 128, 185] }
+    });
+    
+    yPosition = doc.lastAutoTable.finalY + 10;
+  }
+  
+  // Price details
+  doc.setFontSize(14);
+  doc.setTextColor(33, 33, 33);
+  doc.text('Riepilogo Costi', 20, yPosition);
+  
+  // Use autoTable for price breakdown
+  const priceTableData = [
+    ['Soggiorno', `${priceCalculation.basePrice}€`],
+    ['Pulizie finali', `${priceCalculation.cleaningFee || 0}€`],
+    ['Servizi extra', `${priceCalculation.extras || 0}€`],
+    ['Tassa di soggiorno', `${priceCalculation.touristTax || 0}€`],
+    ['Sconto applicato', `${priceCalculation.discount || 0}€`],
+    ['TOTALE', `${priceCalculation.totalPrice || 0}€`]
+  ];
+  
+  doc.autoTable({
+    startY: yPosition + 10,
+    body: priceTableData,
+    theme: 'plain',
+    styles: {
+      cellPadding: 2,
+    },
+    columnStyles: {
+      0: { fontStyle: 'bold' },
+      1: { halign: 'right' }
+    }
   });
   
-  // Final price in bold
-  const finalY = (summaryTable.lastAutoTable?.finalY || yPos) + 10;
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "bold");
-  doc.text("Grazie per aver scelto Villa MareBlu!", 105, finalY + 10, { align: "center" });
+  yPosition = doc.lastAutoTable.finalY + 10;
   
-  // Footer with terms
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "italic");
-  const footerText = "Questo preventivo è valido per 7 giorni dalla data di emissione. L'importo richiesto per la conferma è del 30% del totale.";
-  doc.text(footerText, 105, 280, { align: "center" });
-  
-  return doc;
-};
-
-// Function for downloading the PDF
-export const downloadPDF = (
-  formData: FormValues,
-  apartments: Apartment[],
-  name?: string
-) => {
-  // Generate a simple quote ID
-  const quoteId = `Q${Date.now().toString().slice(-6)}`;
-  
-  // Calculate price info
-  const priceInfo = calculateTotalPrice(formData, apartments);
-  
-  // Create the PDF
-  const doc = generatePDF(formData, priceInfo, quoteId);
-  
-  // Generate filename with client name if provided
-  const filename = name 
-    ? `Preventivo_VillaMareBlu_${name.replace(/\s+/g, '')}_${quoteId}.pdf`
-    : `Preventivo_VillaMareBlu_${quoteId}.pdf`;
+  // Footer
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.text('Villa MareBlu - Via Marco Polo 112, Patù (LE), Salento, Puglia', 105, 280, { align: 'center' });
   
   // Save the PDF
-  doc.save(filename);
-  
-  return doc;
+  doc.save('Villa-MareBlu-Preventivo.pdf');
 };
