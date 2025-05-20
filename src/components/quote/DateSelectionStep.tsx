@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { format, differenceInDays } from "date-fns";
 import { it } from 'date-fns/locale';
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, InfoIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -16,7 +16,6 @@ import {
 import { FormValues } from "@/utils/quoteFormSchema";
 import { DateRange } from "react-day-picker";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon } from "lucide-react";
 
 interface DateSelectionStepProps {
   form: UseFormReturn<FormValues>;
@@ -29,12 +28,15 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
   const checkOut = form.watch("checkOut");
   
   // Combina le date di check-in e check-out in un range
-  const date: DateRange | undefined = checkIn && checkOut
-    ? {
+  const date: DateRange | undefined = useMemo(() => {
+    if (checkIn && checkOut) {
+      return {
         from: checkIn,
         to: checkOut,
-      }
-    : undefined;
+      };
+    }
+    return undefined;
+  }, [checkIn, checkOut]);
   
   // Calcola il numero di notti
   const numberOfNights = useMemo(() => {
@@ -84,7 +86,13 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              <span>Seleziona le date</span>
+              {date?.from && date?.to ? (
+                <span>
+                  {format(date.from, "dd/MM/yyyy", { locale: it })} - {format(date.to, "dd/MM/yyyy", { locale: it })}
+                </span>
+              ) : (
+                <span>Seleziona le date</span>
+              )}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="center">
