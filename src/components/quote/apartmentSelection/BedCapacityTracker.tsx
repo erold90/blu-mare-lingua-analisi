@@ -10,11 +10,15 @@ interface BedCapacityTrackerProps {
   formValues: FormValues;
 }
 
-const BedCapacityTracker: React.FC<BedCapacityTrackerProps> = ({ 
-  selectedApartmentIds, 
-  apartments,
-  formValues 
-}) => {
+export interface BedCapacityInfo {
+  selectedBedsCount: number;
+  hasEnoughBeds: boolean;
+  requiredBeds: number;
+}
+
+export const calculateBedCapacity = (props: BedCapacityTrackerProps): BedCapacityInfo => {
+  const { selectedApartmentIds, apartments, formValues } = props;
+  
   // Get the number of required beds based on guest count
   const { effectiveGuestCount } = getEffectiveGuestCount(formValues);
   
@@ -30,6 +34,12 @@ const BedCapacityTracker: React.FC<BedCapacityTrackerProps> = ({
     hasEnoughBeds,
     requiredBeds: effectiveGuestCount
   };
+};
+
+const BedCapacityTracker: React.FC<BedCapacityTrackerProps> = (props) => {
+  // This component doesn't render anything visible
+  // It's just used to calculate and expose bed capacity information
+  return null;
 };
 
 export default BedCapacityTracker;

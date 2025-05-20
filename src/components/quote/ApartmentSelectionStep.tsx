@@ -8,7 +8,7 @@ import { FormValues } from "@/utils/quoteFormSchema";
 import { useApartmentAvailability } from "@/hooks/quote/useApartmentAvailability";
 import GuestInfoAlert from "./apartmentSelection/GuestInfoAlert";
 import ApartmentGrid from "./apartmentSelection/ApartmentGrid";
-import BedCapacityTracker from "./apartmentSelection/BedCapacityTracker";
+import { calculateBedCapacity } from "./apartmentSelection/BedCapacityTracker";
 
 interface ApartmentSelectionStepProps {
   form: UseFormReturn<FormValues>;
@@ -41,7 +41,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   const selectedApartmentIds = form.getValues("selectedApartments") || [];
   
   // Calculate bed capacity
-  const { selectedBedsCount, hasEnoughBeds, requiredBeds } = BedCapacityTracker({ 
+  const { selectedBedsCount, hasEnoughBeds, requiredBeds } = calculateBedCapacity({ 
     selectedApartmentIds, 
     apartments, 
     formValues 
