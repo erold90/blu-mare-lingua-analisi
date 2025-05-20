@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { usePrices } from "@/hooks/usePrices";
 import { toast } from "sonner";
@@ -14,49 +13,36 @@ const AdminPrices = () => {
   const [weeks, setWeeks] = React.useState<{ start: Date, end: Date }[]>(
     generateWeeksForSeason(selectedYear, 6, 9) // June to September
   );
+  
+  // Keep track of whether we've already initialized the 2025 prices
+  const [prices2025Initialized, setPrices2025Initialized] = React.useState<boolean>(false);
 
-  // Set 2025 prices on first load
+  // Initialize 2025 prices on first load
   React.useEffect(() => {
-    // Check if we're loading 2025 data
-    if (selectedYear === 2025) {
-      const season2025Prices = [
-        // Format: [weekStart, apt1Price, apt2Price, apt3Price, apt4Price]
-        ["2025-06-07", 400, 500, 350, 375], // 7 Giugno
-        ["2025-06-14", 400, 500, 350, 375], // 14 Giugno
-        ["2025-06-21", 400, 500, 350, 375], // 21 Giugno
-        ["2025-06-28", 400, 500, 350, 375], // 28 Giugno
-        ["2025-07-05", 475, 575, 425, 450], // 5 Luglio
-        ["2025-07-12", 475, 575, 425, 450], // 12 Luglio
-        ["2025-07-19", 475, 575, 425, 450], // 19 Luglio
-        ["2025-07-26", 750, 850, 665, 700], // 26 Luglio
-        ["2025-08-02", 750, 850, 665, 700], // 2 Agosto
-        ["2025-08-09", 1150, 1250, 1075, 1100], // 9 Agosto
-        ["2025-08-16", 1150, 1250, 1075, 1100], // 16 Agosto
-        ["2025-08-23", 750, 850, 675, 700], // 23 Agosto
-        ["2025-08-30", 750, 850, 675, 700], // 30 Agosto
-        ["2025-09-06", 500, 600, 425, 450], // 6 Settembre
-        ["2025-09-13", 500, 600, 425, 450], // 13 Settembre
-        ["2025-09-20", 500, 600, 425, 450], // 20 Settembre
-      ];
-
-      // Initialize the prices for each week and apartment
-      const aptIds = apartments.map(apt => apt.id);
+    // Only run this once, when the component mounts and selectedYear is 2025
+    if (selectedYear === 2025 && !prices2025Initialized) {
+      console.log("Initializing 2025 prices...");
       
-      season2025Prices.forEach(([weekStartStr, apt1Price, apt2Price, apt3Price, apt4Price]) => {
-        const prices = [apt1Price, apt2Price, apt3Price, apt4Price];
-        
-        aptIds.forEach((aptId, idx) => {
-          if (idx < prices.length) {
-            const weekStartDate = new Date(weekStartStr as string);
-            const weekStartIso = weekStartDate.toISOString();
-            updateWeeklyPrice(aptId, weekStartIso, prices[idx] as number);
-          }
+      // Set all apartment prices to 120€ for every week
+      const apartmentIds = apartments.map(apt => apt.id);
+      
+      // Get all weeks for 2025 season
+      const weeks2025 = generateWeeksForSeason(2025, 6, 9);
+      
+      // For each apartment and week, set the price to 120€
+      apartmentIds.forEach(aptId => {
+        weeks2025.forEach(week => {
+          const weekStartIso = week.start.toISOString();
+          updateWeeklyPrice(aptId, weekStartIso, 120);
+          console.log(`Updated price for ${aptId}, week ${weekStartIso}: 120€`);
         });
       });
       
+      // Mark as initialized so we don't do it again
+      setPrices2025Initialized(true);
       toast.success("Prezzi 2025 aggiornati con successo");
     }
-  }, [selectedYear, updateWeeklyPrice]);
+  }, [selectedYear, prices2025Initialized, updateWeeklyPrice, generateWeeksForSeason]);
   
   // Re-generate weeks when selected year changes
   React.useEffect(() => {
@@ -85,7 +71,12 @@ const AdminPrices = () => {
     
     if (price) return price.price;
     
-    // If no price found for this specific week, return the apartment's default price
+    // If no price found for this specific week, return 120 as default for 2025
+    if (weekStart.getFullYear() === 2025) {
+      return 120;
+    }
+    
+    // For other years, return the apartment's default price
     const apartment = apartments.find(apt => apt.id === apartmentId);
     return apartment ? apartment.price : 0;
   };
