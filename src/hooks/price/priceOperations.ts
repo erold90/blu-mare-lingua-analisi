@@ -1,7 +1,7 @@
 
 import { Dispatch, SetStateAction } from "react";
 import { WeeklyPrice, SeasonalPricing } from "./types";
-import { generateDefaultPricesForYear, getCurrentOrCreateSeason } from "./priceUtils";
+import { generateDefaultPricesForYear, generateWeeksForSeason } from "./priceUtils";
 
 /**
  * Updates a specific weekly price for an apartment
