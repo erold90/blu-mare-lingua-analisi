@@ -42,10 +42,12 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
   const totalChildren = form.watch("children") || 0;
   const childrenDetails = form.watch("childrenDetails") || [];
   
-  // Count children who don't sleep with parents
-  const independentChildren = childrenDetails.filter(child => !child.sleepsWithParents).length;
+  // Count children who don't sleep with parents or in cribs
+  const independentChildren = childrenDetails.filter(child => 
+    !child.sleepsWithParents && !child.sleepsInCrib
+  ).length;
   
-  // Total people who need linen
+  // Total people who need linen (adults + independent children)
   const totalPeopleForLinen = totalAdults + independentChildren;
   
   // State for persons per apartment (for linen distribution)

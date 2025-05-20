@@ -60,8 +60,10 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
       const adults = formValues.adults || 0;
       const childrenDetails = formValues.childrenDetails || [];
       
-      // Contiamo solo i bambini che NON dormono con i genitori
-      const independentChildren = childrenDetails.filter(child => !child.sleepsWithParents).length;
+      // Contiamo solo i bambini che NON dormono con i genitori E NON dormono in culla
+      const independentChildren = childrenDetails.filter(child => 
+        !child.sleepsWithParents && !child.sleepsInCrib
+      ).length;
       
       // Il totale delle persone che necessitano di biancheria
       const totalPeople = adults + independentChildren;
