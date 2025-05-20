@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { FormValues } from "@/utils/quoteFormSchema";
 import { DateRange } from "react-day-picker";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 interface DateSelectionStepProps {
   form: UseFormReturn<FormValues>;
@@ -54,6 +55,30 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
       return;
     }
     
+    // If only the start date is selected, update that
+    if (range.from && !range.to) {
+      setDateRange({ from: range.from, to: undefined });
+      form.setValue("checkIn", range.from);
+      return;
+    }
+    
+    // If both dates are selected, check for min/max night constraints
+    if (range.from && range.to) {
+      const nights = differenceInDays(range.to, range.from);
+      
+      // Enforce minimum 5 nights
+      if (nights < 5) {
+        toast("Il soggiorno minimo è di 5 notti");
+        return;
+      }
+      
+      // Enforce maximum 28 nights
+      if (nights > 28) {
+        toast("Il soggiorno massimo è di 28 notti");
+        return;
+      }
+    }
+    
     // Update the date range state
     setDateRange(range);
     
@@ -81,7 +106,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
         <Alert className="bg-muted/50 py-2">
           <InfoIcon className="h-4 w-4 mr-2" />
           <AlertDescription className="text-xs">
-            Check-in/out disponibili solo sabato, domenica e lunedì.
+            Check-in/out disponibili solo sabato, domenica e lunedì. Soggiorno minimo di 5 notti, massimo 28 notti.
           </AlertDescription>
         </Alert>
         
@@ -131,7 +156,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
         <Button 
           type="button" 
           onClick={nextStep} 
-          disabled={!dateRange?.from || !dateRange?.to}
+          disabled={!dateRange?.from || !dateRange?.to || numberOfNights < 5 || numberOfNights > 28}
         >
           Avanti
         </Button>
