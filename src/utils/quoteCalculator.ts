@@ -94,7 +94,7 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
   const childrenDetails = formValues.childrenDetails || [];
   
   // Conto solo i bambini con età >= 12 anni per la tassa di soggiorno
-  const childrenOver12 = childrenDetails.filter(child => (child.age >= 12)).length;
+  const childrenOver12 = childrenDetails.filter(child => !child.isUnder12).length;
   
   // Totale persone che pagano la tassa di soggiorno
   const peoplePayingTax = adults + childrenOver12;

@@ -62,7 +62,7 @@ function calculateApartmentFitScore(apartment: Apartment, formValues: FormValues
   }
   
   // Prefer apartments on ground floor for families with small children
-  if (children > 0 && childrenDetails && childrenDetails.some(child => child.age < 5)) {
+  if (children > 0 && childrenDetails && childrenDetails.some(child => child.isUnder12)) {
     score += apartment.floor === "terra" ? 7 : 0;
   }
   

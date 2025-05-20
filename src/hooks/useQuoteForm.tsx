@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,10 +10,10 @@ export function useQuoteForm() {
   const [step, setStep] = useState(1);
   const totalSteps = 6;
   
-  const [childrenArray, setChildrenArray] = useState<{ age: number; sleepsWithParents: boolean }[]>([]);
+  const [childrenArray, setChildrenArray] = useState<{ isUnder12: boolean; sleepsWithParents: boolean }[]>([]);
   const [apartmentDialog, setApartmentDialog] = useState<string | null>(null);
   const [groupDialog, setGroupDialog] = useState(false);
-  const [familyGroups, setFamilyGroups] = useState<{ adults: number; children: number; childrenDetails: { age: number; sleepsWithParents: boolean }[] }[]>([]);
+  const [familyGroups, setFamilyGroups] = useState<{ adults: number; children: number; childrenDetails: { isUnder12: boolean; sleepsWithParents: boolean }[] }[]>([]);
   
   // Inizializzo il form con valori predefiniti
   const form = useForm<FormValues>({
@@ -43,7 +42,7 @@ export function useQuoteForm() {
       if (childrenCount > updatedArray.length) {
         const diff = childrenCount - updatedArray.length;
         for (let i = 0; i < diff; i++) {
-          updatedArray.push({ age: 0, sleepsWithParents: false });
+          updatedArray.push({ isUnder12: true, sleepsWithParents: false });
         }
       }
       // Rimuovo bambini in eccesso
@@ -82,13 +81,9 @@ export function useQuoteForm() {
   };
   
   // Aggiorna i dettagli di un bambino specifico
-  const updateChildDetails = (index: number, field: 'age' | 'sleepsWithParents', value: number | boolean) => {
+  const updateChildDetails = (index: number, field: 'isUnder12' | 'sleepsWithParents', value: boolean) => {
     const updatedArray = [...childrenArray];
-    if (field === 'age') {
-      updatedArray[index].age = value as number;
-    } else {
-      updatedArray[index].sleepsWithParents = value as boolean;
-    }
+    updatedArray[index][field] = value;
     setChildrenArray(updatedArray);
     form.setValue("childrenDetails", updatedArray);
   };
@@ -156,7 +151,7 @@ export function useQuoteForm() {
       form.setValue("children", totalChildren);
       
       // Aggiorniamo anche i dettagli dei bambini se necessario
-      const allChildrenDetails: { age: number; sleepsWithParents: boolean }[] = [];
+      const allChildrenDetails: { isUnder12: boolean; sleepsWithParents: boolean }[] = [];
       familyGroups.forEach(group => {
         if (group.childrenDetails && group.childrenDetails.length > 0) {
           allChildrenDetails.push(...group.childrenDetails);

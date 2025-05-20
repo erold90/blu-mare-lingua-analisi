@@ -12,13 +12,13 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface GuestInfoStepProps {
   form: UseFormReturn<FormValues>;
-  childrenArray: { age: number; sleepsWithParents: boolean }[];
+  childrenArray: { isUnder12: boolean; sleepsWithParents: boolean }[];
   openGroupDialog: () => void;
   incrementAdults: () => void;
   decrementAdults: () => void;
   incrementChildren: () => void;
   decrementChildren: () => void;
-  updateChildDetails: (index: number, field: 'age' | 'sleepsWithParents', value: number | boolean) => void;
+  updateChildDetails: (index: number, field: 'isUnder12' | 'sleepsWithParents', value: boolean) => void;
   nextStep: () => void;
 }
 
@@ -147,18 +147,15 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
               <div key={index} className="space-y-4 pt-4 border-t first:border-t-0 first:pt-0">
                 <h4>Bambino {index + 1}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor={`child-age-${index}`}>Età</Label>
-                    <select
-                      id={`child-age-${index}`}
-                      value={child.age}
-                      onChange={(e) => updateChildDetails(index, 'age', parseInt(e.target.value))}
-                      className="w-full h-10 px-3 rounded-md border border-input bg-background focus-visible:outline-none"
-                    >
-                      {Array.from({ length: 18 }, (_, i) => (
-                        <option key={i} value={i}>{i} {i === 1 ? "anno" : "anni"}</option>
-                      ))}
-                    </select>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`under-12-${index}`}
+                      checked={child.isUnder12}
+                      onCheckedChange={(checked) => {
+                        updateChildDetails(index, 'isUnder12', checked === true);
+                      }}
+                    />
+                    <Label htmlFor={`under-12-${index}`}>Minore di 12 anni</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Checkbox 

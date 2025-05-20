@@ -3,7 +3,7 @@ import { z } from "zod";
 
 // Schema per i dettagli bambini
 export const childDetailSchema = z.object({
-  age: z.number().min(0).max(17),
+  isUnder12: z.boolean().default(true),
   sleepsWithParents: z.boolean().default(false),
 });
 
