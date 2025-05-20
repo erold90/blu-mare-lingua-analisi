@@ -63,7 +63,7 @@ const AdminDashboard = () => {
       
       const occupancyPercentage = Math.round((daysOccupied / totalDays) * 100);
       result.push({
-        name: apt.name,
+        name: `Appartamento ${apt.name}`,
         occupancy: occupancyPercentage
       });
     });
@@ -71,19 +71,25 @@ const AdminDashboard = () => {
     return result;
   }, [reservations, apartments]);
 
-  // Monthly revenue data
-  const monthlyRevenue = React.useMemo(() => {
+  // Summer monthly revenue data (only June to September)
+  const summerMonthlyRevenue = React.useMemo(() => {
     const data: { name: string; revenue: number }[] = [];
-    const months = ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"];
-    const revenueByMonth: number[] = Array(12).fill(0);
+    const summerMonths = ["Giu", "Lug", "Ago", "Set"];
+    const summerMonthIndices = [5, 6, 7, 8]; // June is 5, September is 8
+    const revenueByMonth: number[] = Array(4).fill(0);
     
     reservations.forEach(reservation => {
       const startDate = new Date(reservation.startDate);
       const month = startDate.getMonth();
-      revenueByMonth[month] += (reservation.finalPrice || 0);
+      
+      // Only count if it's a summer month (June-September)
+      const summerIndex = summerMonthIndices.indexOf(month);
+      if (summerIndex !== -1) {
+        revenueByMonth[summerIndex] += (reservation.finalPrice || 0);
+      }
     });
     
-    months.forEach((month, i) => {
+    summerMonths.forEach((month, i) => {
       data.push({
         name: month,
         revenue: revenueByMonth[i]
@@ -159,11 +165,11 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
       
-      {/* Monthly Revenue Chart */}
+      {/* Summer Monthly Revenue Chart */}
       <Card className="overflow-hidden">
         <CardHeader>
-          <CardTitle>Guadagno Mensile</CardTitle>
-          <CardDescription>Distribuzione mensile delle entrate</CardDescription>
+          <CardTitle>Guadagno Mensile Estivo</CardTitle>
+          <CardDescription>Distribuzione delle entrate da giugno a settembre</CardDescription>
         </CardHeader>
         <CardContent className="px-0 pb-0">
           <div className="h-[300px] w-full mt-4">
@@ -172,7 +178,10 @@ const AdminDashboard = () => {
                 revenue: { theme: { light: "#34d399", dark: "#34d399" } },
               }}
             >
-              <BarChart data={monthlyRevenue} margin={{ left: 30, right: 15, bottom: 20 }}>
+              <BarChart 
+                data={summerMonthlyRevenue} 
+                margin={{ left: 30, right: 15, bottom: 20 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} tickMargin={8} />
                 <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `€${value}`} />
