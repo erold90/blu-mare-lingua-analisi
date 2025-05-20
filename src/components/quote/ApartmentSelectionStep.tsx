@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { cn } from "@/lib/utils";
@@ -7,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
-import { Bed, BedDouble, MapPin, Sun, ThermometerSun } from "lucide-react";
+import { Bed, BedDouble, MapPin, Sun, ThermometerSun, Users as UsersIcon } from "lucide-react";
 import { isApartmentSuitable, getRecommendedApartment, getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -112,7 +113,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
       <CardContent className="space-y-6">
         {/* Alert for guest count - Fixed overflow issue */}
         <Alert variant="default" className="bg-blue-50 border-blue-200 mb-4">
-          <Users className="h-4 w-4 text-blue-500 shrink-0" />
+          <UsersIcon className="h-4 w-4 text-blue-500 shrink-0" />
           <AlertDescription className="text-blue-700 break-words whitespace-normal">
             {sleepingWithParents > 0 || sleepingInCribs > 0 ? (
               <div className="flex flex-col">
