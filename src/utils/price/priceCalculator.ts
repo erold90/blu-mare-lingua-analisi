@@ -46,7 +46,7 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
     savings,
     deposit,
     nights,
-    totalPrice: totalAfterDiscount,
+    totalPrice: totalAfterDiscount, // Ensure totalPrice matches totalAfterDiscount
     subtotal
   };
 }

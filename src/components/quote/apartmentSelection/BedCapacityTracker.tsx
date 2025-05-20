@@ -36,9 +36,8 @@ export const calculateBedCapacity = (props: BedCapacityTrackerProps): BedCapacit
   };
 };
 
-const BedCapacityTracker: React.FC<BedCapacityTrackerProps> = (props) => {
-  // This component doesn't render anything visible
-  // It's just used to calculate and expose bed capacity information
+// Component doesn't render anything, it's just a utility
+const BedCapacityTracker: React.FC<BedCapacityTrackerProps> = () => {
   return null;
 };
 

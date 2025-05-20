@@ -40,12 +40,14 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   // Get selected apartment IDs
   const selectedApartmentIds = form.getValues("selectedApartments") || [];
   
-  // Calculate bed capacity
-  const { selectedBedsCount, hasEnoughBeds, requiredBeds } = calculateBedCapacity({ 
+  // Calculate bed capacity using the utility function
+  const bedCapacityInfo = calculateBedCapacity({ 
     selectedApartmentIds, 
     apartments, 
     formValues 
   });
+  
+  const { selectedBedsCount, hasEnoughBeds, requiredBeds } = bedCapacityInfo;
   
   // Handle apartment selection (toggle selection)
   const toggleApartmentSelection = (apartmentId: string) => {
