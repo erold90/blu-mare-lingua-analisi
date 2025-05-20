@@ -16,9 +16,17 @@ interface SummaryStepProps {
 }
 
 const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, nextStep }) => {
-  const priceInfo = calculateTotalPrice(form.getValues(), apartments);
-  const selectedApartment = apartments.find(apt => apt.id === form.getValues("selectedApartment"));
-
+  const formValues = form.getValues();
+  const priceInfo = calculateTotalPrice(formValues, apartments);
+  const selectedApartments = formValues.selectedApartments || [];
+  
+  // If only one apartment is selected, make sure it's the main selectedApartment
+  React.useEffect(() => {
+    if (selectedApartments.length === 1 && formValues.selectedApartment !== selectedApartments[0]) {
+      form.setValue("selectedApartment", selectedApartments[0]);
+    }
+  }, [selectedApartments, form, formValues.selectedApartment]);
+  
   return (
     <Card>
       <CardHeader>
@@ -56,21 +64,32 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
             </div>
           </div>
           
-          {/* Appartamento selezionato */}
+          {/* Appartamenti selezionati */}
           <div className="border rounded-md p-4 space-y-2">
-            <h3 className="font-medium">Appartamento selezionato</h3>
-            {selectedApartment && (
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <span className="text-muted-foreground">Nome:</span>
-                <span>{selectedApartment.name}</span>
-                <span className="text-muted-foreground">Capacità:</span>
-                <span>{selectedApartment.capacity} persone</span>
-                <span className="text-muted-foreground">Posizione:</span>
-                <span>Piano {selectedApartment.floor}</span>
-                <span className="text-muted-foreground">Vista:</span>
-                <span>Vista {selectedApartment.view}</span>
-              </div>
-            )}
+            <h3 className="font-medium">Appartamenti selezionati</h3>
+            <div className="space-y-3">
+              {selectedApartments.length > 0 ? (
+                selectedApartments.map(aptId => {
+                  const apartment = apartments.find(a => a.id === aptId);
+                  if (!apartment) return null;
+                  
+                  return (
+                    <div key={apartment.id} className="border-b pb-2 last:border-b-0 last:pb-0">
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <span className="text-muted-foreground">Nome:</span>
+                        <span>{apartment.name}</span>
+                        <span className="text-muted-foreground">Capacità:</span>
+                        <span>{apartment.capacity} persone</span>
+                        <span className="text-muted-foreground">Posizione:</span>
+                        <span>Piano {apartment.floor}</span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-sm text-muted-foreground">Nessun appartamento selezionato</p>
+              )}
+            </div>
           </div>
           
           {/* Servizi extra */}

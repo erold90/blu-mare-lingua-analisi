@@ -33,6 +33,7 @@ export const dateSchema = z.object({
 // Schema dello step 3: Appartamento selezionato
 export const apartmentSchema = z.object({
   selectedApartment: z.string().min(1, { message: "Seleziona un appartamento" }),
+  selectedApartments: z.array(z.string()).optional(),
 });
 
 // Schema dello step 4: Servizi extra

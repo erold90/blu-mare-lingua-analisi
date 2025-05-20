@@ -28,6 +28,7 @@ export function useQuoteForm() {
       hasPets: false,
       petsCount: 0,
       isGroupBooking: false,
+      selectedApartments: [],
     },
   });
   
@@ -118,6 +119,13 @@ export function useQuoteForm() {
   };
   
   const selectApartment = (id: string) => {
+    // Add to selectedApartments array if not already there
+    const currentSelectedApts = form.getValues("selectedApartments") || [];
+    if (!currentSelectedApts.includes(id)) {
+      form.setValue("selectedApartments", [...currentSelectedApts, id]);
+    }
+    
+    // Also set as the main selected apartment
     form.setValue("selectedApartment", id);
     closeApartmentDialog();
   };

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Bed, Home, MapPin, Wifi } from "lucide-react";
@@ -28,6 +29,13 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   const formValues = form.getValues();
   const totalGuests = formValues.adults + formValues.children;
   
+  // Initialize selectedApartments in form if not already set
+  React.useEffect(() => {
+    if (!form.getValues("selectedApartments") || !Array.isArray(form.getValues("selectedApartments"))) {
+      form.setValue("selectedApartments", []);
+    }
+  }, [form]);
+  
   // Filter suitable apartments based on capacity and dates
   const suitableApartments = apartments.filter(apartment => 
     isApartmentSuitable(apartment, formValues)
@@ -36,11 +44,42 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   // Get recommended apartment ID
   const recommendedApartmentId = getRecommendedApartment(suitableApartments, formValues);
   
+  // Handle apartment selection (toggle selection)
+  const toggleApartmentSelection = (apartmentId: string) => {
+    const currentSelected = form.getValues("selectedApartments") || [];
+    const isSelected = currentSelected.includes(apartmentId);
+    
+    let newSelection: string[];
+    
+    if (isSelected) {
+      // Remove from selection
+      newSelection = currentSelected.filter(id => id !== apartmentId);
+    } else {
+      // Add to selection
+      newSelection = [...currentSelected, apartmentId];
+    }
+    
+    form.setValue("selectedApartments", newSelection);
+    
+    // Also set the main selectedApartment field if this is the first selection or if clearing
+    if (newSelection.length === 1) {
+      form.setValue("selectedApartment", newSelection[0]);
+    } else if (newSelection.length === 0) {
+      form.setValue("selectedApartment", "");
+    }
+  };
+  
+  // Check if an apartment is selected
+  const isApartmentSelected = (apartmentId: string) => {
+    const currentSelected = form.getValues("selectedApartments") || [];
+    return currentSelected.includes(apartmentId);
+  };
+  
   return (
     <Card>
       <CardHeader>
         <CardTitle>Appartamenti disponibili</CardTitle>
-        <CardDescription>Seleziona l'appartamento che preferisci per il tuo soggiorno</CardDescription>
+        <CardDescription>Seleziona l'appartamento o gli appartamenti che preferisci per il tuo soggiorno</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {suitableApartments.length === 0 ? (
@@ -54,33 +93,25 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {suitableApartments.map((apartment) => (
               <div 
                 key={apartment.id} 
                 className={cn(
                   "border rounded-lg p-3 cursor-pointer transition-all hover:border-primary relative", 
-                  form.getValues("selectedApartment") === apartment.id ? "border-primary border-2" : ""
+                  isApartmentSelected(apartment.id) ? "border-primary border-2" : ""
                 )}
-                onClick={() => form.setValue("selectedApartment", apartment.id)}
+                onClick={() => toggleApartmentSelection(apartment.id)}
               >
                 {apartment.id === recommendedApartmentId && (
-                  <Badge variant="default" className="absolute top-2 right-2 bg-green-600">
+                  <Badge variant="default" className="absolute top-2 right-2 bg-green-600 z-10">
                     Consigliato
                   </Badge>
                 )}
                 
-                <div className="h-32 bg-muted rounded-md mb-3 relative overflow-hidden">
-                  <img 
-                    src={apartment.images[0]} 
-                    alt={apartment.name} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                <h3 className="font-medium mt-2">{apartment.name}</h3>
                 
-                <h3 className="font-semibold mb-1">{apartment.name}</h3>
-                
-                <div className="grid grid-cols-2 gap-1 text-xs mb-2">
+                <div className="grid grid-cols-1 gap-1 text-xs mt-2">
                   <div className="flex items-center gap-1">
                     <Bed className="h-3 w-3 text-primary" />
                     <span>{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
@@ -99,17 +130,25 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                   </div>
                 </div>
                 
-                <Button 
-                  type="button" 
-                  variant="link" 
-                  className="text-primary p-0 h-auto text-xs" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openApartmentDialog(apartment.id);
-                  }}
-                >
-                  Dettagli
-                </Button>
+                <div className="flex items-center justify-between mt-2">
+                  <Button 
+                    type="button" 
+                    variant="link" 
+                    className="text-primary p-0 h-auto text-xs" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openApartmentDialog(apartment.id);
+                    }}
+                  >
+                    Dettagli
+                  </Button>
+                  
+                  <Checkbox 
+                    checked={isApartmentSelected(apartment.id)}
+                    onCheckedChange={() => toggleApartmentSelection(apartment.id)}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
               </div>
             ))}
           </div>
@@ -127,7 +166,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
         <Button 
           type="button" 
           onClick={nextStep} 
-          disabled={suitableApartments.length === 0 || !form.getValues("selectedApartment")}
+          disabled={suitableApartments.length === 0 || form.getValues("selectedApartments")?.length === 0}
         >
           Avanti
         </Button>

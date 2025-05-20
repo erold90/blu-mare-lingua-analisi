@@ -14,10 +14,10 @@ export interface PriceCalculation {
 }
 
 export const calculateTotalPrice = (formValues: FormValues, apartments: Apartment[]): PriceCalculation => {
-  const selectedApartmentId = formValues.selectedApartment;
-  const apartment = apartments.find(apt => apt.id === selectedApartmentId);
+  const selectedApartmentIds = formValues.selectedApartments || [formValues.selectedApartment];
+  const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
   
-  if (!apartment) return { 
+  if (selectedApartments.length === 0) return { 
     basePrice: 0, 
     extras: 0, 
     touristTax: 0, 
@@ -45,12 +45,15 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
   // Calcolo il numero di notti
   const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
   
-  // Calcolo il prezzo base dell'appartamento
-  let basePrice = apartment.price * nights;
+  // Calcolo il prezzo base degli appartamenti
+  let basePrice = selectedApartments.reduce((total, apartment) => {
+    return total + (apartment.price * nights);
+  }, 0);
   
   // Aggiungo eventuali extra
   const linenOption = formValues.linenOption;
-  const extraForLinen = linenOption === "extra" ? 30 : linenOption === "deluxe" ? 60 : 0;
+  // Moltiplico il costo della biancheria per il numero di appartamenti
+  const extraForLinen = selectedApartments.length * (linenOption === "extra" ? 30 : linenOption === "deluxe" ? 60 : 0);
   
   // Calcolo il prezzo degli animali domestici
   let petPrice = 0;
@@ -85,10 +88,10 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
 };
 
 export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartment[]): string => {
-  const selectedApartmentId = formValues.selectedApartment;
-  const apartment = apartments.find(apt => apt.id === selectedApartmentId);
+  const selectedApartmentIds = formValues.selectedApartments || [formValues.selectedApartment];
+  const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
   
-  if (!apartment || !formValues.checkIn || !formValues.checkOut) return "";
+  if (selectedApartments.length === 0 || !formValues.checkIn || !formValues.checkOut) return "";
   
   const priceInfo = calculateTotalPrice(formValues, apartments);
   
@@ -102,8 +105,12 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     message += `, ${formValues.children} bambini`;
   }
   
-  message += `\n- Appartamento: ${apartment.name}\n`;
-  message += `- Totale preventivo: ${priceInfo.totalAfterDiscount}€ (+ ${priceInfo.touristTax}€ tassa di soggiorno)`;
+  message += "\n- Appartamenti:";
+  selectedApartments.forEach(apartment => {
+    message += `\n  * ${apartment.name}`;
+  });
+  
+  message += `\n- Totale preventivo: ${priceInfo.totalAfterDiscount}€ (+ ${priceInfo.touristTax}€ tassa di soggiorno)`;
   
   return message;
 };
