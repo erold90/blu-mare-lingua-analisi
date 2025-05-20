@@ -105,37 +105,37 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   };
 
   return (
-    <Card>
+    <Card className="w-full max-w-full">
       <CardHeader>
-        <CardTitle>Appartamenti disponibili</CardTitle>
-        <CardDescription>Seleziona l'appartamento o gli appartamenti che preferisci per il tuo soggiorno</CardDescription>
+        <CardTitle className="text-balance">Appartamenti disponibili</CardTitle>
+        <CardDescription className="text-balance">Seleziona l'appartamento o gli appartamenti che preferisci per il tuo soggiorno</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Alert for guest count - Fixed overflow issue */}
         <Alert variant="default" className="bg-blue-50 border-blue-200 mb-4">
           <UsersIcon className="h-4 w-4 text-blue-500 shrink-0" />
-          <AlertDescription className="text-blue-700 break-words whitespace-normal">
+          <AlertDescription className="text-blue-700 text-balance whitespace-normal">
             {sleepingWithParents > 0 || sleepingInCribs > 0 ? (
-              <div className="flex flex-col">
-                <span className="w-full break-words">
+              <div className="flex flex-col w-full max-w-full">
+                <span className="w-full text-balance">
                   Il tuo gruppo è di {totalGuests} ospiti ({formValues.adults} adulti, {formValues.children} bambini)
                 </span>
                 {sleepingWithParents > 0 && (
-                  <span className="w-full break-words">
+                  <span className="w-full text-balance">
                     di cui {sleepingWithParents} {sleepingWithParents === 1 ? 'bambino dorme' : 'bambini dormono'} con i genitori
                   </span>
                 )}
                 {sleepingInCribs > 0 && (
-                  <span className="w-full break-words">
+                  <span className="w-full text-balance">
                     {sleepingInCribs} {sleepingInCribs === 1 ? 'bambino dorme' : 'bambini dormono'} in culla
                   </span>
                 )}
-                <span className="font-medium mt-1 w-full break-words">
+                <span className="font-medium mt-1 w-full text-balance">
                   Posti letto necessari: {effectiveGuestCount}
                 </span>
               </div>
             ) : (
-              <span className="w-full break-words">
+              <span className="w-full text-balance">
                 Il tuo gruppo è di {totalGuests} ospiti ({formValues.adults} adulti, {formValues.children} bambini)
               </span>
             )}
@@ -144,12 +144,12 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
         
         {/* Feedback about bed selection - Fixed overflow issue */}
         <div className={cn(
-          "p-3 rounded-md transition-colors",
+          "p-3 rounded-md transition-colors w-full max-w-full",
           hasEnoughBeds ? "bg-green-50 border border-green-200" : "bg-amber-50 border border-amber-200"
         )}>
           <div className="flex items-center flex-wrap">
             <Bed className={cn("h-4 w-4 mr-2 shrink-0", hasEnoughBeds ? "text-green-600" : "text-amber-600")} />
-            <p className={cn("text-sm font-medium break-words", hasEnoughBeds ? "text-green-700" : "text-amber-700")}>
+            <p className={cn("text-sm font-medium text-balance", hasEnoughBeds ? "text-green-700" : "text-amber-700")}>
               {hasEnoughBeds 
                 ? `Hai selezionato appartamenti con ${selectedBedsCount} posti letto (sufficienti).` 
                 : `Hai selezionato ${selectedBedsCount} posti letto su ${effectiveGuestCount} necessari. Seleziona altri appartamenti.`}
@@ -177,54 +177,54 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                 <div 
                   key={apartment.id} 
                   className={cn(
-                    "border rounded-lg p-3 relative",
+                    "border rounded-lg p-3 relative w-full",
                     isApartmentSelected(apartment.id) ? "border-primary border-2" : "",
                     isBooked ? "opacity-60" : "cursor-pointer transition-all hover:border-primary",
                   )}
                 >
-                  {/* Removed 'Consigliato' badge */}
-                  
                   {isBooked && (
                     <Badge variant="destructive" className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-sm z-30">
                       Prenotato
                     </Badge>
                   )}
                   
-                  <h3 className="font-medium mt-2 text-sm md:text-base flex flex-nowrap items-center">
+                  <h3 className="font-medium mt-2 text-sm md:text-base flex flex-nowrap items-center text-balance max-w-full">
                     <span className="mr-1">Appartamento</span>
                     <span>{apartment.name.split(' ')[1]}</span>
                   </h3>
                   
                   {/* Posti letto - con enfasi ridotta */}
-                  <div className="mt-2 mb-2 bg-primary/5 p-1 rounded-md">
+                  <div className="mt-2 mb-2 bg-primary/5 p-1 rounded-md w-full">
                     <div className="flex items-center">
                       <Bed className="h-4 w-4 text-primary shrink-0 mr-1" />
-                      <span className="text-sm text-primary">{apartment.beds} posti letto</span>
+                      <span className="text-sm text-primary text-balance w-full">
+                        {apartment.beds} posti letto
+                      </span>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 gap-1 text-xs mt-2">
-                    <div className="flex items-center gap-1">
+                  <div className="grid grid-cols-1 gap-1 text-xs mt-2 w-full max-w-full">
+                    <div className="flex items-center gap-1 text-balance">
                       <BedDouble className="h-3 w-3 text-muted-foreground shrink-0" />
-                      <span>{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
+                      <span className="text-balance">{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 text-balance">
                       <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
-                      <span>Piano {apartment.floor}</span>
+                      <span className="text-balance">Piano {apartment.floor}</span>
                     </div>
                     
-                    {/* Sostituito "Vista Mare" con informazioni su terrazza/veranda */}
-                    <div className="flex items-center gap-1">
+                    {/* Terrazza/veranda */}
+                    <div className="flex items-center gap-1 text-balance">
                       <Sun className="h-3 w-3 text-muted-foreground shrink-0" />
-                      <span>
+                      <span className="text-balance">
                         {apartment.hasVeranda ? 'Ampia Veranda' : apartment.hasTerrace ? 'Terrazza Vista Mare' : ''}
                       </span>
                     </div>
                     
-                    {/* Aggiunto stato del climatizzatore */}
-                    <div className="flex items-center gap-1">
+                    {/* Climatizzatore */}
+                    <div className="flex items-center gap-1 text-balance">
                       <ThermometerSun className="h-3 w-3 text-muted-foreground shrink-0" />
-                      <span>{apartment.hasAirConditioning ? 'Climatizzatore' : 'Non Climatizzato'}</span>
+                      <span className="text-balance">{apartment.hasAirConditioning ? 'Climatizzatore' : 'Non Climatizzato'}</span>
                     </div>
                   </div>
                   
@@ -270,7 +270,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
         )}
         
         {form.formState.errors.selectedApartment && (
-          <p className="text-destructive text-sm">
+          <p className="text-destructive text-sm text-balance">
             {form.formState.errors.selectedApartment.message}
           </p>
         )}
@@ -281,6 +281,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
           type="button" 
           onClick={handleNextStep}
           disabled={availableApartments.length === 0 || (form.getValues("selectedApartments")?.length === 0) || !hasEnoughBeds}
+          className="text-balance w-auto"
         >
           {!hasEnoughBeds && form.getValues("selectedApartments")?.length > 0 
             ? `Seleziona altri appartamenti (${selectedBedsCount}/${effectiveGuestCount})` 
