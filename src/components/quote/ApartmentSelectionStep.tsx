@@ -12,6 +12,7 @@ import { Bed, BedDouble, MapPin, Sun, ThermometerSun, Users as UsersIcon } from 
 import { isApartmentSuitable, getRecommendedApartment, getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useReservations } from "@/hooks/useReservations";
 
 interface ApartmentSelectionStepProps {
   form: UseFormReturn<FormValues>;
@@ -33,6 +34,8 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   const [selectedBedsCount, setSelectedBedsCount] = useState(0);
   const [hasEnoughBeds, setHasEnoughBeds] = useState(false);
   const isMobile = useIsMobile();
+  // Integrazione con il sistema di prenotazioni
+  const { getApartmentAvailability } = useReservations();
   
   // Initialize selectedApartments in form if not already set
   useEffect(() => {
@@ -41,8 +44,18 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
     }
   }, [form]);
   
-  // Show all apartments regardless of capacity, we'll mark them as suitable or not
-  const availableApartments = apartments;
+  // Filtriamo gli appartamenti disponibili in base alle prenotazioni esistenti
+  const availableApartments = apartments.map(apartment => {
+    // Verifichiamo se l'appartamento è già prenotato per le date selezionate
+    const isAvailable = formValues.checkIn && formValues.checkOut ? 
+      getApartmentAvailability(apartment.id, new Date(formValues.checkIn), new Date(formValues.checkOut)) :
+      true;
+
+    return {
+      ...apartment,
+      booked: !isAvailable
+    };
+  });
   
   // Calculate total beds in selected apartments
   useEffect(() => {
@@ -57,7 +70,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   // Handle apartment selection (toggle selection)
   const toggleApartmentSelection = (apartmentId: string) => {
     // Don't allow selecting if it's booked
-    const apartment = apartments.find(apt => apt.id === apartmentId);
+    const apartment = availableApartments.find(apt => apt.id === apartmentId);
     if (apartment?.booked) return;
     
     const currentSelected = form.getValues("selectedApartments") || [];
@@ -156,6 +169,15 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
             </p>
           </div>
         </div>
+
+        {/* Avviso disponibilità aggiornate in base alle prenotazioni */}
+        {formValues.checkIn && formValues.checkOut && (
+          <Alert variant="default" className="bg-yellow-50 border-yellow-200">
+            <AlertDescription className="text-yellow-800">
+              La disponibilità degli appartamenti è aggiornata in base alle prenotazioni esistenti per il periodo selezionato.
+            </AlertDescription>
+          </Alert>
+        )}
         
         {availableApartments.length === 0 ? (
           <div className="p-4 border rounded-md bg-muted/50">

@@ -1,5 +1,7 @@
+
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
+import { useReservations } from "@/hooks/useReservations";
 
 // Check if an apartment is suitable for a booking
 export function isApartmentSuitable(apartment: Apartment, formValues: FormValues): boolean {

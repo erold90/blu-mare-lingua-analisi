@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { apartments } from "@/data/apartments";
@@ -105,7 +106,7 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
       const reservationEnd = new Date(reservation.endDate).getTime();
       
       // Check for overlap
-      return (start <= reservationEnd && end >= reservationStart);
+      return (start < reservationEnd && end > reservationStart);
     });
   };
   

@@ -1,44 +1,18 @@
 
 import * as React from "react";
-import { useNavigate, Link, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { useNavigate, Link, Routes, Route, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/useAuth";
 
 // Admin components imports
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminReservations from "@/components/admin/AdminReservations";
 import AdminLayout from "@/components/admin/AdminLayout";
-
-// Admin credentials (in a real app, these would be stored securely on a server)
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "205647";
-
-export const useAuth = () => {
-  const [isAuthenticated, setIsAuthenticated] = React.useState(() => {
-    return localStorage.getItem("adminAuth") === "true";
-  });
-
-  const login = (username: string, password: string) => {
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      localStorage.setItem("adminAuth", "true");
-      setIsAuthenticated(true);
-      return true;
-    }
-    return false;
-  };
-
-  const logout = () => {
-    localStorage.removeItem("adminAuth");
-    setIsAuthenticated(false);
-  };
-
-  return { isAuthenticated, login, logout };
-};
 
 const LoginForm = () => {
   const [username, setUsername] = React.useState("");
