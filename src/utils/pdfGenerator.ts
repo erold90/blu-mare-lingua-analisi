@@ -9,7 +9,7 @@ import { Apartment } from "@/data/apartments";
 // Add jspdf-autotable type definitions
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: typeof autoTable;
+    autoTable: (options: any) => any;
     lastAutoTable: {
       finalY: number;
     };
@@ -17,8 +17,8 @@ declare module 'jspdf' {
   }
 }
 
-// Register autoTable to jsPDF
-jsPDF.API.autoTable = autoTable;
+// Register autoTable with jsPDF
+(jsPDF.API as any).autoTable = autoTable;
 
 // Funzione per creare il PDF del preventivo
 export const downloadPDF = (formData: FormValues, apartments: Apartment[], clientName?: string) => {

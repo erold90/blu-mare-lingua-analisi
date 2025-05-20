@@ -9,6 +9,7 @@ export interface Apartment {
   view: string;
   size: number;
   price: number;
+  cleaningFee?: number;
   services: string[];
   images: string[];
   longDescription?: string;
