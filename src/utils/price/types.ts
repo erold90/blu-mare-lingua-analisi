@@ -12,6 +12,7 @@ export interface PriceCalculation {
   deposit: number;
   nights: number;
   totalPrice: number;
+  subtotal: number; // Add subtotal property
 }
 
 // Create default empty price calculation object
@@ -26,5 +27,6 @@ export const emptyPriceCalculation: PriceCalculation = {
   savings: 0, 
   deposit: 0, 
   nights: 0,
-  totalPrice: 0
+  totalPrice: 0,
+  subtotal: 0 // Add subtotal property with default value
 };

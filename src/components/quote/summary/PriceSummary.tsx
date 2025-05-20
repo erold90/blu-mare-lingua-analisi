@@ -17,21 +17,23 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   const isHighSeason = formValues.checkIn ? 
     (formValues.checkIn.getMonth() >= 5 && formValues.checkIn.getMonth() <= 8) : false;
     
-  // Calculate the subtotal correctly (basePrice + extras + cleaningFee)
-  const subtotal = priceInfo.basePrice + priceInfo.extras + priceInfo.cleaningFee;
+  // Use the subtotal from the price calculation
+  const subtotal = priceInfo.subtotal;
 
-  // The total to pay should be the final amount after all discounts and inclusions
+  // The total to pay is the final amount after all discounts
   const totalToPay = priceInfo.totalAfterDiscount;
-
-  // Calculate deposit as 30% of the total
-  const deposit = Math.ceil(totalToPay * 0.3);
+  
+  // The deposit is 30% of the total
+  const deposit = priceInfo.deposit;
 
   return (
     <div className="border rounded-md p-4 space-y-4">
       <h3 className="font-medium">Riepilogo costi</h3>
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Costo appartamenti {isHighSeason ? '(settimanale)' : `(${priceInfo.nights} notti)`}:</span>
+          <span className="text-muted-foreground">
+            {isHighSeason ? 'Costo appartamenti (settimanale):' : `Costo appartamenti (${priceInfo.nights} notti):`}
+          </span>
           <span>{priceInfo.basePrice}€</span>
         </div>
         

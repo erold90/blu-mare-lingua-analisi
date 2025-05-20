@@ -60,13 +60,16 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   // Calculate tourist tax
   const touristTax = calculateTouristTax(formValues, nights);
   
-  // Calculate total before discount
-  const totalBeforeDiscount = basePrice + extrasCost + cleaningFee + touristTax;
+  // Calculate subtotal (before tourist tax)
+  const subtotal = basePrice + extrasCost + cleaningFee;
+  
+  // Calculate total before discount (including tourist tax)
+  const totalBeforeDiscount = subtotal + touristTax;
   
   // Round down to the nearest 50€
   const roundedPrice = Math.floor(totalBeforeDiscount / 50) * 50;
   
-  // Calculate the discount amount
+  // Calculate the discount amount (includes both rounding discount and tourist tax)
   const discount = totalBeforeDiscount - roundedPrice;
   
   // Calculate deposit (30%)
@@ -83,6 +86,7 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
     savings: discount,
     deposit,
     nights,
-    totalPrice: roundedPrice
+    totalPrice: roundedPrice,
+    subtotal // Add subtotal to the price calculation
   };
 }
