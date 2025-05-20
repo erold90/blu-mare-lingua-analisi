@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
-import { Bed, BedDouble, MapPin, Wifi, Users, Baby } from "lucide-react";
+import { Bed, BedDouble, MapPin, Wifi, Users } from "lucide-react";
 import { isApartmentSuitable, getRecommendedApartment, getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -43,11 +43,6 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   
   // Show all apartments regardless of capacity, we'll mark them as suitable or not
   const availableApartments = apartments;
-  
-  // Get recommended apartment ID
-  const recommendedApartmentId = getRecommendedApartment(availableApartments.filter(apartment => 
-    isApartmentSuitable(apartment, formValues)
-  ), formValues);
   
   // Calculate total beds in selected apartments
   useEffect(() => {
@@ -187,11 +182,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                     isBooked ? "opacity-60" : "cursor-pointer transition-all hover:border-primary",
                   )}
                 >
-                  {apartment.id === recommendedApartmentId && !isBooked && (
-                    <Badge variant="default" className="absolute top-1 left-1 bg-green-600 text-xs">
-                      Consigliato
-                    </Badge>
-                  )}
+                  {/* Removed 'Consigliato' badge */}
                   
                   {isBooked && (
                     <Badge variant="destructive" className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-sm z-30">
@@ -199,26 +190,30 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                     </Badge>
                   )}
                   
-                  <h3 className="font-medium mt-6 text-sm md:text-base flex flex-nowrap items-center">
+                  <h3 className="font-medium mt-2 text-sm md:text-base flex flex-nowrap items-center">
                     <span className="mr-1">Appartamento</span>
                     <span>{apartment.name.split(' ')[1]}</span>
                   </h3>
                   
+                  {/* Highlight beds count - Make it more prominent */}
+                  <div className="mt-3 mb-2 bg-primary/10 p-2 rounded-md">
+                    <div className="flex items-center justify-center">
+                      <Bed className="h-5 w-5 text-primary shrink-0 mr-2" />
+                      <span className="font-semibold text-primary">{apartment.beds} posti letto</span>
+                    </div>
+                  </div>
+                  
                   <div className="grid grid-cols-1 gap-1 text-xs mt-2">
                     <div className="flex items-center gap-1">
-                      <BedDouble className="h-3 w-3 text-primary shrink-0" />
+                      <BedDouble className="h-3 w-3 text-muted-foreground shrink-0" />
                       <span>{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Bed className="h-3 w-3 text-primary shrink-0" />
-                      <span>{apartment.beds} posti letto</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3 text-primary shrink-0" />
+                      <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
                       <span>Piano {apartment.floor}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Wifi className="h-3 w-3 text-primary shrink-0" />
+                      <Wifi className="h-3 w-3 text-muted-foreground shrink-0" />
                       <span>Vista {apartment.view}</span>
                     </div>
                   </div>
