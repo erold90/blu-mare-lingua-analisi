@@ -1,3 +1,4 @@
+
 // Dati degli appartamenti
 export interface Apartment {
   id: string;
@@ -14,6 +15,7 @@ export interface Apartment {
   CIN?: string;
   bedrooms?: number;
   beds?: number;
+  booked?: boolean; // Added booked property
 }
 
 export const apartments: Apartment[] = [

@@ -1,11 +1,10 @@
-
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
 
 // Check if an apartment is suitable for a booking
 export function isApartmentSuitable(apartment: Apartment, formValues: FormValues): boolean {
   // Don't consider booked apartments as suitable
-  if (apartment.booked) {
+  if (apartment.booked === true) {
     return false;
   }
 
