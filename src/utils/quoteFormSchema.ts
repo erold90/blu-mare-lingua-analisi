@@ -45,6 +45,9 @@ export const extrasSchema = z.object({
   petsCount: z.number().optional(),
   petSize: z.enum(["small", "medium", "large"]).optional(),
   additionalServices: z.array(z.string()).optional(),
+  // New fields
+  personsPerApartment: z.record(z.string(), z.number()).optional(),
+  petsInApartment: z.record(z.string(), z.boolean()).optional(),
 });
 
 // Schema dello step 5: Informazioni di contatto

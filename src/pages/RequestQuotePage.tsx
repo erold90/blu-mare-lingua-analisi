@@ -100,6 +100,7 @@ const RequestQuotePage = () => {
               form={form}
               prevStep={prevStep}
               nextStep={nextStep}
+              apartments={apartments}
             />
           )}
           

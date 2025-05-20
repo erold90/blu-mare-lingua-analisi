@@ -1,7 +1,7 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
-import { Plus, Minus } from "lucide-react";
+import { Dog, Bed } from "lucide-react";
 import { 
   Card, 
   CardContent, 
@@ -22,14 +22,94 @@ import {
   FormMessage 
 } from "@/components/ui/form";
 import { FormValues } from "@/utils/quoteFormSchema";
+import { Apartment } from "@/data/apartments";
+import { Separator } from "@/components/ui/separator";
 
 interface ServicesStepProps {
   form: UseFormReturn<FormValues>;
   prevStep: () => void;
   nextStep: () => void;
+  apartments: Apartment[];
 }
 
-const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep }) => {
+const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, apartments }) => {
+  const selectedApartmentIds = form.watch("selectedApartments") || [];
+  const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
+  const multipleApartments = selectedApartments.length > 1;
+  
+  const totalAdults = form.watch("adults") || 0;
+  const totalChildren = form.watch("children") || 0;
+  const childrenDetails = form.watch("childrenDetails") || [];
+  
+  // Count children who don't sleep with parents
+  const independentChildren = childrenDetails.filter(child => !child.sleepsWithParents).length;
+  
+  // Total people who need linen
+  const totalPeopleForLinen = totalAdults + independentChildren;
+  
+  // State for persons per apartment (for linen distribution)
+  const [personsPerApartment, setPersonsPerApartment] = useState<Record<string, number>>(
+    Object.fromEntries(selectedApartmentIds.map(id => [id, 0]))
+  );
+  
+  // State for which apartment has pets
+  const [petsInApartment, setPetsInApartment] = useState<Record<string, boolean>>(
+    Object.fromEntries(selectedApartmentIds.map(id => [id, false]))
+  );
+  
+  // Initialize or update when selected apartments change
+  useEffect(() => {
+    // Initialize with empty values if not set
+    const initialPersonsPerApt: Record<string, number> = {};
+    const initialPetsPerApt: Record<string, boolean> = {};
+    
+    selectedApartmentIds.forEach(id => {
+      initialPersonsPerApt[id] = personsPerApartment[id] || 0;
+      initialPetsPerApt[id] = petsInApartment[id] || false;
+    });
+    
+    setPersonsPerApartment(initialPersonsPerApt);
+    setPetsInApartment(initialPetsPerApt);
+    
+    // Set form values
+    form.setValue("personsPerApartment", initialPersonsPerApt);
+    form.setValue("petsInApartment", initialPetsPerApt);
+  }, [selectedApartmentIds.join(',')]);
+  
+  // Calculate total persons assigned to apartments
+  const totalAssignedPersons = Object.values(personsPerApartment).reduce((sum, count) => sum + count, 0);
+  
+  // Update form when distribution changes
+  const updatePersonsPerApartment = (apartmentId: string, count: number) => {
+    const newDistribution = { ...personsPerApartment, [apartmentId]: count };
+    setPersonsPerApartment(newDistribution);
+    form.setValue("personsPerApartment", newDistribution);
+  };
+  
+  // Toggle pet assignment for an apartment
+  const togglePetInApartment = (apartmentId: string) => {
+    const newPetsDistribution = { 
+      ...petsInApartment, 
+      [apartmentId]: !petsInApartment[apartmentId] 
+    };
+    setPetsInApartment(newPetsDistribution);
+    form.setValue("petsInApartment", newPetsDistribution);
+    
+    // If any apartment has pets, set hasPets to true
+    const hasPetsInAnyApartment = Object.values(newPetsDistribution).some(Boolean);
+    form.setValue("hasPets", hasPetsInAnyApartment);
+  };
+  
+  // Calculate linen costs
+  const linenCost = totalPeopleForLinen * 15;
+  
+  // Calculate pet costs (50€ per apartment with pets)
+  const petCost = form.watch("hasPets") ? 
+    (multipleApartments ? 
+      Object.values(petsInApartment).filter(Boolean).length * 50 : 
+      50) : 
+    0;
+  
   return (
     <Card>
       <CardHeader>
@@ -38,149 +118,191 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep })
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Opzioni biancheria */}
-        <FormField
-          control={form.control}
-          name="linenOption"
-          render={({ field }) => (
-            <FormItem className="space-y-3">
-              <Label>Biancheria da letto e bagno</Label>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  className="flex flex-col space-y-1"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="standard" id="linen-standard" />
-                    <Label htmlFor="linen-standard" className="cursor-pointer">
-                      Standard - Un cambio incluso (gratuito)
-                    </Label>
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Bed className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-medium">Biancheria da letto e bagno</h3>
+          </div>
+          
+          <FormField
+            control={form.control}
+            name="linenOption"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <FormControl>
+                    <Checkbox 
+                      checked={field.value === "extra"} 
+                      onCheckedChange={(checked) => {
+                        form.setValue("linenOption", checked ? "extra" : "standard");
+                      }}
+                      id="linen-extra"
+                    />
+                  </FormControl>
+                  <Label htmlFor="linen-extra" className="cursor-pointer">
+                    Richiedo servizio biancheria - 15€ a persona per tutto il soggiorno
+                  </Label>
+                </div>
+                
+                {field.value === "extra" && (
+                  <div className="pl-6">
+                    {!multipleApartments ? (
+                      <p className="text-sm text-muted-foreground">
+                        Totale per {totalPeopleForLinen} {totalPeopleForLinen === 1 ? 'persona' : 'persone'}: {linenCost}€
+                      </p>
+                    ) : (
+                      <div className="space-y-4 border rounded-lg p-4">
+                        <p className="text-sm">
+                          Distribuisci le {totalPeopleForLinen} persone tra i tuoi appartamenti:
+                        </p>
+                        
+                        {selectedApartments.map((apartment) => (
+                          <div key={apartment.id} className="flex items-center justify-between">
+                            <Label htmlFor={`apt-persons-${apartment.id}`} className="text-sm">
+                              {apartment.name}:
+                            </Label>
+                            <div className="flex items-center space-x-2">
+                              <Button 
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                onClick={() => {
+                                  const current = personsPerApartment[apartment.id] || 0;
+                                  if (current > 0) {
+                                    updatePersonsPerApartment(apartment.id, current - 1);
+                                  }
+                                }}
+                                disabled={(personsPerApartment[apartment.id] || 0) <= 0}
+                              >
+                                -
+                              </Button>
+                              <Input
+                                id={`apt-persons-${apartment.id}`}
+                                className="w-16 text-center"
+                                value={personsPerApartment[apartment.id] || 0}
+                                readOnly
+                              />
+                              <Button 
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                onClick={() => {
+                                  const current = personsPerApartment[apartment.id] || 0;
+                                  if (totalAssignedPersons < totalPeopleForLinen) {
+                                    updatePersonsPerApartment(apartment.id, current + 1);
+                                  }
+                                }}
+                                disabled={totalAssignedPersons >= totalPeopleForLinen}
+                              >
+                                +
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        <div className="flex justify-between text-sm font-medium mt-2 pt-2 border-t">
+                          <span>Persone assegnate:</span>
+                          <span>{totalAssignedPersons} / {totalPeopleForLinen}</span>
+                        </div>
+                        
+                        {totalAssignedPersons !== totalPeopleForLinen && (
+                          <p className="text-destructive text-sm">
+                            {totalAssignedPersons < totalPeopleForLinen
+                              ? `Devi assegnare ancora ${totalPeopleForLinen - totalAssignedPersons} persone`
+                              : `Hai assegnato ${totalAssignedPersons - totalPeopleForLinen} persone in più`}
+                          </p>
+                        )}
+                        
+                        <p className="text-sm text-muted-foreground pt-2">
+                          Costo totale biancheria: {linenCost}€
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="extra" id="linen-extra" />
-                    <Label htmlFor="linen-extra" className="cursor-pointer">
-                      Extra - Un cambio biancheria aggiuntivo (+30€)
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="deluxe" id="linen-deluxe" />
-                    <Label htmlFor="linen-deluxe" className="cursor-pointer">
-                      Deluxe - Cambi biancheria frequenti (+60€)
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                )}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <Separator />
         
         {/* Animali domestici */}
-        <FormField
-          control={form.control}
-          name="hasPets"
-          render={({ field }) => (
-            <FormItem className="space-y-3">
-              <div className="flex items-center space-x-2">
-                <FormControl>
-                  <Checkbox 
-                    checked={field.value} 
-                    onCheckedChange={field.onChange}
-                    id="has-pets"
-                  />
-                </FormControl>
-                <Label htmlFor="has-pets" className="cursor-pointer">
-                  Viaggerò con animali domestici
-                </Label>
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        {/* Dettagli animali domestici (se presenti) */}
-        {form.watch("hasPets") && (
-          <div className="space-y-4 border rounded-lg p-4">
-            <h3 className="font-medium">Dettagli animali domestici</h3>
-            
-            <div className="space-y-2">
-              <Label htmlFor="pets-count">Numero di animali</Label>
-              <div className="flex items-center space-x-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => {
-                    const current = form.getValues("petsCount") || 0;
-                    if (current > 0) form.setValue("petsCount", current - 1);
-                  }}
-                  disabled={(form.getValues("petsCount") || 0) <= 0}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  id="pets-count"
-                  type="number"
-                  className="w-20 text-center"
-                  {...form.register("petsCount", { valueAsNumber: true })}
-                  readOnly
-                />
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={() => {
-                    const current = form.getValues("petsCount") || 0;
-                    form.setValue("petsCount", current + 1);
-                  }}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            <FormField
-              control={form.control}
-              name="petSize"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <Label>Taglia dell'animale</Label>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-col space-y-1"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="small" id="pet-small" />
-                        <Label htmlFor="pet-small" className="cursor-pointer">
-                          Piccola (fino a 10kg) - 5€ al giorno per animale
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="medium" id="pet-medium" />
-                        <Label htmlFor="pet-medium" className="cursor-pointer">
-                          Media (10-25kg) - 10€ al giorno per animale
-                        </Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="large" id="pet-large" />
-                        <Label htmlFor="pet-large" className="cursor-pointer">
-                          Grande (oltre 25kg) - 15€ al giorno per animale
-                        </Label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Dog className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-medium">Animali domestici</h3>
           </div>
-        )}
+          
+          <FormField
+            control={form.control}
+            name="hasPets"
+            render={({ field }) => (
+              <FormItem className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <FormControl>
+                    <Checkbox 
+                      checked={field.value} 
+                      onCheckedChange={field.onChange}
+                      id="has-pets"
+                    />
+                  </FormControl>
+                  <Label htmlFor="has-pets" className="cursor-pointer">
+                    Viaggerò con animali domestici - 50€ {multipleApartments ? "per appartamento" : ""}
+                  </Label>
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          {/* Dettagli animali domestici (se presenti) */}
+          {form.watch("hasPets") && (
+            <div className="space-y-4 border rounded-lg p-4 ml-6">
+              {multipleApartments ? (
+                <>
+                  <p className="text-sm">Seleziona in quali appartamenti saranno presenti animali domestici:</p>
+                  
+                  {selectedApartments.map((apartment) => (
+                    <div key={apartment.id} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`pet-apt-${apartment.id}`}
+                        checked={petsInApartment[apartment.id] || false}
+                        onCheckedChange={() => togglePetInApartment(apartment.id)}
+                      />
+                      <Label htmlFor={`pet-apt-${apartment.id}`} className="text-sm cursor-pointer">
+                        {apartment.name}
+                      </Label>
+                    </div>
+                  ))}
+                  
+                  <p className="text-sm text-muted-foreground pt-2">
+                    Costo totale animali: {petCost}€
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Supplemento per animali domestici: 50€ per tutto il soggiorno
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </CardContent>
       <CardFooter className="flex justify-between">
         <Button type="button" variant="outline" onClick={prevStep}>Indietro</Button>
-        <Button type="button" onClick={nextStep}>Avanti</Button>
+        <Button 
+          type="button" 
+          onClick={nextStep}
+          disabled={
+            form.watch("linenOption") === "extra" && 
+            multipleApartments && 
+            totalAssignedPersons !== totalPeopleForLinen
+          }
+        >
+          Avanti
+        </Button>
       </CardFooter>
     </Card>
   );

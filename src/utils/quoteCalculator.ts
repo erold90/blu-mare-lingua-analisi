@@ -52,17 +52,35 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
   
   // Aggiungo eventuali extra
   const linenOption = formValues.linenOption;
-  // Moltiplico il costo della biancheria per il numero di appartamenti
-  const extraForLinen = selectedApartments.length * (linenOption === "extra" ? 30 : linenOption === "deluxe" ? 60 : 0);
   
-  // Calcolo il prezzo degli animali domestici
+  // Calcolo il costo della biancheria (15€ per persona)
+  let extraForLinen = 0;
+  if (linenOption === "extra") {
+    const adults = formValues.adults || 0;
+    const childrenDetails = formValues.childrenDetails || [];
+    const independentChildren = childrenDetails.filter(child => !child.sleepsWithParents).length;
+    const totalPeople = adults + independentChildren;
+    
+    extraForLinen = totalPeople * 15; // 15€ per persona
+  }
+  
+  // Calcolo il prezzo degli animali domestici (50€ per appartamento con animali)
   let petPrice = 0;
   if (formValues.hasPets) {
-    const petsCount = formValues.petsCount || 0;
-    const petSize = formValues.petSize;
-    
-    const pricePerPet = petSize === "small" ? 5 : petSize === "medium" ? 10 : 15;
-    petPrice = pricePerPet * petsCount * nights;
+    if (selectedApartments.length === 1) {
+      // Prezzo fisso di 50€ per un solo appartamento
+      petPrice = 50;
+    } else if (selectedApartments.length > 1 && formValues.petsInApartment) {
+      // 50€ per ogni appartamento con animali
+      const apartmentsWithPets = Object.entries(formValues.petsInApartment)
+        .filter(([_, hasPet]) => hasPet)
+        .length;
+      
+      petPrice = apartmentsWithPets * 50;
+    } else {
+      // Default se non è specificato quale appartamento ha animali
+      petPrice = 50;
+    }
   }
   
   // Calcolo della tassa di soggiorno
@@ -109,6 +127,27 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
   selectedApartments.forEach(apartment => {
     message += `\n  * ${apartment.name}`;
   });
+  
+  // Aggiungo informazioni su servizi extra
+  message += "\n- Servizi extra:";
+  
+  // Biancheria
+  if (formValues.linenOption === "extra") {
+    message += "\n  * Servizio biancheria incluso";
+  }
+  
+  // Animali
+  if (formValues.hasPets) {
+    message += "\n  * Con animali domestici";
+    
+    if (selectedApartments.length > 1 && formValues.petsInApartment) {
+      const apartmentsWithPets = Object.entries(formValues.petsInApartment)
+        .filter(([id, hasPet]) => hasPet)
+        .map(([id]) => selectedApartments.find(apt => apt.id === id)?.name || id);
+      
+      message += ` (in ${apartmentsWithPets.join(", ")})`;
+    }
+  }
   
   message += `\n- Totale preventivo: ${priceInfo.totalAfterDiscount}€ (+ ${priceInfo.touristTax}€ tassa di soggiorno)`;
   
