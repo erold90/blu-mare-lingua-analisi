@@ -60,7 +60,7 @@ const RequestQuotePage = () => {
     <div className="container px-4 py-8 md:py-12 max-w-full overflow-x-hidden">
       <div className="text-center mb-8">
         <h1 className="text-3xl md:text-4xl font-bold mb-4">Richiedi un Preventivo</h1>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+        <p className="text-sm md:text-base text-muted-foreground max-w-2xl mx-auto">
           Compila il form per ricevere un preventivo personalizzato.
         </p>
       </div>
