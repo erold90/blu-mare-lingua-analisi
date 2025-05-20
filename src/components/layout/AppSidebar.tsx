@@ -46,7 +46,7 @@ export function AppSidebar() {
   return (
     <div 
       className={`transition-all duration-300 ease-in-out fixed top-16 left-0 bottom-0 z-30 ${
-        isMobile ? "" : (isHovered ? "md:w-56" : "md:w-0")
+        isMobile ? "" : (isHovered ? "md:w-52" : "md:w-0")
       }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}

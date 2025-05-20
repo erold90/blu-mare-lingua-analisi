@@ -5,11 +5,9 @@ import { AppSidebar } from "./AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { CookieConsent } from "@/components/CookieConsent";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useState } from "react";
 
 export function AppLayout() {
   const isMobile = useIsMobile();
-  const [sidebarHovered, setSidebarHovered] = useState(false);
   
   return (
     <SidebarProvider>
