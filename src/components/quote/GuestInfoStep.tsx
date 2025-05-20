@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormValues } from "@/utils/quoteFormSchema";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface GuestInfoStepProps {
   form: UseFormReturn<FormValues>;
@@ -32,6 +33,8 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
   updateChildDetails,
   nextStep
 }) => {
+  const isMobile = useIsMobile();
+  
   return (
     <Card>
       <CardHeader>
@@ -42,48 +45,51 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
         {/* Numero di adulti */}
         <div className="space-y-2">
           <Label htmlFor="adults">Numero di adulti</Label>
-          <div className="flex items-center space-x-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="icon" 
-              onClick={decrementAdults}
-              disabled={form.getValues("adults") <= 1}
-            >
-              <Minus className="h-4 w-4" />
-            </Button>
-            <Input
-              id="adults"
-              type="number"
-              className="w-20 text-center"
-              {...form.register("adults", { valueAsNumber: true })}
-              readOnly
-            />
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="icon" 
-              onClick={incrementAdults}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center space-x-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="icon" 
+                onClick={decrementAdults}
+                disabled={form.getValues("adults") <= 1}
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <Input
+                id="adults"
+                type="number"
+                className="w-20 text-center"
+                {...form.register("adults", { valueAsNumber: true })}
+                readOnly
+              />
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="icon" 
+                onClick={incrementAdults}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
             
             {/* Mostra il pulsante per i gruppi se ci sono più di 3 adulti */}
             {form.watch("adults") > 3 && !form.watch("isGroupBooking") && (
               <Button 
                 type="button"
                 variant="outline"
-                className="ml-4 flex items-center gap-2"
+                className="mt-0 flex items-center gap-2 text-sm"
                 onClick={openGroupDialog}
+                size={isMobile ? "sm" : "default"}
               >
                 <Users className="h-4 w-4" />
-                Specifica composizione gruppo
+                {isMobile ? "Composizione" : "Specifica composizione gruppo"}
               </Button>
             )}
             
             {/* Badge che indica che è una prenotazione di gruppo */}
             {form.watch("isGroupBooking") && (
-              <div className="flex items-center ml-4">
+              <div className="flex flex-wrap items-center mt-0">
                 <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                   <Users className="h-3 w-3" />
                   Gruppo definito
