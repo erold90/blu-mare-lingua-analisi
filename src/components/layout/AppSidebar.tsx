@@ -25,7 +25,9 @@ export function AppSidebar() {
   
   // Function to close sidebar on mobile when a link is clicked
   const handleLinkClick = () => {
-    setOpenMobile(false);
+    if (isMobile) {
+      setOpenMobile(false);
+    }
   };
 
   // For desktop only - hover interaction
@@ -43,8 +45,8 @@ export function AppSidebar() {
 
   return (
     <div 
-      className={`md:fixed md:left-0 md:top-0 md:bottom-0 md:z-30 transition-all duration-300 ease-in-out ${
-        !isMobile && isHovered ? "md:w-64" : "md:w-0"
+      className={`transition-all duration-300 ease-in-out fixed top-16 left-0 bottom-0 z-30 ${
+        isMobile ? "" : (isHovered ? "md:w-56" : "md:w-0")
       }`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
@@ -52,9 +54,7 @@ export function AppSidebar() {
       <Sidebar>
         <SidebarHeader className="border-b">
           <Link to="/" className="flex items-center gap-2 px-4 py-2" onClick={handleLinkClick}>
-            <span className={`text-xl font-semibold transition-opacity duration-200 ${
-              !isMobile ? "" : ""
-            }`}>Villa Mare Blu</span>
+            <span className="text-xl font-semibold">Villa Mare Blu</span>
           </Link>
         </SidebarHeader>
         <SidebarContent>
