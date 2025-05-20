@@ -11,10 +11,9 @@ export function AppHeader() {
   return (
     <header className={`fixed top-0 z-40 w-full ${isMobile ? "h-12" : "h-16"}`}>
       <div className={`container ${isMobile ? "p-0" : ""} flex items-center ${isMobile ? "h-12" : "h-16"}`}>
-        <div className={`flex items-center ${open ? "ml-[16rem]" : "ml-2"} mt-2 transition-all duration-300`}>
+        <div className={`flex items-center ${isMobile ? "ml-2" : open ? "ml-[16rem]" : "ml-2"} mt-2 transition-all duration-300`}>
           <SidebarTrigger />
         </div>
-        {/* Removed the Villa MareBlu text that was here */}
       </div>
     </header>
   );
