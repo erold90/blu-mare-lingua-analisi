@@ -20,6 +20,15 @@ const QuoteConfirmationDialog: React.FC<QuoteConfirmationDialogProps> = ({
 }) => {
   const [fullName, setFullName] = useState("");
   
+  const handleConfirm = () => {
+    // Only pass the name if it's not empty
+    if (fullName.trim()) {
+      onConfirm(fullName);
+    } else {
+      onConfirm();
+    }
+  };
+  
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
@@ -47,7 +56,7 @@ const QuoteConfirmationDialog: React.FC<QuoteConfirmationDialogProps> = ({
           <Button type="button" variant="outline" onClick={onSkip}>
             Scarica senza nome
           </Button>
-          <Button type="button" onClick={() => onConfirm(fullName || undefined)}>
+          <Button type="button" onClick={handleConfirm}>
             Scarica con il mio nome
           </Button>
         </DialogFooter>

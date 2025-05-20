@@ -31,6 +31,11 @@ const ContactStep: React.FC<ContactStepProps> = ({
   const formValues = form.getValues();
   const priceInfo = calculateTotalPrice(formValues, apartments);
   
+  // Function to handle PDF download directly
+  const handleDownloadClick = () => {
+    setShowPdfDialog(true);
+  };
+  
   return (
     <>
       <Card>
@@ -92,7 +97,7 @@ const ContactStep: React.FC<ContactStepProps> = ({
               type="button" 
               variant="outline" 
               className="gap-2"
-              onClick={() => setShowPdfDialog(true)}
+              onClick={handleDownloadClick}
             >
               <FileText className="h-4 w-4" />
               Scarica preventivo PDF
