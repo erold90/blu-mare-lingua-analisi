@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Apartment } from "@/data/apartments";
+import { Bed, Home, MapPin, Wifi } from "lucide-react";
 
 interface ApartmentDialogProps {
   apartmentId: string | null;
@@ -32,13 +33,14 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
 
   return (
     <Dialog open={!!apartmentId} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{apartment.name}</DialogTitle>
           <DialogDescription>
             {apartment.description}
           </DialogDescription>
         </DialogHeader>
+        
         <div className="space-y-4">
           <div className="aspect-video bg-muted rounded-md overflow-hidden">
             <img 
@@ -47,16 +49,43 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <span className="text-muted-foreground">Capacità:</span>
-            <span>{apartment.capacity} persone</span>
-            <span className="text-muted-foreground">Dimensione:</span>
-            <span>{apartment.size} m²</span>
-            <span className="text-muted-foreground">Piano:</span>
-            <span>{apartment.floor}</span>
-            <span className="text-muted-foreground">Vista:</span>
-            <span>{apartment.view}</span>
+          
+          {/* Apartment Details */}
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <Bed className="h-4 w-4 text-primary" />
+              <span>{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Home className="h-4 w-4 text-primary" />
+              <span>{apartment.beds} posti letto</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-primary" />
+              <span>Piano {apartment.floor}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Wifi className="h-4 w-4 text-primary" />
+              <span>Vista {apartment.view}</span>
+            </div>
           </div>
+          
+          {/* Long Description */}
+          {apartment.longDescription && (
+            <div className="mt-4">
+              <h4 className="font-medium mb-2">Descrizione dettagliata</h4>
+              <p className="text-sm text-muted-foreground">{apartment.longDescription}</p>
+            </div>
+          )}
+
+          {/* CIN */}
+          {apartment.CIN && (
+            <div className="text-xs text-muted-foreground">
+              CIN: {apartment.CIN}
+            </div>
+          )}
+          
+          {/* Services */}
           <div>
             <h4 className="font-medium mb-2">Servizi inclusi:</h4>
             <div className="flex flex-wrap gap-2">
@@ -66,6 +95,7 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
             </div>
           </div>
         </div>
+        
         <DialogFooter className="sm:justify-end">
           <Button 
             variant="default" 

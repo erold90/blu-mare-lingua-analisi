@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
+import { Bed, Home, MapPin, Wifi } from "lucide-react";
 
 interface ApartmentSelectionStepProps {
   form: UseFormReturn<FormValues>;
@@ -53,11 +54,23 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                   <span className="font-semibold text-primary">{apartment.price}€/notte</span>
                 </div>
                 <p className="text-muted-foreground text-sm">{apartment.description}</p>
-                <div className="flex flex-wrap gap-2">
-                  <span className="text-xs bg-muted px-2 py-1 rounded">{apartment.capacity} persone</span>
-                  <span className="text-xs bg-muted px-2 py-1 rounded">Piano {apartment.floor}</span>
-                  <span className="text-xs bg-muted px-2 py-1 rounded">Vista {apartment.view}</span>
-                  <span className="text-xs bg-muted px-2 py-1 rounded">{apartment.size} m²</span>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-1">
+                    <Bed className="h-3 w-3 text-primary" />
+                    <span>{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Home className="h-3 w-3 text-primary" />
+                    <span>{apartment.beds} posti letto</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3 text-primary" />
+                    <span>Piano {apartment.floor}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Wifi className="h-3 w-3 text-primary" />
+                    <span>Vista {apartment.view}</span>
+                  </div>
                 </div>
                 <Button 
                   type="button" 
