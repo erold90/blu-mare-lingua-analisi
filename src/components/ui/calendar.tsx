@@ -64,6 +64,7 @@ function Calendar({
         formatWeekdayName: (day) => format(day, 'EEEEEE', { locale: it }).toUpperCase(),
         formatCaption: (date) => format(date, 'MMMM yyyy', { locale: it }),
       }}
+      fixedWeeks={true}
       {...props}
     />
   );

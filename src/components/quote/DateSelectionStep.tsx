@@ -16,6 +16,7 @@ import {
 import { FormValues } from "@/utils/quoteFormSchema";
 import { DateRange } from "react-day-picker";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface DateSelectionStepProps {
   form: UseFormReturn<FormValues>;
@@ -108,16 +109,19 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="center" className="w-auto p-0">
-            <Calendar
-              initialFocus
-              mode="range"
-              defaultMonth={new Date()}
-              selected={dateRange}
-              onSelect={handleDateChange}
-              disabled={isDateDisabled}
-              numberOfMonths={1}
-            />
+          <PopoverContent align="center" className="w-auto p-0 flex justify-center" sideOffset={12}>
+            <ScrollArea className="max-h-[350px]">
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={new Date()}
+                selected={dateRange}
+                onSelect={handleDateChange}
+                disabled={isDateDisabled}
+                numberOfMonths={1}
+                fixedWeeks={true}
+              />
+            </ScrollArea>
           </PopoverContent>
         </Popover>
 
