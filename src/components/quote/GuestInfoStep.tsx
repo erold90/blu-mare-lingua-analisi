@@ -144,7 +144,7 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
           <div className="space-y-4 mt-4 border rounded-lg p-4">
             <h3 className="font-medium">Dettagli bambini</h3>
             {childrenArray.map((child, index) => (
-              <div key={index} className="space-y-4 pt-4 border-t first:border-t-0 first:pt-0">
+              <div key={`child-${index}`} className="space-y-4 pt-4 border-t first:border-t-0 first:pt-0">
                 <h4>Bambino {index + 1}</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center space-x-2">

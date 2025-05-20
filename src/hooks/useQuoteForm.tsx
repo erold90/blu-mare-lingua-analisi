@@ -83,8 +83,16 @@ export function useQuoteForm() {
   
   // Aggiorna i dettagli di un bambino specifico
   const updateChildDetails = (index: number, field: 'isUnder12' | 'sleepsWithParents', value: boolean) => {
-    const updatedArray = [...childrenArray];
-    updatedArray[index][field] = value;
+    // Creo una copia profonda dell'array per evitare che le modifiche a un bambino influenzino gli altri
+    const updatedArray = childrenArray.map((child, i) => {
+      if (i === index) {
+        // Aggiorno solo il bambino all'indice specificato
+        return { ...child, [field]: value };
+      }
+      // Lascio invariati gli altri bambini
+      return { ...child };
+    });
+    
     setChildrenArray(updatedArray);
     form.setValue("childrenDetails", updatedArray);
   };
@@ -138,7 +146,7 @@ export function useQuoteForm() {
         children: form.getValues("children"), 
         // Assicuriamoci di impostare entrambi i valori a false per i dettagli dei bambini
         childrenDetails: form.getValues("children") > 0 
-          ? Array(form.getValues("children")).fill({ isUnder12: false, sleepsWithParents: false }) 
+          ? Array(form.getValues("children")).fill().map(() => ({ isUnder12: false, sleepsWithParents: false }))
           : [] 
       }];
       setFamilyGroups(initialGroups);
