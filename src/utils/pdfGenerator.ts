@@ -1,5 +1,6 @@
+
 import { jsPDF } from "jspdf";
-import autoTable, { RowInput } from "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { FormValues } from "./quoteFormSchema";
 import { calculateTotalPrice } from "./quoteCalculator";
@@ -12,6 +13,8 @@ export const generateQuotePDF = (
 ) => {
   // Create PDF instance
   const doc = new jsPDF();
+  // Add the autoTable functionality to jsPDF
+  autoTable(doc, {}); // This registers the plugin
   
   // Format today's date
   const today = format(new Date(), "dd-MM-yyyy");
@@ -68,7 +71,7 @@ export const generateQuotePDF = (
   
   doc.setFontSize(10);
   // Create stay details table
-  const stayTableResult = doc.autoTable({
+  const stayTableResult = autoTable(doc, {
     startY: yPos,
     head: [["Periodo", "Durata", "Ospiti"]],
     body: [
@@ -82,10 +85,8 @@ export const generateQuotePDF = (
     headStyles: { fillColor: [0, 85, 164] },
   });
   
-  // Update position for next section - Safely handle potentially undefined lastRow
-  const stayTableY = stayTableResult && typeof stayTableResult === 'object' && 'lastRow' in stayTableResult ? 
-    stayTableResult.lastRow?.position?.y : 
-    yPos + 20;
+  // Update position for next section
+  const stayTableY = stayTableResult?.lastAutoTable?.finalY ?? (yPos + 20);
   yPos = stayTableY + 20;
   
   // --- Apartments Section ---
@@ -118,7 +119,7 @@ export const generateQuotePDF = (
   });
   
   // Create apartments table
-  const apartmentsTableResult = doc.autoTable({
+  const apartmentsTableResult = autoTable(doc, {
     startY: yPos + 5,
     head: [["Appartamento", "Capacità", "Occupazione", "Prezzo", "Totale"]],
     body: apartmentData.length > 0 ? apartmentData : [["--", "--", "--", "--", "--"]],
@@ -126,10 +127,8 @@ export const generateQuotePDF = (
     headStyles: { fillColor: [0, 85, 164] },
   });
   
-  // Update position for next section - Safely handle potentially undefined lastRow
-  const apartmentsTableY = apartmentsTableResult && typeof apartmentsTableResult === 'object' && 'lastRow' in apartmentsTableResult ? 
-    apartmentsTableResult.lastRow?.position?.y : 
-    yPos + 40;
+  // Update position for next section
+  const apartmentsTableY = apartmentsTableResult?.lastAutoTable?.finalY ?? (yPos + 40);
   yPos = apartmentsTableY + 20;
   
   // --- Services Section ---
@@ -144,7 +143,7 @@ export const generateQuotePDF = (
   servicesData.push(["Tassa di soggiorno", "1€ per notte per persona", `${priceInfo.touristTax}€`]);
   
   // Create services table
-  const servicesTableResult = doc.autoTable({
+  const servicesTableResult = autoTable(doc, {
     startY: yPos + 5,
     head: [["Servizio", "Descrizione", "Totale"]],
     body: servicesData,
@@ -152,10 +151,8 @@ export const generateQuotePDF = (
     headStyles: { fillColor: [0, 85, 164] },
   });
   
-  // Update position for next section - Safely handle potentially undefined lastRow
-  const servicesTableY = servicesTableResult && typeof servicesTableResult === 'object' && 'lastRow' in servicesTableResult ? 
-    servicesTableResult.lastRow?.position?.y : 
-    yPos + 20;
+  // Update position for next section
+  const servicesTableY = servicesTableResult?.lastAutoTable?.finalY ?? (yPos + 20);
   yPos = servicesTableY + 20;
   
   // --- Price Summary ---
@@ -175,17 +172,15 @@ export const generateQuotePDF = (
   }
   
   // Create summary table
-  const summaryTableResult = doc.autoTable({
+  const summaryTableResult = autoTable(doc, {
     startY: yPos + 5,
     body: summaryData,
     theme: "grid",
     styles: { fontSize: 10 },
   });
   
-  // Final price in bold - Safely handle potentially undefined lastRow
-  const summaryTableY = summaryTableResult && typeof summaryTableResult === 'object' && 'lastRow' in summaryTableResult ? 
-    summaryTableResult.lastRow?.position?.y : 
-    yPos + 30;
+  // Final price in bold
+  const summaryTableY = summaryTableResult?.lastAutoTable?.finalY ?? (yPos + 30);
   const finalY = summaryTableY + 10;
   doc.setFontSize(12);
   doc.setFont("helvetica", "bold");
