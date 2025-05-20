@@ -10,6 +10,9 @@ import Index from "./pages/Index";
 import ApartmentsPage from "./pages/ApartmentsPage";
 import RequestQuotePage from "./pages/RequestQuotePage";
 import ReservedAreaPage from "./pages/ReservedAreaPage";
+import ContactsPage from "./pages/ContactsPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import CookiePolicyPage from "./pages/CookiePolicyPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +29,9 @@ const App = () => (
             <Route path="/appartamenti" element={<ApartmentsPage />} />
             <Route path="/preventivo" element={<RequestQuotePage />} />
             <Route path="/area-riservata" element={<ReservedAreaPage />} />
+            <Route path="/contatti" element={<ContactsPage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+            <Route path="/cookie-policy" element={<CookiePolicyPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

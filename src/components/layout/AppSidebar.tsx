@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { Home, User, Calculator, Building } from "lucide-react";
+import { Home, User, Calculator, Building, Mail, Shield, Cookie } from "lucide-react";
 import { 
   Sidebar, 
   SidebarContent, 
@@ -13,6 +13,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarSeparator,
   useSidebar
 } from "@/components/ui/sidebar";
 
@@ -60,6 +61,14 @@ export function AppSidebar() {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/contatti" onClick={handleLinkClick}>
+                    <Mail />
+                    <span>Contatti</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -71,6 +80,23 @@ export function AppSidebar() {
               <Link to="/area-riservata" onClick={handleLinkClick}>
                 <User />
                 <span>Area Riservata</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarSeparator />
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/privacy-policy" onClick={handleLinkClick}>
+                <Shield />
+                <span>Privacy Policy</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link to="/cookie-policy" onClick={handleLinkClick}>
+                <Cookie />
+                <span>Cookie Policy</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

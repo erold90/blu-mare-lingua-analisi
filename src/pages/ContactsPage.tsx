@@ -1,19 +1,48 @@
 
 import * as React from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { MapPin, Mail, Phone } from "lucide-react";
+import emailjs from 'emailjs-com';
 
 const ContactsPage = () => {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const formRef = React.useRef<HTMLFormElement>(null);
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    toast({
-      title: "Messaggio inviato",
-      description: "Ti risponderemo al più presto. Grazie per averci contattato!"
-    });
+    setIsSubmitting(true);
+
+    try {
+      // Replace these with your actual EmailJS service ID, template ID, and user ID
+      // You'll need to create an EmailJS account and set up a template
+      const serviceId = "service_id"; // Replace with your service ID
+      const templateId = "template_id"; // Replace with your template ID
+      const userId = "user_id"; // Replace with your user ID
+
+      const result = await emailjs.sendForm(
+        serviceId,
+        templateId,
+        event.currentTarget,
+        userId
+      );
+
+      if (result.text === "OK") {
+        toast.success("Messaggio inviato con successo! Ti risponderemo al più presto.");
+        formRef.current?.reset();
+      } else {
+        throw new Error("Errore nell'invio del messaggio");
+      }
+    } catch (error) {
+      console.error("Email error:", error);
+      toast.error("Si è verificato un errore. Riprova più tardi o contattaci direttamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -38,7 +67,7 @@ const ContactsPage = () => {
               <Mail className="h-6 w-6 text-primary shrink-0 mt-1" />
               <div>
                 <h3 className="font-medium">Email</h3>
-                <p className="text-muted-foreground">info@villamareblu.it<br />prenotazioni@villamareblu.it</p>
+                <p className="text-muted-foreground">macchiaforcato@gmail.com</p>
               </div>
             </div>
             
@@ -46,7 +75,7 @@ const ContactsPage = () => {
               <Phone className="h-6 w-6 text-primary shrink-0 mt-1" />
               <div>
                 <h3 className="font-medium">Telefono</h3>
-                <p className="text-muted-foreground">+39 0789 12345<br />+39 345 6789012 (Cellulare)</p>
+                <p className="text-muted-foreground">+39 3937767749</p>
               </div>
             </div>
           </div>
@@ -64,10 +93,17 @@ const ContactsPage = () => {
           </div>
           
           <div className="mt-8 h-64 md:h-80 bg-muted rounded-lg">
-            {/* Qui si potrebbe inserire una mappa */}
-            <div className="w-full h-full flex items-center justify-center bg-blue-100 rounded-lg">
-              <span className="text-muted-foreground">Mappa</span>
-            </div>
+            <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d49063.09653402417!2d9.458836397314443!3d40.92587253783483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x12d92dd9b8dd7b51%3A0x29f54f9b6800fc4e!2s07026%20Olbia%20SS!5e0!3m2!1sit!2sit!4v1652506226651!5m2!1sit!2sit" 
+              width="100%" 
+              height="100%" 
+              style={{ border: 0 }} 
+              allowFullScreen 
+              loading="lazy" 
+              referrerPolicy="no-referrer-when-downgrade"
+              className="rounded-lg"
+              title="Mappa Villa Mare Blu"
+            ></iframe>
           </div>
         </div>
         
@@ -78,46 +114,82 @@ const ContactsPage = () => {
             Compila il modulo sottostante per inviarci un messaggio. Ti risponderemo al più presto.
           </p>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">Nome</Label>
-                <Input id="firstName" placeholder="Il tuo nome" required />
+                <Input 
+                  id="firstName" 
+                  name="firstName"
+                  placeholder="Il tuo nome" 
+                  required 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Cognome</Label>
-                <Input id="lastName" placeholder="Il tuo cognome" required />
+                <Input 
+                  id="lastName" 
+                  name="lastName"
+                  placeholder="Il tuo cognome" 
+                  required 
+                />
               </div>
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="La tua email" required />
+              <Input 
+                id="email" 
+                name="email"
+                type="email" 
+                placeholder="La tua email" 
+                required 
+              />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="phone">Telefono</Label>
-              <Input id="phone" type="tel" placeholder="Il tuo numero di telefono" />
+              <Input 
+                id="phone" 
+                name="phone"
+                type="tel" 
+                placeholder="Il tuo numero di telefono" 
+              />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="subject">Oggetto</Label>
-              <Input id="subject" placeholder="Oggetto del messaggio" required />
+              <Input 
+                id="subject" 
+                name="subject"
+                placeholder="Oggetto del messaggio" 
+                required 
+              />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="message">Messaggio</Label>
               <Textarea 
                 id="message" 
+                name="message"
                 placeholder="Scrivi qui il tuo messaggio..." 
                 rows={5}
                 required
               />
             </div>
             
-            <Button type="submit" size="lg" className="w-full">
-              Invia Messaggio
+            <Button 
+              type="submit" 
+              size="lg" 
+              className="w-full"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Invio in corso..." : "Invia Messaggio"}
             </Button>
+            
+            <p className="text-xs text-muted-foreground mt-2">
+              Inviando questo modulo, accetti la nostra <Link to="/privacy-policy" className="text-primary underline">Privacy Policy</Link>.
+            </p>
           </form>
         </div>
       </div>
