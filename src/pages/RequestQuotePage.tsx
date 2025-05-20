@@ -57,7 +57,7 @@ const RequestQuotePage = () => {
       {/* Progress bar */}
       <ProgressBar step={step} totalSteps={totalSteps} />
       
-      <Form {...form.formState}>
+      <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmitHandler)} className="space-y-8">
           {/* STEP 1: Informazioni sugli ospiti */}
           {step === 1 && (
