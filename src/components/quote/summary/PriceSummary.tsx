@@ -64,7 +64,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Tassa di soggiorno:</span>
-          <span className="text-green-600">Inclusa</span>
+          <span>{priceInfo.touristTax}€</span>
         </div>
         
         <Separator className="my-2" />

@@ -15,6 +15,7 @@ export function calculateDiscount(totalBeforeDiscount: number, touristTax: numbe
   const discount = totalBeforeDiscount - roundedPrice;
   
   // The savings include both the discount and the tourist tax
+  // Make sure the tourist tax is included in the savings calculation
   const savings = discount + touristTax;
   
   // Calculate deposit (30%)
