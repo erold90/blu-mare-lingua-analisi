@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Dialog,
   DialogContent,
@@ -104,29 +103,6 @@ const GroupDialog: React.FC<GroupDialogProps> = ({
         </DialogHeader>
         
         <div className="space-y-6 my-4 max-h-[60vh] overflow-y-auto pr-2">
-          {/* Selezione del tipo di gruppo */}
-          <div className="space-y-3">
-            <Label>Tipo di gruppo</Label>
-            <RadioGroup
-              value={groupType || "families"}
-              onValueChange={(value) => onGroupTypeChange(value as "families" | "couples")}
-              className="flex flex-col space-y-1"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="families" id="group-families" />
-                <Label htmlFor="group-families" className="cursor-pointer">
-                  Famiglie
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="couples" id="group-couples" />
-                <Label htmlFor="group-couples" className="cursor-pointer">
-                  Coppie
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-          
           {/* Lista dei gruppi familiari */}
           <div className="space-y-6">
             {familyGroups.map((group, groupIndex) => (

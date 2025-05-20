@@ -59,7 +59,11 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
       // Se c'è un solo appartamento o non sono state specificate le persone per appartamento
       const adults = formValues.adults || 0;
       const childrenDetails = formValues.childrenDetails || [];
+      
+      // Contiamo solo i bambini che NON dormono con i genitori
       const independentChildren = childrenDetails.filter(child => !child.sleepsWithParents).length;
+      
+      // Il totale delle persone che necessitano di biancheria
       const totalPeople = adults + independentChildren;
       
       totalExtras += totalPeople * 15; // 15€ per persona
@@ -139,6 +143,14 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
   
   if (formValues.children > 0) {
     message += `, ${formValues.children} bambini`;
+    
+    // Aggiungo informazioni su bambini che dormono con i genitori
+    const childrenDetails = formValues.childrenDetails || [];
+    const sleepingWithParents = childrenDetails.filter(child => child.sleepsWithParents).length;
+    
+    if (sleepingWithParents > 0) {
+      message += ` (di cui ${sleepingWithParents} ${sleepingWithParents === 1 ? 'dorme' : 'dormono'} con i genitori)`;
+    }
   }
   
   message += "\n- Appartamenti:";

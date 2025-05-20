@@ -1,7 +1,7 @@
 
 import { z } from "zod";
 
-// Schema per i dettagli bambini
+// Schema per i dettagli bambini - rimosso isUnder12 poiché non più necessario
 export const childDetailSchema = z.object({
   isUnder12: z.boolean().default(true),
   sleepsWithParents: z.boolean().default(false),
@@ -45,7 +45,7 @@ export const extrasSchema = z.object({
   petsCount: z.number().optional(),
   petSize: z.enum(["small", "medium", "large"]).optional(),
   additionalServices: z.array(z.string()).optional(),
-  // New fields
+  // Record fields
   personsPerApartment: z.record(z.string(), z.number()).optional(),
   petsInApartment: z.record(z.string(), z.boolean()).optional(),
 });
