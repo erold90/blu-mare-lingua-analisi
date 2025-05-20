@@ -1,6 +1,5 @@
 
 import * as React from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   Table, 
@@ -48,6 +47,7 @@ import { useReservations, Reservation } from "@/hooks/useReservations";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Define the form schema
 const reservationSchema = z.object({
@@ -80,6 +80,7 @@ const AdminReservations = () => {
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [reservationToDelete, setReservationToDelete] = React.useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   const form = useForm<ReservationFormData>({
     resolver: zodResolver(reservationSchema),
@@ -149,15 +150,14 @@ const AdminReservations = () => {
         updateReservation({
           ...data,
           id: editingId,
-          // Ensure all required fields are present and convert Date objects to strings
+          startDate: data.startDate.toISOString(),
+          endDate: data.endDate.toISOString(),
           guestName: data.guestName,
           adults: data.adults,
           children: data.children,
           cribs: data.cribs,
           hasPets: data.hasPets,
           apartmentIds: data.apartmentIds,
-          startDate: data.startDate.toISOString(), // Convert Date to ISO string
-          endDate: data.endDate.toISOString(), // Convert Date to ISO string
           finalPrice: data.finalPrice,
           paymentMethod: data.paymentMethod,
           paymentStatus: data.paymentStatus
@@ -165,15 +165,14 @@ const AdminReservations = () => {
         toast.success("Prenotazione aggiornata con successo!");
       } else {
         addReservation({
-          // Ensure all required fields are present and convert Date objects to strings
           guestName: data.guestName,
           adults: data.adults,
           children: data.children,
           cribs: data.cribs,
           hasPets: data.hasPets,
           apartmentIds: data.apartmentIds,
-          startDate: data.startDate.toISOString(), // Convert Date to ISO string
-          endDate: data.endDate.toISOString(), // Convert Date to ISO string
+          startDate: data.startDate.toISOString(),
+          endDate: data.endDate.toISOString(),
           finalPrice: data.finalPrice,
           paymentMethod: data.paymentMethod,
           paymentStatus: data.paymentStatus,
@@ -190,96 +189,108 @@ const AdminReservations = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Gestione Prenotazioni</h2>
-        <Button onClick={handleAddNew}>
+        <h2 className="text-xl font-bold">Gestione Prenotazioni</h2>
+        <Button onClick={handleAddNew} size={isMobile ? "sm" : "default"}>
           <Plus className="mr-2 h-4 w-4" />
-          Nuova Prenotazione
+          {!isMobile && "Nuova Prenotazione"}
+          {isMobile && "Nuovo"}
         </Button>
       </div>
 
       {/* Reservations Table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Appartamenti</TableHead>
-              <TableHead>Check-in</TableHead>
-              <TableHead>Check-out</TableHead>
-              <TableHead>Prezzo</TableHead>
-              <TableHead>Stato Pagamento</TableHead>
-              <TableHead className="text-right">Azioni</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {reservations.length === 0 ? (
+      <div className="rounded-md border overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
-                  Nessuna prenotazione trovata
-                </TableCell>
+                <TableHead>Cliente</TableHead>
+                <TableHead className={isMobile ? "hidden" : ""}>Appartamenti</TableHead>
+                <TableHead>Check-in</TableHead>
+                <TableHead>Check-out</TableHead>
+                <TableHead className={isMobile ? "hidden" : ""}>Prezzo</TableHead>
+                <TableHead className={isMobile ? "hidden" : ""}>Stato Pagamento</TableHead>
+                <TableHead className="text-right">Azioni</TableHead>
               </TableRow>
-            ) : (
-              reservations.map((reservation) => (
-                <TableRow key={reservation.id}>
-                  <TableCell className="font-medium">
-                    {reservation.guestName}
-                    <div className="text-xs text-muted-foreground">
-                      Adulti: {reservation.adults}, Bambini: {reservation.children}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {reservation.apartmentIds.map(id => {
-                      const apartment = apartments.find(a => a.id === id);
-                      return apartment?.name;
-                    }).join(", ")}
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(reservation.startDate), 'dd/MM/yyyy')}
-                  </TableCell>
-                  <TableCell>
-                    {format(new Date(reservation.endDate), 'dd/MM/yyyy')}
-                  </TableCell>
-                  <TableCell>€{reservation.finalPrice}</TableCell>
-                  <TableCell>
-                    {reservation.paymentStatus === "notPaid" && "Non Pagato"}
-                    {reservation.paymentStatus === "deposit" && 
-                      `Caparra: €${reservation.depositAmount}`}
-                    {reservation.paymentStatus === "paid" && "Pagato"}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleEdit(reservation.id)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => {
-                          setReservationToDelete(reservation.id);
-                          setIsDeleteDialogOpen(true);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {reservations.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={isMobile ? 4 : 7} className="text-center py-4 text-muted-foreground">
+                    Nessuna prenotazione trovata
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                reservations.map((reservation) => (
+                  <TableRow key={reservation.id}>
+                    <TableCell className="font-medium">
+                      {reservation.guestName}
+                      {isMobile && (
+                        <div className="text-xs text-muted-foreground">
+                          {reservation.apartmentIds.map(id => {
+                            const apartment = apartments.find(a => a.id === id);
+                            return apartment?.name;
+                          }).join(", ")}
+                          <div>€{reservation.finalPrice}</div>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className={isMobile ? "hidden" : ""}>
+                      {reservation.apartmentIds.map(id => {
+                        const apartment = apartments.find(a => a.id === id);
+                        return apartment?.name;
+                      }).join(", ")}
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(reservation.startDate), 'dd/MM/yyyy')}
+                    </TableCell>
+                    <TableCell>
+                      {format(new Date(reservation.endDate), 'dd/MM/yyyy')}
+                    </TableCell>
+                    <TableCell className={isMobile ? "hidden" : ""}>€{reservation.finalPrice}</TableCell>
+                    <TableCell className={isMobile ? "hidden" : ""}>
+                      {reservation.paymentStatus === "notPaid" && "Non Pagato"}
+                      {reservation.paymentStatus === "deposit" && 
+                        `Caparra: €${reservation.depositAmount}`}
+                      {reservation.paymentStatus === "paid" && "Pagato"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleEdit(reservation.id)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => {
+                            setReservationToDelete(reservation.id);
+                            setIsDeleteDialogOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {/* Reservation Form Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className={cn(
+          "max-w-2xl max-h-[90vh] overflow-y-auto",
+          isMobile && "w-[95vw] p-4"
+        )}>
           <DialogHeader>
             <DialogTitle>
               {editingId ? "Modifica Prenotazione" : "Nuova Prenotazione"}
@@ -292,7 +303,7 @@ const AdminReservations = () => {
           </DialogHeader>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               {/* Guest Information */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Informazioni Ospite</h3>
@@ -311,7 +322,10 @@ const AdminReservations = () => {
                   )}
                 />
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className={cn(
+                  "grid gap-4",
+                  isMobile ? "grid-cols-1" : "grid-cols-3"
+                )}>
                   <FormField
                     control={form.control}
                     name="adults"
@@ -402,7 +416,10 @@ const AdminReservations = () => {
                       <FormDescription>
                         Seleziona uno o più appartamenti per questa prenotazione
                       </FormDescription>
-                      <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div className={cn(
+                        "grid gap-2 mt-2",
+                        isMobile ? "grid-cols-1" : "grid-cols-2"
+                      )}>
                         {apartments.map((apartment) => (
                           <div 
                             key={apartment.id} 
@@ -432,7 +449,10 @@ const AdminReservations = () => {
                   )}
                 />
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className={cn(
+                  "grid gap-4",
+                  isMobile ? "grid-cols-1" : "grid-cols-2"
+                )}>
                   <FormField
                     control={form.control}
                     name="startDate"
@@ -541,63 +561,68 @@ const AdminReservations = () => {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="paymentMethod"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Metodo di Pagamento</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleziona metodo di pagamento" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="cash">Contanti</SelectItem>
-                          <SelectItem value="bankTransfer">Bonifico Bancario</SelectItem>
-                          <SelectItem value="creditCard">Carta di Credito</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className={cn(
+                  "grid gap-4",
+                  isMobile ? "grid-cols-1" : "grid-cols-2"
+                )}>
+                  <FormField
+                    control={form.control}
+                    name="paymentMethod"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Metodo di Pagamento</FormLabel>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleziona metodo di pagamento" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="cash">Contanti</SelectItem>
+                            <SelectItem value="bankTransfer">Bonifico Bancario</SelectItem>
+                            <SelectItem value="creditCard">Carta di Credito</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                <FormField
-                  control={form.control}
-                  name="paymentStatus"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Stato del Pagamento</FormLabel>
-                      <Select 
-                        onValueChange={(value) => {
-                          field.onChange(value);
-                          // Reset deposit amount if not deposit
-                          if (value !== "deposit") {
-                            form.setValue("depositAmount", 0);
-                          }
-                        }} 
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleziona stato del pagamento" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="notPaid">Non Pagato</SelectItem>
-                          <SelectItem value="deposit">Caparra Versata</SelectItem>
-                          <SelectItem value="paid">Pagamento Completo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  <FormField
+                    control={form.control}
+                    name="paymentStatus"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Stato del Pagamento</FormLabel>
+                        <Select 
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            // Reset deposit amount if not deposit
+                            if (value !== "deposit") {
+                              form.setValue("depositAmount", 0);
+                            }
+                          }} 
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleziona stato del pagamento" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="notPaid">Non Pagato</SelectItem>
+                            <SelectItem value="deposit">Caparra Versata</SelectItem>
+                            <SelectItem value="paid">Pagamento Completo</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 {form.watch("paymentStatus") === "deposit" && (
                   <FormField
@@ -641,15 +666,16 @@ const AdminReservations = () => {
                 )}
               />
 
-              <DialogFooter>
+              <DialogFooter className={isMobile ? "flex-col space-y-2" : ""}>
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={() => setIsDialogOpen(false)}
+                  className={isMobile ? "w-full" : ""}
                 >
                   Annulla
                 </Button>
-                <Button type="submit">
+                <Button type="submit" className={isMobile ? "w-full" : ""}>
                   {editingId ? "Aggiorna" : "Salva"} Prenotazione
                 </Button>
               </DialogFooter>
@@ -660,23 +686,25 @@ const AdminReservations = () => {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
+        <DialogContent className={isMobile ? "w-[95vw]" : ""}>
           <DialogHeader>
             <DialogTitle>Conferma Eliminazione</DialogTitle>
             <DialogDescription>
               Sei sicuro di voler eliminare questa prenotazione? Questa azione non può essere annullata.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
+          <DialogFooter className={isMobile ? "flex-col space-y-2" : ""}>
             <Button 
               variant="outline" 
               onClick={() => setIsDeleteDialogOpen(false)}
+              className={isMobile ? "w-full" : ""}
             >
               Annulla
             </Button>
             <Button 
               variant="destructive" 
               onClick={handleDeleteConfirm}
+              className={isMobile ? "w-full" : ""}
             >
               Elimina
             </Button>

@@ -2,7 +2,7 @@
 import * as React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Calendar, LayoutDashboard, LogOut, Menu, Users } from "lucide-react";
+import { Calendar, LayoutDashboard, LogOut, Menu } from "lucide-react";
 import { useAuth } from "@/pages/ReservedAreaPage";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
@@ -56,22 +56,22 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   );
 
   return (
-    <div className="container px-4 py-4 md:py-12">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-8 gap-2 md:gap-4">
-        <div>
-          <h1 className="text-2xl md:text-4xl font-bold">Area Amministrazione</h1>
-          <p className="text-muted-foreground text-sm md:text-base">Gestisci le prenotazioni e visualizza le statistiche</p>
+    <div className="px-4 py-4">
+      <div className="flex flex-col mb-4 gap-2">
+        <div className="flex flex-col">
+          <h1 className="text-2xl font-bold">Area Amministrazione</h1>
+          <p className="text-muted-foreground text-sm">Gestisci le prenotazioni e visualizza le statistiche</p>
         </div>
-        <Button variant="outline" onClick={handleLogout} size={isMobile ? "sm" : "default"}>
+        <Button variant="outline" onClick={handleLogout} size={isMobile ? "sm" : "default"} className="self-start">
           <LogOut className="mr-2 h-4 w-4" />
           Logout
         </Button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+      <div className="flex flex-col gap-4">
         {/* Mobile navigation */}
         {isMobile ? (
-          <div className="w-full mb-4">
+          <div className="mb-4">
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" className="w-full flex justify-between items-center">
@@ -95,7 +95,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         )}
 
         {/* Main content */}
-        <main className="flex-1 border rounded-lg p-3 md:p-6 overflow-x-auto">
+        <main className="flex-1 border rounded-lg p-3 md:p-6 overflow-auto">
           {children}
         </main>
       </div>
