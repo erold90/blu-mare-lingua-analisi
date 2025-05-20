@@ -188,11 +188,17 @@ const AdminDashboard = () => {
                 <ChartTooltip 
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
+                      const data = payload[0];
+                      const month = data.payload.name;
+                      const revenue = data.payload.revenue;
+                      
                       return (
-                        <ChartTooltipContent
-                          className="bg-background border-border"
-                          formatter={(value) => [`€${value}`, 'Guadagno']}
-                        />
+                        <div className="rounded-lg border bg-background p-2 shadow-md">
+                          <p className="font-medium">{month}</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Guadagno totale: <span className="font-semibold text-foreground">€{revenue.toLocaleString()}</span>
+                          </p>
+                        </div>
                       );
                     }
                     return null;

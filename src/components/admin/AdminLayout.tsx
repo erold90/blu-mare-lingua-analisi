@@ -1,8 +1,7 @@
-
 import * as React from "react";
-import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Calendar, LayoutDashboard, LogOut, Menu } from "lucide-react";
+import { Calendar, LayoutDashboard, Home, Menu } from "lucide-react";
 import { useAuth } from "@/pages/ReservedAreaPage";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
@@ -21,11 +20,6 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const location = useLocation();
   const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = React.useState(false);
-
-  const handleLogout = () => {
-    logout();
-    navigate("/area-riservata");
-  };
   
   const isActive = (path: string) => {
     return location.pathname.includes(path);
@@ -69,9 +63,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             {isActive('dashboard') ? 'Statistiche e metriche' : 'Gestione prenotazioni'}
           </p>
         </div>
-        <Button variant="outline" onClick={handleLogout} size="sm" className="h-9">
-          <LogOut className="h-4 w-4 mr-2" />
-          <span className="hidden md:inline">Logout</span>
+        <Button variant="outline" size="sm" className="h-9" asChild>
+          <Link to="/">
+            <Home className="h-4 w-4 mr-2" />
+            <span className="hidden md:inline">Home</span>
+          </Link>
         </Button>
       </div>
 
