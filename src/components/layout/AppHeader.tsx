@@ -12,6 +12,9 @@ export function AppHeader() {
         <div className="flex items-center ml-2 mt-2">
           <SidebarTrigger />
         </div>
+        <div className="flex items-center ml-2">
+          <span className="text-xl font-semibold text-white">Villa MareBlu</span>
+        </div>
         {!isMobile && (
           <nav className="flex items-center gap-6 ml-auto">
             <a href="/" className="font-medium text-white hover:text-primary transition-colors">

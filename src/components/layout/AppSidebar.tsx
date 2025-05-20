@@ -35,7 +35,7 @@ export function AppSidebar() {
     <Sidebar variant="floating">
       <SidebarHeader className="border-b">
         <Link to="/" className="flex items-center gap-2 px-4 py-2" onClick={handleLinkClick}>
-          <span className="text-xl font-semibold">Villa Mare Blu</span>
+          <span className="text-xl font-semibold">Villa MareBlu</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
@@ -108,7 +108,7 @@ export function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
         <div className="mt-4 text-xs text-muted-foreground">
-          <div>© Villa Mare Blu {new Date().getFullYear()}</div>
+          <div>© Villa MareBlu {new Date().getFullYear()}</div>
           <div>Tutti i diritti riservati</div>
         </div>
       </SidebarFooter>
