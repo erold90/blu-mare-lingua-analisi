@@ -52,20 +52,24 @@ const ApartmentGallery = ({ images }: { images: string[] }) => {
           />
         ))}
       </div>
-      <button
-        onClick={prevImage}
-        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-1 rounded-full"
-        aria-label="Immagine precedente"
-      >
-        <ArrowLeft className="h-5 w-5" />
-      </button>
-      <button
-        onClick={nextImage}
-        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-1 rounded-full"
-        aria-label="Immagine successiva"
-      >
-        <ArrowRight className="h-5 w-5" />
-      </button>
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={prevImage}
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-1 rounded-full"
+            aria-label="Immagine precedente"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <button
+            onClick={nextImage}
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-1 rounded-full"
+            aria-label="Immagine successiva"
+          >
+            <ArrowRight className="h-5 w-5" />
+          </button>
+        </>
+      )}
     </div>
   );
 };
@@ -84,7 +88,7 @@ const ApartmentModal = ({ apartment }: { apartment: Apartment & { gallery?: stri
           <DialogDescription>{apartment.description}</DialogDescription>
         </DialogHeader>
         
-        <ApartmentGallery images={apartment.gallery || [apartment.images[0]]} />
+        <ApartmentGallery images={apartment.gallery && apartment.gallery.length > 0 ? apartment.gallery : apartment.images} />
         
         <div className="mt-6">
           <h4 className="font-medium mb-2">Descrizione dettagliata</h4>
@@ -145,7 +149,6 @@ const ApartmentsPage = () => {
   useEffect(() => {
     const savedApartments = localStorage.getItem("apartments");
     const savedImages = localStorage.getItem("apartmentImages");
-    const savedCovers = localStorage.getItem("apartmentCovers");
     
     if (savedApartments) {
       try {
@@ -166,12 +169,31 @@ const ApartmentsPage = () => {
   
   // Prepare apartment data with gallery images
   const apartmentData = apartments.map(apt => {
-    const images = apartmentImages[apt.id] || [];
-    const gallery = images.length > 0 ? images : [apt.images[0]];
+    const aptImages = apartmentImages[apt.id] || [];
+    const coverImageIndex = (() => {
+      const coverIndices = localStorage.getItem("apartmentCovers");
+      if (coverIndices) {
+        try {
+          const indices = JSON.parse(coverIndices);
+          return indices[apt.id] ?? 0;
+        } catch {
+          return 0;
+        }
+      }
+      return 0;
+    })();
+    
+    // Get the cover image (first image) and all images for gallery
+    const coverImage = aptImages.length > 0 ? 
+      (coverImageIndex >= 0 && coverImageIndex < aptImages.length ? 
+        aptImages[coverImageIndex] : 
+        aptImages[0]) : 
+      apt.images[0];
     
     return {
       ...apt,
-      gallery,
+      images: [coverImage, ...apt.images.slice(1)], // Replace only the first image with cover
+      gallery: aptImages.length > 0 ? aptImages : apt.images,
     };
   });
 
@@ -190,7 +212,7 @@ const ApartmentsPage = () => {
           <Card key={apartment.id} className="overflow-hidden h-full flex flex-col">
             <div className="aspect-[4/3] relative">
               <img 
-                src={apartment.gallery[0]} 
+                src={apartment.images[0]} 
                 alt={apartment.name}
                 className="w-full h-full object-cover"
               />

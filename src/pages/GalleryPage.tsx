@@ -2,6 +2,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Gallery, Image } from "lucide-react";
 
 const GalleryPage = () => {
   // Use state for images, initialize with fallback images
@@ -49,10 +50,21 @@ const GalleryPage = () => {
     
     loadImagesFromStorage();
     
-    // Set up an event listener to update images when localStorage changes
-    window.addEventListener("storage", loadImagesFromStorage);
+    // Set up an event listener for custom storage events
+    const handleStorageChange = (e: Event) => {
+      if (e instanceof StorageEvent && (e.key === "apartmentImages" || e.key === "galleryImages")) {
+        loadImagesFromStorage();
+      }
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Also set up a custom event listener for local changes (same window)
+    window.addEventListener("apartmentImagesUpdated", loadImagesFromStorage);
+    
     return () => {
-      window.removeEventListener("storage", loadImagesFromStorage);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("apartmentImagesUpdated", loadImagesFromStorage);
     };
   }, []);
 
@@ -85,23 +97,33 @@ const GalleryPage = () => {
       </div>
       
       {/* Griglia immagini */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {images.map((image, index) => (
-          <div 
-            key={index} 
-            className="cursor-pointer overflow-hidden rounded-lg transition-transform hover:scale-[1.02]"
-            onClick={() => setSelectedImage(image)}
-          >
-            <AspectRatio ratio={4/3}>
-              <img 
-                src={image} 
-                alt={`Villa Mare Blu - Immagine ${index + 1}`} 
-                className="w-full h-full object-cover"
-              />
-            </AspectRatio>
-          </div>
-        ))}
-      </div>
+      {images.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {images.map((image, index) => (
+            <div 
+              key={index} 
+              className="cursor-pointer overflow-hidden rounded-lg transition-transform hover:scale-[1.02]"
+              onClick={() => setSelectedImage(image)}
+            >
+              <AspectRatio ratio={4/3}>
+                <img 
+                  src={image} 
+                  alt={`Villa Mare Blu - Immagine ${index + 1}`} 
+                  className="w-full h-full object-cover"
+                />
+              </AspectRatio>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <Gallery className="h-16 w-16 text-muted-foreground opacity-30" />
+          <h2 className="mt-4 text-xl font-medium">Nessuna immagine disponibile</h2>
+          <p className="mt-2 text-muted-foreground">
+            Non ci sono ancora immagini nella galleria.
+          </p>
+        </div>
+      )}
       
       {/* Modal visualizzazione immagine */}
       {selectedImage && (
