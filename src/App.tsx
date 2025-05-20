@@ -7,10 +7,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { AppLayout } from "./components/layout/AppLayout";
 import Index from "./pages/Index";
-import AboutPage from "./pages/AboutPage";
-import ServicesPage from "./pages/ServicesPage";
-import GalleryPage from "./pages/GalleryPage";
-import ContactsPage from "./pages/ContactsPage";
+import ApartmentsPage from "./pages/ApartmentsPage";
+import RequestQuotePage from "./pages/RequestQuotePage";
 import ReservedAreaPage from "./pages/ReservedAreaPage";
 import NotFound from "./pages/NotFound";
 
@@ -25,10 +23,8 @@ const App = () => (
         <Routes>
           <Route element={<AppLayout />}>
             <Route path="/" element={<Index />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/services" element={<ServicesPage />} />
-            <Route path="/gallery" element={<GalleryPage />} />
-            <Route path="/contacts" element={<ContactsPage />} />
+            <Route path="/appartamenti" element={<ApartmentsPage />} />
+            <Route path="/preventivo" element={<RequestQuotePage />} />
             <Route path="/area-riservata" element={<ReservedAreaPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />

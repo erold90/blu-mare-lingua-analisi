@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { Menu, Home, User } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -24,17 +24,14 @@ export function AppHeader() {
             <Link to="/" className="font-medium hover:text-primary transition-colors">
               Home
             </Link>
-            <Link to="/about" className="font-medium hover:text-primary transition-colors">
-              La Villa
+            <Link to="/appartamenti" className="font-medium hover:text-primary transition-colors">
+              Appartamenti
             </Link>
-            <Link to="/services" className="font-medium hover:text-primary transition-colors">
-              Servizi
+            <Link to="/preventivo" className="font-medium hover:text-primary transition-colors">
+              Preventivo
             </Link>
-            <Link to="/gallery" className="font-medium hover:text-primary transition-colors">
-              Galleria
-            </Link>
-            <Link to="/contacts" className="font-medium hover:text-primary transition-colors">
-              Contatti
+            <Link to="/area-riservata" className="font-medium hover:text-primary transition-colors">
+              Area Riservata
             </Link>
           </nav>
         )}

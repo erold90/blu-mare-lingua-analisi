@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { Home, User, MessageSquare, MapPin, Compass, List } from "lucide-react";
+import { Home, User, Calculator, Building } from "lucide-react";
 import { 
   Sidebar, 
   SidebarContent, 
@@ -38,33 +38,17 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link to="/about">
-                    <Compass />
-                    <span>La Villa</span>
+                  <Link to="/appartamenti">
+                    <Building />
+                    <span>Appartamenti</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link to="/services">
-                    <List />
-                    <span>Servizi</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/gallery">
-                    <Compass />
-                    <span>Galleria</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Link to="/contacts">
-                    <MessageSquare />
-                    <span>Contatti</span>
+                  <Link to="/preventivo">
+                    <Calculator />
+                    <span>Preventivo</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
