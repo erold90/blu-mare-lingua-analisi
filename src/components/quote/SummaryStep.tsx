@@ -12,7 +12,6 @@ import { useActivityLog } from "@/hooks/useActivityLog";
 // Componenti separati per ogni sezione
 import DateDurationInfo from "./summary/DateDurationInfo";
 import GuestInfo from "./summary/GuestInfo";
-import ApartmentList from "./summary/ApartmentList";
 import PriceSummary from "./summary/PriceSummary";
 
 interface SummaryStepProps {
@@ -71,13 +70,6 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
             {/* Ospiti */}
             <GuestInfo formValues={formValues} />
           </div>
-          
-          {/* Appartamenti selezionati */}
-          <ApartmentList 
-            apartments={apartments} 
-            selectedApartments={selectedApartments} 
-            formValues={formValues} 
-          />
           
           {/* Riepilogo costi */}
           <PriceSummary priceInfo={priceInfo} formValues={formValues} />
