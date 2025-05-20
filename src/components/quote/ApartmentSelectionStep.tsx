@@ -59,13 +59,16 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
       newSelection = [...currentSelected, apartmentId];
     }
     
-    form.setValue("selectedApartments", newSelection);
+    form.setValue("selectedApartments", newSelection, { shouldValidate: true });
     
     // Also set the main selectedApartment field if this is the first selection or if clearing
     if (newSelection.length === 1) {
-      form.setValue("selectedApartment", newSelection[0]);
+      form.setValue("selectedApartment", newSelection[0], { shouldValidate: true });
     } else if (newSelection.length === 0) {
-      form.setValue("selectedApartment", "");
+      form.setValue("selectedApartment", "", { shouldValidate: true });
+    } else if (newSelection.length > 1) {
+      // Make sure selectedApartment has a value when multiple apartments are selected
+      form.setValue("selectedApartment", newSelection[0], { shouldValidate: true });
     }
   };
   
@@ -109,7 +112,10 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                   </Badge>
                 )}
                 
-                <h3 className="font-medium mt-2">{apartment.name}</h3>
+                <h3 className="font-medium mt-2 text-base md:text-lg flex items-center">
+                  <span className="mr-1">Appartamento</span>
+                  <span>{apartment.name.split(' ')[1]}</span>
+                </h3>
                 
                 <div className="grid grid-cols-1 gap-1 text-xs mt-2">
                   <div className="flex items-center gap-1">

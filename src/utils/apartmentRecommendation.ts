@@ -35,7 +35,6 @@ function calculateApartmentFitScore(apartment: Apartment, formValues: FormValues
   // Children handling
   if (children > 0) {
     // Check if there are enough beds for children
-    // Updated to account for correct bed counts
     const hasEnoughBeds = (apartment.beds || 0) >= totalGuests;
     score += hasEnoughBeds ? 8 : 0;
     
