@@ -4,8 +4,11 @@ import { AppHeader } from "./AppHeader";
 import { AppSidebar } from "./AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { CookieConsent } from "@/components/CookieConsent";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function AppLayout() {
+  const isMobile = useIsMobile();
+  
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full flex-col">

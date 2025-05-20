@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Admin components imports
 import AdminDashboard from "@/components/admin/AdminDashboard";
@@ -44,6 +45,7 @@ const LoginForm = () => {
   const [password, setPassword] = React.useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +62,7 @@ const LoginForm = () => {
     <div className="container flex items-center justify-center min-h-[70vh] px-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">Area Riservata</CardTitle>
+          <CardTitle className="text-xl md:text-2xl">Area Riservata</CardTitle>
           <CardDescription>
             Accedi all'area di amministrazione per gestire le prenotazioni.
           </CardDescription>
