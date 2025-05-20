@@ -57,11 +57,11 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   // Calculate cleaning fee
   const cleaningFee = calculateCleaningFee(selectedApartments);
   
-  // Calculate tourist tax
-  const touristTax = calculateTouristTax(formValues, nights);
-  
   // Calculate subtotal (before tourist tax)
   const subtotal = basePrice + extrasCost + cleaningFee;
+  
+  // Calculate tourist tax
+  const touristTax = calculateTouristTax(formValues, nights);
   
   // Calculate total before discount (including tourist tax)
   const totalBeforeDiscount = subtotal + touristTax;
@@ -69,8 +69,11 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   // Round down to the nearest 50€
   const roundedPrice = Math.floor(totalBeforeDiscount / 50) * 50;
   
-  // Calculate the discount amount (includes both rounding discount and tourist tax)
+  // Calculate the discount amount (difference between original total and rounded total)
   const discount = totalBeforeDiscount - roundedPrice;
+  
+  // The savings should include both the rounding discount and the tourist tax (since it's "included")
+  const savings = discount + touristTax;
   
   // Calculate deposit (30%)
   const deposit = Math.ceil(roundedPrice * 0.3);
@@ -83,10 +86,10 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
     totalBeforeDiscount,
     totalAfterDiscount: roundedPrice,
     discount,
-    savings: discount,
+    savings, // Now correctly includes both the rounding discount and tourist tax
     deposit,
     nights,
     totalPrice: roundedPrice,
-    subtotal // Add subtotal to the price calculation
+    subtotal
   };
 }
