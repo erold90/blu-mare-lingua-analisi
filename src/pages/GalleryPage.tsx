@@ -15,11 +15,13 @@ const GalleryPage = () => {
   // Load all apartment images from localStorage
   useEffect(() => {
     const loadImagesFromStorage = () => {
+      console.log("Loading gallery images from storage");
       try {
         // Get apartment images directly
         const apartmentImagesStr = localStorage.getItem("apartmentImages");
         if (apartmentImagesStr) {
           const apartmentImages = JSON.parse(apartmentImagesStr);
+          console.log("Loaded apartment images:", apartmentImages);
           
           // Flatten all image arrays into a single array
           const allImages: string[] = [];
@@ -30,6 +32,7 @@ const GalleryPage = () => {
           });
           
           if (allImages.length > 0) {
+            console.log("Setting gallery with apartment images:", allImages);
             setImages(allImages);
             return;
           }
@@ -40,6 +43,7 @@ const GalleryPage = () => {
         if (galleryImagesStr) {
           const galleryImages = JSON.parse(galleryImagesStr);
           if (Array.isArray(galleryImages) && galleryImages.length > 0) {
+            console.log("Setting gallery with gallery images:", galleryImages);
             setImages(galleryImages);
           }
         }
@@ -50,9 +54,9 @@ const GalleryPage = () => {
     
     loadImagesFromStorage();
     
-    // Set up an event listener for custom storage events
-    const handleStorageChange = (e: Event) => {
-      if (e instanceof StorageEvent && (e.key === "apartmentImages" || e.key === "galleryImages")) {
+    // Set up an event listener for storage events
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "apartmentImages" || e.key === "galleryImages") {
         loadImagesFromStorage();
       }
     };
@@ -60,11 +64,15 @@ const GalleryPage = () => {
     window.addEventListener("storage", handleStorageChange);
     
     // Also set up a custom event listener for local changes (same window)
-    window.addEventListener("apartmentImagesUpdated", loadImagesFromStorage);
+    const handleCustomEvent = () => {
+      loadImagesFromStorage();
+    };
+    
+    window.addEventListener("apartmentImagesUpdated", handleCustomEvent);
     
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("apartmentImagesUpdated", loadImagesFromStorage);
+      window.removeEventListener("apartmentImagesUpdated", handleCustomEvent);
     };
   }, []);
 
@@ -110,6 +118,10 @@ const GalleryPage = () => {
                   src={image} 
                   alt={`Villa Mare Blu - Immagine ${index + 1}`} 
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error(`Failed to load gallery image: ${image}`);
+                    e.currentTarget.src = "/placeholder.svg";
+                  }}
                 />
               </AspectRatio>
             </div>
@@ -145,6 +157,10 @@ const GalleryPage = () => {
               src={selectedImage} 
               alt="Immagine ingrandita" 
               className="max-h-[90vh] max-w-full object-contain"
+              onError={(e) => {
+                console.error(`Failed to load modal image: ${selectedImage}`);
+                e.currentTarget.src = "/placeholder.svg";
+              }}
             />
           </div>
         </div>

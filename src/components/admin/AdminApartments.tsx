@@ -52,24 +52,32 @@ const AdminApartments = () => {
   
   // Load saved images and cover image indices from localStorage on component mount
   useEffect(() => {
-    const savedImages = localStorage.getItem("apartmentImages");
-    const savedCovers = localStorage.getItem("apartmentCovers");
-    
-    if (savedImages) {
-      try {
-        setApartmentImages(JSON.parse(savedImages));
-      } catch (error) {
-        console.error("Failed to parse saved apartment images:", error);
+    const loadImagesFromStorage = () => {
+      const savedImages = localStorage.getItem("apartmentImages");
+      const savedCovers = localStorage.getItem("apartmentCovers");
+      
+      if (savedImages) {
+        try {
+          const parsedImages = JSON.parse(savedImages);
+          console.log("Loaded images from storage:", parsedImages);
+          setApartmentImages(parsedImages);
+        } catch (error) {
+          console.error("Failed to parse saved apartment images:", error);
+        }
       }
-    }
-    
-    if (savedCovers) {
-      try {
-        setCoverImage(JSON.parse(savedCovers));
-      } catch (error) {
-        console.error("Failed to parse saved cover image indices:", error);
+      
+      if (savedCovers) {
+        try {
+          const parsedCovers = JSON.parse(savedCovers);
+          console.log("Loaded cover indices from storage:", parsedCovers);
+          setCoverImage(parsedCovers);
+        } catch (error) {
+          console.error("Failed to parse saved cover image indices:", error);
+        }
       }
-    }
+    };
+
+    loadImagesFromStorage();
   }, []);
   
   // Save apartments to localStorage whenever they change
@@ -102,6 +110,10 @@ const AdminApartments = () => {
     });
     
     localStorage.setItem("galleryImages", JSON.stringify(allImages));
+    
+    // Dispatch a custom event to notify other components that images have been updated
+    const event = new CustomEvent("apartmentImagesUpdated");
+    window.dispatchEvent(event);
   }, [apartmentImages, coverImage]);
   
   // Initialize selected apartment
@@ -229,11 +241,12 @@ const AdminApartments = () => {
   
   const renderApartmentImages = (apartmentId: string) => {
     const images = apartmentImages[apartmentId] || [];
+    console.log(`Rendering images for apartment ${apartmentId}:`, images);
     
     return (
       <div className="mt-4">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-medium">Immagini</h3>
+          <h3 className="font-medium">Immagini ({images.length})</h3>
           <div className="flex gap-2">
             <Button 
               variant="outline" 
@@ -277,6 +290,10 @@ const AdminApartments = () => {
                               src={imageUrl} 
                               alt={`Apartment ${index+1}`}
                               className="absolute inset-0 w-full h-full object-cover"
+                              onError={(e) => {
+                                console.error(`Failed to load image: ${imageUrl}`);
+                                e.currentTarget.src = "/placeholder.svg";
+                              }}
                             />
                           </div>
                           <div className="absolute top-1 right-1 flex gap-1">

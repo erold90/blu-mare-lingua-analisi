@@ -37,9 +37,13 @@ const ApartmentGallery = ({ images }: { images: string[] }) => {
     <div className="relative w-full h-64 md:h-80 overflow-hidden rounded-md mt-4">
       <div className="absolute inset-0">
         <img 
-          src={images[currentIndex]} 
+          src={images[currentIndex] || "/placeholder.svg"} 
           alt={`Immagine ${currentIndex + 1}`} 
           className="w-full h-full object-cover transition-opacity duration-300"
+          onError={(e) => {
+            console.error(`Failed to load image in gallery: ${images[currentIndex]}`);
+            e.currentTarget.src = "/placeholder.svg";
+          }}
         />
       </div>
       <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1">
@@ -122,7 +126,7 @@ const ApartmentModal = ({ apartment }: { apartment: Apartment & { gallery?: stri
             </div>
           </div>
           <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
-            {apartment.services.map((feature: string, index: number) => (
+            {apartment.services && apartment.services.map((feature: string, index: number) => (
               <li key={index} className="flex items-start gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
                 <span>{feature}</span>
@@ -147,52 +151,89 @@ const ApartmentsPage = () => {
 
   // Load apartments and their images from localStorage
   useEffect(() => {
-    const savedApartments = localStorage.getItem("apartments");
-    const savedImages = localStorage.getItem("apartmentImages");
-    
-    if (savedApartments) {
-      try {
-        setApartments(JSON.parse(savedApartments));
-      } catch (error) {
-        console.error("Failed to parse saved apartments:", error);
+    const loadData = () => {
+      console.log("Loading apartments and images data from localStorage");
+      
+      // Load apartments
+      const savedApartments = localStorage.getItem("apartments");
+      if (savedApartments) {
+        try {
+          const parsedApartments = JSON.parse(savedApartments);
+          console.log("Loaded apartments:", parsedApartments);
+          setApartments(parsedApartments);
+        } catch (error) {
+          console.error("Failed to parse saved apartments:", error);
+        }
       }
-    }
-    
-    if (savedImages) {
-      try {
-        setApartmentImages(JSON.parse(savedImages));
-      } catch (error) {
-        console.error("Failed to parse saved apartment images:", error);
+      
+      // Load apartment images
+      const savedImages = localStorage.getItem("apartmentImages");
+      if (savedImages) {
+        try {
+          const parsedImages = JSON.parse(savedImages);
+          console.log("Loaded apartment images:", parsedImages);
+          setApartmentImages(parsedImages);
+        } catch (error) {
+          console.error("Failed to parse saved apartment images:", error);
+        }
       }
-    }
+    };
+    
+    loadData();
+    
+    // Listen for storage changes
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "apartments" || e.key === "apartmentImages" || e.key === "apartmentCovers") {
+        loadData();
+      }
+    };
+    
+    // Also listen for custom events for same-window updates
+    const handleCustomEvent = () => {
+      loadData();
+    };
+    
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("apartmentImagesUpdated", handleCustomEvent);
+    
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("apartmentImagesUpdated", handleCustomEvent);
+    };
   }, []);
   
   // Prepare apartment data with gallery images
   const apartmentData = apartments.map(apt => {
     const aptImages = apartmentImages[apt.id] || [];
-    const coverImageIndex = (() => {
-      const coverIndices = localStorage.getItem("apartmentCovers");
-      if (coverIndices) {
+    const coverIndices = (() => {
+      const savedCovers = localStorage.getItem("apartmentCovers");
+      if (savedCovers) {
         try {
-          const indices = JSON.parse(coverIndices);
-          return indices[apt.id] ?? 0;
-        } catch {
-          return 0;
+          return JSON.parse(savedCovers);
+        } catch (error) {
+          console.error("Failed to parse saved cover indices:", error);
+          return {};
         }
       }
-      return 0;
+      return {};
     })();
     
+    const coverImageIndex = coverIndices[apt.id] ?? 0;
+    
     // Get the cover image (first image) and all images for gallery
-    const coverImage = aptImages.length > 0 ? 
-      (coverImageIndex >= 0 && coverImageIndex < aptImages.length ? 
-        aptImages[coverImageIndex] : 
-        aptImages[0]) : 
-      apt.images[0];
+    let coverImage = "/placeholder.svg";
+    if (aptImages.length > 0 && coverImageIndex >= 0 && coverImageIndex < aptImages.length) {
+      coverImage = aptImages[coverImageIndex];
+    } else if (apt.images && apt.images.length > 0) {
+      coverImage = apt.images[0];
+    }
+    
+    console.log(`Apartment ${apt.id} cover image:`, coverImage);
+    console.log(`Apartment ${apt.id} gallery images:`, aptImages);
     
     return {
       ...apt,
-      images: [coverImage, ...apt.images.slice(1)], // Replace only the first image with cover
+      images: [coverImage, ...(apt.images?.slice(1) || [])],
       gallery: aptImages.length > 0 ? aptImages : apt.images,
     };
   });
@@ -215,6 +256,10 @@ const ApartmentsPage = () => {
                 src={apartment.images[0]} 
                 alt={apartment.name}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.error(`Failed to load apartment image: ${apartment.images[0]}`);
+                  e.currentTarget.src = "/placeholder.svg";
+                }}
               />
             </div>
             <CardHeader>
