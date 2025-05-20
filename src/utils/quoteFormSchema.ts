@@ -1,9 +1,9 @@
 
 import { z } from "zod";
 
-// Schema per i dettagli bambini - rimosso isUnder12 poiché non più necessario
+// Schema per i dettagli bambini - modifichiamo il default di isUnder12 a false
 export const childDetailSchema = z.object({
-  isUnder12: z.boolean().default(true),
+  isUnder12: z.boolean().default(false),
   sleepsWithParents: z.boolean().default(false),
 });
 
