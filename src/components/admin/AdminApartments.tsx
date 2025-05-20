@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { apartments as apartmentsData, Apartment } from "@/data/apartments";
 import { Plus, X, Move, CheckCircle, Image as ImageIcon, Edit } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { v4 as uuidv4 } from 'uuid';
 
 const AdminApartments = () => {
   const [apartments, setApartments] = useState<Apartment[]>(() => {
@@ -49,10 +50,66 @@ const AdminApartments = () => {
   const [coverImage, setCoverImage] = useState<{ [key: string]: number }>({});
   const isMobile = useIsMobile();
   
+  // Load saved images and cover image indices from localStorage on component mount
+  useEffect(() => {
+    const savedImages = localStorage.getItem("apartmentImages");
+    const savedCovers = localStorage.getItem("apartmentCovers");
+    
+    if (savedImages) {
+      try {
+        setApartmentImages(JSON.parse(savedImages));
+      } catch (error) {
+        console.error("Failed to parse saved apartment images:", error);
+      }
+    }
+    
+    if (savedCovers) {
+      try {
+        setCoverImage(JSON.parse(savedCovers));
+      } catch (error) {
+        console.error("Failed to parse saved cover image indices:", error);
+      }
+    }
+  }, []);
+  
   // Save apartments to localStorage whenever they change
-  React.useEffect(() => {
+  useEffect(() => {
     localStorage.setItem("apartments", JSON.stringify(apartments));
-  }, [apartments]);
+    
+    // Update each apartment's images array with the cover image
+    const updatedApartments = apartments.map(apt => {
+      const images = apartmentImages[apt.id] || [];
+      const coverIdx = coverImage[apt.id] ?? 0;
+      
+      return {
+        ...apt,
+        images: images.length > 0 ? [images[coverIdx !== -1 ? coverIdx : 0], ...images] : ["placeholder.svg"]
+      };
+    });
+    
+    localStorage.setItem("apartments", JSON.stringify(updatedApartments));
+  }, [apartments, apartmentImages, coverImage]);
+  
+  // Save images and cover image indices to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("apartmentImages", JSON.stringify(apartmentImages));
+    localStorage.setItem("apartmentCovers", JSON.stringify(coverImage));
+    
+    // Also update the gallery images in localStorage for the GalleryPage
+    const allImages: string[] = [];
+    Object.values(apartmentImages).forEach(images => {
+      allImages.push(...images);
+    });
+    
+    localStorage.setItem("galleryImages", JSON.stringify(allImages));
+  }, [apartmentImages, coverImage]);
+  
+  // Initialize selected apartment
+  useEffect(() => {
+    if (apartments.length > 0 && !selectedApartment) {
+      setSelectedApartment(apartments[0]);
+    }
+  }, [apartments, selectedApartment]);
   
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination || !selectedApartment) return;
@@ -87,7 +144,13 @@ const AdminApartments = () => {
     for (let i = 0; i < e.target.files.length; i++) {
       const file = e.target.files[i];
       const objectURL = URL.createObjectURL(file);
-      newImages.push(objectURL);
+      
+      // Create a unique identifier for this image
+      const imageId = `apartment_${apartmentId}_${uuidv4()}`;
+      
+      // Store the image with its metadata
+      const imageWithMetadata = objectURL;
+      newImages.push(imageWithMetadata);
     }
     
     setApartmentImages(prev => {
@@ -96,7 +159,7 @@ const AdminApartments = () => {
     });
     
     // Set the first image as cover if no cover is set
-    if (!coverImage[apartmentId] && newImages.length > 0) {
+    if (coverImage[apartmentId] === undefined && newImages.length > 0) {
       setCoverImage(prev => ({
         ...prev,
         [apartmentId]: 0
@@ -137,6 +200,17 @@ const AdminApartments = () => {
       ...prev,
       [apartmentId]: index
     }));
+    
+    // Update the apartment's main image in the apartments list
+    if (apartmentImages[apartmentId] && apartmentImages[apartmentId][index]) {
+      const coverImageUrl = apartmentImages[apartmentId][index];
+      
+      setApartments(prevApartments => 
+        prevApartments.map(apt => 
+          apt.id === apartmentId ? { ...apt, images: [coverImageUrl, ...apt.images] } : apt
+        )
+      );
+    }
     
     toast.success("Immagine di copertina impostata");
   };

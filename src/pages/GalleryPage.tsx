@@ -1,27 +1,67 @@
 
 import * as React from "react";
+import { useEffect, useState } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 const GalleryPage = () => {
-  // Array di URL di immagini di esempio
-  const images = [
+  // Use state for images, initialize with fallback images
+  const [images, setImages] = useState<string[]>([
     "https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     "https://images.unsplash.com/photo-1615571022219-eb45cf7faa9d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
     "https://images.unsplash.com/photo-1591825729269-caeb344f6df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1600585154526-990dced4db0d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1574643156929-51fa098b0394?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1564013434775-f71db0030976?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1568084680786-a84f91d1153c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-  ];
+  ]);
+
+  // Load all apartment images from localStorage
+  useEffect(() => {
+    const loadImagesFromStorage = () => {
+      try {
+        // Get apartment images directly
+        const apartmentImagesStr = localStorage.getItem("apartmentImages");
+        if (apartmentImagesStr) {
+          const apartmentImages = JSON.parse(apartmentImagesStr);
+          
+          // Flatten all image arrays into a single array
+          const allImages: string[] = [];
+          Object.values(apartmentImages).forEach((imageArray: any) => {
+            if (Array.isArray(imageArray) && imageArray.length > 0) {
+              allImages.push(...imageArray);
+            }
+          });
+          
+          if (allImages.length > 0) {
+            setImages(allImages);
+            return;
+          }
+        }
+        
+        // If no apartment images or gallery images found, check if there are any gallery images saved
+        const galleryImagesStr = localStorage.getItem("galleryImages");
+        if (galleryImagesStr) {
+          const galleryImages = JSON.parse(galleryImagesStr);
+          if (Array.isArray(galleryImages) && galleryImages.length > 0) {
+            setImages(galleryImages);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading images from storage:", error);
+      }
+    };
+    
+    loadImagesFromStorage();
+    
+    // Set up an event listener to update images when localStorage changes
+    window.addEventListener("storage", loadImagesFromStorage);
+    return () => {
+      window.removeEventListener("storage", loadImagesFromStorage);
+    };
+  }, []);
 
   const categories = [
     "Tutte", "Interni", "Esterni", "Vista Mare", "Piscina"
   ];
 
-  const [selectedCategory, setSelectedCategory] = React.useState("Tutte");
-  const [selectedImage, setSelectedImage] = React.useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState("Tutte");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   return (
     <div className="container px-4 py-8 md:py-12">

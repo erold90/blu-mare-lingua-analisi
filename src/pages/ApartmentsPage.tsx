@@ -1,5 +1,6 @@
 
 import * as React from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { 
@@ -19,7 +20,7 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 import { Bed, Home, ArrowRight, ArrowLeft, Sun, ThermometerSun } from "lucide-react";
-import { apartments } from "@/data/apartments";
+import { apartments as defaultApartments, Apartment } from "@/data/apartments";
 
 const ApartmentGallery = ({ images }: { images: string[] }) => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
@@ -69,7 +70,7 @@ const ApartmentGallery = ({ images }: { images: string[] }) => {
   );
 };
 
-const ApartmentModal = ({ apartment }: { apartment: any }) => {
+const ApartmentModal = ({ apartment }: { apartment: Apartment & { gallery?: string[] } }) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -137,10 +138,42 @@ const ApartmentModal = ({ apartment }: { apartment: any }) => {
 };
 
 const ApartmentsPage = () => {
-  const apartmentData = apartments.map(apt => ({
-    ...apt,
-    gallery: [apt.images[0]],
-  }));
+  const [apartments, setApartments] = useState<Apartment[]>(defaultApartments);
+  const [apartmentImages, setApartmentImages] = useState<{ [key: string]: string[] }>({});
+
+  // Load apartments and their images from localStorage
+  useEffect(() => {
+    const savedApartments = localStorage.getItem("apartments");
+    const savedImages = localStorage.getItem("apartmentImages");
+    const savedCovers = localStorage.getItem("apartmentCovers");
+    
+    if (savedApartments) {
+      try {
+        setApartments(JSON.parse(savedApartments));
+      } catch (error) {
+        console.error("Failed to parse saved apartments:", error);
+      }
+    }
+    
+    if (savedImages) {
+      try {
+        setApartmentImages(JSON.parse(savedImages));
+      } catch (error) {
+        console.error("Failed to parse saved apartment images:", error);
+      }
+    }
+  }, []);
+  
+  // Prepare apartment data with gallery images
+  const apartmentData = apartments.map(apt => {
+    const images = apartmentImages[apt.id] || [];
+    const gallery = images.length > 0 ? images : [apt.images[0]];
+    
+    return {
+      ...apt,
+      gallery,
+    };
+  });
 
   return (
     <div className="container px-4 py-8 md:py-12">
@@ -157,7 +190,7 @@ const ApartmentsPage = () => {
           <Card key={apartment.id} className="overflow-hidden h-full flex flex-col">
             <div className="aspect-[4/3] relative">
               <img 
-                src={apartment.images[0]} 
+                src={apartment.gallery[0]} 
                 alt={apartment.name}
                 className="w-full h-full object-cover"
               />
