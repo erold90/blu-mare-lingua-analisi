@@ -1,4 +1,3 @@
-
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { format } from "date-fns";
@@ -202,26 +201,37 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
                 <span className="text-muted-foreground">Costo appartamenti ({priceInfo.nights} notti):</span>
                 <span>{priceInfo.basePrice}€</span>
               </div>
+              
+              {/* Display the cleaning fee */}
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Pulizia finale:</span>
+                <span>{priceInfo.cleaningFee}€ <span className="text-green-600">(inclusa)</span></span>
+              </div>
+              
               {priceInfo.extras > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Servizi extra:</span>
                   <span>{priceInfo.extras}€</span>
                 </div>
               )}
+              
               {sleepingInCribs > 0 && (
                 <div className="flex justify-between text-sm text-green-600">
                   <span>Culle per bambini ({sleepingInCribs}):</span>
                   <span>Gratuito</span>
                 </div>
               )}
+              
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotale:</span>
-                <span>{priceInfo.basePrice + priceInfo.extras}€</span>
+                <span>{priceInfo.basePrice + priceInfo.extras + priceInfo.cleaningFee}€</span>
               </div>
+              
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Tassa di soggiorno:</span>
                 <span className="text-green-600">Inclusa</span>
               </div>
+              
               <Separator className="my-2" />
               <div className="flex justify-between text-sm font-medium">
                 <span>Totale con sconto applicato:</span>

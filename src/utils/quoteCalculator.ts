@@ -1,16 +1,18 @@
-
 import { Apartment } from "../data/apartments";
 import { FormValues } from "./quoteFormSchema";
 
 export interface PriceCalculation {
   basePrice: number;
   extras: number;
+  cleaningFee: number;
   touristTax: number;
   totalBeforeDiscount: number;
   totalAfterDiscount: number;
+  discount: number;
   savings: number;
   deposit: number;
   nights: number;
+  totalPrice: number;
 }
 
 export const calculateTotalPrice = (formValues: FormValues, apartments: Apartment[]): PriceCalculation => {
@@ -19,13 +21,16 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
   
   if (selectedApartments.length === 0) return { 
     basePrice: 0, 
-    extras: 0, 
+    extras: 0,
+    cleaningFee: 0,
     touristTax: 0, 
     totalBeforeDiscount: 0, 
-    totalAfterDiscount: 0, 
+    totalAfterDiscount: 0,
+    discount: 0,
     savings: 0, 
     deposit: 0, 
-    nights: 0 
+    nights: 0,
+    totalPrice: 0
   };
   
   const checkIn = formValues.checkIn;
@@ -33,13 +38,16 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
   
   if (!checkIn || !checkOut) return { 
     basePrice: 0, 
-    extras: 0, 
+    extras: 0,
+    cleaningFee: 0,
     touristTax: 0, 
     totalBeforeDiscount: 0, 
-    totalAfterDiscount: 0, 
+    totalAfterDiscount: 0,
+    discount: 0,
     savings: 0, 
     deposit: 0, 
-    nights: 0 
+    nights: 0,
+    totalPrice: 0
   };
   
   // Calcolo il numero di notti
@@ -48,6 +56,13 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
   // Calcolo il prezzo base degli appartamenti
   let basePrice = selectedApartments.reduce((total, apartment) => {
     return total + (apartment.price * nights);
+  }, 0);
+  
+  // Calculate cleaning fee for each apartment
+  let cleaningFee = selectedApartments.reduce((total, apartment) => {
+    // Use a default cleaning fee of 50€ per apartment if not specified
+    const apartmentCleaningFee = apartment.cleaningFee || 50;
+    return total + apartmentCleaningFee;
   }, 0);
   
   // Aggiungo eventuali extra
@@ -108,24 +123,27 @@ export const calculateTotalPrice = (formValues: FormValues, apartments: Apartmen
   // Calcolo tassa: 1€ per persona per notte
   const touristTax = peoplePayingTax * nights * 1;
   
-  // Prezzo totale (inclusa tassa di soggiorno)
-  const totalPrice = basePrice + totalExtras + touristTax;
+  // Include cleaning fee in the total price calculation
+  const totalBeforeDiscount = basePrice + totalExtras + touristTax + cleaningFee;
   
   // Arrotondamento per difetto al multiplo di 50 più vicino
-  const roundedPrice = Math.floor(totalPrice / 50) * 50;
+  const roundedPrice = Math.floor(totalBeforeDiscount / 50) * 50;
   
-  // Il risparmio ora include anche la tassa di soggiorno
-  const savings = totalPrice - roundedPrice;
+  // Calculate the discount amount
+  const discount = totalBeforeDiscount - roundedPrice;
   
   return {
     basePrice,
     extras: totalExtras,
+    cleaningFee,
     touristTax,
-    totalBeforeDiscount: totalPrice,
+    totalBeforeDiscount,
     totalAfterDiscount: roundedPrice,
-    savings: savings,
+    discount,
+    savings: discount,
     deposit: Math.ceil(roundedPrice * 0.3), // 30% di caparra
-    nights
+    nights,
+    totalPrice: roundedPrice
   };
 };
 

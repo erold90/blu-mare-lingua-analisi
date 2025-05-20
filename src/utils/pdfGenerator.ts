@@ -1,4 +1,3 @@
-
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
@@ -6,6 +5,17 @@ import { it } from "date-fns/locale";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice, PriceCalculation } from "@/utils/quoteCalculator";
 import { Apartment } from "@/data/apartments";
+
+// Add jspdf-autotable type definitions
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: typeof autoTable;
+    lastAutoTable: {
+      finalY: number;
+    };
+    getNumberOfPages: () => number;
+  }
+}
 
 // Register autoTable to jsPDF
 jsPDF.API.autoTable = autoTable;
@@ -142,7 +152,7 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
   tableBody.push(["Costo base appartamento", "", `€ ${priceCalculation.basePrice.toFixed(2)}`]);
   
   // Extra selezionati
-  if (formData.linenOption) {
+  if (formData.linenOption && priceCalculation.extras > 0) {
     let linenText;
     switch(formData.linenOption) {
       case "extra":
@@ -172,7 +182,7 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
   tableBody.push(["Totale", "", `€ ${priceCalculation.totalPrice.toFixed(2)}`]);
   
   // Aggiungo la tabella al PDF
-  doc.autoTable({
+  (doc as any).autoTable({
     startY: y,
     head: [["Voce", "Dettagli", "Importo"]],
     body: tableBody,
@@ -202,7 +212,7 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
   doc.text("Il saldo dovrà essere effettuato all'arrivo.", 20, y);
   
   // Piè di pagina
-  const pageCount = doc.internal.getNumberOfPages();
+  const pageCount = (doc as any).getNumberOfPages();
   for (let i = 1; i <= pageCount; i++) {
     doc.setPage(i);
     doc.setFontSize(10);
