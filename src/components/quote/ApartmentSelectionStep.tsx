@@ -39,13 +39,13 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
     }
   }, [form]);
   
-  // Filter suitable apartments based on capacity and dates
-  const suitableApartments = apartments.filter(apartment => 
-    isApartmentSuitable(apartment, formValues)
-  );
+  // Show all apartments regardless of capacity, we'll mark them as suitable or not
+  const availableApartments = apartments;
   
   // Get recommended apartment ID
-  const recommendedApartmentId = getRecommendedApartment(suitableApartments, formValues);
+  const recommendedApartmentId = getRecommendedApartment(availableApartments.filter(apartment => 
+    isApartmentSuitable(apartment, formValues)
+  ), formValues);
   
   // Calculate total beds in selected apartments
   useEffect(() => {
@@ -59,6 +59,10 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   
   // Handle apartment selection (toggle selection)
   const toggleApartmentSelection = (apartmentId: string) => {
+    // Don't allow selecting if it's booked
+    const apartment = apartments.find(apt => apt.id === apartmentId);
+    if (apartment?.booked) return;
+    
     const currentSelected = form.getValues("selectedApartments") || [];
     const isSelected = currentSelected.includes(apartmentId);
     
@@ -91,8 +95,10 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
     return currentSelected.includes(apartmentId);
   };
   
-  // Check if group is too large for a single apartment
-  const isLargeGroup = effectiveGuestCount > 8;
+  // Check if apartment is suitable
+  const isSuitable = (apartment: Apartment) => {
+    return isApartmentSuitable(apartment, formValues);
+  };
   
   // Handle next step with validation
   const handleNextStep = () => {
@@ -108,7 +114,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
         <CardDescription>Seleziona l'appartamento o gli appartamenti che preferisci per il tuo soggiorno</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Modifica dell'alert per evitare overflow */}
+        {/* Alert for guest count */}
         <Alert variant="default" className="bg-blue-50 border-blue-200 mb-4 overflow-hidden">
           <Users className="h-4 w-4 text-blue-500 shrink-0" />
           <AlertDescription className="text-blue-700 break-words">
@@ -121,14 +127,13 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
                   <span>di cui {sleepingWithParents} {sleepingWithParents === 1 ? 'bambino dorme' : 'bambini dormono'} con i genitori</span>
                 )}
                 {sleepingInCribs > 0 && (
-                  <span>{sleepingInCribs} {sleepingInCribs === 1 ? 'bambino dorme' : 'bambini dormono'} in culla (gratis)</span>
+                  <span>{sleepingInCribs} {sleepingInCribs === 1 ? 'bambino dorme' : 'bambini dormono'} in culla</span>
                 )}
                 <span className="font-medium mt-1">Posti letto necessari: {effectiveGuestCount}</span>
               </div>
             ) : (
               <>
-                Il tuo gruppo è di {totalGuests} ospiti ({formValues.adults} adulti, {formValues.children} bambini).
-                {isLargeGroup && " Puoi selezionare più appartamenti per ospitare tutti."}
+                Il tuo gruppo è di {totalGuests} ospiti ({formValues.adults} adulti, {formValues.children} bambini)
               </>
             )}
           </AlertDescription>
@@ -149,10 +154,10 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
           </div>
         </div>
         
-        {suitableApartments.length === 0 ? (
+        {availableApartments.length === 0 ? (
           <div className="p-4 border rounded-md bg-muted/50">
             <p className="text-center">
-              Non ci sono appartamenti disponibili per {effectiveGuestCount} ospiti nelle date selezionate.
+              Non ci sono appartamenti disponibili.
               <br />
               <span className="text-sm text-muted-foreground">
                 Prova a modificare le date o il numero di ospiti.
@@ -161,72 +166,93 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {suitableApartments.map((apartment) => (
-              <div 
-                key={apartment.id} 
-                className={cn(
-                  "border rounded-lg p-3 cursor-pointer transition-all hover:border-primary relative", 
-                  isApartmentSelected(apartment.id) ? "border-primary border-2" : ""
-                )}
-              >
-                {apartment.id === recommendedApartmentId && (
-                  <Badge variant="default" className="absolute top-1 left-1 bg-green-600 text-xs">
-                    Consigliato
-                  </Badge>
-                )}
-                
-                <h3 className="font-medium mt-6 text-sm md:text-base flex flex-nowrap items-center">
-                  <span className="mr-1">Appartamento</span>
-                  <span>{apartment.name.split(' ')[1]}</span>
-                </h3>
-                
-                <div className="grid grid-cols-1 gap-1 text-xs mt-2">
-                  <div className="flex items-center gap-1">
-                    <BedDouble className="h-3 w-3 text-primary shrink-0" />
-                    <span>{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Bed className="h-3 w-3 text-primary shrink-0" />
-                    <span>{apartment.beds} posti letto</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-primary shrink-0" />
-                    <span>Piano {apartment.floor}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Wifi className="h-3 w-3 text-primary shrink-0" />
-                    <span>Vista {apartment.view}</span>
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between mt-2">
-                  <Button 
-                    type="button" 
-                    variant="link" 
-                    className="text-primary p-0 h-auto text-xs z-20" 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openApartmentDialog(apartment.id);
-                    }}
-                  >
-                    Dettagli
-                  </Button>
-                  
-                  <Checkbox 
-                    id={`apartment-checkbox-${apartment.id}`}
-                    checked={isApartmentSelected(apartment.id)}
-                    onCheckedChange={() => toggleApartmentSelection(apartment.id)}
-                    className="cursor-pointer z-20"
-                  />
-                </div>
-                
-                {/* Create a clickable overlay for the entire card */}
+            {availableApartments.map((apartment) => {
+              const isBooked = !!apartment.booked;
+              const isSuitableForGroup = isSuitable(apartment);
+              
+              return (
                 <div 
-                  className="absolute inset-0 z-10 cursor-pointer" 
-                  onClick={() => toggleApartmentSelection(apartment.id)}
-                />
-              </div>
-            ))}
+                  key={apartment.id} 
+                  className={cn(
+                    "border rounded-lg p-3 relative",
+                    isApartmentSelected(apartment.id) ? "border-primary border-2" : "",
+                    isBooked ? "opacity-60" : "cursor-pointer transition-all hover:border-primary",
+                  )}
+                >
+                  {apartment.id === recommendedApartmentId && !isBooked && (
+                    <Badge variant="default" className="absolute top-1 left-1 bg-green-600 text-xs">
+                      Consigliato
+                    </Badge>
+                  )}
+                  
+                  {isBooked && (
+                    <Badge variant="destructive" className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-sm z-30">
+                      Prenotato
+                    </Badge>
+                  )}
+                  
+                  <h3 className="font-medium mt-6 text-sm md:text-base flex flex-nowrap items-center">
+                    <span className="mr-1">Appartamento</span>
+                    <span>{apartment.name.split(' ')[1]}</span>
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 gap-1 text-xs mt-2">
+                    <div className="flex items-center gap-1">
+                      <BedDouble className="h-3 w-3 text-primary shrink-0" />
+                      <span>{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Bed className="h-3 w-3 text-primary shrink-0" />
+                      <span>{apartment.beds} posti letto</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3 text-primary shrink-0" />
+                      <span>Piano {apartment.floor}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Wifi className="h-3 w-3 text-primary shrink-0" />
+                      <span>Vista {apartment.view}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-2">
+                    <Button 
+                      type="button" 
+                      variant="link" 
+                      className="text-primary p-0 h-auto text-xs z-20" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openApartmentDialog(apartment.id);
+                      }}
+                    >
+                      Dettagli
+                    </Button>
+                    
+                    {!isBooked && (
+                      <Checkbox 
+                        id={`apartment-checkbox-${apartment.id}`}
+                        checked={isApartmentSelected(apartment.id)}
+                        onCheckedChange={() => toggleApartmentSelection(apartment.id)}
+                        className="cursor-pointer z-20"
+                      />
+                    )}
+                  </div>
+                  
+                  {/* Overlay for booked apartments to prevent interactions */}
+                  {isBooked && (
+                    <div className="absolute inset-0 bg-gray-100/40 z-10 rounded-lg" />
+                  )}
+                  
+                  {/* Create a clickable overlay for the entire card */}
+                  {!isBooked && (
+                    <div 
+                      className="absolute inset-0 z-10 cursor-pointer" 
+                      onClick={() => toggleApartmentSelection(apartment.id)}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
         
@@ -241,7 +267,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
         <Button 
           type="button" 
           onClick={handleNextStep}
-          disabled={suitableApartments.length === 0 || (form.getValues("selectedApartments")?.length === 0) || !hasEnoughBeds}
+          disabled={availableApartments.length === 0 || (form.getValues("selectedApartments")?.length === 0) || !hasEnoughBeds}
         >
           {!hasEnoughBeds && form.getValues("selectedApartments")?.length > 0 
             ? `Seleziona altri appartamenti (${selectedBedsCount}/${effectiveGuestCount})` 

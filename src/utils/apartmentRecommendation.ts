@@ -4,6 +4,11 @@ import { FormValues } from "@/utils/quoteFormSchema";
 
 // Check if an apartment is suitable for a booking
 export function isApartmentSuitable(apartment: Apartment, formValues: FormValues): boolean {
+  // Don't consider booked apartments as suitable
+  if (apartment.booked) {
+    return false;
+  }
+
   // Calculate effective guest count considering children sleeping with parents or in cribs
   const { adults, children, childrenDetails } = formValues;
   
@@ -14,25 +19,15 @@ export function isApartmentSuitable(apartment: Apartment, formValues: FormValues
   // Calculate actual beds needed (adults + children - children not needing beds)
   const effectiveGuestCount = adults + children - sleepingWithParents - sleepingInCribs;
   
-  // Per gruppi numerosi, non controlliamo la capacità totale perché potrebbero selezionare più appartamenti
-  const totalGuests = adults + children;
-  
-  // Se il totalGuests è maggiore della capacità massima di qualsiasi appartamento singolo
-  // (es. > 8), allora mostriamo tutti gli appartamenti disponibili
-  if (totalGuests > 8) {
+  // We always show all apartments regardless of capacity
+  // But the ones that meet capacity requirements will be considered "suitable"
+  if (apartment.capacity >= effectiveGuestCount) {
     return true;
   }
   
-  // Altrimenti, controlliamo se il singolo appartamento può ospitare il gruppo
-  // Utilizziamo effectiveGuestCount invece di totalGuests per considerare i bambini che dormono con i genitori o in culle
-  if (apartment.capacity < effectiveGuestCount) {
-    return false;
-  }
-  
   // Additional logic for availability could be added here
-  // (e.g., checking if the apartment is available for the selected dates)
   
-  return true;
+  return false;
 }
 
 // Calculate how well an apartment fits the group's needs
