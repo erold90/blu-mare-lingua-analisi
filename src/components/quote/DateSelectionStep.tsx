@@ -39,6 +39,9 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
     return undefined;
   });
   
+  // State to control the popover visibility
+  const [open, setOpen] = useState(false);
+  
   // Calculate number of nights
   const numberOfNights = dateRange?.from && dateRange?.to
     ? differenceInDays(dateRange.to, dateRange.from)
@@ -70,6 +73,8 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
     
     if (range.to) {
       form.setValue("checkOut", range.to);
+      // Close the calendar after selecting the check-out date
+      setOpen(false);
     }
     
     // Trigger validation
@@ -84,7 +89,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Date selection button */}
-        <Popover>
+        <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
