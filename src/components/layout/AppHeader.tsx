@@ -19,19 +19,6 @@ export function AppHeader() {
             <span className="text-xl font-semibold text-white">Villa MareBlu</span>
           </div>
         )}
-        {!isMobile && (
-          <nav className="flex items-center gap-6 ml-auto">
-            <a href="/" className="font-medium text-white hover:text-primary transition-colors">
-              Home
-            </a>
-            <a href="/appartamenti" className="font-medium text-white hover:text-primary transition-colors">
-              Appartamenti
-            </a>
-            <a href="/preventivo" className="font-medium text-white hover:text-primary transition-colors">
-              Preventivo
-            </a>
-          </nav>
-        )}
       </div>
     </header>
   );

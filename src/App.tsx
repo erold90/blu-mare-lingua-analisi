@@ -26,22 +26,11 @@ const queryClient = new QueryClient();
 // Component to track page views
 const PageViewTracker = () => {
   const location = useLocation();
+  const { addSiteVisit } = require("./hooks/useActivityLog").useActivityLog();
   
   useEffect(() => {
-    // We need to use a React component to access hooks
-    const addPageVisit = async () => {
-      try {
-        const { useActivityLog } = await import("./hooks/useActivityLog");
-        const { addSiteVisit } = useActivityLog();
-        addSiteVisit(location.pathname);
-      } catch (error) {
-        console.error("Failed to log page visit", error);
-      }
-    };
-    
-    // Execute it inside the component
-    addPageVisit();
-  }, [location]);
+    addSiteVisit(location.pathname);
+  }, [location, addSiteVisit]);
   
   return null;
 };
