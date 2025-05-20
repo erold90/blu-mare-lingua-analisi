@@ -59,7 +59,7 @@ const ContactsPage = () => {
               <MapPin className="h-6 w-6 text-primary shrink-0 mt-1" />
               <div>
                 <h3 className="font-medium">Indirizzo</h3>
-                <p className="text-muted-foreground">Via del Mare, 123<br />07026 Olbia (SS)<br />Sardegna, Italia</p>
+                <p className="text-muted-foreground">Via Marco Polo 112<br />73053 Patù (LE)<br />Salento, Puglia</p>
               </div>
             </div>
             
@@ -94,7 +94,7 @@ const ContactsPage = () => {
           
           <div className="mt-8 h-64 md:h-80 bg-muted rounded-lg">
             <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d49063.09653402417!2d9.458836397314443!3d40.92587253783483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x12d92dd9b8dd7b51%3A0x29f54f9b6800fc4e!2s07026%20Olbia%20SS!5e0!3m2!1sit!2sit!4v1652506226651!5m2!1sit!2sit" 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3024.2286008529195!2d18.29282087704548!3d39.82353447131548!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x13442aef4bc92ee3%3A0xc5a77b4b7764eed3!2sVia%20Marco%20Polo%2C%20112%2C%2073053%20Pat%C3%B9%20LE!5e0!3m2!1sit!2sit!4v1716927634793!5m2!1sit!2sit" 
               width="100%" 
               height="100%" 
               style={{ border: 0 }} 

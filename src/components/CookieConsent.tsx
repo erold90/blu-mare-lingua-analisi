@@ -41,24 +41,24 @@ export function CookieConsent() {
 
   return (
     <div className={cn(
-      "fixed bottom-4 left-4 right-4 md:right-auto md:w-96 p-4 bg-white dark:bg-slate-900 rounded-lg shadow-lg border z-50",
+      "fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-slate-900 border-t z-50",
       "transform transition-transform duration-300 ease-in-out"
     )}>
-      <div className="flex items-start gap-3">
-        <Cookie className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-        <div className="flex-1">
-          <p className="text-sm mb-2">
+      <div className="container mx-auto flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <Cookie className="h-5 w-5 text-primary flex-shrink-0" />
+          <p className="text-sm">
             Questo sito utilizza cookie per migliorare la tua esperienza. 
             Leggi la nostra <Link to="/cookie-policy" className="text-primary underline">Cookie Policy</Link> per saperne di più.
           </p>
-          <div className="flex gap-2 mt-3">
-            <Button variant="outline" size="sm" onClick={handleDecline}>
-              Solo essenziali
-            </Button>
-            <Button size="sm" onClick={handleAccept}>
-              Accetta tutti
-            </Button>
-          </div>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <Button variant="outline" size="sm" onClick={handleDecline}>
+            Solo essenziali
+          </Button>
+          <Button size="sm" onClick={handleAccept} className="bg-slate-900 text-white dark:bg-white dark:text-slate-900">
+            Accetta tutti
+          </Button>
         </div>
       </div>
     </div>
