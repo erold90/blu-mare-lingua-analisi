@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { FormValues } from "@/utils/quoteFormSchema";
 
@@ -23,7 +22,11 @@ interface ActivityLogContextType {
   addSiteVisit: (page: string) => void;
   getVisitsCount: (period: 'day' | 'month' | 'year') => number;
   getQuoteLogsForDay: (date: Date) => QuoteLog[];
+  clearOldData: () => void;
 }
+
+// Maximum number of site visits to store
+const MAX_SITE_VISITS = 1000;
 
 const ActivityLogContext = createContext<ActivityLogContextType | undefined>(undefined);
 
@@ -45,7 +48,11 @@ export const ActivityLogProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const savedVisits = localStorage.getItem("siteVisits");
     if (savedVisits) {
       try {
-        return JSON.parse(savedVisits);
+        // Only load up to MAX_SITE_VISITS most recent visits
+        const parsedVisits = JSON.parse(savedVisits);
+        return Array.isArray(parsedVisits) 
+          ? parsedVisits.slice(-MAX_SITE_VISITS) 
+          : [];
       } catch (error) {
         console.error("Failed to parse saved site visits:", error);
         return [];
@@ -56,11 +63,27 @@ export const ActivityLogProvider: React.FC<{ children: React.ReactNode }> = ({ c
   
   // Save logs to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem("quoteLogs", JSON.stringify(quoteLogs));
+    try {
+      localStorage.setItem("quoteLogs", JSON.stringify(quoteLogs));
+    } catch (error) {
+      console.error("Failed to save quote logs to localStorage:", error);
+      // If we can't save, try to reduce the data size
+      if (quoteLogs.length > 50) {
+        setQuoteLogs(prev => prev.slice(-50)); // Keep only the 50 most recent logs
+      }
+    }
   }, [quoteLogs]);
   
   useEffect(() => {
-    localStorage.setItem("siteVisits", JSON.stringify(siteVisits));
+    try {
+      // Only store up to MAX_SITE_VISITS most recent visits
+      const visitsToStore = siteVisits.slice(-MAX_SITE_VISITS);
+      localStorage.setItem("siteVisits", JSON.stringify(visitsToStore));
+    } catch (error) {
+      console.error("Failed to save site visits to localStorage:", error);
+      // If we still can't save, reduce the limit by half
+      setSiteVisits(prev => prev.slice(-(MAX_SITE_VISITS / 2)));
+    }
   }, [siteVisits]);
   
   const addQuoteLog = (quoteData: QuoteLog) => {
@@ -74,8 +97,9 @@ export const ActivityLogProvider: React.FC<{ children: React.ReactNode }> = ({ c
         updatedLogs[existingIndex] = quoteData;
         return updatedLogs;
       } else {
-        // Add new entry
-        return [...prev, quoteData];
+        // Add new entry, but limit to 100 most recent if getting large
+        const newLogs = [...prev, quoteData];
+        return newLogs.length > 100 ? newLogs.slice(-100) : newLogs;
       }
     });
   };
@@ -85,14 +109,21 @@ export const ActivityLogProvider: React.FC<{ children: React.ReactNode }> = ({ c
       return; // Don't log admin area visits
     }
     
-    setSiteVisits(prev => [
-      ...prev,
-      {
-        id: Math.random().toString(36).substring(2, 11),
-        timestamp: new Date().toISOString(),
-        page
-      }
-    ]);
+    setSiteVisits(prev => {
+      // Only keep up to MAX_SITE_VISITS - 1 previous visits + the new one
+      const limitedPrev = prev.length >= MAX_SITE_VISITS 
+        ? prev.slice(-(MAX_SITE_VISITS - 1)) 
+        : prev;
+        
+      return [
+        ...limitedPrev,
+        {
+          id: Math.random().toString(36).substring(2, 11),
+          timestamp: new Date().toISOString(),
+          page
+        }
+      ];
+    });
   };
   
   const getVisitsCount = (period: 'day' | 'month' | 'year'): number => {
@@ -129,6 +160,22 @@ export const ActivityLogProvider: React.FC<{ children: React.ReactNode }> = ({ c
     });
   };
   
+  // Function to clear old data
+  const clearOldData = () => {
+    // Keep only the last 30 days of site visits
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    setSiteVisits(prev => 
+      prev.filter(visit => new Date(visit.timestamp) > thirtyDaysAgo)
+    );
+    
+    // Keep only the last 50 quote logs
+    if (quoteLogs.length > 50) {
+      setQuoteLogs(prev => prev.slice(-50));
+    }
+  };
+  
   return (
     <ActivityLogContext.Provider value={{
       quoteLogs,
@@ -136,7 +183,8 @@ export const ActivityLogProvider: React.FC<{ children: React.ReactNode }> = ({ c
       addQuoteLog,
       addSiteVisit,
       getVisitsCount,
-      getQuoteLogsForDay
+      getQuoteLogsForDay,
+      clearOldData
     }}>
       {children}
     </ActivityLogContext.Provider>

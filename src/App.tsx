@@ -27,11 +27,18 @@ const queryClient = new QueryClient();
 // Component to track page views
 const PageViewTracker = () => {
   const location = useLocation();
-  const { addSiteVisit } = useActivityLog();
+  const { addSiteVisit, clearOldData } = useActivityLog();
   
+  // Track the current page visit
   useEffect(() => {
     addSiteVisit(location.pathname);
   }, [location, addSiteVisit]);
+  
+  // Clear old data periodically - once per session is enough
+  useEffect(() => {
+    // Only run once when component mounts
+    clearOldData();
+  }, [clearOldData]);
   
   return null;
 };
