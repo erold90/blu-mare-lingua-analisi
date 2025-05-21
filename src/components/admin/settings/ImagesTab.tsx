@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Plus, Image as ImageIcon } from "lucide-react";
+import { Plus, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -35,6 +35,10 @@ export const ImagesTab = () => {
     }
   };
 
+  const isValidImage = (url: string) => {
+    return url && !url.includes("placeholder.svg");
+  };
+
   return (
     <div className="space-y-6">
       <Card>
@@ -47,25 +51,34 @@ export const ImagesTab = () => {
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <div className="aspect-video rounded-md overflow-hidden border">
-                {siteSettings.heroImage ? (
+              <div className="aspect-video rounded-md overflow-hidden border bg-muted relative">
+                {isValidImage(siteSettings.heroImage) ? (
                   <img
                     src={siteSettings.heroImage}
                     alt="Hero"
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                    }}
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-muted">
-                    <ImageIcon className="h-12 w-12 text-muted-foreground opacity-50" />
-                  </div>
-                )}
+                ) : null}
+                <div className={`${isValidImage(siteSettings.heroImage) ? 'hidden' : ''} absolute inset-0 flex flex-col items-center justify-center bg-muted`}>
+                  <ImageIcon className="h-12 w-12 text-muted-foreground opacity-50 mb-2" />
+                  <p className="text-sm text-muted-foreground">Nessuna immagine caricata</p>
+                </div>
               </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Si consiglia un'immagine in formato 16:9 con alta risoluzione
+              </p>
             </div>
             <div className="flex items-center">
               <div>
                 <Button
                   variant="outline"
                   onClick={() => document.getElementById('hero-upload')?.click()}
+                  className="flex items-center"
                 >
                   <Plus className="h-4 w-4 mr-1" /> Cambia immagine
                 </Button>
@@ -76,9 +89,6 @@ export const ImagesTab = () => {
                   className="hidden"
                   onChange={(e) => handleImageUpload('hero', null, e)}
                 />
-                <p className="text-sm text-muted-foreground mt-2">
-                  Si consiglia un'immagine in formato 16:9 con alta risoluzione
-                </p>
               </div>
             </div>
           </div>
@@ -96,18 +106,23 @@ export const ImagesTab = () => {
           <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6`}>
             {siteSettings.homeImages.map((imageUrl, index) => (
               <div key={index} className="space-y-3">
-                <div className="aspect-square rounded-md overflow-hidden border">
-                  {imageUrl ? (
+                <div className="aspect-square rounded-md overflow-hidden border bg-muted relative">
+                  {isValidImage(imageUrl) ? (
                     <img
                       src={imageUrl}
                       alt={`Home ${index+1}`}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                      }}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-muted">
-                      <ImageIcon className="h-8 w-8 text-muted-foreground opacity-50" />
-                    </div>
-                  )}
+                  ) : null}
+                  <div className={`${isValidImage(imageUrl) ? 'hidden' : ''} absolute inset-0 flex flex-col items-center justify-center bg-muted`}>
+                    <ImageIcon className="h-8 w-8 text-muted-foreground opacity-50 mb-2" />
+                    <p className="text-xs text-muted-foreground">Nessuna immagine</p>
+                  </div>
                 </div>
                 <Button
                   variant="outline"
