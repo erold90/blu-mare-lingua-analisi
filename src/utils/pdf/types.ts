@@ -1,10 +1,16 @@
 
 import { jsPDF } from "jspdf";
 
+// Type definition for the return value of autoTable
+interface AutoTableResult {
+  finalY: number;
+  [key: string]: any;
+}
+
 // Extend jspdf-autotable type definitions for the main module
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: (options: any) => { finalY?: number };
+    autoTable: (options: any) => AutoTableResult;
     getNumberOfPages: () => number;
     internal: {
       events: any;
