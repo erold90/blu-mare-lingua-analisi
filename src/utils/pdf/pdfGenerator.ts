@@ -53,8 +53,8 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     let finalY = yAfterApartment + 150; // Default fallback position
     
     try {
-      // Create table and store the result. The type is now properly defined
-      const result = doc.autoTable({
+      // Create table and store the result
+      const result: AutoTableResult = doc.autoTable({
         startY: yAfterApartment + 20,
         head: [["Voce", "Dettagli", "Importo"]],
         body: tableBody,
@@ -68,7 +68,7 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
       });
       
       // Update finalY if available
-      if (result && result.finalY !== undefined) {
+      if (result && typeof result.finalY === 'number') {
         finalY = result.finalY;
       }
     } catch (tableError) {
