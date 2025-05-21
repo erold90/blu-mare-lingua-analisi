@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { WeeklyPrice, SeasonalPricing } from "./types";
 import { generateDefaultPricesForYear } from "./priceUtils";
@@ -14,6 +15,15 @@ export const useProviderState = () => {
       try {
         const parsedPricing = JSON.parse(savedPricing);
         console.log(`useProviderState: Loaded ${parsedPricing.length} seasons from localStorage`);
+        
+        // Debug - log the first few prices
+        if (parsedPricing.length > 0 && parsedPricing[0].prices && parsedPricing[0].prices.length > 0) {
+          const firstFewPrices = parsedPricing[0].prices.slice(0, 5).map((p: WeeklyPrice) => 
+            `${p.apartmentId}: ${p.price}€ (${new Date(p.weekStart).toLocaleDateString()})`
+          );
+          console.log("Sample prices:", firstFewPrices);
+        }
+        
         return parsedPricing;
       } catch (error) {
         console.error("Failed to parse saved seasonal pricing:", error);
@@ -39,6 +49,16 @@ export const useProviderState = () => {
         const year2025 = allPricing.find((season: SeasonalPricing) => season.year === 2025);
         if (year2025) {
           console.log(`Trovati ${year2025.prices.length} prezzi per il 2025 in localStorage`);
+          
+          // Debug - log a few prices
+          if (year2025.prices.length > 0) {
+            const apt1Prices = year2025.prices.filter((p: WeeklyPrice) => p.apartmentId === "apt-1");
+            console.log(`Prezzi per apt-1 nel 2025: ${apt1Prices.length}`);
+            console.log("Primi 3 prezzi:", apt1Prices.slice(0, 3).map((p: WeeklyPrice) => 
+              `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
+            ));
+          }
+          
           return year2025.prices;
         }
       } catch (error) {

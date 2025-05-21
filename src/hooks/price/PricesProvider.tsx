@@ -3,7 +3,7 @@ import React, { createContext, useEffect } from "react";
 import { PricesContextType } from "./types";
 import { getPriceForDate, getCurrentOrCreateSeason, generateWeeksForSeason } from "./priceUtils";
 import { useProviderState } from "./useProviderState";
-import { updateWeeklyPrice as updatePrice, initializeYearPricing } from "./priceOperations";
+import { updateWeeklyPrice as updatePrice, initializeYearPricing, resetAllPrices } from "./priceOperations";
 
 // Create the context
 export const PricesContext = createContext<PricesContextType | undefined>(undefined);
@@ -34,7 +34,7 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   
   // Reset dei prezzi (solo per sviluppo)
   const resetPrices = () => {
-    localStorage.removeItem("seasonalPricing");
+    resetAllPrices();
     window.location.reload();
   };
   

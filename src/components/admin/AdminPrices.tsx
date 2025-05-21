@@ -22,6 +22,11 @@ const AdminPrices = () => {
     generateWeeksForSeason(selectedYear, 6, 9) // June to September
   );
   
+  // Forzare un rendering per assicurarsi che i prezzi siano caricati
+  React.useEffect(() => {
+    console.log("AdminPrices: Forza il rendering per assicurarsi che i prezzi siano caricati");
+  }, []);
+  
   // Log di diagnostica
   React.useEffect(() => {
     const year2025 = seasonalPricing.find(s => s.year === 2025);
@@ -60,30 +65,31 @@ const AdminPrices = () => {
   // Get price for a specific apartment and week
   const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
     const weekStartStr = weekStart.toISOString();
-    const price = weeklyPrices.find(
+    
+    // 1. First try to find in weekly prices (most current)
+    const weeklyPrice = weeklyPrices.find(
       p => p.apartmentId === apartmentId && 
-           p.weekStart.substring(0, 10) === weekStartStr.substring(0, 10)
+           new Date(p.weekStart).toDateString() === weekStart.toDateString()
     );
     
-    if (price) {
-      return price.price;
+    if (weeklyPrice) {
+      return weeklyPrice.price;
     }
     
-    // Find the right year in seasonalPricing
+    // 2. Look in seasonal pricing for this year
     const year = weekStart.getFullYear();
     const season = seasonalPricing.find(s => s.year === year);
     
     if (season) {
-      // Try to find a price for this apartment and week
-      const matchingPrice = season.prices.find(
+      const seasonPrice = season.prices.find(
         p => p.apartmentId === apartmentId && 
              new Date(p.weekStart).toDateString() === weekStart.toDateString()
       );
       
-      if (matchingPrice) return matchingPrice.price;
+      if (seasonPrice) return seasonPrice.price;
     }
     
-    // For other years, return the apartment's default price
+    // 3. Default to apartment base price if not found
     const apartment = apartments.find(apt => apt.id === apartmentId);
     return apartment ? apartment.price : 0;
   };

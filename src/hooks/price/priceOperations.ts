@@ -94,7 +94,7 @@ export const initializeYearPricing = (
   seasonalPricing: SeasonalPricing[], 
   setSeasonalPricing: Dispatch<SetStateAction<SeasonalPricing[]>>
 ) => {
-  // Prima verifichiamo se esiste già un localStorage con i prezzi del 2025
+  // Verifichiamo se esiste già un localStorage con i prezzi del 2025
   const savedPricing = localStorage.getItem("seasonalPricing");
   let has2025Season = false;
   
@@ -103,7 +103,6 @@ export const initializeYearPricing = (
       const parsedPricing = JSON.parse(savedPricing) as SeasonalPricing[];
       has2025Season = parsedPricing.some(season => season.year === 2025);
       
-      // Se esiste già, non forziamo più l'aggiornamento ogni volta
       if (has2025Season) {
         console.log("I prezzi 2025 esistono già, li utilizziamo");
         return;
@@ -114,6 +113,7 @@ export const initializeYearPricing = (
   }
   
   if (!has2025Season) {
+    console.log("Inizializzazione prezzi 2025 con valori personalizzati");
     // Create predefined pricing data for 2025 season based on the provided table
     const prices2025: WeeklyPrice[] = [];
     
@@ -168,4 +168,12 @@ export const initializeYearPricing = (
     localStorage.setItem("seasonalPricing", JSON.stringify(updatedPricing));
     console.log("2025 seasonal prices initialized with custom values");
   }
+};
+
+/**
+ * Completely reset all price data (debug only)
+ */
+export const resetAllPrices = () => {
+  console.log("Resetting all prices data");
+  localStorage.removeItem("seasonalPricing");
 };
