@@ -89,12 +89,12 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   };
 
   return (
-    <Card className="w-full max-w-full">
-      <CardHeader>
-        <CardTitle className="text-balance">Appartamenti disponibili</CardTitle>
-        <CardDescription className="text-balance">Seleziona l'appartamento o gli appartamenti che preferisci per il tuo soggiorno</CardDescription>
+    <Card className="max-w-3xl mx-auto">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl">Appartamenti disponibili</CardTitle>
+        <CardDescription>Seleziona l'appartamento o gli appartamenti che preferisci per il tuo soggiorno</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* Alert for guest count */}
         <GuestInfoAlert formValues={formValues} />
         
@@ -108,7 +108,7 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
         />
         
         {form.formState.errors.selectedApartment && (
-          <p className="text-destructive text-sm text-balance">
+          <p className="text-destructive text-sm">
             {form.formState.errors.selectedApartment.message}
           </p>
         )}

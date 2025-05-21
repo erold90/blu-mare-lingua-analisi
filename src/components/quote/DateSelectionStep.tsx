@@ -26,23 +26,23 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
   } = useDateSelection(form);
   
   return (
-    <Card className="max-w-5xl mx-auto">
+    <Card className="max-w-3xl mx-auto">
       <CardHeader className="pb-2">
-        <CardTitle className="text-xl md:text-2xl">Selezione date</CardTitle>
+        <CardTitle className="text-xl">Selezione date</CardTitle>
         <CardDescription>Indica le date di check-in e check-out del tuo soggiorno</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Information alert */}
-        <Alert className="bg-muted/50 py-2">
+      <CardContent className="space-y-5">
+        {/* Information alert - more compact */}
+        <Alert className="bg-muted/50 py-1.5">
           <InfoIcon className="h-4 w-4 mr-2" />
           <AlertDescription className="text-xs">
             Check-in/out disponibili solo sabato, domenica e lunedì. Soggiorno minimo di 5 notti, massimo 28 notti.
           </AlertDescription>
         </Alert>
         
-        <div className="grid md:grid-cols-5 gap-6">
-          {/* Calendar displayed larger on desktop */}
-          <div className="md:col-span-3 flex justify-center">
+        <div className="grid md:grid-cols-12 gap-4">
+          {/* Calendar - larger */}
+          <div className="md:col-span-7 flex justify-center">
             <Calendar
               initialFocus
               mode="range"
@@ -52,25 +52,25 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
               disabled={isDateDisabled}
               numberOfMonths={1}
               fixedWeeks={true}
-              className="border rounded-lg p-4 bg-background shadow-sm w-full max-w-md md:max-w-full scale-100 md:scale-110 origin-top"
+              className="border rounded-lg p-2 bg-background shadow-sm w-full max-w-md md:max-w-full scale-100 md:scale-115 origin-top"
             />
           </div>
 
           {/* Stay summary */}
-          <div className="md:col-span-2">
+          <div className="md:col-span-5">
             {dateRange?.from && dateRange?.to ? (
               <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="pt-6">
-                  <h3 className="text-lg font-semibold mb-4">Riepilogo del soggiorno</h3>
+                <CardContent className="pt-4">
+                  <h3 className="text-base font-semibold mb-3">Riepilogo del soggiorno</h3>
                   <StaySummary 
                     dateRange={dateRange} 
                     numberOfNights={numberOfNights} 
                   />
                   
                   {numberOfNights > 0 && (
-                    <div className="mt-6 p-4 bg-white rounded-lg border shadow-sm">
-                      <h4 className="font-medium text-sm">Informazioni importanti:</h4>
-                      <ul className="text-xs mt-2 space-y-1 text-muted-foreground">
+                    <div className="mt-4 p-3 bg-white rounded-lg border shadow-sm">
+                      <h4 className="font-medium text-xs mb-1.5">Informazioni importanti:</h4>
+                      <ul className="text-xs space-y-0.5 text-muted-foreground">
                         <li>• Check-in: dalle 15:00 alle 19:00</li>
                         <li>• Check-out: entro le 10:00</li>
                         {numberOfNights < 5 && (
@@ -85,10 +85,10 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
                 </CardContent>
               </Card>
             ) : (
-              <div className="flex h-full items-center justify-center p-6 text-center">
+              <div className="flex h-full items-center justify-center p-4 text-center">
                 <div className="text-muted-foreground">
-                  <p className="font-medium mb-2">Seleziona le date</p>
-                  <p className="text-sm">Scegli prima la data di arrivo, poi quella di partenza</p>
+                  <p className="font-medium mb-1">Seleziona le date</p>
+                  <p className="text-xs">Scegli prima la data di arrivo, poi quella di partenza</p>
                 </div>
               </div>
             )}

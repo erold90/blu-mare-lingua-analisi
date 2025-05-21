@@ -54,18 +54,18 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
   }, [addQuoteLog, formValues]);
   
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Riepilogo prenotazione</CardTitle>
+    <Card className="max-w-3xl mx-auto">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl">Riepilogo prenotazione</CardTitle>
         <CardDescription>Verifica i dettagli del tuo preventivo</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid md:grid-cols-2 gap-4">
+      <CardContent className="space-y-4">
+        <div className="grid md:grid-cols-2 gap-3">
           {/* Sezione sinistra: Informazioni soggiorno */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Card>
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-semibold mb-4">Date del soggiorno</h3>
+              <CardContent className="pt-4 pb-4">
+                <h3 className="text-base font-semibold mb-3">Date del soggiorno</h3>
                 <DateDurationInfo 
                   checkIn={formValues.checkIn}
                   checkOut={formValues.checkOut}
@@ -75,18 +75,18 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
             </Card>
             
             <Card>
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-semibold mb-4">Ospiti</h3>
+              <CardContent className="pt-4 pb-4">
+                <h3 className="text-base font-semibold mb-3">Ospiti</h3>
                 <GuestInfo formValues={formValues} />
               </CardContent>
             </Card>
           </div>
           
           {/* Sezione destra: Appartamenti e prezzi */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <Card>
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-semibold mb-4">Appartamenti selezionati</h3>
+              <CardContent className="pt-4 pb-4">
+                <h3 className="text-base font-semibold mb-3">Appartamenti selezionati</h3>
                 <ApartmentList
                   apartments={apartments}
                   selectedApartments={selectedApartments}
@@ -97,7 +97,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
             </Card>
             
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="pt-4 pb-4">
                 <PriceSummary 
                   priceInfo={priceInfo}
                   formValues={formValues}
