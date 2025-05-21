@@ -54,7 +54,7 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     const tableBody = generateCostsTable(doc, priceCalculation, formData, yAfterApartment);
     
     // Add the table to the PDF
-    doc.autoTable({
+    const result = doc.autoTable({
       startY: yAfterApartment + 20,
       head: [["Voce", "Dettagli", "Importo"]],
       body: tableBody,
@@ -68,7 +68,8 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     });
     
     // Get the final Y position after the table
-    const finalY = doc.autoTable.previous.finalY;
+    // Access the result directly since we stored it
+    const finalY = result?.lastAutoTable?.finalY || result?.finalY || yAfterApartment + 50;
     
     // Add notes after the table
     generateNotesSection(doc, finalY);
