@@ -1,6 +1,6 @@
 
 import { jsPDF } from "jspdf";
-import { PriceCalculation } from "@/utils/price/types"; // Import from the central location
+import type { PriceCalculation } from "@/utils/price/types"; // Import using 'type' keyword
 
 // Type definition for the return value of autoTable
 export interface AutoTableResult {
@@ -27,5 +27,5 @@ declare module 'jspdf' {
   }
 }
 
-// Re-export the PriceCalculation interface from the central location
-export { PriceCalculation };
+// Re-export the PriceCalculation interface from the central location using 'export type'
+export type { PriceCalculation };
