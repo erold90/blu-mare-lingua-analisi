@@ -92,7 +92,7 @@ export const addFooter = (doc: jsPDF) => {
   addCenteredText(doc, "Tel: +39 055 123 4567 • Email: info@casavacanzetoscana.it • www.casavacanzetoscana.it", footerY + 10, 9);
 };
 
-// Add a watermark to the document
+// Add a watermark to the document - FIXED to not use translate method
 export const addWatermark = (doc: jsPDF) => {
   const pageHeight = doc.internal.pageSize.getHeight();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -105,12 +105,19 @@ export const addWatermark = (doc: jsPDF) => {
   doc.setFontSize(60);
   doc.setFont("helvetica", "bold");
   
-  // Rotate and position the watermark
-  doc.saveGraphicsState();
-  doc.translate(pageWidth / 2, pageHeight / 2);
-  doc.rotate(-45);
-  doc.text("PREVENTIVO", 0, 0, { align: "center" });
-  doc.restoreGraphicsState();
+  // Position the watermark in the center with rotation (without using translate)
+  const text = "PREVENTIVO";
+  doc.setTextColor(230, 230, 230);
+  
+  // Add multiple watermarks with slight offset to create diagonal effect
+  for (let i = -2; i <= 2; i++) {
+    const xPos = pageWidth / 2 + (i * 50);
+    const yPos = pageHeight / 2 + (i * 50);
+    doc.text(text, xPos, yPos, {
+      align: "center",
+      angle: -45
+    });
+  }
   
   // Restore previous state
   doc.setTextColor(0, 0, 0);

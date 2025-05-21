@@ -13,10 +13,6 @@ declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => AutoTableResult;
     getNumberOfPages: () => number;
-    saveGraphicsState: () => jsPDF;
-    restoreGraphicsState: () => jsPDF;
-    translate: (x: number, y: number) => jsPDF;
-    rotate: (angle: number) => jsPDF;
   }
   
   // Add the missing internal methods without redefining the entire internal property
