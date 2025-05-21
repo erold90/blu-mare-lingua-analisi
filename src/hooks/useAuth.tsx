@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -24,21 +24,29 @@ export const useAuth = () => {
         console.error("Failed to parse saved admin settings:", error);
       }
     }
+    
+    // Controlla anche lo stato di autenticazione all'avvio
+    const authStatus = localStorage.getItem("adminAuth") === "true";
+    console.log("Stato autenticazione all'avvio:", authStatus);
+    setIsAuthenticated(authStatus);
   }, []);
 
-  const login = (username: string, password: string) => {
+  const login = useCallback((username: string, password: string) => {
     if (username === adminCredentials.username && password === adminCredentials.password) {
       localStorage.setItem("adminAuth", "true");
       setIsAuthenticated(true);
+      console.log("Login effettuato con successo");
       return true;
     }
+    console.log("Credenziali non valide");
     return false;
-  };
+  }, [adminCredentials]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("adminAuth");
     setIsAuthenticated(false);
-  };
+    console.log("Logout effettuato");
+  }, []);
 
   return { isAuthenticated, login, logout, adminCredentials };
 };

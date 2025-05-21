@@ -27,12 +27,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     return location.pathname.includes(path);
   };
 
-  const handleLogout = () => {
+  const handleLogout = React.useCallback(() => {
     logout();
     toast.success("Logout effettuato con successo");
-    navigate("/area-riservata");
+    // Forziamo la navigazione alla pagina di login
+    navigate("/area-riservata", { replace: true });
     setMenuOpen(false);
-  };
+    // Aggiungiamo un reload della pagina per forzare il ricaricamento dello stato
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+  }, [logout, navigate]);
 
   const NavItems = () => (
     <nav className="space-y-1">
