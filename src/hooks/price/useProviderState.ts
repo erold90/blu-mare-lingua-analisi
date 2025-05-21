@@ -1,6 +1,7 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { WeeklyPrice, SeasonalPricing } from "./types";
-import { generateDefaultPricesForYear, generateWeeksForSeason } from "./priceUtils";
+import { generateDefaultPricesForYear } from "./priceUtils";
 
 /**
  * Custom hook to manage the state for the prices provider
@@ -35,6 +36,7 @@ export const useProviderState = () => {
         const allPricing = JSON.parse(savedPricing);
         const year2025 = allPricing.find((season: SeasonalPricing) => season.year === 2025);
         if (year2025) {
+          console.log(`Trovati ${year2025.prices.length} prezzi per il 2025 in localStorage`);
           return year2025.prices;
         }
       } catch (error) {
@@ -48,6 +50,14 @@ export const useProviderState = () => {
     return currentSeason ? currentSeason.prices : generateDefaultPricesForYear(currentYear);
   });
 
+  // Assicuriamoci che i prezzi settimanali vengano aggiornati quando cambia seasonalPricing
+  useEffect(() => {
+    const year2025 = seasonalPricing.find(season => season.year === 2025);
+    if (year2025) {
+      setWeeklyPrices(year2025.prices);
+    }
+  }, [seasonalPricing]);
+
   return {
     seasonalPricing,
     setSeasonalPricing,
@@ -55,3 +65,4 @@ export const useProviderState = () => {
     setWeeklyPrices
   };
 };
+

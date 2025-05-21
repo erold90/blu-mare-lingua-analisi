@@ -2,6 +2,8 @@ import * as React from "react";
 import { usePrices } from "@/hooks/usePrices";
 import YearTabs from "./prices/YearTabs";
 import { apartments } from "@/data/apartments";
+import { Button } from "@/components/ui/button"; 
+import { toast } from "sonner";
 
 const AdminPrices = () => {
   const { 
@@ -9,7 +11,8 @@ const AdminPrices = () => {
     updateWeeklyPrice, 
     generateWeeksForSeason, 
     getCurrentSeason,
-    seasonalPricing 
+    seasonalPricing,
+    __DEBUG_reset
   } = usePrices();
   
   const years = [2025, 2026, 2027, 2028];
@@ -17,6 +20,17 @@ const AdminPrices = () => {
   const [weeks, setWeeks] = React.useState<{ start: Date, end: Date }[]>(
     generateWeeksForSeason(selectedYear, 6, 9) // June to September
   );
+  
+  // Mostra il numero di prezzi caricati per anno 2025
+  React.useEffect(() => {
+    const year2025 = seasonalPricing.find(s => s.year === 2025);
+    if (year2025) {
+      const pricesForApt1 = year2025.prices.filter(p => p.apartmentId === "apt-1").length;
+      console.log(`Prezzi caricati per l'anno 2025 (Apt 1): ${pricesForApt1}`);
+    } else {
+      console.warn("Nessun prezzo trovato per l'anno 2025");
+    }
+  }, [seasonalPricing]);
   
   // Keep track of whether we've already initialized the prices
   const [pricesInitialized, setPricesInitialized] = React.useState<boolean>(false);
@@ -38,9 +52,11 @@ const AdminPrices = () => {
         }
       }
       
-      // We'll let the PricesProvider handle the initialization
-      // Just mark as initialized so we don't check repeatedly
-      setPricesInitialized(true);
+      // Forza l'inizializzazione attraverso usePrices
+      setTimeout(() => {
+        console.log("AdminPrices: Forza il rendering per assicurarsi che i prezzi siano caricati");
+        setPricesInitialized(true);
+      }, 200);
     }
   }, [pricesInitialized]);
   
@@ -89,8 +105,22 @@ const AdminPrices = () => {
     return apartment ? apartment.price : 0;
   };
   
+  const handleResetPricesClick = () => {
+    if (__DEBUG_reset) {
+      __DEBUG_reset();
+      toast.success("Prezzi reimpostati con successo");
+    }
+  };
+  
   return (
     <div className="space-y-6">
+      {process.env.NODE_ENV === 'development' && __DEBUG_reset && (
+        <div className="mb-4 flex justify-end">
+          <Button variant="destructive" size="sm" onClick={handleResetPricesClick}>
+            Reset Prezzi (Debug)
+          </Button>
+        </div>
+      )}
       <YearTabs 
         years={years}
         selectedYear={selectedYear}

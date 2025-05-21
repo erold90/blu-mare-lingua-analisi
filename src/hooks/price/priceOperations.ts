@@ -94,7 +94,28 @@ export const initializeYearPricing = (
   seasonalPricing: SeasonalPricing[], 
   setSeasonalPricing: Dispatch<SetStateAction<SeasonalPricing[]>>
 ) => {
-  const has2025Season = seasonalPricing.some(season => season.year === 2025);
+  // Prima verifichiamo se esiste già un localStorage con i prezzi del 2025
+  const savedPricing = localStorage.getItem("seasonalPricing");
+  let has2025Season = false;
+  
+  if (savedPricing) {
+    try {
+      const parsedPricing = JSON.parse(savedPricing) as SeasonalPricing[];
+      has2025Season = parsedPricing.some(season => season.year === 2025);
+      
+      // Se esiste già, ma vogliamo forzare l'aggiornamento, rimuoviamolo
+      if (has2025Season) {
+        console.log("Rimuovendo i prezzi 2025 esistenti per reinizializzare");
+        // Rimuovi la stagione 2025 per ricrearla
+        const updatedPricing = parsedPricing.filter(season => season.year !== 2025);
+        localStorage.setItem("seasonalPricing", JSON.stringify(updatedPricing));
+        setSeasonalPricing(updatedPricing);
+        has2025Season = false;
+      }
+    } catch (error) {
+      console.error("Errore nel parsing dei prezzi stagionali salvati:", error);
+    }
+  }
   
   if (!has2025Season) {
     // Create predefined pricing data for 2025 season based on the provided table
@@ -143,17 +164,19 @@ export const initializeYearPricing = (
       });
     });
     
-    setSeasonalPricing(prevPricing => [
-      ...prevPricing,
-      {
-        year: 2025,
-        prices: prices2025
-      }
-    ]);
+    // Aggiorna lo stato con i nuovi prezzi
+    const updatedPricing = [...seasonalPricing.filter(s => s.year !== 2025), { year: 2025, prices: prices2025 }];
+    setSeasonalPricing(updatedPricing);
     
     // Save to localStorage immediately
-    const updatedPricing = [...seasonalPricing, { year: 2025, prices: prices2025 }];
     localStorage.setItem("seasonalPricing", JSON.stringify(updatedPricing));
     console.log("2025 seasonal prices initialized with custom values");
+    
+    // Forza il reload della pagina per caricare i nuovi prezzi
+    if (window.location.href.includes('/area-riservata/prezzi')) {
+      console.log("Forzando il reload della pagina per caricare i nuovi prezzi");
+      setTimeout(() => window.location.reload(), 500);
+    }
   }
 };
+

@@ -13,7 +13,9 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   
   // Initialize 2025 season with custom prices if it doesn't exist
   useEffect(() => {
-    console.log("PricesProvider: Initializing 2025 pricing with custom values if needed");
+    console.log("PricesProvider: Initializing 2025 pricing with custom values");
+    
+    // Forziamo sempre l'inizializzazione con valori personalizzati
     initializeYearPricing(seasonalPricing, setSeasonalPricing);
     
     // Also ensure current year's prices are loaded
@@ -46,3 +48,4 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     </PricesContext.Provider>
   );
 };
+

@@ -10,8 +10,19 @@ export const usePrices = (): PricesContextType => {
     throw new Error("usePrices must be used within a PricesProvider");
   }
   
-  return context;
+  // Forza pulizia del localStorage se necessario (solo per sviluppo)
+  const forceResetPrices = () => {
+    localStorage.removeItem("seasonalPricing");
+    window.location.reload();
+  };
+  
+  return {
+    ...context,
+    // Aggiunge la funzione per il debug (non disponibile in produzione)
+    __DEBUG_reset: process.env.NODE_ENV === 'development' ? forceResetPrices : undefined
+  };
 };
 
 // Re-export everything from the refactored modules
 export * from './price';
+
