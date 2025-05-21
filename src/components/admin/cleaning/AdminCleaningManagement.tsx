@@ -388,20 +388,7 @@ const AdminCleaningManagementContent = () => {
                 classNames={{
                   day_today: "font-bold text-primary",
                   day_selected: "bg-primary text-primary-foreground",
-                  day: ({ date, isOutside, isSelected }) => {
-                    const dateKey = format(date, "yyyy-MM-dd");
-                    const day = specialDays[dateKey];
-                    
-                    // Check if this date has a cleaning task
-                    const hasTask = day && (selectedApartment === "all" || 
-                      day.tasks.some(t => t.apartmentId === selectedApartment));
-                    
-                    if (hasTask && !isSelected) {
-                      return "bg-accent text-accent-foreground";
-                    }
-                    
-                    return "";
-                  }
+                  day_hasCleaningTask: "bg-accent text-accent-foreground"
                 }}
                 className="rounded-md border shadow-none"
               />
