@@ -53,7 +53,21 @@ const ContactStep: React.FC<ContactStepProps> = ({
             <h3 className="font-medium">Riepilogo del preventivo</h3>
             <div className="space-y-3">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Periodo:</span>
+                <span className="text-muted-foreground flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-calendar-days">
+                    <path d="M8 2v4" />
+                    <path d="M16 2v4" />
+                    <rect width="18" height="18" x="3" y="4" rx="2" />
+                    <path d="M3 10h18" />
+                    <path d="M8 14h.01" />
+                    <path d="M12 14h.01" />
+                    <path d="M16 14h.01" />
+                    <path d="M8 18h.01" />
+                    <path d="M12 18h.01" />
+                    <path d="M16 18h.01" />
+                  </svg>
+                  Periodo:
+                </span>
                 <span className="font-medium">
                   {formValues.checkIn && formValues.checkOut ? 
                     `${format(formValues.checkIn, 'dd/MM/yyyy', { locale: it })} - ${format(formValues.checkOut, 'dd/MM/yyyy', { locale: it })}` :
@@ -62,19 +76,39 @@ const ContactStep: React.FC<ContactStepProps> = ({
               </div>
               
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Durata:</span>
+                <span className="text-muted-foreground flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-clock">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                  </svg>
+                  Durata:
+                </span>
                 <span className="font-medium">{priceInfo.nights} notti</span>
               </div>
               
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Ospiti:</span>
+                <span className="text-muted-foreground flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  Ospiti:
+                </span>
                 <span className="font-medium">
                   {formValues.adults} adulti{formValues.children > 0 ? `, ${formValues.children} bambini` : ''}
                 </span>
               </div>
               
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Appartamenti:</span>
+                <span className="text-muted-foreground flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-home">
+                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                  </svg>
+                  Appartamenti:
+                </span>
                 <div className="font-medium flex flex-col items-end">
                   <span>{selectedApartments.length}</span>
                   <span className="text-xs text-muted-foreground">
@@ -92,13 +126,20 @@ const ContactStep: React.FC<ContactStepProps> = ({
               
               {priceInfo.discount > 0 && (
                 <div className="flex justify-between items-center text-sm text-green-500">
-                  <span>Risparmio (sconto):</span>
+                  <span>Sconto:</span>
                   <span>{priceInfo.discount}€</span>
                 </div>
               )}
               
               <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">Caparra (30%):</span>
+                <span className="text-muted-foreground flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-piggy-bank">
+                    <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2h0V5z" />
+                    <path d="M2 9v1c0 1.1.9 2 2 2h1" />
+                    <path d="M16 11h0" />
+                  </svg>
+                  Caparra (30%):
+                </span>
                 <span>{priceInfo.deposit}€</span>
               </div>
             </div>

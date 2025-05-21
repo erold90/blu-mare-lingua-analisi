@@ -12,7 +12,7 @@ export const formatItalianDate = (date: Date): string => {
 export const addCenteredText = (doc: jsPDF, text: string, y: number, fontSize = 12) => {
   const pageWidth = doc.internal.pageSize.width;
   doc.setFontSize(fontSize);
-  const textWidth = doc.getStringUnitWidth(text) * fontSize / doc.internal.scaleFactor;
+  const textWidth = doc.getTextWidth(text);
   const x = (pageWidth - textWidth) / 2;
   doc.text(text, x, y);
 };
@@ -21,7 +21,7 @@ export const addCenteredText = (doc: jsPDF, text: string, y: number, fontSize = 
 export const addRightAlignedText = (doc: jsPDF, text: string, y: number, fontSize = 12) => {
   const pageWidth = doc.internal.pageSize.width;
   doc.setFontSize(fontSize);
-  const textWidth = doc.getStringUnitWidth(text) * fontSize / doc.internal.scaleFactor;
+  const textWidth = doc.getTextWidth(text);
   const x = pageWidth - textWidth - 20; // 20 is the right margin
   doc.text(text, x, y);
 };
@@ -45,4 +45,3 @@ export const addPageNumbers = (doc: jsPDF) => {
     doc.text(`Pagina ${i} di ${pageCount}`, pageWidth - 40, doc.internal.pageSize.height - 10);
   }
 };
-

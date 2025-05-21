@@ -52,12 +52,12 @@ export const generateStayDetailsSection = (doc: jsPDF, formData: FormValues) => 
   }
   
   // Guest information
-  const totalGuests = formData.adults + formData.children;
+  const totalGuests = (formData.adults || 0) + (formData.children || 0);
   doc.text(`Numero totale di ospiti: ${totalGuests}`, 20, y);
   y += 7;
-  doc.text(`- Adulti: ${formData.adults}`, 30, y);
+  doc.text(`- Adulti: ${formData.adults || 0}`, 30, y);
   y += 7;
-  doc.text(`- Bambini: ${formData.children}`, 30, y);
+  doc.text(`- Bambini: ${formData.children || 0}`, 30, y);
   
   return y + 10; // Return the next Y position
 };
@@ -138,7 +138,7 @@ export const generateCostsTable = (doc: jsPDF, priceCalculation: PriceCalculatio
   }
   
   // Total
-  tableBody.push(["Totale", "", `€ ${priceCalculation.totalPrice.toFixed(2)}`]);
+  tableBody.push(["Totale", "", `€ ${priceCalculation.totalAfterDiscount.toFixed(2)}`]);
   
   return tableBody;
 };
@@ -161,4 +161,3 @@ export const generateNotesSection = (doc: jsPDF, yStart: number) => {
   y += 5;
   doc.text("Il saldo dovrà essere effettuato all'arrivo.", 20, y);
 };
-
