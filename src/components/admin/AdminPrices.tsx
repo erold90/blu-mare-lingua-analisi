@@ -105,6 +105,7 @@ const AdminPrices = () => {
     return apartment ? apartment.price : 0;
   };
   
+  // Only call handleResetPricesClick if __DEBUG_reset exists
   const handleResetPricesClick = () => {
     if (__DEBUG_reset) {
       __DEBUG_reset();
