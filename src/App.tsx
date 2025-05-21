@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,7 +15,6 @@ import ContactsPage from "./pages/ContactsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import CookiePolicyPage from "./pages/CookiePolicyPage";
 import NotFound from "./pages/NotFound";
-import GalleryPage from "./pages/GalleryPage";
 import { ReservationsProvider } from "./hooks/useReservations";
 import { PricesProvider } from "./hooks/price/PricesProvider";
 import { SettingsProvider } from "./hooks/useSettings";
@@ -62,7 +60,6 @@ const App = () => (
                   <Route element={<AppLayout />}>
                     <Route path="/" element={<Index />} />
                     <Route path="/appartamenti" element={<ApartmentsPage />} />
-                    <Route path="/galleria" element={<GalleryPage />} />
                     <Route path="/preventivo" element={<RequestQuotePage />} />
                     <Route path="/area-riservata/*" element={<ReservedAreaPage />} />
                     <Route path="/contatti" element={<ContactsPage />} />
