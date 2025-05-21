@@ -49,7 +49,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
             Pulizia finale:
           </span>
           <div className="flex items-center">
-            <span className="font-medium mr-1">{priceInfo.cleaningFee}€</span>
+            <del className="font-medium mr-1">{priceInfo.cleaningFee}€</del>
             <span className="text-green-500">(inclusa)</span>
           </div>
         </div>
@@ -81,7 +81,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
             Tassa di soggiorno:
           </span>
           <div className="flex items-center">
-            <span className="font-medium mr-1">{priceInfo.touristTax}€</span>
+            <del className="font-medium mr-1">{priceInfo.touristTax}€</del>
             <span className="text-green-500">(inclusa)</span>
           </div>
         </div>
@@ -98,7 +98,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         
         {priceInfo.discount > 0 && (
           <div className="flex justify-between text-sm text-green-500">
-            <span>Risparmio (sconto):</span>
+            <span>Sconto:</span>
             <span>{priceInfo.discount}€</span>
           </div>
         )}

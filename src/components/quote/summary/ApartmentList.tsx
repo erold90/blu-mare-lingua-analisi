@@ -122,7 +122,7 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                       <SparklesIcon className="h-3 w-3" />Pulizia finale:
                     </span>
                     <span className="flex items-center">
-                      {costs.cleaningFee}€
+                      <del>{costs.cleaningFee}€</del>
                       <span className="text-green-500 text-[10px] ml-1">(inclusa)</span>
                     </span>
                     
@@ -130,7 +130,7 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                       <Banknote className="h-3 w-3" />Tassa soggiorno:
                     </span>
                     <span className="flex items-center">
-                      {costs.touristTax}€
+                      <del>{costs.touristTax}€</del>
                       <span className="text-green-500 text-[10px] ml-1">(inclusa)</span>
                     </span>
                     
@@ -144,7 +144,7 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                   {costs.discount > 0 && (
                     <div className="flex justify-between items-center text-sm mt-1">
                       <div className="text-green-500 flex items-center gap-1 text-sm">
-                        Risparmio: {costs.discount}€
+                        Sconto: {costs.discount}€
                       </div>
                       <div className="font-semibold">
                         Totale scontato: {costs.roundedTotal}€
