@@ -24,3 +24,8 @@ export const calculateBasePrice = (
   console.log(`Total base price for all apartments: ${totalBasePrice}€`);
   return totalBasePrice;
 };
+
+// Round down price to the nearest 50€
+export const roundDownToNearest50 = (price: number): number => {
+  return Math.floor(price / 50) * 50;
+};

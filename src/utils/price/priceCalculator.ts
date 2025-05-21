@@ -10,9 +10,7 @@ import { usePrices } from "@/hooks/usePrices";
 
 /**
  * Gets the weekly price for an apartment on a specific date
- * @param apartmentId The ID of the apartment
- * @param weekStart The start date of the week
- * @returns The price for that week or 0 if not found
+ * using the configured prices in the admin area
  */
 const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
   try {
@@ -33,16 +31,35 @@ const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
     searchDate.setHours(0, 0, 0, 0);
     const searchDateStr = searchDate.toISOString().split('T')[0];
     
-    // Find matching price
-    const price = yearData.prices.find((p: any) => {
-      const priceDate = new Date(p.weekStart);
-      priceDate.setHours(0, 0, 0, 0);
-      const priceDateStr = priceDate.toISOString().split('T')[0];
-      
-      return p.apartmentId === apartmentId && priceDateStr === searchDateStr;
-    });
+    console.log(`Looking for price: apartmentId=${apartmentId}, date=${searchDateStr}, year=${year}`);
     
-    return price ? price.price : 0;
+    // Find matching price by finding the closest weekly start date
+    // We need to loop through all prices and find the one with the closest start date
+    // that is not after our search date
+    let bestMatch = null;
+    let bestMatchDiff = Infinity;
+    
+    for (const p of yearData.prices) {
+      if (p.apartmentId === apartmentId) {
+        const priceDate = new Date(p.weekStart);
+        priceDate.setHours(0, 0, 0, 0);
+        
+        // Check if this price date is before or equal to our search date
+        const diff = searchDate.getTime() - priceDate.getTime();
+        if (diff >= 0 && diff < bestMatchDiff && diff < 7 * 24 * 60 * 60 * 1000) {
+          bestMatch = p;
+          bestMatchDiff = diff;
+        }
+      }
+    }
+    
+    if (bestMatch) {
+      console.log(`Found best match price for ${apartmentId}: ${bestMatch.price}€`);
+      return bestMatch.price;
+    }
+    
+    console.log(`No price found for ${apartmentId} on ${searchDateStr}`);
+    return 0;
   } catch (error) {
     console.error("Error getting price for date:", error);
     return 0;
@@ -72,8 +89,13 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   
   // For each apartment, get the weekly price for the check-in date
   selectedApartments.forEach(apartment => {
-    const weekPrice = getPriceForWeek(apartment.id, new Date(formValues.checkIn));
-    console.log(`Found weekly price for ${apartment.id}: ${weekPrice}€`);
+    // Try to get the weekly price from the pricing system
+    let weekPrice = 0;
+    
+    if (formValues.checkIn) {
+      weekPrice = getPriceForWeek(apartment.id, new Date(formValues.checkIn));
+      console.log(`Found weekly price for ${apartment.id}: ${weekPrice}€`);
+    }
     
     if (weekPrice > 0) {
       apartmentPrices[apartment.id] = weekPrice;

@@ -3,6 +3,7 @@ import React from "react";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
+import { roundDownToNearest50 } from "@/utils/price/basePrice";
 
 interface ApartmentListProps {
   apartments: Apartment[];
@@ -28,7 +29,7 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
   // Calculate rounded price for each apartment (round down to nearest 50€)
   const getRoundedPrice = (apartmentId: string): number => {
     const originalPrice = priceInfo.apartmentPrices?.[apartmentId] || 0;
-    return Math.floor(originalPrice / 50) * 50;
+    return roundDownToNearest50(originalPrice);
   };
 
   // Calculate discount for each apartment

@@ -6,9 +6,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
-import { calculateTotalPrice } from "@/utils/quoteCalculator";
+import { calculateTotalPrice } from "@/utils/price/priceCalculator";
 import { Separator } from "@/components/ui/separator";
 import QuoteConfirmationDialog from "./QuoteConfirmationDialog";
+import { format } from "date-fns";
+import { it } from "date-fns/locale";
 
 interface ContactStepProps {
   form: UseFormReturn<FormValues>;
@@ -30,6 +32,8 @@ const ContactStep: React.FC<ContactStepProps> = ({
   const [showPdfDialog, setShowPdfDialog] = useState(false);
   const formValues = form.getValues();
   const priceInfo = calculateTotalPrice(formValues, apartments);
+  const selectedApartmentIds = formValues.selectedApartments || [formValues.selectedApartment];
+  const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
   
   // Function to handle PDF download directly
   const handleDownloadClick = () => {
@@ -52,7 +56,7 @@ const ContactStep: React.FC<ContactStepProps> = ({
                 <span className="text-muted-foreground">Periodo:</span>
                 <span className="font-medium">
                   {formValues.checkIn && formValues.checkOut ? 
-                    `${formValues.checkIn.toLocaleDateString('it-IT')} - ${formValues.checkOut.toLocaleDateString('it-IT')}` :
+                    `${format(formValues.checkIn, 'dd/MM/yyyy', { locale: it })} - ${format(formValues.checkOut, 'dd/MM/yyyy', { locale: it })}` :
                     '-'}
                 </span>
               </div>
@@ -71,9 +75,12 @@ const ContactStep: React.FC<ContactStepProps> = ({
               
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Appartamenti:</span>
-                <span className="font-medium">
-                  {(formValues.selectedApartments || [formValues.selectedApartment]).length}
-                </span>
+                <div className="font-medium flex flex-col items-end">
+                  <span>{selectedApartments.length}</span>
+                  <span className="text-xs text-muted-foreground">
+                    ({selectedApartments.map(apt => apt.name).join(', ')})
+                  </span>
+                </div>
               </div>
               
               <Separator className="my-2" />
@@ -83,10 +90,37 @@ const ContactStep: React.FC<ContactStepProps> = ({
                 <span className="text-primary text-lg">{priceInfo.totalAfterDiscount}€</span>
               </div>
               
+              {priceInfo.discount > 0 && (
+                <div className="flex justify-between items-center text-sm text-green-500">
+                  <span>Risparmio (sconto):</span>
+                  <span>{priceInfo.discount}€</span>
+                </div>
+              )}
+              
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Caparra (30%):</span>
                 <span>{priceInfo.deposit}€</span>
               </div>
+            </div>
+          </div>
+          
+          {/* Lista degli appartamenti */}
+          <div className="border rounded-md p-4">
+            <h3 className="font-medium mb-3">Appartamenti selezionati</h3>
+            <div className="space-y-3">
+              {selectedApartments.map((apartment, index) => {
+                const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
+                const isLastItem = index === selectedApartments.length - 1;
+                
+                return (
+                  <div key={apartment.id} className={`${!isLastItem ? 'pb-3 border-b' : ''}`}>
+                    <div className="flex justify-between items-center">
+                      <span>{apartment.name}</span>
+                      <span className="font-medium">{apartmentPrice}€</span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </CardContent>
