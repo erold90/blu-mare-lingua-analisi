@@ -4,7 +4,7 @@ import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
-import { PriceCalculation } from "@/utils/price/types"; // Updated import
+import { PriceCalculation } from "@/utils/price/types"; 
 import { Apartment } from "@/data/apartments";
 import { 
   addCenteredText, 
@@ -25,10 +25,8 @@ import {
 } from "./sectionGenerators";
 import { AutoTableResult } from "./types";
 
-// Make sure jspdf-autotable is properly attached to jsPDF
-if (typeof jsPDF !== "undefined" && jsPDF.prototype) {
-  require("jspdf-autotable");
-}
+// Remove the require statement and ensure jspdf-autotable is loaded via import
+// This package attaches itself to the jsPDF prototype automatically 
 
 // Main function to create and download the quote PDF
 export const downloadPDF = (formData: FormValues, apartments: Apartment[], clientName?: string) => {
