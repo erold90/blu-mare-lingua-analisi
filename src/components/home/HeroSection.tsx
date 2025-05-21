@@ -21,7 +21,7 @@ export const HeroSection = () => {
     <div className="relative w-full">
       <div className={`w-full ${isMobile ? "h-[70vh]" : "h-[70vh]"} relative overflow-hidden`}>
         <div 
-          className="absolute inset-0 bg-cover" 
+          className="absolute inset-0 bg-cover bg-no-repeat" 
           style={{
             backgroundImage: `url('${heroImage}')`,
             backgroundPosition: imagePosition

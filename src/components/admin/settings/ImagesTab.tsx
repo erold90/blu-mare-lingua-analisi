@@ -4,27 +4,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Plus, Image as ImageIcon, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { Plus, Image as ImageIcon } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ImagePositioner } from "./ImagePositioner";
 
 export const ImagesTab = () => {
   const { siteSettings, updateSiteSettings } = useSettings();
   const isMobile = useIsMobile();
   const [imagePreviewPosition, setImagePreviewPosition] = React.useState(siteSettings.heroImagePosition || "center");
   
-  const positionOptions = [
-    { value: "center", label: "Centro" },
-    { value: "top", label: "Alto" },
-    { value: "bottom", label: "Basso" },
-    { value: "left", label: "Sinistra" },
-    { value: "right", label: "Destra" },
-    { value: "top left", label: "Alto Sinistra" },
-    { value: "top right", label: "Alto Destra" },
-    { value: "bottom left", label: "Basso Sinistra" },
-    { value: "bottom right", label: "Basso Destra" }
-  ];
-
   React.useEffect(() => {
     setImagePreviewPosition(siteSettings.heroImagePosition || "center");
   }, [siteSettings.heroImagePosition]);
@@ -72,79 +61,41 @@ export const ImagesTab = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <div>
-              <div className="aspect-video rounded-md overflow-hidden border bg-muted relative">
-                {isValidImage(siteSettings.heroImage) ? (
-                  <div className="w-full h-full overflow-hidden">
-                    <img
-                      src={siteSettings.heroImage}
-                      alt="Hero"
-                      className="w-full h-full object-cover"
-                      style={{ objectPosition: imagePreviewPosition }}
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.parentElement?.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
+              {isValidImage(siteSettings.heroImage) ? (
+                <ImagePositioner
+                  imageUrl={siteSettings.heroImage}
+                  currentPosition={imagePreviewPosition}
+                  onPositionChange={handlePositionChange}
+                />
+              ) : (
+                <div className="aspect-video rounded-md overflow-hidden border bg-muted relative">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted">
+                    <ImageIcon className="h-12 w-12 text-muted-foreground opacity-50 mb-2" />
+                    <p className="text-sm text-muted-foreground">Nessuna immagine caricata</p>
                   </div>
-                ) : null}
-                <div className={`${isValidImage(siteSettings.heroImage) ? 'hidden' : ''} absolute inset-0 flex flex-col items-center justify-center bg-muted`}>
-                  <ImageIcon className="h-12 w-12 text-muted-foreground opacity-50 mb-2" />
-                  <p className="text-sm text-muted-foreground">Nessuna immagine caricata</p>
                 </div>
-              </div>
+              )}
               <p className="text-sm text-muted-foreground mt-2">
                 Si consiglia un'immagine in formato 16:9 con alta risoluzione
               </p>
             </div>
-            <div className="flex flex-col gap-4">
-              <div>
-                <Button
-                  variant="outline"
-                  onClick={() => document.getElementById('hero-upload')?.click()}
-                  className="flex items-center"
-                >
-                  <Plus className="h-4 w-4 mr-1" /> Cambia immagine
-                </Button>
-                <Input
-                  id="hero-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => handleImageUpload('hero', null, e)}
-                />
-              </div>
-              
-              {isValidImage(siteSettings.heroImage) && (
-                <div className="mt-4">
-                  <h3 className="text-sm font-medium mb-2">Posizione immagine</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {positionOptions.map((option) => (
-                      <Button 
-                        key={option.value}
-                        size="sm"
-                        variant={imagePreviewPosition === option.value ? "default" : "outline"}
-                        className="w-full text-xs"
-                        onClick={() => handlePositionChange(option.value)}
-                      >
-                        {option.label}
-                      </Button>
-                    ))}
-                  </div>
-                  <div className="mt-4 flex justify-center">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handlePositionChange("center")}
-                      className="flex items-center"
-                    >
-                      <RotateCcw className="h-4 w-4 mr-1" /> Ripristina posizione
-                    </Button>
-                  </div>
-                </div>
-              )}
+            <div>
+              <Button
+                variant="outline"
+                onClick={() => document.getElementById('hero-upload')?.click()}
+                className="flex items-center"
+              >
+                <Plus className="h-4 w-4 mr-1" /> Cambia immagine
+              </Button>
+              <Input
+                id="hero-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleImageUpload('hero', null, e)}
+              />
             </div>
           </div>
         </CardContent>
