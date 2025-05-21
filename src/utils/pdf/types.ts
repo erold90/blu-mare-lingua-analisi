@@ -1,6 +1,7 @@
 
 import { jsPDF } from "jspdf";
 import type { PriceCalculation } from "@/utils/price/types"; // Import using 'type' keyword
+import { UserOptions } from "jspdf-autotable";
 
 // Type definition for the return value of autoTable
 export interface AutoTableResult {
@@ -27,7 +28,7 @@ export interface TableCell {
 // Extended methods we need for our custom jsPDF functionality
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: (options: any) => AutoTableResult;
+    autoTable: (options: UserOptions) => AutoTableResult;
     getNumberOfPages: () => number;
   }
 }
