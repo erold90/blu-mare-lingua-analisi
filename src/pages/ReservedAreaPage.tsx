@@ -24,18 +24,28 @@ const LoginForm = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [isLoggingIn, setIsLoggingIn] = React.useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (isLoggingIn) return; // Previene doppi click
+    
+    setIsLoggingIn(true);
+    
     if (login(username, password)) {
       toast.success("Login effettuato con successo");
-      // Aumentiamo il ritardo per garantire che lo stato di autenticazione sia completamente aggiornato
+      
+      console.log("Login form: Login riuscito, reindirizzamento tra 800ms");
+      
+      // Ritardo consistente per garantire che tutti gli stati siano aggiornati
       setTimeout(() => {
-        navigate("/area-riservata/dashboard", { replace: true });
-      }, 500);
+        console.log("Login form: Esecuzione reindirizzamento a dashboard");
+        window.location.href = "/area-riservata/dashboard";
+      }, 800);
     } else {
       toast.error("Credenziali non valide");
+      setIsLoggingIn(false);
     }
   };
 
@@ -59,6 +69,7 @@ const LoginForm = () => {
                 placeholder="Inserisci username" 
                 required 
                 autoComplete="username"
+                disabled={isLoggingIn}
               />
             </div>
             <div className="space-y-2">
@@ -71,9 +82,16 @@ const LoginForm = () => {
                 placeholder="Inserisci password" 
                 required 
                 autoComplete="current-password"
+                disabled={isLoggingIn}
               />
             </div>
-            <Button type="submit" className="w-full">Accedi</Button>
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={isLoggingIn}
+            >
+              {isLoggingIn ? "Accesso in corso..." : "Accedi"}
+            </Button>
           </form>
         </CardContent>
       </Card>
@@ -86,16 +104,22 @@ const ReservedAreaPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Controlliamo all'avvio del componente e quando cambia isAuthenticated
+  // Registriamo i cambiamenti di stato di autenticazione
   React.useEffect(() => {
-    console.log("Stato autenticazione:", isAuthenticated);
-    console.log("Percorso attuale:", location.pathname);
+    console.log("ReservedAreaPage - Stato autenticazione:", isAuthenticated);
+    console.log("ReservedAreaPage - Percorso attuale:", location.pathname);
     
     if (isAuthenticated && location.pathname === '/area-riservata') {
-      console.log("Reindirizzamento verso la dashboard");
+      console.log("ReservedAreaPage - Reindirizzamento a dashboard");
       navigate('/area-riservata/dashboard', { replace: true });
     }
   }, [isAuthenticated, location.pathname, navigate]);
+  
+  // Se siamo su /area-riservata ma siamo già autenticati, reindirizzare immediatamente
+  if (isAuthenticated && location.pathname === '/area-riservata') {
+    console.log("ReservedAreaPage - Reindirizzamento diretto a dashboard");
+    return <Navigate to="/area-riservata/dashboard" replace />;
+  }
   
   return (
     <Routes>

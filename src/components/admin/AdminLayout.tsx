@@ -30,15 +30,20 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const handleLogout = React.useCallback(() => {
     logout();
     toast.success("Logout effettuato con successo");
-    // Forziamo la navigazione alla pagina di login
-    navigate("/area-riservata", { replace: true });
+    
+    console.log("AdminLayout - Logout: reindirizzamento tra 300ms");
+    
+    // Chiude il menu mobile se aperto
     setMenuOpen(false);
-    // Aggiungiamo un reload della pagina per forzare il ricaricamento dello stato
+    
+    // Utilizziamo un approccio più diretto per il reindirizzamento
     setTimeout(() => {
-      window.location.reload();
-    }, 100);
-  }, [logout, navigate]);
+      // Usando window.location per un refresh completo della pagina
+      window.location.href = "/area-riservata";
+    }, 300);
+  }, [logout]);
 
+  // Il resto del codice rimane invariato
   const NavItems = () => (
     <nav className="space-y-1">
       <NavLink
