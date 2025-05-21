@@ -3,7 +3,7 @@ import * as React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { CleaningProvider, useCleaningManagement } from "@/hooks/useCleaningManagement";
+import { CleaningProvider, useCleaningManagement } from "@/hooks/cleaning";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 

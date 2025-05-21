@@ -5,7 +5,7 @@ import { format, isSameDay } from "date-fns";
 import { it } from "date-fns/locale";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { CleaningTask, useCleaningManagement } from "@/hooks/useCleaningManagement";
+import { CleaningTask, useCleaningManagement } from "@/hooks/cleaning";
 import CleaningTaskCard from "../CleaningTaskCard";
 
 interface CalendarViewProps {

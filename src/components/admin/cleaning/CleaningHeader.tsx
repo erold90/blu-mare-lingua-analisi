@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import NewTaskDialog from "./NewTaskDialog";
 import { useReservations } from "@/hooks/useReservations";
-import { useCleaningManagement } from "@/hooks/useCleaningManagement";
+import { useCleaningManagement } from "@/hooks/cleaning";
 
 interface CleaningHeaderProps {
   view: "calendar" | "list" | "statistics";

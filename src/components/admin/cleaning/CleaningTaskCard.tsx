@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -8,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash } from "lucide-react";
-import { CleaningTask } from "@/hooks/useCleaningManagement";
+import { CleaningTask } from "@/hooks/cleaning";
 
 interface CleaningTaskCardProps {
   task: CleaningTask;

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
-import { CleaningTask } from "@/hooks/useCleaningManagement";
+import { CleaningTask } from "@/hooks/cleaning";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
