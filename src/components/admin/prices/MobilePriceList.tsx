@@ -20,9 +20,9 @@ const MobilePriceList: React.FC<MobilePriceListProps> = ({
   // Debug log to check if props are received correctly
   React.useEffect(() => {
     console.log("MobilePriceList - Weeks:", weeks.length);
-    if (weeks.length > 0) {
+    if (weeks.length > 0 && apartments.length > 0) {
       const sample = getPriceForWeek(apartments[0].id, weeks[0].start);
-      console.log("Sample price for first week:", sample);
+      console.log(`Sample price for first week (${format(weeks[0].start, "yyyy-MM-dd")}):`, sample);
     }
   }, [weeks, getPriceForWeek]);
   
@@ -35,6 +35,7 @@ const MobilePriceList: React.FC<MobilePriceListProps> = ({
             {weeks.map((week, idx) => {
               // Get the price for this apartment and week
               const price = getPriceForWeek(apartment.id, week.start);
+              const weekStartFormatted = format(week.start, "yyyy-MM-dd");
               
               return (
                 <div key={idx} className="grid grid-cols-2 gap-2 items-center">

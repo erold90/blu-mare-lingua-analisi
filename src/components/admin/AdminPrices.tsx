@@ -31,7 +31,7 @@ const AdminPrices = () => {
     console.log(`AdminPrices: ${weeklyPrices.length} weekly prices loaded`);
     
     if (weeklyPrices.length > 0) {
-      const samplePrices = weeklyPrices.filter(p => p.apartmentId === apartments[0].id);
+      const samplePrices = weeklyPrices.filter(p => p.apartmentId === "appartamento-1");
       console.log(`Loaded ${samplePrices.length} prices for ${apartments[0].name}`);
       
       // Display first 3 prices for debugging
@@ -70,23 +70,31 @@ const AdminPrices = () => {
     }
   };
   
-  // This function properly finds prices based on date string comparison
+  // Reformatted getPriceForWeek to use a more direct approach
   const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
-    // Format for comparison (YYYY-MM-DD)
-    const weekStartStr = weekStart.toISOString().split('T')[0];
+    // Convert to date strings for consistent comparison (YYYY-MM-DD)
+    const weekStartDateStr = weekStart.toISOString().split('T')[0];
     
-    // Find the right price by comparing dates as strings
-    const matchingPrice = weeklyPrices.find(p => {
-      const priceDate = new Date(p.weekStart).toISOString().split('T')[0];
-      return p.apartmentId === apartmentId && priceDate === weekStartStr;
+    // Debug logging
+    console.log(`Searching price for ${apartmentId} on ${weekStartDateStr}`);
+    
+    // Find price by matching apartment ID and comparing date strings
+    const matchingPrice = weeklyPrices.find(price => {
+      const priceDate = new Date(price.weekStart).toISOString().split('T')[0];
+      const isMatch = price.apartmentId === apartmentId && priceDate === weekStartDateStr;
+      
+      if (isMatch) {
+        console.log(`Match found: ${price.price}€`);
+      }
+      
+      return isMatch;
     });
     
     if (matchingPrice) {
-      console.log(`Found price for ${apartmentId} on ${weekStartStr}: ${matchingPrice.price}€`);
       return matchingPrice.price;
     }
     
-    console.log(`No price found for ${apartmentId} on ${weekStartStr}, returning 0`);
+    console.log(`No price found for ${apartmentId} on ${weekStartDateStr}`);
     return 0;
   };
   
@@ -109,7 +117,7 @@ const AdminPrices = () => {
     <div className="space-y-6">
       <div className="mb-4 flex justify-between">
         <h2 className="text-2xl font-bold">Gestione Prezzi</h2>
-        {process.env.NODE_ENV === 'development' && __DEBUG_reset && (
+        {process.env.NODE_ENV !== 'production' && __DEBUG_reset && (
           <Button variant="destructive" size="sm" onClick={handleResetPricesClick}>
             Reset Prezzi (Debug)
           </Button>

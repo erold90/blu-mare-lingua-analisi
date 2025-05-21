@@ -22,7 +22,7 @@ const PriceTable: React.FC<PriceTableProps> = ({
     console.log("PriceTable - Weeks:", weeks.length);
     if (weeks.length > 0 && apartments.length > 0) {
       const sample = getPriceForWeek(apartments[0].id, weeks[0].start);
-      console.log("Sample price for first apartment and week:", sample);
+      console.log(`Sample price for first apartment and week (${format(weeks[0].start, "yyyy-MM-dd")}):`, sample);
     }
   }, [weeks, getPriceForWeek]);
   

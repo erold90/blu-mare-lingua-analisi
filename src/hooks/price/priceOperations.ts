@@ -140,9 +140,12 @@ export const forceInitializePrices = (
   });
   
   console.log(`Created ${prices2025.length} custom prices for 2025`);
-  console.log("Sample prices:", prices2025.slice(0, 5).map(p => 
-    `${p.apartmentId}: ${p.price}€ (${new Date(p.weekStart).toLocaleDateString()})`
-  ));
+  
+  // Log detailed examples of the created prices
+  const examples = prices2025.slice(0, 4).map(p => 
+    `${p.apartmentId}: ${p.price}€ (${new Date(p.weekStart).toLocaleDateString()} - ${new Date(p.weekEnd).toLocaleDateString()})`
+  );
+  console.log("Sample prices:", examples);
   
   // Update state with new prices
   const initialPricing = [{ year: 2025, prices: prices2025 }];

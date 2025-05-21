@@ -16,7 +16,7 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     console.log("PricesProvider: Checking existing prices");
     
-    // Force initialization on first load if no prices exist
+    // First, check if we have any pricing data
     if (!seasonalPricing || seasonalPricing.length === 0) {
       console.log("PricesProvider: No prices found, initializing with custom prices");
       localStorage.removeItem("seasonalPricing"); // Clear any existing prices first
@@ -24,22 +24,35 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setWeeklyPrices(initialPrices);
       console.log(`PricesProvider: Initialized ${initialPrices.length} custom prices`);
       toast.success("Prezzi 2025 inizializzati correttamente");
+      return;
+    } 
+    
+    console.log(`PricesProvider: Found ${seasonalPricing.length} existing seasons`);
+    
+    // Check if we have prices for 2025
+    const year2025 = seasonalPricing.find(s => s.year === 2025);
+    
+    if (!year2025 || !year2025.prices || year2025.prices.length === 0) {
+      console.log("PricesProvider: 2025 prices missing, forcing initialization");
+      // Just initialize 2025 prices without resetting everything
+      const initialPrices = forceInitializePrices(setSeasonalPricing);
+      setWeeklyPrices(initialPrices);
+      console.log(`PricesProvider: Initialized ${initialPrices.length} prices for 2025`);
+      toast.success("Prezzi 2025 inizializzati correttamente");
     } else {
-      console.log(`PricesProvider: Found ${seasonalPricing.length} existing seasons`);
+      console.log(`PricesProvider: Found ${year2025.prices.length} prices for 2025`);
       
-      // Check if we have prices for 2025
-      const year2025 = seasonalPricing.find(s => s.year === 2025);
-      
-      if (!year2025 || !year2025.prices || year2025.prices.length === 0) {
-        console.log("PricesProvider: 2025 prices missing, forcing initialization");
-        resetAllPrices();
-        const initialPrices = forceInitializePrices(setSeasonalPricing);
-        setWeeklyPrices(initialPrices);
-        console.log(`PricesProvider: Initialized ${initialPrices.length} prices for 2025`);
-        toast.success("Prezzi 2025 inizializzati correttamente");
-      } else {
-        console.log(`PricesProvider: Found ${year2025.prices.length} prices for 2025`);
+      // Log some sample prices for debugging
+      const sampleApt = year2025.prices.filter(p => p.apartmentId === "appartamento-1");
+      if (sampleApt.length > 0) {
+        console.log("Sample prices for appartamento-1:", 
+          sampleApt.slice(0, 3).map(p => 
+            `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
+          )
+        );
       }
+      
+      setWeeklyPrices(year2025.prices);
     }
   }, []);
   
