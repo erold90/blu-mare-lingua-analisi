@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { useNavigate, Link, Routes, Route, Navigate } from "react-router-dom";
+import { useNavigate, Link, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,11 +30,7 @@ const LoginForm = () => {
     
     if (login(username, password)) {
       toast.success("Login effettuato con successo");
-      
-      // Force a small delay before navigation to ensure state updates
-      setTimeout(() => {
-        navigate("/area-riservata/dashboard", { replace: true });
-      }, 100);
+      navigate("/area-riservata/dashboard");
     } else {
       toast.error("Credenziali non valide");
     }
@@ -82,6 +78,7 @@ const LoginForm = () => {
 
 const ReservedAreaPage = () => {
   const { isAuthenticated } = useAuth();
+  const location = useLocation();
   
   // Added console log for debugging authentication state
   React.useEffect(() => {
