@@ -40,5 +40,5 @@ export const useAuth = () => {
     setIsAuthenticated(false);
   };
 
-  return { isAuthenticated, login, logout };
+  return { isAuthenticated, login, logout, adminCredentials };
 };

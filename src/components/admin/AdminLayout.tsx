@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { NavLink, useLocation, Link } from "react-router-dom";
-import { Calendar, LayoutDashboard, Image, Settings, EuroIcon, History } from "lucide-react";
+import { Calendar, LayoutDashboard, Image, Settings, EuroIcon, History, Home, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
@@ -99,53 +99,24 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <History className="h-5 w-5" />
         <span>Log</span>
       </NavLink>
+      <div className="mt-4 md:hidden px-3">
+        <Button variant="outline" className="w-full" onClick={() => logout()}>
+          Logout
+        </Button>
+      </div>
     </nav>
   );
 
   return (
-    <div className="flex flex-col h-full min-h-[calc(100vh-1rem)] py-3">
-      <div className="flex items-center justify-between px-3 mb-4">
-        <div className="flex flex-col">
-          <h1 className="text-xl font-bold">Area Amministrazione</h1>
-          <p className="text-muted-foreground text-xs">
-            {isActive('dashboard') ? 'Statistiche e metriche' : 
-             isActive('prenotazioni') ? 'Gestione prenotazioni' : 
-             isActive('prezzi') ? 'Gestione prezzi stagionali' :
-             isActive('appartamenti') ? 'Gestione appartamenti' :
-             isActive('impostazioni') ? 'Impostazioni generali' :
-             isActive('log') ? 'Log attività' : ''}
-          </p>
-        </div>
-        
-        {/* Show only Home link on mobile, all links on desktop */}
-        <div className="flex space-x-4">
-          {isMobile ? (
-            <Link to="/" className="text-black hover:underline">Home</Link>
-          ) : (
-            <>
-              <Link to="/" className="text-black hover:underline">Home</Link>
-              <Link to="/appartamenti" className="text-black hover:underline">Appartamenti</Link>
-              <Link to="/preventivo" className="text-black hover:underline">Preventivo</Link>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-1">
-        {isMobile ? (
-          <div className="w-full px-2 pb-2">
+    <div className="flex flex-col h-full min-h-screen">
+      <div className="flex items-center justify-between py-3 px-3 mb-0 md:mb-4 bg-white shadow-sm z-10 sticky top-0">
+        <div className="flex items-center space-x-3">
+          {isMobile && (
             <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" className="w-full flex justify-between items-center mb-3">
-                  <span>
-                    {isActive('dashboard') ? 'Dashboard' : 
-                     isActive('prenotazioni') ? 'Prenotazioni' :
-                     isActive('prezzi') ? 'Prezzi' :
-                     isActive('appartamenti') ? 'Appartamenti' :
-                     isActive('impostazioni') ? 'Impostazioni' :
-                     isActive('log') ? 'Log' : ''}
-                  </span>
-                  <span className="h-5 w-5">≡</span>
+                <Button variant="ghost" size="icon" className="md:hidden">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Menu</span>
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-64 pt-8">
@@ -155,21 +126,44 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 </div>
               </SheetContent>
             </Sheet>
-            
-            <div className="border rounded-lg p-3 h-full overflow-hidden">
-              {children}
-            </div>
+          )}
+          <div>
+            <h1 className="text-xl font-bold">Area Amministrazione</h1>
+            <p className="text-muted-foreground text-xs hidden sm:block">
+              {isActive('dashboard') ? 'Statistiche e metriche' : 
+               isActive('prenotazioni') ? 'Gestione prenotazioni' : 
+               isActive('prezzi') ? 'Gestione prezzi stagionali' :
+               isActive('appartamenti') ? 'Gestione appartamenti' :
+               isActive('impostazioni') ? 'Impostazioni generali' :
+               isActive('log') ? 'Log attività' : ''}
+            </p>
           </div>
-        ) : (
-          <div className="flex h-full w-full gap-4 px-4">
-            <aside className="w-56 shrink-0">
-              <NavItems />
-            </aside>
-            <main className="flex-1 border rounded-lg p-6 overflow-auto">
-              {children}
-            </main>
-          </div>
+        </div>
+        
+        <div className="flex space-x-2">
+          <Link to="/" className="text-black hover:underline">
+            <Home className="h-5 w-5" />
+            <span className="sr-only">Home</span>
+          </Link>
+          {!isMobile && (
+            <Button variant="outline" size="sm" onClick={() => logout()}>
+              Logout
+            </Button>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-1">
+        {!isMobile && (
+          <aside className="w-56 shrink-0 border-r h-[calc(100vh-70px)] sticky top-[60px] pt-5 px-2">
+            <NavItems />
+          </aside>
         )}
+        <main className="flex-1 p-3 md:p-6">
+          <div className="border rounded-lg h-full p-3 md:p-6 overflow-auto">
+            {children}
+          </div>
+        </main>
       </div>
     </div>
   );

@@ -37,7 +37,7 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="container flex items-center justify-center min-h-[70vh] px-4">
+    <div className="container flex items-center justify-center min-h-[80vh] px-4 mt-8 md:mt-0 md:min-h-[70vh]">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-xl md:text-2xl">Area Riservata</CardTitle>
@@ -55,6 +55,7 @@ const LoginForm = () => {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Inserisci username" 
                 required 
+                autoComplete="username"
               />
             </div>
             <div className="space-y-2">
@@ -66,6 +67,7 @@ const LoginForm = () => {
                 onChange={(e) => setPassword(e.target.value)} 
                 placeholder="Inserisci password" 
                 required 
+                autoComplete="current-password"
               />
             </div>
             <Button type="submit" className="w-full">Accedi</Button>
