@@ -26,12 +26,12 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
   } = useDateSelection(form);
   
   return (
-    <Card className="max-w-3xl mx-auto">
+    <Card className="max-w-2xl mx-auto">
       <CardHeader className="pb-2">
         <CardTitle className="text-xl">Selezione date</CardTitle>
         <CardDescription>Indica le date di check-in e check-out del tuo soggiorno</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-4">
         {/* Information alert - more compact */}
         <Alert className="bg-muted/50 py-1.5">
           <InfoIcon className="h-4 w-4 mr-2" />
@@ -42,7 +42,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
         
         <div className="grid md:grid-cols-12 gap-4">
           {/* Calendar - larger */}
-          <div className="md:col-span-7 flex justify-center">
+          <div className="md:col-span-8 flex justify-center">
             <Calendar
               initialFocus
               mode="range"
@@ -52,23 +52,23 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
               disabled={isDateDisabled}
               numberOfMonths={1}
               fixedWeeks={true}
-              className="border rounded-lg p-2 bg-background shadow-sm w-full max-w-md md:max-w-full scale-100 md:scale-115 origin-top"
+              className="border rounded-lg p-2 bg-background shadow-sm w-full scale-110 transform origin-top"
             />
           </div>
 
           {/* Stay summary */}
-          <div className="md:col-span-5">
+          <div className="md:col-span-4">
             {dateRange?.from && dateRange?.to ? (
               <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="pt-4">
-                  <h3 className="text-base font-semibold mb-3">Riepilogo del soggiorno</h3>
+                <CardContent className="pt-3">
+                  <h3 className="text-base font-semibold mb-2">Riepilogo del soggiorno</h3>
                   <StaySummary 
                     dateRange={dateRange} 
                     numberOfNights={numberOfNights} 
                   />
                   
                   {numberOfNights > 0 && (
-                    <div className="mt-4 p-3 bg-white rounded-lg border shadow-sm">
+                    <div className="mt-3 p-3 bg-white rounded-lg border shadow-sm">
                       <h4 className="font-medium text-xs mb-1.5">Informazioni importanti:</h4>
                       <ul className="text-xs space-y-0.5 text-muted-foreground">
                         <li>• Check-in: dalle 15:00 alle 19:00</li>

@@ -137,14 +137,14 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
   };
   
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Servizi extra</CardTitle>
+    <Card className="max-w-2xl mx-auto">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl">Servizi extra</CardTitle>
         <CardDescription>Personalizza il tuo soggiorno con servizi aggiuntivi</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         {/* Opzioni biancheria */}
-        <div className="space-y-4">
+        <div className="space-y-3 p-3 border rounded-md">
           <div className="flex items-center space-x-2">
             <Bed className="h-5 w-5 text-primary" />
             <h3 className="text-lg font-medium">Biancheria da letto e bagno</h3>
@@ -171,63 +171,67 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
                 </div>
                 
                 {field.value === "extra" && (
-                  <div className="pl-6">
+                  <div className="pl-6 mt-2">
                     {!multipleApartments ? (
                       <p className="text-sm text-muted-foreground">
                         Totale per {totalPeopleForLinen} {totalPeopleForLinen === 1 ? 'persona' : 'persone'}: {linenCost}€
                       </p>
                     ) : (
-                      <div className="space-y-4 border rounded-lg p-4">
+                      <div className="space-y-3 border rounded-lg p-3">
                         <p className="text-sm">
                           Distribuisci le {totalPeopleForLinen} persone tra i tuoi appartamenti:
                         </p>
                         
-                        {selectedApartments.map((apartment) => (
-                          <div key={apartment.id} className="flex items-center justify-between">
-                            <Label htmlFor={`apt-persons-${apartment.id}`} className="text-sm flex-shrink-0">
-                              {getApartmentLabel(apartment.name)}:
-                            </Label>
-                            <div className="flex items-center space-x-2">
-                              <Button 
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                onClick={() => {
-                                  const current = personsPerApartment[apartment.id] || 0;
-                                  if (current > 0) {
-                                    updatePersonsPerApartment(apartment.id, current - 1);
-                                  }
-                                }}
-                                disabled={(personsPerApartment[apartment.id] || 0) <= 0}
-                              >
-                                -
-                              </Button>
-                              <Input
-                                id={`apt-persons-${apartment.id}`}
-                                className="w-16 text-center"
-                                value={personsPerApartment[apartment.id] || 0}
-                                readOnly
-                              />
-                              <Button 
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                onClick={() => {
-                                  const current = personsPerApartment[apartment.id] || 0;
-                                  // Check both that we haven't assigned all people and that the apartment isn't at capacity
-                                  if (totalAssignedPersons < totalPeopleForLinen && 
-                                      !hasReachedApartmentCapacity(apartment.id)) {
-                                    updatePersonsPerApartment(apartment.id, current + 1);
-                                  }
-                                }}
-                                disabled={totalAssignedPersons >= totalPeopleForLinen || 
-                                          hasReachedApartmentCapacity(apartment.id)}
-                              >
-                                +
-                              </Button>
+                        <div className="grid md:grid-cols-2 gap-2">
+                          {selectedApartments.map((apartment) => (
+                            <div key={apartment.id} className="flex items-center justify-between">
+                              <Label htmlFor={`apt-persons-${apartment.id}`} className="text-sm flex-shrink-0">
+                                {getApartmentLabel(apartment.name)}:
+                              </Label>
+                              <div className="flex items-center space-x-2">
+                                <Button 
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => {
+                                    const current = personsPerApartment[apartment.id] || 0;
+                                    if (current > 0) {
+                                      updatePersonsPerApartment(apartment.id, current - 1);
+                                    }
+                                  }}
+                                  disabled={(personsPerApartment[apartment.id] || 0) <= 0}
+                                  className="h-7 w-7"
+                                >
+                                  -
+                                </Button>
+                                <Input
+                                  id={`apt-persons-${apartment.id}`}
+                                  className="w-12 text-center"
+                                  value={personsPerApartment[apartment.id] || 0}
+                                  readOnly
+                                />
+                                <Button 
+                                  type="button"
+                                  variant="outline"
+                                  size="icon"
+                                  onClick={() => {
+                                    const current = personsPerApartment[apartment.id] || 0;
+                                    // Check both that we haven't assigned all people and that the apartment isn't at capacity
+                                    if (totalAssignedPersons < totalPeopleForLinen && 
+                                        !hasReachedApartmentCapacity(apartment.id)) {
+                                      updatePersonsPerApartment(apartment.id, current + 1);
+                                    }
+                                  }}
+                                  disabled={totalAssignedPersons >= totalPeopleForLinen || 
+                                            hasReachedApartmentCapacity(apartment.id)}
+                                  className="h-7 w-7"
+                                >
+                                  +
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                         
                         <div className="flex justify-between text-sm font-medium mt-2 pt-2 border-t">
                           <span>Persone assegnate:</span>
@@ -242,7 +246,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
                           </p>
                         )}
                         
-                        <p className="text-sm text-muted-foreground pt-2">
+                        <p className="text-sm text-muted-foreground">
                           Costo totale biancheria: {linenCost}€
                         </p>
                       </div>
@@ -255,10 +259,8 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
           />
         </div>
         
-        <Separator />
-        
         {/* Animali domestici */}
-        <div className="space-y-4">
+        <div className="space-y-3 p-3 border rounded-md">
           <div className="flex items-center space-x-2">
             <Dog className="h-5 w-5 text-primary" />
             <h3 className="text-lg font-medium">Animali domestici</h3>
@@ -288,25 +290,27 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
           
           {/* Dettagli animali domestici (se presenti) */}
           {form.watch("hasPets") && (
-            <div className="space-y-4 border rounded-lg p-4 ml-6">
+            <div className="space-y-2 border rounded-lg p-3 ml-6 mt-2">
               {multipleApartments ? (
                 <>
                   <p className="text-sm">Seleziona in quali appartamenti saranno presenti animali domestici:</p>
                   
-                  {selectedApartments.map((apartment) => (
-                    <div key={apartment.id} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`pet-apt-${apartment.id}`}
-                        checked={petsInApartment[apartment.id] || false}
-                        onCheckedChange={() => togglePetInApartment(apartment.id)}
-                      />
-                      <Label htmlFor={`pet-apt-${apartment.id}`} className="text-sm cursor-pointer">
-                        {getApartmentLabel(apartment.name)}
-                      </Label>
-                    </div>
-                  ))}
+                  <div className="grid md:grid-cols-2 gap-2">
+                    {selectedApartments.map((apartment) => (
+                      <div key={apartment.id} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`pet-apt-${apartment.id}`}
+                          checked={petsInApartment[apartment.id] || false}
+                          onCheckedChange={() => togglePetInApartment(apartment.id)}
+                        />
+                        <Label htmlFor={`pet-apt-${apartment.id}`} className="text-sm cursor-pointer">
+                          {getApartmentLabel(apartment.name)}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                   
-                  <p className="text-sm text-muted-foreground pt-2">
+                  <p className="text-sm text-muted-foreground pt-2 mt-2 border-t">
                     Costo totale animali: {petCost}€
                   </p>
                 </>
@@ -319,7 +323,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between">
+      <CardFooter className="flex justify-between pt-2">
         <Button type="button" variant="outline" onClick={prevStep}>Indietro</Button>
         <Button 
           type="button" 
