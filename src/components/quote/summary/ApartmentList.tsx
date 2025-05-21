@@ -4,7 +4,7 @@ import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
 import { roundDownToNearest50 } from "@/utils/price/basePrice";
-import { Euro, PawPrint, Bed, SparklesIcon, Banknote, Receipt } from "lucide-react";
+import { Euro, PawPrint, Bed, SparklesIcon, Banknote, Receipt, CalendarDays } from "lucide-react";
 
 interface ApartmentListProps {
   apartments: Apartment[];
@@ -75,6 +75,13 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
     };
   };
 
+  // Calculate weeks from nights
+  const getWeeksInfo = () => {
+    const nights = priceInfo.nights || 0;
+    const weeks = Math.ceil(nights / 7);
+    return weeks > 1 ? `${weeks} settimane (${nights} notti)` : `${nights} notti`;
+  };
+
   return (
     <div className="space-y-3">
       {selectedApartments.length > 0 ? (
@@ -99,6 +106,11 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                       <Bed className="h-3 w-3" />Posti letto:
                     </span>
                     <span>{apartment.beds}</span>
+                    
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <CalendarDays className="h-3 w-3" />Periodo:
+                    </span>
+                    <span>{getWeeksInfo()}</span>
                     
                     {costs.linenCost > 0 && (
                       <>

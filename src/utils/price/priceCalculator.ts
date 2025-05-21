@@ -34,7 +34,6 @@ const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
     console.log(`Looking for price: apartmentId=${apartmentId}, date=${searchDateStr}, year=${year}`);
     
     // Find matching price by finding the closest weekly start date
-    // We need to loop through all prices and find the one with the closest start date
     // that is not after our search date
     let bestMatch = null;
     let bestMatchDiff = Infinity;
@@ -87,28 +86,42 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   const apartmentPrices: Record<string, number> = {};
   let basePrice = 0;
   
-  // For each apartment, get the weekly price for the check-in date
+  // MODIFICA: Calcola il numero di settimane (arrotondando per eccesso)
+  const numberOfWeeks = Math.ceil(nights / 7);
+  console.log(`Number of complete weeks: ${numberOfWeeks}`);
+  
+  // Per ogni appartamento selezionato
   selectedApartments.forEach(apartment => {
-    // Try to get the weekly price from the pricing system
-    let weekPrice = 0;
+    let totalApartmentPrice = 0;
     
-    if (formValues.checkIn) {
-      weekPrice = getPriceForWeek(apartment.id, new Date(formValues.checkIn));
-      console.log(`Found weekly price for ${apartment.id}: ${weekPrice}€`);
+    // Per ogni settimana di soggiorno, ottieni il prezzo corrispondente
+    for (let week = 0; week < numberOfWeeks; week++) {
+      // Calcola la data di inizio di questa settimana
+      const weekStartDate = new Date(formValues.checkIn);
+      weekStartDate.setDate(weekStartDate.getDate() + (week * 7));
+      
+      // Ottieni il prezzo per questa settimana
+      const weeklyPrice = getPriceForWeek(apartment.id, weekStartDate);
+      console.log(`Week ${week+1} price for ${apartment.id}: ${weeklyPrice}€ (starting on ${weekStartDate.toISOString().split('T')[0]})`);
+      
+      if (weeklyPrice > 0) {
+        totalApartmentPrice += weeklyPrice;
+      } else {
+        // Utilizza il prezzo predefinito dell'appartamento se non è impostato un prezzo specifico
+        const defaultPrice = apartment.price || 0;
+        console.log(`No specific price found for week ${week+1}, using default price: ${defaultPrice}€`);
+        totalApartmentPrice += defaultPrice;
+      }
     }
     
-    if (weekPrice > 0) {
-      apartmentPrices[apartment.id] = weekPrice;
-      basePrice += weekPrice;
-    } else {
-      // Fallback to base price from apartment data if weekly price not found
-      apartmentPrices[apartment.id] = apartment.price || 0;
-      basePrice += apartment.price || 0;
-      console.log(`Using fallback price for ${apartment.id}: ${apartment.price}€`);
-    }
+    // Salva il prezzo totale dell'appartamento
+    apartmentPrices[apartment.id] = totalApartmentPrice;
+    basePrice += totalApartmentPrice;
+    
+    console.log(`Total price for apartment ${apartment.id} (${numberOfWeeks} weeks): ${totalApartmentPrice}€`);
   });
   
-  console.log(`Total base price: ${basePrice}€`);
+  console.log(`Total base price for all apartments: ${basePrice}€`);
   
   // Calculate extras (cleaning fee, linen, pets, tourist tax)
   const { extrasCost, cleaningFee, touristTax } = calculateExtras(formValues, selectedApartments, nights);
@@ -134,7 +147,7 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
     extras: extrasCost,
     cleaningFee,
     touristTax,
-    touristTaxPerPerson,  // Add this property
+    touristTaxPerPerson,
     totalBeforeDiscount,
     totalAfterDiscount,
     discount,
@@ -143,6 +156,6 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
     nights,
     totalPrice: totalAfterDiscount,
     subtotal,
-    apartmentPrices // Add individual apartment prices
+    apartmentPrices
   };
 }
