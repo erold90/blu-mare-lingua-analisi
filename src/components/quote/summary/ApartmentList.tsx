@@ -4,6 +4,7 @@ import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
 import { roundDownToNearest50 } from "@/utils/price/basePrice";
+import { Euro, Dog } from "lucide-react";
 
 interface ApartmentListProps {
   apartments: Apartment[];
@@ -26,17 +27,52 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
     return formValues.hasPets || false;
   };
 
-  // Calculate rounded price for each apartment (round down to nearest 50€)
-  const getRoundedPrice = (apartmentId: string): number => {
-    const originalPrice = priceInfo.apartmentPrices?.[apartmentId] || 0;
-    return roundDownToNearest50(originalPrice);
+  // Get number of people per apartment
+  const getPeopleCount = (apartmentId: string): number => {
+    if (formValues.personsPerApartment && formValues.personsPerApartment[apartmentId]) {
+      return formValues.personsPerApartment[apartmentId];
+    }
+    // Fallback to total adults and children
+    return (formValues.adults || 0) + (formValues.children || 0);
   };
 
-  // Calculate discount for each apartment
-  const getDiscount = (apartmentId: string): number => {
-    const originalPrice = priceInfo.apartmentPrices?.[apartmentId] || 0;
-    const roundedPrice = getRoundedPrice(apartmentId);
-    return originalPrice - roundedPrice;
+  // Calculate apartment-specific costs
+  const calculateApartmentCosts = (apartment: Apartment) => {
+    const apartmentBasePrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
+    const peopleCount = getPeopleCount(apartment.id);
+    const hasPets = hasPetsInApartment(apartment.id);
+    
+    // Calculate linen cost (15€ per person if extra)
+    const linenCost = formValues.linenOption === "extra" ? peopleCount * 15 : 0;
+    
+    // Pet cost: 50€ per apartment if there are pets
+    const petCost = hasPets ? 50 : 0;
+    
+    // Cleaning fee is fixed at 50€ per apartment (included in price)
+    const cleaningFee = 50;
+    
+    // Tourist tax: 1€ per person per night (included in price)
+    const touristTax = peopleCount * priceInfo.nights * 1;
+    
+    // Calculate total before discount
+    const totalBeforeDiscount = apartmentBasePrice + linenCost + petCost;
+    
+    // Round down to nearest 50€
+    const roundedTotal = roundDownToNearest50(totalBeforeDiscount);
+    
+    // Calculate discount
+    const discount = totalBeforeDiscount - roundedTotal;
+    
+    return {
+      basePrice: apartmentBasePrice,
+      linenCost,
+      petCost,
+      cleaningFee,
+      touristTax,
+      totalBeforeDiscount,
+      roundedTotal,
+      discount
+    };
   };
 
   return (
@@ -44,9 +80,7 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
       {selectedApartments.length > 0 ? (
         <div className="space-y-4">
           {selectedApartments.map((apartment, index) => {
-            const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
-            const roundedPrice = getRoundedPrice(apartment.id);
-            const discount = getDiscount(apartment.id);
+            const costs = calculateApartmentCosts(apartment);
             const hasPets = hasPetsInApartment(apartment.id);
             const isLastItem = index === selectedApartments.length - 1;
             
@@ -56,38 +90,55 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                   <div className="flex justify-between items-center">
                     <h4 className="font-semibold text-md">{apartment.name}</h4>
                     <div className="text-right">
-                      {discount > 0 && (
-                        <div className="flex flex-col">
-                          <span className="text-sm line-through text-muted-foreground">{apartmentPrice}€</span>
-                          <span className="text-primary font-semibold">{roundedPrice}€</span>
-                        </div>
-                      )}
-                      {discount === 0 && (
-                        <span className="text-primary font-semibold">{apartmentPrice}€</span>
-                      )}
+                      <span className="text-primary font-semibold">{costs.basePrice}€</span>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <span className="text-muted-foreground">Capacità:</span>
-                    <span>{apartment.capacity} persone</span>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
                     <span className="text-muted-foreground">Posti letto:</span>
                     <span>{apartment.beds}</span>
-                    <span className="text-muted-foreground">Posizione:</span>
-                    <span>Piano {apartment.floor}</span>
+                    
+                    {costs.linenCost > 0 && (
+                      <>
+                        <span className="text-muted-foreground">Biancheria extra:</span>
+                        <span>{costs.linenCost}€</span>
+                      </>
+                    )}
                     
                     {hasPets && (
                       <>
-                        <span className="text-muted-foreground">Animali:</span>
-                        <span>Sì</span>
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Dog className="h-3 w-3" />Animali:
+                        </span>
+                        <span>{costs.petCost}€</span>
                       </>
                     )}
+                    
+                    <span className="text-muted-foreground">Pulizia finale:</span>
+                    <span className="flex items-center">
+                      {costs.cleaningFee}€
+                      <span className="text-green-500 text-[10px] ml-1">(inclusa)</span>
+                    </span>
+                    
+                    <span className="text-muted-foreground">Tassa soggiorno:</span>
+                    <span className="flex items-center">
+                      {costs.touristTax}€
+                      <span className="text-green-500 text-[10px] ml-1">(inclusa)</span>
+                    </span>
+                    
+                    <span className="text-muted-foreground font-medium">Totale:</span>
+                    <span className="font-medium">{costs.totalBeforeDiscount}€</span>
                   </div>
                   
                   {/* Sconto per appartamento */}
-                  {discount > 0 && (
-                    <div className="mt-1 text-sm text-green-500">
-                      Risparmio: {discount}€
+                  {costs.discount > 0 && (
+                    <div className="flex justify-between items-center text-sm mt-1">
+                      <div className="text-green-500 flex items-center gap-1 text-sm">
+                        Risparmio: {costs.discount}€
+                      </div>
+                      <div className="font-semibold">
+                        Totale scontato: {costs.roundedTotal}€
+                      </div>
                     </div>
                   )}
                 </div>

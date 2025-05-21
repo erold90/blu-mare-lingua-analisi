@@ -86,7 +86,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({ form, apartments, prevStep, n
           <div className="space-y-4">
             <Card>
               <CardContent className="pt-6">
-                <h3 className="text-lg font-semibold mb-4">Appartamenti</h3>
+                <h3 className="text-lg font-semibold mb-4">Appartamenti selezionati</h3>
                 <ApartmentList
                   apartments={apartments}
                   selectedApartments={selectedApartments}

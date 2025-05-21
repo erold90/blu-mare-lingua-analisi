@@ -15,7 +15,7 @@ export const calculateExtras = (
   selectedApartments: Apartment[],
   nights: number
 ): ExtrasResult => {
-  // Get effective guest count - adjust the destructuring to match the actual return type
+  // Get effective guest count
   const guestCountInfo = getEffectiveGuestCount(formValues);
   const totalGuests = guestCountInfo.totalGuests;
   
@@ -27,17 +27,29 @@ export const calculateExtras = (
     linenCost = totalGuests * 25; // 25€ per person for deluxe linen
   }
   
-  // Calculate pet costs
-  let petsCost = formValues.hasPets ? 50 : 0; // 50€ flat fee for pets
+  // Calculate pet costs - 50€ per apartment with pets
+  let petsCost = 0;
+  if (formValues.hasPets) {
+    if (formValues.petsInApartment && Object.keys(formValues.petsInApartment).length > 0) {
+      // Count apartments that have pets
+      const apartmentsWithPets = Object.entries(formValues.petsInApartment)
+        .filter(([_, hasPet]) => hasPet)
+        .length;
+      
+      petsCost = apartmentsWithPets * 50;
+    } else {
+      // Default to one apartment with pets
+      petsCost = 50;
+    }
+  }
   
   // Calculate cleaning fee (fixed at 50€ per apartment)
   const cleaningFee = selectedApartments.length * 50;
   
-  // Calculate tourist tax (2€ per adult per night)
-  // Since we don't have direct access to adults count from getEffectiveGuestCount,
-  // let's get it from formValues instead
-  const adults = formValues.adults || 0;
-  const touristTax = adults * 2 * nights;
+  // Calculate tourist tax (1€ per person per night)
+  // Exclude children under 12
+  const adultEquivalents = totalGuests - guestCountInfo.sleepingInCribs - guestCountInfo.sleepingWithParents;
+  const touristTax = adultEquivalents * nights * 1;
   
   // Total extras
   const extrasCost = linenCost + petsCost;

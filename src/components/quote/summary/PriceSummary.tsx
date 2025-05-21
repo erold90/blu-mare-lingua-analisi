@@ -4,6 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { PriceCalculation } from "@/utils/price/types";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
+import { Euro, Discount, Tax, Cleaning } from "lucide-react";
 
 interface PriceSummaryProps {
   priceInfo: PriceCalculation;
@@ -28,7 +29,11 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
 
   return (
     <div className="border rounded-md p-4 space-y-4">
-      <h3 className="font-medium">Riepilogo costi</h3>
+      <h3 className="font-medium flex items-center gap-2">
+        <Euro className="h-4 w-4" /> 
+        Riepilogo costi
+      </h3>
+      
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">
@@ -39,9 +44,12 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         
         {/* Display the cleaning fee */}
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Pulizia finale:</span>
+          <span className="text-muted-foreground flex items-center gap-1">
+            <Cleaning className="h-3 w-3" /> 
+            Pulizia finale:
+          </span>
           <div className="flex items-center">
-            <span className="font-medium mr-2">{priceInfo.cleaningFee}€</span>
+            <span className="font-medium mr-1">{priceInfo.cleaningFee}€</span>
             <span className="text-green-500">(inclusa)</span>
           </div>
         </div>
@@ -68,14 +76,23 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         </div>
         
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Tassa di soggiorno:</span>
-          <span className="font-medium">{priceInfo.touristTax}€</span>
+          <span className="text-muted-foreground flex items-center gap-1">
+            <Tax className="h-3 w-3" /> 
+            Tassa di soggiorno:
+          </span>
+          <div className="flex items-center">
+            <span className="font-medium mr-1">{priceInfo.touristTax}€</span>
+            <span className="text-green-500">(inclusa)</span>
+          </div>
         </div>
         
         <Separator className="my-2" />
         
         <div className="flex justify-between text-sm font-semibold">
-          <span>Totale con sconto applicato:</span>
+          <span className="flex items-center gap-1">
+            <Discount className="h-4 w-4" />
+            Totale con sconto applicato:
+          </span>
           <span className="text-primary">{totalToPay}€</span>
         </div>
         
