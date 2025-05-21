@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useNavigate, Link, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,10 @@ const LoginForm = () => {
     
     if (login(username, password)) {
       toast.success("Login effettuato con successo");
-      navigate("/area-riservata/dashboard");
+      // Aggiungiamo un breve ritardo per garantire che lo stato di autenticazione si aggiorni
+      setTimeout(() => {
+        navigate("/area-riservata/dashboard", { replace: true });
+      }, 100);
     } else {
       toast.error("Credenziali non valide");
     }
@@ -81,6 +83,14 @@ const LoginForm = () => {
 const ReservedAreaPage = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Aggiungiamo un effetto per reindirizzare l'utente quando isAuthenticated cambia
+  React.useEffect(() => {
+    if (isAuthenticated && location.pathname === '/area-riservata') {
+      navigate('/area-riservata/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, location.pathname, navigate]);
   
   return (
     <Routes>
