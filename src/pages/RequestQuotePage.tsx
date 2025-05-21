@@ -11,6 +11,7 @@ import ContactStep from "@/components/quote/ContactStep";
 import GroupDialog from "@/components/quote/GroupDialog";
 import ApartmentDialog from "@/components/quote/ApartmentDialog";
 import ProgressBar from "@/components/quote/ProgressBar";
+import QuoteConfirmationDialog from "@/components/quote/QuoteConfirmationDialog";
 import { Form } from "@/components/ui/form";
 
 // Utils and Data
@@ -27,6 +28,8 @@ const RequestQuotePage = () => {
     apartmentDialog,
     groupDialog,
     familyGroups,
+    showConfirmationDialog,
+    setShowConfirmationDialog,
     incrementAdults,
     decrementAdults,
     incrementChildren,
@@ -51,111 +54,135 @@ const RequestQuotePage = () => {
     setFamilyGroups(groups as any);
   };
   
+  // Handle PDF download with name
+  const handleDownloadWithName = (name?: string) => {
+    downloadQuote(name);
+    setShowConfirmationDialog(false);
+  };
+  
+  // Handle PDF download without name
+  const handleDownloadWithoutName = () => {
+    downloadQuote();
+    setShowConfirmationDialog(false);
+  };
+  
   return (
-    <div className="container px-4 py-8 md:py-12 max-w-full overflow-x-hidden">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">Richiedi un Preventivo</h1>
-        <p className="text-[10px] md:text-xs text-muted-foreground max-w-2xl mx-auto">
-          Compila il form per ricevere un preventivo personalizzato.
-        </p>
+    <div className="bg-gray-50 min-h-screen">
+      <div className="container px-4 py-8 md:py-12">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Richiedi un Preventivo</h1>
+          <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
+            Compila il form per ricevere un preventivo personalizzato per il tuo soggiorno.
+          </p>
+        </div>
+        
+        {/* Progress bar */}
+        <div className="max-w-5xl mx-auto mb-8">
+          <ProgressBar step={step} totalSteps={totalSteps} />
+        </div>
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmitHandler)} className="space-y-8 mb-16">
+            {/* STEP 1: Informazioni sugli ospiti */}
+            {step === 1 && (
+              <GuestInfoStep 
+                form={form}
+                childrenArray={childrenArray}
+                openGroupDialog={openGroupDialog}
+                incrementAdults={incrementAdults}
+                decrementAdults={decrementAdults}
+                incrementChildren={incrementChildren}
+                decrementChildren={decrementChildren}
+                updateChildDetails={updateChildDetails}
+                nextStep={nextStep}
+              />
+            )}
+            
+            {/* STEP 2: Selezione date */}
+            {step === 2 && (
+              <DateSelectionStep 
+                form={form}
+                prevStep={prevStep}
+                nextStep={nextStep}
+              />
+            )}
+            
+            {/* STEP 3: Selezione appartamento */}
+            {step === 3 && (
+              <ApartmentSelectionStep 
+                form={form}
+                apartments={apartments}
+                openApartmentDialog={openApartmentDialog}
+                prevStep={prevStep}
+                nextStep={nextStep}
+              />
+            )}
+            
+            {/* STEP 4: Servizi extra */}
+            {step === 4 && (
+              <ServicesStep 
+                form={form}
+                prevStep={prevStep}
+                nextStep={nextStep}
+                apartments={apartments}
+              />
+            )}
+            
+            {/* STEP 5: Riepilogo e calcolo finale */}
+            {step === 5 && (
+              <SummaryStep 
+                form={form}
+                apartments={apartments}
+                prevStep={prevStep}
+                nextStep={nextStep}
+              />
+            )}
+            
+            {/* STEP 6: Finalizzazione preventivo */}
+            {step === 6 && (
+              <ContactStep 
+                form={form}
+                apartments={apartments}
+                prevStep={prevStep}
+                onSubmit={handleSubmitWrapper}
+                downloadQuote={() => setShowConfirmationDialog(true)}
+                sendWhatsApp={sendWhatsApp}
+              />
+            )}
+          </form>
+        </Form>
+        
+        {/* Dialog per i dettagli dell'appartamento */}
+        <ApartmentDialog
+          apartmentId={apartmentDialog}
+          apartments={apartments}
+          onOpenChange={closeApartmentDialog}
+          onSelect={selectApartment}
+        />
+        
+        {/* Dialog per la composizione del gruppo */}
+        <GroupDialog
+          open={groupDialog}
+          onOpenChange={closeGroupDialog}
+          familyGroups={familyGroups as FamilyGroup[]}
+          groupType={form.getValues("groupType")}
+          onGroupTypeChange={(value) => form.setValue("groupType", value)}
+          onFamilyGroupsChange={handleFamilyGroupsChange}
+          onConfirm={closeGroupDialog}
+          onCancel={() => {
+            closeGroupDialog();
+            form.setValue("isGroupBooking", false);
+          }}
+        />
+        
+        {/* Dialog per la conferma del download del preventivo */}
+        <QuoteConfirmationDialog
+          open={showConfirmationDialog}
+          onOpenChange={setShowConfirmationDialog}
+          onConfirm={handleDownloadWithName}
+          onSkip={handleDownloadWithoutName}
+        />
       </div>
-      
-      {/* Progress bar */}
-      <ProgressBar step={step} totalSteps={totalSteps} />
-      
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmitHandler)} className="space-y-8">
-          {/* STEP 1: Informazioni sugli ospiti */}
-          {step === 1 && (
-            <GuestInfoStep 
-              form={form}
-              childrenArray={childrenArray}
-              openGroupDialog={openGroupDialog}
-              incrementAdults={incrementAdults}
-              decrementAdults={decrementAdults}
-              incrementChildren={incrementChildren}
-              decrementChildren={decrementChildren}
-              updateChildDetails={updateChildDetails}
-              nextStep={nextStep}
-            />
-          )}
-          
-          {/* STEP 2: Selezione date */}
-          {step === 2 && (
-            <DateSelectionStep 
-              form={form}
-              prevStep={prevStep}
-              nextStep={nextStep}
-            />
-          )}
-          
-          {/* STEP 3: Selezione appartamento */}
-          {step === 3 && (
-            <ApartmentSelectionStep 
-              form={form}
-              apartments={apartments}
-              openApartmentDialog={openApartmentDialog}
-              prevStep={prevStep}
-              nextStep={nextStep}
-            />
-          )}
-          
-          {/* STEP 4: Servizi extra */}
-          {step === 4 && (
-            <ServicesStep 
-              form={form}
-              prevStep={prevStep}
-              nextStep={nextStep}
-              apartments={apartments}
-            />
-          )}
-          
-          {/* STEP 5: Riepilogo e calcolo finale */}
-          {step === 5 && (
-            <SummaryStep 
-              form={form}
-              apartments={apartments}
-              prevStep={prevStep}
-              nextStep={nextStep}
-            />
-          )}
-          
-          {/* STEP 6: Finalizzazione preventivo */}
-          {step === 6 && (
-            <ContactStep 
-              form={form}
-              apartments={apartments}
-              prevStep={prevStep}
-              onSubmit={handleSubmitWrapper}
-              downloadQuote={downloadQuote}
-              sendWhatsApp={sendWhatsApp}
-            />
-          )}
-        </form>
-      </Form>
-      
-      {/* Dialog per i dettagli dell'appartamento */}
-      <ApartmentDialog
-        apartmentId={apartmentDialog}
-        apartments={apartments}
-        onOpenChange={closeApartmentDialog}
-        onSelect={selectApartment}
-      />
-      
-      {/* Dialog per la composizione del gruppo */}
-      <GroupDialog
-        open={groupDialog}
-        onOpenChange={closeGroupDialog}
-        familyGroups={familyGroups as FamilyGroup[]}
-        groupType={form.getValues("groupType")}
-        onGroupTypeChange={(value) => form.setValue("groupType", value)}
-        onFamilyGroupsChange={handleFamilyGroupsChange}
-        onConfirm={closeGroupDialog}
-        onCancel={() => {
-          closeGroupDialog();
-          form.setValue("isGroupBooking", false);
-        }}
-      />
     </div>
   );
 };

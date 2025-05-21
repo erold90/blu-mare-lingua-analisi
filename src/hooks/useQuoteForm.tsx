@@ -8,8 +8,12 @@ import { useApartmentSelection } from "./quote/useApartmentSelection";
 import { useGroupManagement, FamilyGroup } from "./quote/useGroupManagement";
 import { useQuoteActions } from "./quote/useQuoteActions";
 import { useChildEffects } from "./quote/useChildEffects";
+import { useState } from "react";
 
 export function useQuoteForm() {
+  // Dialog state for PDF confirmation
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
+  
   // Initialize form with default values
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -72,6 +76,8 @@ export function useQuoteForm() {
     apartmentDialog,
     groupDialog,
     familyGroups,
+    showConfirmationDialog,
+    setShowConfirmationDialog,
     incrementAdults,
     decrementAdults,
     incrementChildren,

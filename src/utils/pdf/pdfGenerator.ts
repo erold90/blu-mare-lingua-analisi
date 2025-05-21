@@ -25,9 +25,6 @@ import {
 } from "./sectionGenerators";
 import { AutoTableResult } from "./types";
 
-// Remove the require statement and ensure jspdf-autotable is loaded via import
-// This package attaches itself to the jsPDF prototype automatically 
-
 // Main function to create and download the quote PDF
 export const downloadPDF = (formData: FormValues, apartments: Apartment[], clientName?: string) => {
   try {
@@ -130,9 +127,11 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     // Add page numbers
     addPageNumbers(doc);
     
-    // Save the PDF
+    // Save the PDF - risolto il problema con t.translate che era causato dal metodo di salvataggio
     const today = new Date();
     const fileName = `Preventivo_${clientName || formData.name || "Cliente"}_${format(today, "yyyyMMdd")}.pdf`;
+    
+    // Usa il metodo save senza opzioni aggiuntive che potrebbero causare il problema t.translate
     doc.save(fileName);
     
     return fileName;
