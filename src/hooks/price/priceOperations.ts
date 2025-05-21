@@ -36,10 +36,14 @@ export const updateWeeklyPrice = (
     yearIndex = updatedPricing.length - 1;
   }
   
+  // Format date strings for comparison
+  const weekStartDate = new Date(weekStart).toISOString().split('T')[0];
+  
   // Update the specific price
-  const priceIndex = updatedPricing[yearIndex].prices.findIndex(
-    p => p.apartmentId === apartmentId && p.weekStart.substring(0, 10) === weekStart.substring(0, 10)
-  );
+  const priceIndex = updatedPricing[yearIndex].prices.findIndex(p => {
+    const priceDate = new Date(p.weekStart).toISOString().split('T')[0];
+    return p.apartmentId === apartmentId && priceDate === weekStartDate;
+  });
   
   if (priceIndex !== -1) {
     // Price exists, update it
@@ -136,6 +140,9 @@ export const forceInitializePrices = (
   });
   
   console.log(`Created ${prices2025.length} custom prices for 2025`);
+  console.log("Sample prices:", prices2025.slice(0, 5).map(p => 
+    `${p.apartmentId}: ${p.price}€ (${new Date(p.weekStart).toLocaleDateString()})`
+  ));
   
   // Update state with new prices
   const initialPricing = [{ year: 2025, prices: prices2025 }];

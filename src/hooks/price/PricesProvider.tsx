@@ -16,12 +16,31 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     console.log("PricesProvider: Checking existing prices");
     
-    // Clear and force initialization on first load
-    console.log("Forcing price initialization with custom prices");
-    localStorage.removeItem("seasonalPricing"); // Clear any existing prices first
-    const initialPrices = forceInitializePrices(setSeasonalPricing);
-    setWeeklyPrices(initialPrices);
-    toast.success("Prezzi 2025 inizializzati correttamente");
+    // Force initialization on first load if no prices exist
+    if (!seasonalPricing || seasonalPricing.length === 0) {
+      console.log("PricesProvider: No prices found, initializing with custom prices");
+      localStorage.removeItem("seasonalPricing"); // Clear any existing prices first
+      const initialPrices = forceInitializePrices(setSeasonalPricing);
+      setWeeklyPrices(initialPrices);
+      console.log(`PricesProvider: Initialized ${initialPrices.length} custom prices`);
+      toast.success("Prezzi 2025 inizializzati correttamente");
+    } else {
+      console.log(`PricesProvider: Found ${seasonalPricing.length} existing seasons`);
+      
+      // Check if we have prices for 2025
+      const year2025 = seasonalPricing.find(s => s.year === 2025);
+      
+      if (!year2025 || !year2025.prices || year2025.prices.length === 0) {
+        console.log("PricesProvider: 2025 prices missing, forcing initialization");
+        resetAllPrices();
+        const initialPrices = forceInitializePrices(setSeasonalPricing);
+        setWeeklyPrices(initialPrices);
+        console.log(`PricesProvider: Initialized ${initialPrices.length} prices for 2025`);
+        toast.success("Prezzi 2025 inizializzati correttamente");
+      } else {
+        console.log(`PricesProvider: Found ${year2025.prices.length} prices for 2025`);
+      }
+    }
   }, []);
   
   // Update a specific weekly price
@@ -36,9 +55,11 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   
   // Reset prices (for development only)
   const resetPrices = () => {
+    console.log("Resetting all prices and forcing initialization");
     resetAllPrices();
     const initialPrices = forceInitializePrices(setSeasonalPricing);
     setWeeklyPrices(initialPrices);
+    console.log(`Reset complete, initialized ${initialPrices.length} prices`);
     toast.success("Prezzi reimpostati correttamente");
   };
   
@@ -50,7 +71,7 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     getPriceForDate: (apartmentId: string, date: Date) => getPriceForDate(apartmentId, date, seasonalPricing),
     generateWeeksForSeason,
     getCurrentSeason,
-    __DEBUG_reset: process.env.NODE_ENV === 'development' ? resetPrices : undefined
+    __DEBUG_reset: resetPrices
   };
   
   return (

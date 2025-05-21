@@ -31,20 +31,25 @@ const AdminPrices = () => {
     console.log(`AdminPrices: ${weeklyPrices.length} weekly prices loaded`);
     
     if (weeklyPrices.length > 0) {
-      const apt1Prices = weeklyPrices.filter(p => p.apartmentId === "apt-1");
-      console.log(`Loaded ${apt1Prices.length} prices for Apt 1`);
+      const samplePrices = weeklyPrices.filter(p => p.apartmentId === apartments[0].id);
+      console.log(`Loaded ${samplePrices.length} prices for ${apartments[0].name}`);
       
       // Display first 3 prices for debugging
-      if (apt1Prices.length > 0) {
-        console.log("First 3 prices for Apt 1:", 
-          apt1Prices.slice(0, 3).map(p => 
+      if (samplePrices.length > 0) {
+        console.log("First 3 prices:", 
+          samplePrices.slice(0, 3).map(p => 
             `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
           )
         );
+      } else {
+        console.log("No prices found for first apartment");
       }
     } else {
       console.log("No weekly prices found. Forcing refresh...");
-      __DEBUG_reset && __DEBUG_reset();
+      if (__DEBUG_reset) {
+        __DEBUG_reset();
+        toast.success("Prezzi reinizializzati con successo");
+      }
     }
   }, [weeklyPrices, __DEBUG_reset]);
   
@@ -65,19 +70,24 @@ const AdminPrices = () => {
     }
   };
   
-  // FIXED: This function now properly compares dates as strings to find prices
+  // This function properly finds prices based on date string comparison
   const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
-    // Convert weekStart to string format for comparison
-    const weekStartStr = weekStart.toISOString().substring(0, 10); // YYYY-MM-DD format
+    // Format for comparison (YYYY-MM-DD)
+    const weekStartStr = weekStart.toISOString().split('T')[0];
     
-    // Find the right apartment price
+    // Find the right price by comparing dates as strings
     const matchingPrice = weeklyPrices.find(p => {
-      return p.apartmentId === apartmentId && 
-             new Date(p.weekStart).toISOString().substring(0, 10) === weekStartStr;
+      const priceDate = new Date(p.weekStart).toISOString().split('T')[0];
+      return p.apartmentId === apartmentId && priceDate === weekStartStr;
     });
     
-    // Return the price if found, otherwise return 0
-    return matchingPrice ? matchingPrice.price : 0;
+    if (matchingPrice) {
+      console.log(`Found price for ${apartmentId} on ${weekStartStr}: ${matchingPrice.price}€`);
+      return matchingPrice.price;
+    }
+    
+    console.log(`No price found for ${apartmentId} on ${weekStartStr}, returning 0`);
+    return 0;
   };
   
   const handleResetPricesClick = () => {
@@ -87,7 +97,7 @@ const AdminPrices = () => {
     }
   };
 
-  // If no prices loaded yet, force a reset
+  // Force price initialization if needed
   React.useEffect(() => {
     if (weeklyPrices.length === 0 && __DEBUG_reset) {
       console.log("No prices found, forcing reset");

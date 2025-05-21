@@ -17,6 +17,15 @@ const MobilePriceList: React.FC<MobilePriceListProps> = ({
   getPriceForWeek,
   handlePriceChange,
 }) => {
+  // Debug log to check if props are received correctly
+  React.useEffect(() => {
+    console.log("MobilePriceList - Weeks:", weeks.length);
+    if (weeks.length > 0) {
+      const sample = getPriceForWeek(apartments[0].id, weeks[0].start);
+      console.log("Sample price for first week:", sample);
+    }
+  }, [weeks, getPriceForWeek]);
+  
   return (
     <div className="space-y-8">
       {apartments.map(apartment => (

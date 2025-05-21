@@ -17,6 +17,15 @@ const PriceTable: React.FC<PriceTableProps> = ({
   getPriceForWeek,
   handlePriceChange,
 }) => {
+  // Debug log
+  React.useEffect(() => {
+    console.log("PriceTable - Weeks:", weeks.length);
+    if (weeks.length > 0 && apartments.length > 0) {
+      const sample = getPriceForWeek(apartments[0].id, weeks[0].start);
+      console.log("Sample price for first apartment and week:", sample);
+    }
+  }, [weeks, getPriceForWeek]);
+  
   return (
     <Table className="min-w-[600px]">
       <TableHeader>
