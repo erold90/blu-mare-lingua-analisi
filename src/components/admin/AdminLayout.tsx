@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { NavLink, useLocation, Link } from "react-router-dom";
+import { NavLink, useLocation, Link, useNavigate } from "react-router-dom";
 import { Calendar, LayoutDashboard, Image, Settings, EuroIcon, History, Home, Menu } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -10,6 +10,7 @@ import {
   SheetTrigger
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -18,11 +19,19 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   const { logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = React.useState(false);
   
   const isActive = (path: string) => {
     return location.pathname.includes(path);
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Logout effettuato con successo");
+    navigate("/area-riservata");
+    setMenuOpen(false);
   };
 
   const NavItems = () => (
@@ -100,7 +109,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <span>Log</span>
       </NavLink>
       <div className="mt-4 md:hidden px-3">
-        <Button variant="outline" className="w-full" onClick={() => logout()}>
+        <Button variant="outline" className="w-full" onClick={handleLogout}>
           Logout
         </Button>
       </div>
@@ -146,7 +155,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <span className="sr-only">Home</span>
           </Link>
           {!isMobile && (
-            <Button variant="outline" size="sm" onClick={() => logout()}>
+            <Button variant="outline" size="sm" onClick={handleLogout}>
               Logout
             </Button>
           )}

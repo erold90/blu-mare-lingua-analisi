@@ -82,11 +82,6 @@ const ReservedAreaPage = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
   
-  // Added console log for debugging authentication state
-  React.useEffect(() => {
-    console.log("Authentication state:", isAuthenticated);
-  }, [isAuthenticated]);
-  
   return (
     <Routes>
       <Route path="/" element={!isAuthenticated ? <LoginForm /> : <Navigate to="/area-riservata/dashboard" replace />} />
