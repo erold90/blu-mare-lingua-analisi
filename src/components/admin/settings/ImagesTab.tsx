@@ -4,13 +4,30 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Plus, Image as ImageIcon, AlertCircle } from "lucide-react";
+import { Plus, Image as ImageIcon, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export const ImagesTab = () => {
   const { siteSettings, updateSiteSettings } = useSettings();
   const isMobile = useIsMobile();
+  const [imagePreviewPosition, setImagePreviewPosition] = React.useState(siteSettings.heroImagePosition || "center");
+  
+  const positionOptions = [
+    { value: "center", label: "Centro" },
+    { value: "top", label: "Alto" },
+    { value: "bottom", label: "Basso" },
+    { value: "left", label: "Sinistra" },
+    { value: "right", label: "Destra" },
+    { value: "top left", label: "Alto Sinistra" },
+    { value: "top right", label: "Alto Destra" },
+    { value: "bottom left", label: "Basso Sinistra" },
+    { value: "bottom right", label: "Basso Destra" }
+  ];
+
+  React.useEffect(() => {
+    setImagePreviewPosition(siteSettings.heroImagePosition || "center");
+  }, [siteSettings.heroImagePosition]);
 
   const handleImageUpload = (
     type: 'hero' | 'home',
@@ -35,6 +52,12 @@ export const ImagesTab = () => {
     }
   };
 
+  const handlePositionChange = (position: string) => {
+    setImagePreviewPosition(position);
+    updateSiteSettings({ heroImagePosition: position });
+    toast.success("Posizione immagine aggiornata");
+  };
+
   const isValidImage = (url: string) => {
     return url && !url.includes("placeholder.svg");
   };
@@ -53,16 +76,19 @@ export const ImagesTab = () => {
             <div>
               <div className="aspect-video rounded-md overflow-hidden border bg-muted relative">
                 {isValidImage(siteSettings.heroImage) ? (
-                  <img
-                    src={siteSettings.heroImage}
-                    alt="Hero"
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      e.currentTarget.onerror = null;
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                    }}
-                  />
+                  <div className="w-full h-full overflow-hidden">
+                    <img
+                      src={siteSettings.heroImage}
+                      alt="Hero"
+                      className="w-full h-full object-cover"
+                      style={{ objectPosition: imagePreviewPosition }}
+                      onError={(e) => {
+                        e.currentTarget.onerror = null;
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.parentElement?.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                  </div>
                 ) : null}
                 <div className={`${isValidImage(siteSettings.heroImage) ? 'hidden' : ''} absolute inset-0 flex flex-col items-center justify-center bg-muted`}>
                   <ImageIcon className="h-12 w-12 text-muted-foreground opacity-50 mb-2" />
@@ -73,7 +99,7 @@ export const ImagesTab = () => {
                 Si consiglia un'immagine in formato 16:9 con alta risoluzione
               </p>
             </div>
-            <div className="flex items-center">
+            <div className="flex flex-col gap-4">
               <div>
                 <Button
                   variant="outline"
@@ -90,6 +116,35 @@ export const ImagesTab = () => {
                   onChange={(e) => handleImageUpload('hero', null, e)}
                 />
               </div>
+              
+              {isValidImage(siteSettings.heroImage) && (
+                <div className="mt-4">
+                  <h3 className="text-sm font-medium mb-2">Posizione immagine</h3>
+                  <div className="grid grid-cols-3 gap-2">
+                    {positionOptions.map((option) => (
+                      <Button 
+                        key={option.value}
+                        size="sm"
+                        variant={imagePreviewPosition === option.value ? "default" : "outline"}
+                        className="w-full text-xs"
+                        onClick={() => handlePositionChange(option.value)}
+                      >
+                        {option.label}
+                      </Button>
+                    ))}
+                  </div>
+                  <div className="mt-4 flex justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePositionChange("center")}
+                      className="flex items-center"
+                    >
+                      <RotateCcw className="h-4 w-4 mr-1" /> Ripristina posizione
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </CardContent>

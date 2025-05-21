@@ -1,7 +1,9 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 export interface SiteSettings {
   heroImage: string;
+  heroImagePosition: string; // Added to store image position
   homeImages: string[];
   blockedDates: string[]; // ISO date strings
   blockedDateRanges: { start: string; end: string }[]; // ISO date strings
@@ -26,6 +28,7 @@ interface SettingsContextType {
 
 const defaultSiteSettings: SiteSettings = {
   heroImage: "/placeholder.svg",
+  heroImagePosition: "center", // Default position is center
   homeImages: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
   blockedDates: [],
   blockedDateRanges: []
