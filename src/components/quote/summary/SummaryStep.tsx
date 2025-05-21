@@ -10,10 +10,10 @@ import { v4 as uuidv4 } from "uuid";
 import { useActivityLog } from "@/hooks/useActivityLog";
 
 // Componenti separati per ogni sezione
-import DateDurationInfo from "./summary/DateDurationInfo";
-import GuestInfo from "./summary/GuestInfo";
-import PriceSummary from "./summary/PriceSummary";
-import ApartmentList from "./summary/ApartmentList";
+import DateDurationInfo from "./DateDurationInfo";
+import GuestInfo from "./GuestInfo";
+import PriceSummary from "./PriceSummary";
+import ApartmentList from "./ApartmentList";
 
 interface SummaryStepProps {
   form: UseFormReturn<FormValues>;
