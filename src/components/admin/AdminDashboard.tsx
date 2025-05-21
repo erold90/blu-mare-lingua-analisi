@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -377,7 +376,7 @@ const AdminDashboardContent = () => {
             <CardTitle>Guadagno Mensile Estivo</CardTitle>
             <CardDescription>Distribuzione delle entrate da giugno a settembre</CardDescription>
           </CardHeader>
-          <CardContent className="px-0 pb-0">
+          <CardContent className="px-0 pb-4">
             <div className="h-[300px] w-full mt-4">
               <ChartContainer 
                 config={{
@@ -470,7 +469,7 @@ const AdminDashboardContent = () => {
             <CardTitle>Prenotazioni per Mese</CardTitle>
             <CardDescription>Distribuzione annuale delle prenotazioni</CardDescription>
           </CardHeader>
-          <CardContent className="px-0 pb-0">
+          <CardContent className="px-0 pb-4">
             <div className="h-[300px] w-full mt-4">
               <ChartContainer 
                 config={{
@@ -581,8 +580,8 @@ const AdminDashboardContent = () => {
         </Card>
       </div>
       
-      {/* Prossimi check-in/check-out */}
-      <Card>
+      {/* Prossimi check-in/check-out - added mt-8 for more separation */}
+      <Card className="mt-8">
         <CardHeader>
           <CardTitle>Prossimi Movimenti</CardTitle>
           <CardDescription>Check-in e check-out nei prossimi 7 giorni</CardDescription>
