@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { PriceCalculation } from "@/utils/price/types";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
-import { Euro, Discount, Tax, Cleaning } from "lucide-react";
+import { Euro, Percent, ReceiptText, Sparkles } from "lucide-react";
 
 interface PriceSummaryProps {
   priceInfo: PriceCalculation;
@@ -45,7 +45,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         {/* Display the cleaning fee */}
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground flex items-center gap-1">
-            <Cleaning className="h-3 w-3" /> 
+            <Sparkles className="h-3 w-3" /> 
             Pulizia finale:
           </span>
           <div className="flex items-center">
@@ -77,7 +77,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground flex items-center gap-1">
-            <Tax className="h-3 w-3" /> 
+            <ReceiptText className="h-3 w-3" /> 
             Tassa di soggiorno:
           </span>
           <div className="flex items-center">
@@ -90,7 +90,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         
         <div className="flex justify-between text-sm font-semibold">
           <span className="flex items-center gap-1">
-            <Discount className="h-4 w-4" />
+            <Percent className="h-4 w-4" />
             Totale con sconto applicato:
           </span>
           <span className="text-primary">{totalToPay}€</span>

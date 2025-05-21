@@ -4,7 +4,7 @@ import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
 import { roundDownToNearest50 } from "@/utils/price/basePrice";
-import { Euro, Dog } from "lucide-react";
+import { Euro, PawPrint } from "lucide-react";
 
 interface ApartmentListProps {
   apartments: Apartment[];
@@ -108,7 +108,7 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                     {hasPets && (
                       <>
                         <span className="text-muted-foreground flex items-center gap-1">
-                          <Dog className="h-3 w-3" />Animali:
+                          <PawPrint className="h-3 w-3" />Animali:
                         </span>
                         <span>{costs.petCost}€</span>
                       </>
