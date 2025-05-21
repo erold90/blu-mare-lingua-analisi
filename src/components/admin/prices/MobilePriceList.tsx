@@ -31,14 +31,30 @@ const MobilePriceList: React.FC<MobilePriceListProps> = ({
   React.useEffect(() => {
     console.log("MobilePriceList - Weeks:", weeks.length);
     if (apartments.length > 0 && weeks.length > 0) {
+      // Get first day formatted for logging
+      const firstWeekDateStr = weeks[0].start.toISOString().split('T')[0];
       const samplePrice = getPriceForWeek(apartments[0].id, weeks[0].start);
-      console.log(`Sample price for ${apartments[0].name}, week ${format(weeks[0].start, "d MMM")}: ${samplePrice}€`);
+      console.log(`Sample price for ${apartments[0].name}, week ${firstWeekDateStr}: ${samplePrice}€`);
+      
+      // Check for the first week of June 2025 specifically
+      const jun2025 = weeks.find(w => {
+        const dateStr = w.start.toISOString().split('T')[0];
+        return dateStr.startsWith('2025-06-07');
+      });
+      
+      if (jun2025) {
+        console.log("Found June 7 2025 week, checking prices for all apartments:");
+        apartments.forEach(apt => {
+          const price = getPriceForWeek(apt.id, jun2025.start);
+          console.log(`${apt.name}: ${price}€`);
+        });
+      }
     }
   }, [weeks, getPriceForWeek]);
   
   const handleEditClick = (apartmentId: string, apartmentName: string, weekStart: Date, weekEnd: Date) => {
     const currentPrice = getPriceForWeek(apartmentId, weekStart);
-    console.log(`Editing price for ${apartmentName}, week of ${format(weekStart, "d MMM")}: ${currentPrice}€`);
+    console.log(`Editing price for ${apartmentName}, week of ${format(weekStart, "yyyy-MM-dd")}: ${currentPrice}€`);
     setEditingPrice({
       apartmentId,
       apartmentName,
@@ -56,6 +72,7 @@ const MobilePriceList: React.FC<MobilePriceListProps> = ({
         editingPrice.weekStart.toISOString(),
         price.toString()
       );
+      setEditingPrice(null);
     }
   };
   

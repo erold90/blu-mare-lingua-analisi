@@ -31,14 +31,16 @@ const PriceTable: React.FC<PriceTableProps> = ({
   React.useEffect(() => {
     console.log("PriceTable - Weeks:", weeks.length);
     if (apartments.length > 0 && weeks.length > 0) {
+      // Get first day formatted for logging
+      const firstWeekDateStr = weeks[0].start.toISOString().split('T')[0];
       const samplePrice = getPriceForWeek(apartments[0].id, weeks[0].start);
-      console.log(`Sample price for ${apartments[0].name}, week ${format(weeks[0].start, "d MMM")}: ${samplePrice}€`);
+      console.log(`Sample price for ${apartments[0].name}, week ${firstWeekDateStr}: ${samplePrice}€`);
     }
   }, [weeks, getPriceForWeek]);
   
   const handleEditClick = (apartmentId: string, apartmentName: string, weekStart: Date, weekEnd: Date) => {
     const currentPrice = getPriceForWeek(apartmentId, weekStart);
-    console.log(`Editing price for ${apartmentName}, week of ${format(weekStart, "d MMM")}: ${currentPrice}€`);
+    console.log(`Editing price for ${apartmentName}, week of ${format(weekStart, "yyyy-MM-dd")}: ${currentPrice}€`);
     setEditingPrice({
       apartmentId,
       apartmentName,
@@ -56,6 +58,7 @@ const PriceTable: React.FC<PriceTableProps> = ({
         editingPrice.weekStart.toISOString(),
         price.toString()
       );
+      setEditingPrice(null);
     }
   };
   

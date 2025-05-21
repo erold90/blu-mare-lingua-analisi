@@ -40,26 +40,41 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setWeeklyPrices(initialPrices);
       console.log(`PricesProvider: Initialized ${initialPrices.length} prices for 2025`);
       toast.success("Prezzi 2025 inizializzati correttamente");
-    } else {
-      console.log(`PricesProvider: Found ${year2025.prices.length} prices for 2025`);
-      
-      // Log some sample prices for debugging
-      for (const apt of apartments) {
-        const aptPrices = year2025.prices.filter(p => p.apartmentId === apt.id);
-        if (aptPrices.length > 0) {
-          console.log(`PricesProvider: ${apt.name} has ${aptPrices.length} prices`);
-          console.log("First 3 prices:", 
-            aptPrices.slice(0, 3).map(p => 
-              `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
-            )
-          );
-        } else {
-          console.log(`PricesProvider: No prices found for ${apt.name}`);
-        }
-      }
-      
-      setWeeklyPrices(year2025.prices);
+      return;
+    } 
+    
+    console.log(`PricesProvider: Found ${year2025.prices.length} prices for 2025`);
+    
+    // Check if prices for all apartments exist
+    const missingPrices = apartments.some(apt => {
+      const aptPrices = year2025.prices.filter(p => p.apartmentId === apt.id);
+      return aptPrices.length === 0;
+    });
+    
+    if (missingPrices) {
+      console.log("PricesProvider: Missing prices for some apartments, forcing initialization");
+      const initialPrices = forceInitializePrices(setSeasonalPricing);
+      setWeeklyPrices(initialPrices);
+      toast.success("Prezzi completati per tutti gli appartamenti");
+      return;
     }
+    
+    // Log some sample prices for debugging
+    for (const apt of apartments) {
+      const aptPrices = year2025.prices.filter(p => p.apartmentId === apt.id);
+      if (aptPrices.length > 0) {
+        console.log(`PricesProvider: ${apt.name} has ${aptPrices.length} prices`);
+        console.log("First 3 prices:", 
+          aptPrices.slice(0, 3).map(p => 
+            `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
+          )
+        );
+      } else {
+        console.log(`PricesProvider: No prices found for ${apt.name}`);
+      }
+    }
+    
+    setWeeklyPrices(year2025.prices);
   }, []);
   
   // Update a specific weekly price

@@ -71,29 +71,24 @@ const AdminPrices = () => {
     }
   };
   
-  // Improved getPriceForWeek to use exact date matching
+  // Fixed getPriceForWeek to correctly identify and match dates
   const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
     // Format dates consistently for comparison (YYYY-MM-DD)
-    const weekStartDateStr = weekStart.toISOString().split('T')[0];
+    const weekStartFormatted = weekStart.toISOString().split('T')[0];
     
-    // Find matching price entry
-    const matchingPrice = weeklyPrices.find(price => {
-      // Extract just the date part from both date strings
-      const priceStartDate = new Date(price.weekStart).toISOString().split('T')[0];
-      const match = price.apartmentId === apartmentId && priceStartDate === weekStartDateStr;
-      
-      if (apartmentId === "appartamento-1" && weekStartDateStr === "2025-06-07") {
-        console.log(`Comparing: ${price.apartmentId}/${apartmentId}, ${priceStartDate}/${weekStartDateStr}, match: ${match}`);
-      }
-      
-      return match;
+    // Find matching price entry by comparing date strings directly
+    const price = weeklyPrices.find(p => {
+      const priceStartFormatted = new Date(p.weekStart).toISOString().split('T')[0];
+      return p.apartmentId === apartmentId && priceStartFormatted === weekStartFormatted;
     });
     
-    if (apartmentId === "appartamento-1" && weekStartDateStr === "2025-06-07") {
-      console.log(`Price lookup for ${apartmentId}, ${weekStartDateStr}: ${matchingPrice ? matchingPrice.price : 'not found'}`);
+    // Debug
+    if (apartmentId === "appartamento-1" && weekStartFormatted.startsWith("2025-06-07")) {
+      console.log(`Looking for price: ${apartmentId}, ${weekStartFormatted}`);
+      console.log(`Found price: ${price ? price.price : "not found"}`);
     }
     
-    return matchingPrice ? matchingPrice.price : 0;
+    return price ? price.price : 0;
   };
   
   const handleResetPricesClick = () => {

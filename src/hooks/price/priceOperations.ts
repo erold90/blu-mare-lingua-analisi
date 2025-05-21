@@ -1,7 +1,7 @@
 
 import { Dispatch, SetStateAction } from "react";
 import { WeeklyPrice, SeasonalPricing } from "./types";
-import { apartments } from "@/data/apartments"; // Add this import
+import { apartments } from "@/data/apartments";
 
 /**
  * Updates a specific weekly price for an apartment
