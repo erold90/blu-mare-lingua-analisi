@@ -1,14 +1,24 @@
 
 import { jsPDF } from "jspdf";
 
-// Add jspdf-autotable type definitions
+// Extend jspdf-autotable type definitions
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: (options: any) => any;
-    lastAutoTable: {
-      finalY: number;
+    autoTable: (options: any) => {
+      previous: {
+        finalY: number;
+      };
     };
     getNumberOfPages: () => number;
+    getFontSize: () => number;
+    internal: {
+      scaleFactor: number;
+      getFontSize: () => number;
+      pageSize: {
+        getWidth: () => number;
+        getHeight: () => number;
+      };
+    };
   }
 }
 
@@ -27,4 +37,3 @@ export interface PdfDocumentOptions {
     bottom?: number;
   };
 }
-
