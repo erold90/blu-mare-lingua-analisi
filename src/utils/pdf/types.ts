@@ -17,7 +17,6 @@ declare module 'jspdf' {
       };
       pages: any[];
       getEncryptor(objectId: number): (data: string) => string;
-      // Add missing properties and methods
       getFontSize: () => number;
       getStringUnitWidth: (text: string) => number;
       getTextDimensions: (text: string) => { w: number; h: number };
