@@ -23,7 +23,7 @@ const QuoteConfirmationDialog: React.FC<QuoteConfirmationDialogProps> = ({
   const handleConfirm = () => {
     // Only pass the name if it's not empty
     if (fullName.trim()) {
-      onConfirm(fullName);
+      onConfirm(fullName.trim());
     } else {
       onConfirm();
     }

@@ -23,8 +23,7 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     const selectedApts = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
     
     if (selectedApts.length === 0) {
-      console.error("Nessun appartamento selezionato");
-      return;
+      throw new Error("Nessun appartamento selezionato");
     }
     
     // Calculate the total price
@@ -33,8 +32,8 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     // Create a new PDF document
     const doc = new jsPDF();
     
-    // Apply autoTable to document
-    autoTable(doc, { startY: -100 }); // This is just to register the plugin
+    // Register the plugin
+    autoTable(doc, { startY: -100 }); 
     
     // Add title
     doc.setFontSize(22);
@@ -53,28 +52,37 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     // Generate the costs table data
     const tableBody = generateCostsTable(doc, priceCalculation, formData, yAfterApartment);
     
-    // Add the table to the PDF
-    const tableResult = doc.autoTable({
-      startY: yAfterApartment + 20,
-      head: [["Voce", "Dettagli", "Importo"]],
-      body: tableBody,
-      theme: "grid",
-      headStyles: { fillColor: [80, 80, 80] },
-      columnStyles: {
-        0: { cellWidth: 80 },
-        1: { cellWidth: 50 },
-        2: { cellWidth: 40, halign: "right" }
-      }
-    });
-    
-    // Get the final Y position after the table - provide fallback value
+    // Add the table to the PDF with explicit type handling
     let finalY = yAfterApartment + 150; // Default fallback position
-    if (tableResult && typeof tableResult === 'object') {
-      if ('lastAutoTable' in tableResult && tableResult.lastAutoTable?.finalY) {
-        finalY = tableResult.lastAutoTable.finalY;
-      } else if ('finalY' in tableResult && tableResult.finalY) {
-        finalY = tableResult.finalY;
+    
+    try {
+      const tableResult = doc.autoTable({
+        startY: yAfterApartment + 20,
+        head: [["Voce", "Dettagli", "Importo"]],
+        body: tableBody,
+        theme: "grid",
+        headStyles: { fillColor: [80, 80, 80] },
+        columnStyles: {
+          0: { cellWidth: 80 },
+          1: { cellWidth: 50 },
+          2: { cellWidth: 40, halign: "right" }
+        }
+      });
+      
+      // Try to get the final Y position using different property paths
+      if (tableResult) {
+        if (typeof tableResult === 'object') {
+          // Try different properties that might contain finalY
+          if ('lastAutoTable' in tableResult && tableResult.lastAutoTable && 'finalY' in tableResult.lastAutoTable) {
+            finalY = tableResult.lastAutoTable.finalY;
+          } else if ('finalY' in tableResult) {
+            finalY = tableResult.finalY;
+          }
+        }
       }
+    } catch (tableError) {
+      console.error("Error creating table:", tableError);
+      // Continue with default finalY if table creation fails
     }
     
     // Add notes after the table

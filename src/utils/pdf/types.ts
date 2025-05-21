@@ -6,7 +6,14 @@ declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => any;
     getNumberOfPages: () => number;
-    getFontSize: () => number;
+  }
+}
+
+// Extending the internal property to include necessary methods
+declare module 'jspdf/dist/jspdf.min' {
+  interface jsPDFAPI {
+    getStringUnitWidth: (text: string) => number;
+    getTextDimensions: (text: string) => { w: number; h: number };
   }
 }
 

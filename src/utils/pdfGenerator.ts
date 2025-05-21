@@ -3,4 +3,3 @@
 import { downloadPDF } from "./pdf/pdfGenerator";
 
 export { downloadPDF };
-

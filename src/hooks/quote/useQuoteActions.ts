@@ -5,13 +5,28 @@ import { FormValues } from "@/utils/quoteFormSchema";
 import { apartments } from "@/data/apartments";
 import { downloadPDF } from "@/utils/pdf/pdfGenerator";
 import { createWhatsAppMessage } from "@/utils/quoteCalculator";
+import { useState } from "react";
+import QuoteConfirmationDialog from "@/components/quote/QuoteConfirmationDialog";
 
 export function useQuoteActions(form: UseFormReturn<FormValues>) {
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
+  
   // Download quote as PDF
   const downloadQuote = (name?: string) => {
     const formValues = form.getValues();
     
     try {
+      // Check required data
+      if (!formValues.checkIn || !formValues.checkOut) {
+        toast.error("Per favore seleziona le date di arrivo e partenza");
+        return;
+      }
+      
+      if (!formValues.selectedApartment && (!formValues.selectedApartments || formValues.selectedApartments.length === 0)) {
+        toast.error("Per favore seleziona almeno un appartamento");
+        return;
+      }
+      
       // Pass form values and apartments to downloadPDF
       const filename = downloadPDF(formValues, apartments, name);
       if (filename) {
@@ -70,6 +85,8 @@ export function useQuoteActions(form: UseFormReturn<FormValues>) {
     downloadQuote,
     sendWhatsApp,
     onSubmitHandler,
-    handleSubmitWrapper
+    handleSubmitWrapper,
+    showConfirmationDialog,
+    setShowConfirmationDialog
   };
 }
