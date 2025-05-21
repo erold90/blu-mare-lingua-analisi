@@ -13,8 +13,8 @@ export const addCenteredText = (doc: jsPDF, text: string, y: number, fontSize = 
   const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFontSize(fontSize);
   
-  // Calculate text width using the correct method
-  const textWidth = doc.getStringUnitWidth(text) * doc.internal.scaleFactor * (fontSize / (72 / 25.6));
+  // Calculate text width using the internal method
+  const textWidth = doc.internal.getStringUnitWidth(text) * fontSize / doc.internal.scaleFactor * 72 / 25.6;
   const x = (pageWidth - textWidth) / 2;
   doc.text(text, x, y);
 };
@@ -24,8 +24,8 @@ export const addRightAlignedText = (doc: jsPDF, text: string, y: number, fontSiz
   const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFontSize(fontSize);
   
-  // Calculate text width using the correct method
-  const textWidth = doc.getStringUnitWidth(text) * doc.internal.scaleFactor * (fontSize / (72 / 25.6));
+  // Calculate text width using the internal method
+  const textWidth = doc.internal.getStringUnitWidth(text) * fontSize / doc.internal.scaleFactor * 72 / 25.6;
   const x = pageWidth - textWidth - 20; // 20 is the right margin
   doc.text(text, x, y);
 };

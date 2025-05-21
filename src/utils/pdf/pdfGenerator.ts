@@ -32,9 +32,6 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     // Create a new PDF document
     const doc = new jsPDF();
     
-    // Register the plugin
-    autoTable(doc, { startY: -100 }); 
-    
     // Add title
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
@@ -52,7 +49,7 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     // Generate the costs table data
     const tableBody = generateCostsTable(doc, priceCalculation, formData, yAfterApartment);
     
-    // Add the table to the PDF with explicit type handling
+    // Add the table to the PDF
     let finalY = yAfterApartment + 150; // Default fallback position
     
     try {
@@ -69,15 +66,13 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
         }
       });
       
-      // Try to get the final Y position using different property paths
+      // Get the final Y position
       if (tableResult) {
-        if (typeof tableResult === 'object') {
-          // Try different properties that might contain finalY
-          if ('lastAutoTable' in tableResult && tableResult.lastAutoTable && 'finalY' in tableResult.lastAutoTable) {
-            finalY = tableResult.lastAutoTable.finalY;
-          } else if ('finalY' in tableResult) {
-            finalY = tableResult.finalY;
-          }
+        // Access finalY safely, accounting for different property structures
+        if (tableResult.lastAutoTable && tableResult.lastAutoTable.finalY) {
+          finalY = tableResult.lastAutoTable.finalY;
+        } else if (tableResult.finalY) {
+          finalY = tableResult.finalY;
         }
       }
     } catch (tableError) {

@@ -3,10 +3,9 @@ import { toast } from "sonner";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { apartments } from "@/data/apartments";
-import { downloadPDF } from "@/utils/pdf/pdfGenerator";
+import { downloadPDF } from "@/utils/pdfGenerator";
 import { createWhatsAppMessage } from "@/utils/quoteCalculator";
 import { useState } from "react";
-import QuoteConfirmationDialog from "@/components/quote/QuoteConfirmationDialog";
 
 export function useQuoteActions(form: UseFormReturn<FormValues>) {
   const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
