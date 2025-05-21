@@ -36,4 +36,9 @@ export interface PdfDocumentOptions {
     top?: number;
     bottom?: number;
   };
+  colors?: {
+    primary?: [number, number, number];
+    secondary?: [number, number, number];
+    heading?: [number, number, number];
+  };
 }

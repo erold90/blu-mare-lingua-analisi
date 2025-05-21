@@ -5,15 +5,24 @@ import { format } from "date-fns";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice, PriceCalculation } from "@/utils/quoteCalculator";
 import { Apartment } from "@/data/apartments";
-import { addCenteredText, addPageNumbers, formatItalianDate } from "./formatUtils";
+import { 
+  addCenteredText, 
+  addPageNumbers, 
+  formatItalianDate,
+  addLogo,
+  addFooter,
+  addWatermark,
+  addHeaderBackground
+} from "./formatUtils";
 import { 
   generateClientSection, 
   generateStayDetailsSection, 
   generateApartmentSection, 
   generateCostsTable, 
-  generateNotesSection 
+  generateNotesSection,
+  generatePaymentMethodsSection
 } from "./sectionGenerators";
-import { AutoTableResult } from "./types"; // Import types to extend jsPDF
+import { AutoTableResult } from "./types";
 
 // Main function to create and download the quote PDF
 export const downloadPDF = (formData: FormValues, apartments: Apartment[], clientName?: string) => {
@@ -32,13 +41,19 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     // Create a new PDF document
     const doc = new jsPDF();
     
+    // Add watermark
+    addWatermark(doc);
+    
+    // Add logo
+    const yAfterLogo = addLogo(doc);
+    
     // Add title
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
-    addCenteredText(doc, "Preventivo Soggiorno", 20, 22);
+    addCenteredText(doc, "Preventivo Soggiorno", yAfterLogo, 22);
     
     // Add client information
-    generateClientSection(doc, formData, clientName);
+    const yAfterClient = generateClientSection(doc, formData, clientName);
     
     // Add stay details
     const yAfterStayDetails = generateStayDetailsSection(doc, formData);
@@ -55,16 +70,24 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     try {
       // Create table and store the result
       const result: AutoTableResult = doc.autoTable({
-        startY: yAfterApartment + 20,
+        startY: yAfterApartment + 25,
         head: [["Voce", "Dettagli", "Importo"]],
         body: tableBody,
         theme: "grid",
-        headStyles: { fillColor: [80, 80, 80] },
+        headStyles: { 
+          fillColor: [80, 80, 80],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
         columnStyles: {
           0: { cellWidth: 80 },
-          1: { cellWidth: 50 },
+          1: { cellWidth: 60 },
           2: { cellWidth: 40, halign: "right" }
-        }
+        },
+        alternateRowStyles: {
+          fillColor: [240, 240, 240]
+        },
+        margin: { left: 20, right: 20 }
       });
       
       // Update finalY if available
@@ -76,15 +99,36 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
       // Continue with default finalY if table creation fails
     }
     
+    // Check if we need to add a new page for notes section
+    if (finalY > doc.internal.pageSize.getHeight() - 100) {
+      doc.addPage();
+      finalY = 20;
+    }
+    
     // Add notes after the table
-    generateNotesSection(doc, finalY);
+    const yAfterNotes = generateNotesSection(doc, finalY);
+    
+    // Add payment methods section
+    if (yAfterNotes > doc.internal.pageSize.getHeight() - 100) {
+      doc.addPage();
+      generatePaymentMethodsSection(doc, 20);
+    } else {
+      generatePaymentMethodsSection(doc, yAfterNotes);
+    }
+    
+    // Add footer to all pages
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      addFooter(doc);
+    }
     
     // Add page numbers
     addPageNumbers(doc);
     
     // Save the PDF
     const today = new Date();
-    const fileName = `Preventivo_${clientName || "Cliente"}_${format(today, "yyyyMMdd")}.pdf`;
+    const fileName = `Preventivo_${clientName || formData.name || "Cliente"}_${format(today, "yyyyMMdd")}.pdf`;
     doc.save(fileName);
     
     return fileName;
