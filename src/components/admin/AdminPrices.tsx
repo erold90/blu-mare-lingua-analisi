@@ -42,8 +42,11 @@ const AdminPrices = () => {
           )
         );
       }
+    } else {
+      console.log("No weekly prices found. Forcing refresh...");
+      __DEBUG_reset && __DEBUG_reset();
     }
-  }, [weeklyPrices]);
+  }, [weeklyPrices, __DEBUG_reset]);
   
   // Re-generate weeks when selected year changes
   React.useEffect(() => {
@@ -97,6 +100,14 @@ const AdminPrices = () => {
       toast.success("Prezzi reimpostati con successo");
     }
   };
+
+  // If no prices loaded yet, force a reset
+  React.useEffect(() => {
+    if (weeklyPrices.length === 0 && __DEBUG_reset) {
+      console.log("No prices found, forcing reset");
+      __DEBUG_reset();
+    }
+  }, [weeklyPrices.length, __DEBUG_reset]);
   
   return (
     <div className="space-y-6">

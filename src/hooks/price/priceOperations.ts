@@ -143,7 +143,7 @@ export const forceInitializePrices = (
   
   // Save to localStorage immediately
   localStorage.setItem("seasonalPricing", JSON.stringify(initialPricing));
-  console.log("2025 seasonal prices saved to localStorage");
+  console.log("2025 seasonal prices saved to localStorage with values:", initialPricing);
   
   return prices2025;
 };
