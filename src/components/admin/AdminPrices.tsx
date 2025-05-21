@@ -18,32 +18,34 @@ const AdminPrices = () => {
   
   const years = [2025, 2026, 2027, 2028];
   const [selectedYear, setSelectedYear] = React.useState<number>(2025);
-  const [weeks, setWeeks] = React.useState<{ start: Date, end: Date }[]>(
-    generateWeeksForSeason(selectedYear, 6, 9) // June to September
-  );
-  
-  // Forzare un rendering per assicurarsi che i prezzi siano caricati
+  const [weeks, setWeeks] = React.useState<{ start: Date, end: Date }[]>([]);
+
+  // Inizializza le settimane all'avvio
   React.useEffect(() => {
-    console.log("AdminPrices: Forza il rendering per assicurarsi che i prezzi siano caricati");
-  }, []);
+    console.log("AdminPrices: Inizializzando le settimane per la stagione");
+    setWeeks(generateWeeksForSeason(selectedYear, 6, 9)); // June to September
+  }, [generateWeeksForSeason, selectedYear]);
   
   // Log di diagnostica
   React.useEffect(() => {
+    console.log("AdminPrices: weeklyPrices updated:", weeklyPrices.length);
+    
     const year2025 = seasonalPricing.find(s => s.year === 2025);
     if (year2025) {
-      const pricesForApt1 = year2025.prices.filter(p => p.apartmentId === "apt-1").length;
-      console.log(`Prezzi caricati per l'anno 2025 (Apt 1): ${pricesForApt1}`);
+      const pricesForApt1 = year2025.prices.filter(p => p.apartmentId === "apt-1");
+      console.log(`Prezzi caricati per l'anno 2025 (Apt 1): ${pricesForApt1.length}`);
       
       // Visualizza i primi 3 prezzi per debug
-      const samplePrices = year2025.prices
-        .filter(p => p.apartmentId === "apt-1")
-        .slice(0, 3)
-        .map(p => `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`);
-      console.log("Sample prices for Apt 1:", samplePrices);
+      if (pricesForApt1.length > 0) {
+        const samplePrices = pricesForApt1
+          .slice(0, 3)
+          .map(p => `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`);
+        console.log("Sample prices for Apt 1:", samplePrices);
+      }
     } else {
       console.warn("Nessun prezzo trovato per l'anno 2025");
     }
-  }, [seasonalPricing]);
+  }, [seasonalPricing, weeklyPrices]);
   
   // Re-generate weeks when selected year changes
   React.useEffect(() => {
@@ -86,15 +88,18 @@ const AdminPrices = () => {
              new Date(p.weekStart).toDateString() === weekStart.toDateString()
       );
       
-      if (seasonPrice) return seasonPrice.price;
+      if (seasonPrice) {
+        return seasonPrice.price;
+      }
     }
     
-    // 3. Default to apartment base price if not found
-    const apartment = apartments.find(apt => apt.id === apartmentId);
-    return apartment ? apartment.price : 0;
+    // Debug per vedere cosa sta accadendo
+    console.log(`Prezzo non trovato per ${apartmentId} su ${weekStart.toDateString()}, uso il default`);
+    
+    // 3. Default to base price if not found
+    return 0; // Usiamo 0 come valore default invece di un prezzo fisso
   };
   
-  // Only call handleResetPricesClick if __DEBUG_reset exists
   const handleResetPricesClick = () => {
     if (__DEBUG_reset) {
       __DEBUG_reset();
@@ -104,21 +109,29 @@ const AdminPrices = () => {
   
   return (
     <div className="space-y-6">
-      {process.env.NODE_ENV === 'development' && __DEBUG_reset && (
-        <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex justify-between">
+        <h2 className="text-2xl font-bold">Gestione Prezzi</h2>
+        {process.env.NODE_ENV === 'development' && __DEBUG_reset && (
           <Button variant="destructive" size="sm" onClick={handleResetPricesClick}>
             Reset Prezzi (Debug)
           </Button>
+        )}
+      </div>
+      
+      {weeklyPrices.length > 0 ? (
+        <YearTabs 
+          years={years}
+          selectedYear={selectedYear}
+          onYearChange={setSelectedYear}
+          weeks={weeks}
+          getPriceForWeek={getPriceForWeek}
+          handlePriceChange={handlePriceChange}
+        />
+      ) : (
+        <div className="p-8 text-center rounded-md border border-dashed">
+          <p className="text-muted-foreground">Caricamento prezzi in corso...</p>
         </div>
       )}
-      <YearTabs 
-        years={years}
-        selectedYear={selectedYear}
-        onYearChange={setSelectedYear}
-        weeks={weeks}
-        getPriceForWeek={getPriceForWeek}
-        handlePriceChange={handlePriceChange}
-      />
     </div>
   );
 };

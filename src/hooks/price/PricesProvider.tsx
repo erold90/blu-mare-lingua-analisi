@@ -3,7 +3,8 @@ import React, { createContext, useEffect } from "react";
 import { PricesContextType } from "./types";
 import { getPriceForDate, getCurrentOrCreateSeason, generateWeeksForSeason } from "./priceUtils";
 import { useProviderState } from "./useProviderState";
-import { updateWeeklyPrice as updatePrice, initializeYearPricing, resetAllPrices } from "./priceOperations";
+import { updateWeeklyPrice as updatePrice, initializeYearPricing, resetAllPrices, forceInitializePrices } from "./priceOperations";
+import { toast } from "sonner";
 
 // Create the context
 export const PricesContext = createContext<PricesContextType | undefined>(undefined);
@@ -11,15 +12,34 @@ export const PricesContext = createContext<PricesContextType | undefined>(undefi
 export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { seasonalPricing, setSeasonalPricing, weeklyPrices, setWeeklyPrices } = useProviderState();
   
-  // Initialize 2025 season with custom prices if it doesn't exist (una volta sola)
+  // Initialize 2025 season with custom prices if it doesn't exist
   useEffect(() => {
     console.log("PricesProvider: Checking if 2025 pricing needs initialization");
     
-    // Inizializziamo i prezzi solo se necessario
-    initializeYearPricing(seasonalPricing, setSeasonalPricing);
+    if (!seasonalPricing || seasonalPricing.length === 0) {
+      console.log("Nessun prezzo stagionale trovato, forziamo l'inizializzazione");
+      const initialPrices = forceInitializePrices(setSeasonalPricing);
+      setWeeklyPrices(initialPrices);
+      toast.success("Prezzi 2025 inizializzati correttamente");
+      return;
+    }
     
-    // Also ensure current year's prices are loaded
-    getCurrentOrCreateSeason(seasonalPricing, setSeasonalPricing, setWeeklyPrices);
+    // Verifica se esiste una stagione 2025
+    const year2025 = seasonalPricing.find(s => s.year === 2025);
+    if (!year2025 || !year2025.prices || year2025.prices.length === 0) {
+      console.log("Stagione 2025 mancante o vuota, inizializzazione forzata");
+      const initialPrices = forceInitializePrices(setSeasonalPricing);
+      setWeeklyPrices(initialPrices);
+      toast.success("Prezzi 2025 inizializzati correttamente");
+    } else {
+      console.log(`Stagione 2025 trovata con ${year2025.prices.length} prezzi`);
+      
+      // Debug: stampa alcuni prezzi per verifica
+      if (year2025.prices.length > 0) {
+        const samplePrices = year2025.prices.filter(p => p.apartmentId === "apt-1").slice(0, 3);
+        console.log("Esempi prezzi:", samplePrices.map(p => `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`));
+      }
+    }
   }, []);
   
   // Update a specific weekly price
@@ -35,7 +55,9 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Reset dei prezzi (solo per sviluppo)
   const resetPrices = () => {
     resetAllPrices();
-    window.location.reload();
+    const initialPrices = forceInitializePrices(setSeasonalPricing);
+    setWeeklyPrices(initialPrices);
+    toast.success("Prezzi reimpostati correttamente");
   };
   
   // Create the context value object

@@ -14,6 +14,8 @@ export const generateWeeksForSeason = (year: number, startMonth: number, endMont
     currentDate = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000);
   }
   
+  console.log(`Primo sabato di ${startMonth}/${year}: ${currentDate.toLocaleDateString()}`);
+  
   // Generate weeks until the end of September
   while (currentDate.getMonth() < endMonth) {
     const weekEnd = new Date(currentDate);
@@ -24,11 +26,17 @@ export const generateWeeksForSeason = (year: number, startMonth: number, endMont
       end: weekEnd
     });
     
+    // Debug logging
+    if (weeks.length <= 3 || weeks.length >= 15) {
+      console.log(`Week ${weeks.length}: ${currentDate.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`);
+    }
+    
     // Move to next Saturday
     currentDate = new Date(currentDate);
     currentDate.setDate(currentDate.getDate() + 7);
   }
   
+  console.log(`Generato ${weeks.length} settimane per la stagione ${year}`);
   return weeks;
 };
 
@@ -43,7 +51,7 @@ export function generateDefaultPricesForYear(year: number): WeeklyPrice[] {
         apartmentId: apartment.id,
         weekStart: week.start.toISOString(),
         weekEnd: week.end.toISOString(),
-        price: apartment.price // Default to the base apartment price
+        price: 0 // Default to 0 price
       });
     });
   });
@@ -61,7 +69,7 @@ export const getPriceForDate = (apartmentId: string, date: Date, seasonalPricing
   
   // Find the season for this year
   const season = seasonalPricing.find(s => s.year === year);
-  if (!season) return apartment.price; // Return default price if no seasonal pricing
+  if (!season) return 0; // Return default price if no seasonal pricing
   
   // Find the week containing this date
   const weekPrice = season.prices.find(price => {
@@ -74,7 +82,7 @@ export const getPriceForDate = (apartmentId: string, date: Date, seasonalPricing
   });
   
   // Return weekly price if found, otherwise default price
-  return weekPrice ? weekPrice.price : apartment.price;
+  return weekPrice ? weekPrice.price : 0;
 };
 
 // Get or create season for current year
@@ -83,7 +91,7 @@ export const getCurrentOrCreateSeason = (
   setSeasonalPricing: React.Dispatch<React.SetStateAction<SeasonalPricing[]>>,
   setWeeklyPrices: React.Dispatch<React.SetStateAction<WeeklyPrice[]>>
 ): SeasonalPricing => {
-  const currentYear = new Date().getFullYear();
+  const currentYear = 2025; // forziamo a 2025
   const currentSeason = seasonalPricing.find(season => season.year === currentYear);
   
   if (!currentSeason) {
@@ -93,9 +101,15 @@ export const getCurrentOrCreateSeason = (
       prices: generateDefaultPricesForYear(currentYear)
     };
     
+    console.log(`Creata nuova stagione per il ${currentYear} con ${newSeason.prices.length} prezzi`);
+    
     // Update seasonal pricing
-    setSeasonalPricing(prevPricing => [...prevPricing, newSeason]);
+    const updatedPricing = [...seasonalPricing, newSeason];
+    setSeasonalPricing(updatedPricing);
     setWeeklyPrices(newSeason.prices);
+    
+    // Save to localStorage
+    localStorage.setItem("seasonalPricing", JSON.stringify(updatedPricing));
     
     return newSeason;
   }

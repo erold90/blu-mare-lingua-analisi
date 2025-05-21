@@ -14,6 +14,8 @@ export const updateWeeklyPrice = (
   setSeasonalPricing: Dispatch<SetStateAction<SeasonalPricing[]>>,
   setWeeklyPrices: Dispatch<SetStateAction<WeeklyPrice[]>>
 ) => {
+  console.log(`Updating price for ${apartmentId} on ${weekStart} to ${price}€`);
+  
   const currentYear = new Date(weekStart).getFullYear();
   
   // Create a copy of the current pricing to work with
@@ -24,9 +26,10 @@ export const updateWeeklyPrice = (
   
   if (yearIndex === -1) {
     // Year not found, create new year entry
+    console.log(`Creating new pricing for year ${currentYear}`);
     const newYearPricing = {
       year: currentYear,
-      prices: generateDefaultPricesForYear(currentYear)
+      prices: []
     };
     
     // Add the new year pricing to the updated pricing
@@ -42,6 +45,7 @@ export const updateWeeklyPrice = (
   if (priceIndex !== -1) {
     // Price exists, update it
     updatedPricing[yearIndex].prices[priceIndex].price = price;
+    console.log(`Updated existing price: ${apartmentId}, ${weekStart}, ${price}€`);
   } else {
     // Add new price entry if not found
     const weekEndDate = new Date(weekStart);
@@ -53,6 +57,7 @@ export const updateWeeklyPrice = (
       weekEnd: weekEndDate.toISOString(),
       price
     });
+    console.log(`Added new price: ${apartmentId}, ${weekStart}, ${price}€`);
   }
   
   // Save to state
@@ -62,29 +67,10 @@ export const updateWeeklyPrice = (
   localStorage.setItem("seasonalPricing", JSON.stringify(updatedPricing));
   
   // Also update weekly prices if they're for the current year
-  setWeeklyPrices(prevPrices => {
-    const updatedWeeklyPrices = [...prevPrices];
-    const weeklyPriceIndex = updatedWeeklyPrices.findIndex(
-      p => p.apartmentId === apartmentId && p.weekStart.substring(0, 10) === weekStart.substring(0, 10)
-    );
-    
-    if (weeklyPriceIndex !== -1) {
-      updatedWeeklyPrices[weeklyPriceIndex].price = price;
-    } else {
-      // Add new price entry if not found
-      const weekEndDate = new Date(weekStart);
-      weekEndDate.setDate(weekEndDate.getDate() + 6); // End is 6 days later
-      
-      updatedWeeklyPrices.push({
-        apartmentId,
-        weekStart: weekStart,
-        weekEnd: weekEndDate.toISOString(),
-        price
-      });
-    }
-    
-    return updatedWeeklyPrices;
-  });
+  const currentYearPrices = updatedPricing[yearIndex].prices;
+  setWeeklyPrices(currentYearPrices);
+  
+  console.log(`Weekly prices updated, now has ${currentYearPrices.length} entries`);
 };
 
 /**
@@ -104,7 +90,7 @@ export const initializeYearPricing = (
       has2025Season = parsedPricing.some(season => season.year === 2025);
       
       if (has2025Season) {
-        console.log("I prezzi 2025 esistono già, li utilizziamo");
+        console.log("I prezzi 2025 esistono già in localStorage");
         return;
       }
     } catch (error) {
@@ -112,62 +98,63 @@ export const initializeYearPricing = (
     }
   }
   
-  if (!has2025Season) {
-    console.log("Inizializzazione prezzi 2025 con valori personalizzati");
-    // Create predefined pricing data for 2025 season based on the provided table
-    const prices2025: WeeklyPrice[] = [];
+  console.log("Inizializzazione prezzi 2025 con valori personalizzati");
+  
+  // Create predefined pricing data for 2025 season based on the provided table
+  const prices2025: WeeklyPrice[] = [];
+  
+  // Define price tiers for each apartment and period
+  const pricingData = [
+    // June
+    { start: "2025-06-07", end: "2025-06-13", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
+    { start: "2025-06-14", end: "2025-06-20", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
+    { start: "2025-06-21", end: "2025-06-27", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
+    { start: "2025-06-28", end: "2025-07-04", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
     
-    // Define price tiers for each apartment and period
-    const pricingData = [
-      // June
-      { start: "2025-06-07", end: "2025-06-13", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
-      { start: "2025-06-14", end: "2025-06-20", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
-      { start: "2025-06-21", end: "2025-06-27", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
-      { start: "2025-06-28", end: "2025-07-04", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
-      
-      // July
-      { start: "2025-07-05", end: "2025-07-11", prices: { "apt-1": 475, "apt-2": 575, "apt-3": 425, "apt-4": 450 } },
-      { start: "2025-07-12", end: "2025-07-18", prices: { "apt-1": 475, "apt-2": 575, "apt-3": 425, "apt-4": 450 } },
-      { start: "2025-07-19", end: "2025-07-25", prices: { "apt-1": 475, "apt-2": 575, "apt-3": 425, "apt-4": 450 } },
-      { start: "2025-07-26", end: "2025-08-01", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 665, "apt-4": 700 } },
-      
-      // August
-      { start: "2025-08-02", end: "2025-08-08", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 665, "apt-4": 700 } },
-      { start: "2025-08-09", end: "2025-08-15", prices: { "apt-1": 1150, "apt-2": 1250, "apt-3": 1075, "apt-4": 1100 } },
-      { start: "2025-08-16", end: "2025-08-22", prices: { "apt-1": 1150, "apt-2": 1250, "apt-3": 1075, "apt-4": 1100 } },
-      { start: "2025-08-23", end: "2025-08-29", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 675, "apt-4": 700 } },
-      { start: "2025-08-30", end: "2025-09-05", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 675, "apt-4": 700 } },
-      
-      // September
-      { start: "2025-09-06", end: "2025-09-12", prices: { "apt-1": 500, "apt-2": 600, "apt-3": 425, "apt-4": 450 } },
-      { start: "2025-09-13", end: "2025-09-19", prices: { "apt-1": 500, "apt-2": 600, "apt-3": 425, "apt-4": 450 } },
-      { start: "2025-09-20", end: "2025-09-26", prices: { "apt-1": 500, "apt-2": 600, "apt-3": 425, "apt-4": 450 } },
-    ];
+    // July
+    { start: "2025-07-05", end: "2025-07-11", prices: { "apt-1": 475, "apt-2": 575, "apt-3": 425, "apt-4": 450 } },
+    { start: "2025-07-12", end: "2025-07-18", prices: { "apt-1": 475, "apt-2": 575, "apt-3": 425, "apt-4": 450 } },
+    { start: "2025-07-19", end: "2025-07-25", prices: { "apt-1": 475, "apt-2": 575, "apt-3": 425, "apt-4": 450 } },
+    { start: "2025-07-26", end: "2025-08-01", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 665, "apt-4": 700 } },
+    
+    // August
+    { start: "2025-08-02", end: "2025-08-08", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 665, "apt-4": 700 } },
+    { start: "2025-08-09", end: "2025-08-15", prices: { "apt-1": 1150, "apt-2": 1250, "apt-3": 1075, "apt-4": 1100 } },
+    { start: "2025-08-16", end: "2025-08-22", prices: { "apt-1": 1150, "apt-2": 1250, "apt-3": 1075, "apt-4": 1100 } },
+    { start: "2025-08-23", end: "2025-08-29", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 675, "apt-4": 700 } },
+    { start: "2025-08-30", end: "2025-09-05", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 675, "apt-4": 700 } },
+    
+    // September
+    { start: "2025-09-06", end: "2025-09-12", prices: { "apt-1": 500, "apt-2": 600, "apt-3": 425, "apt-4": 450 } },
+    { start: "2025-09-13", end: "2025-09-19", prices: { "apt-1": 500, "apt-2": 600, "apt-3": 425, "apt-4": 450 } },
+    { start: "2025-09-20", end: "2025-09-26", prices: { "apt-1": 500, "apt-2": 600, "apt-3": 425, "apt-4": 450 } },
+  ];
 
-    // Create price entries for each apartment and time period
-    pricingData.forEach(period => {
-      // For each apartment ID
-      Object.entries(period.prices).forEach(([aptId, price]) => {
-        const startDate = new Date(period.start);
-        const endDate = new Date(period.end);
-        
-        prices2025.push({
-          apartmentId: aptId,
-          weekStart: startDate.toISOString(),
-          weekEnd: endDate.toISOString(),
-          price: price
-        });
+  // Create price entries for each apartment and time period
+  pricingData.forEach(period => {
+    // For each apartment ID
+    Object.entries(period.prices).forEach(([aptId, price]) => {
+      const startDate = new Date(period.start);
+      const endDate = new Date(period.end);
+      
+      prices2025.push({
+        apartmentId: aptId,
+        weekStart: startDate.toISOString(),
+        weekEnd: endDate.toISOString(),
+        price: price
       });
     });
-    
-    // Aggiorna lo stato con i nuovi prezzi
-    const updatedPricing = [...seasonalPricing.filter(s => s.year !== 2025), { year: 2025, prices: prices2025 }];
-    setSeasonalPricing(updatedPricing);
-    
-    // Save to localStorage immediately
-    localStorage.setItem("seasonalPricing", JSON.stringify(updatedPricing));
-    console.log("2025 seasonal prices initialized with custom values");
-  }
+  });
+  
+  console.log(`Creati ${prices2025.length} prezzi personalizzati per il 2025`);
+  
+  // Aggiorna lo stato con i nuovi prezzi
+  const updatedPricing = [...seasonalPricing.filter(s => s.year !== 2025), { year: 2025, prices: prices2025 }];
+  setSeasonalPricing(updatedPricing);
+  
+  // Save to localStorage immediately
+  localStorage.setItem("seasonalPricing", JSON.stringify(updatedPricing));
+  console.log("2025 seasonal prices saved to localStorage");
 };
 
 /**
@@ -176,4 +163,72 @@ export const initializeYearPricing = (
 export const resetAllPrices = () => {
   console.log("Resetting all prices data");
   localStorage.removeItem("seasonalPricing");
+};
+
+/**
+ * Forza l'inizializzazione dei prezzi cancellando quelli esistenti
+ */
+export const forceInitializePrices = (
+  setSeasonalPricing: Dispatch<SetStateAction<SeasonalPricing[]>>
+) => {
+  console.log("Forzando l'inizializzazione dei prezzi");
+  localStorage.removeItem("seasonalPricing");
+  
+  // Create predefined pricing data for 2025 season based on the provided table
+  const prices2025: WeeklyPrice[] = [];
+  
+  // Define price tiers for each apartment and period
+  const pricingData = [
+    // June
+    { start: "2025-06-07", end: "2025-06-13", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
+    { start: "2025-06-14", end: "2025-06-20", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
+    { start: "2025-06-21", end: "2025-06-27", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
+    { start: "2025-06-28", end: "2025-07-04", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
+    
+    // July
+    { start: "2025-07-05", end: "2025-07-11", prices: { "apt-1": 475, "apt-2": 575, "apt-3": 425, "apt-4": 450 } },
+    { start: "2025-07-12", end: "2025-07-18", prices: { "apt-1": 475, "apt-2": 575, "apt-3": 425, "apt-4": 450 } },
+    { start: "2025-07-19", end: "2025-07-25", prices: { "apt-1": 475, "apt-2": 575, "apt-3": 425, "apt-4": 450 } },
+    { start: "2025-07-26", end: "2025-08-01", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 665, "apt-4": 700 } },
+    
+    // August
+    { start: "2025-08-02", end: "2025-08-08", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 665, "apt-4": 700 } },
+    { start: "2025-08-09", end: "2025-08-15", prices: { "apt-1": 1150, "apt-2": 1250, "apt-3": 1075, "apt-4": 1100 } },
+    { start: "2025-08-16", end: "2025-08-22", prices: { "apt-1": 1150, "apt-2": 1250, "apt-3": 1075, "apt-4": 1100 } },
+    { start: "2025-08-23", end: "2025-08-29", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 675, "apt-4": 700 } },
+    { start: "2025-08-30", end: "2025-09-05", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 675, "apt-4": 700 } },
+    
+    // September
+    { start: "2025-09-06", end: "2025-09-12", prices: { "apt-1": 500, "apt-2": 600, "apt-3": 425, "apt-4": 450 } },
+    { start: "2025-09-13", end: "2025-09-19", prices: { "apt-1": 500, "apt-2": 600, "apt-3": 425, "apt-4": 450 } },
+    { start: "2025-09-20", end: "2025-09-26", prices: { "apt-1": 500, "apt-2": 600, "apt-3": 425, "apt-4": 450 } },
+  ];
+
+  // Create price entries for each apartment and time period
+  pricingData.forEach(period => {
+    // For each apartment ID
+    Object.entries(period.prices).forEach(([aptId, price]) => {
+      const startDate = new Date(period.start);
+      const endDate = new Date(period.end);
+      
+      prices2025.push({
+        apartmentId: aptId,
+        weekStart: startDate.toISOString(),
+        weekEnd: endDate.toISOString(),
+        price: price
+      });
+    });
+  });
+  
+  console.log(`Creati ${prices2025.length} prezzi personalizzati per il 2025`);
+  
+  // Aggiorna lo stato con i nuovi prezzi
+  const initialPricing = [{ year: 2025, prices: prices2025 }];
+  setSeasonalPricing(initialPricing);
+  
+  // Save to localStorage immediately
+  localStorage.setItem("seasonalPricing", JSON.stringify(initialPricing));
+  console.log("2025 seasonal prices saved to localStorage");
+  
+  return prices2025;
 };

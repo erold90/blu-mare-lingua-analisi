@@ -21,5 +21,5 @@ export interface PricesContextType {
   getPriceForDate: (apartmentId: string, date: Date) => number;
   generateWeeksForSeason: (year: number, startMonth: number, endMonth: number) => { start: Date, end: Date }[];
   getCurrentSeason: () => SeasonalPricing;
-  __DEBUG_reset?: () => void; // Added debug reset function as optional
+  __DEBUG_reset?: () => void; // Funzione di reset per debug
 }

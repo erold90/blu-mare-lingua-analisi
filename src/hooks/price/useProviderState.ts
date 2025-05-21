@@ -7,6 +7,8 @@ import { generateDefaultPricesForYear } from "./priceUtils";
  * Custom hook to manage the state for the prices provider
  */
 export const useProviderState = () => {
+  console.log("Inizializzazione di useProviderState");
+  
   // Initial state with seasonal pricing for the current year
   const [seasonalPricing, setSeasonalPricing] = useState<SeasonalPricing[]>(() => {
     console.log("useProviderState: Loading seasonal pricing from localStorage");
@@ -27,21 +29,16 @@ export const useProviderState = () => {
         return parsedPricing;
       } catch (error) {
         console.error("Failed to parse saved seasonal pricing:", error);
-        return [];
       }
     }
     
     console.log("useProviderState: No seasonal pricing found, initializing with default");
-    const currentYear = new Date().getFullYear();
-    // Initialize with default pricing if nothing is saved
-    return [{
-      year: currentYear,
-      prices: generateDefaultPricesForYear(currentYear)
-    }];
+    return [];
   });
   
   // Current year's weekly prices
   const [weeklyPrices, setWeeklyPrices] = useState<WeeklyPrice[]>(() => {
+    console.log("Inizializzazione dei prezzi settimanali");
     const savedPricing = localStorage.getItem("seasonalPricing");
     if (savedPricing) {
       try {
@@ -54,9 +51,12 @@ export const useProviderState = () => {
           if (year2025.prices.length > 0) {
             const apt1Prices = year2025.prices.filter((p: WeeklyPrice) => p.apartmentId === "apt-1");
             console.log(`Prezzi per apt-1 nel 2025: ${apt1Prices.length}`);
-            console.log("Primi 3 prezzi:", apt1Prices.slice(0, 3).map((p: WeeklyPrice) => 
-              `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
-            ));
+            if (apt1Prices.length > 0) {
+              console.log("Primi 3 prezzi:", apt1Prices.slice(0, 3).map((p: WeeklyPrice) => 
+                `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
+              ));
+              console.log("Dettaglio primo prezzo:", apt1Prices[0]);
+            }
           }
           
           return year2025.prices;
@@ -66,10 +66,8 @@ export const useProviderState = () => {
       }
     }
     
-    // Otherwise use current year pricing
-    const currentYear = new Date().getFullYear();
-    const currentSeason = seasonalPricing.find(season => season.year === currentYear);
-    return currentSeason ? currentSeason.prices : [];
+    console.log("Nessun prezzo trovato per il 2025, restituendo array vuoto");
+    return [];
   });
 
   // Aggiorniamo i prezzi settimanali quando cambia seasonalPricing
