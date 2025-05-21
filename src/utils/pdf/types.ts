@@ -7,12 +7,18 @@ declare module 'jspdf' {
     autoTable: (options: any) => any;
     getNumberOfPages: () => number;
     internal: {
+      events: any;
       scaleFactor: number;
-      getFontSize: () => number;
-      pageSize: {
+      pageSize: { 
+        width: number;
         getWidth: () => number;
+        height: number;
         getHeight: () => number;
       };
+      pages: any[];
+      getEncryptor(objectId: number): (data: string) => string;
+      // Add missing properties and methods
+      getFontSize: () => number;
       getStringUnitWidth: (text: string) => number;
       getTextDimensions: (text: string) => { w: number; h: number };
     };

@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { apartments } from "@/data/apartments";
-import { downloadPDF } from "@/utils/pdfGenerator";
+import { downloadPDF } from "@/utils/pdf/pdfGenerator";
 import { createWhatsAppMessage } from "@/utils/quoteCalculator";
 import { useState } from "react";
 

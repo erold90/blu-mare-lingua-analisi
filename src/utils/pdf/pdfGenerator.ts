@@ -53,7 +53,7 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     let finalY = yAfterApartment + 150; // Default fallback position
     
     try {
-      const tableResult = doc.autoTable({
+      const tableResult = autoTable(doc, {
         startY: yAfterApartment + 20,
         head: [["Voce", "Dettagli", "Importo"]],
         body: tableBody,
@@ -66,14 +66,9 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
         }
       });
       
-      // Get the final Y position
+      // Get the final Y position safely
       if (tableResult) {
-        // Access finalY safely, accounting for different property structures
-        if (tableResult.lastAutoTable && tableResult.lastAutoTable.finalY) {
-          finalY = tableResult.lastAutoTable.finalY;
-        } else if (tableResult.finalY) {
-          finalY = tableResult.finalY;
-        }
+        finalY = tableResult.finalY || finalY;
       }
     } catch (tableError) {
       console.error("Error creating table:", tableError);
