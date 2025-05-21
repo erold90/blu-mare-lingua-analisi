@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Separator } from "@/components/ui/separator";
-import { PriceCalculation } from "@/utils/quoteCalculator";
+import { PriceCalculation } from "@/utils/price/types";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
 
@@ -34,62 +34,73 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
           <span className="text-muted-foreground">
             {isHighSeason ? 'Costo appartamenti (settimanale):' : `Costo appartamenti (${priceInfo.nights} notti):`}
           </span>
-          <span>{priceInfo.basePrice}€</span>
+          <span className="font-medium">{priceInfo.basePrice}€</span>
         </div>
         
         {/* Display the cleaning fee */}
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Pulizia finale:</span>
-          <span>{priceInfo.cleaningFee}€ <span className="text-green-600">(inclusa)</span></span>
+          <div className="flex items-center">
+            <span className="font-medium mr-2">{priceInfo.cleaningFee}€</span>
+            <span className="text-green-500">(inclusa)</span>
+          </div>
         </div>
         
         {priceInfo.extras > 0 && (
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Servizi extra:</span>
-            <span>{priceInfo.extras}€</span>
+            <span className="font-medium">{priceInfo.extras}€</span>
           </div>
         )}
         
         {sleepingInCribs > 0 && (
-          <div className="flex justify-between text-sm text-green-600">
+          <div className="flex justify-between text-sm text-green-500">
             <span>Culle per bambini ({sleepingInCribs}):</span>
             <span>Gratuito</span>
           </div>
         )}
         
+        <Separator className="my-2" />
+        
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Subtotale:</span>
-          <span>{subtotal}€</span>
+          <span className="font-medium">{subtotal}€</span>
         </div>
         
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Tassa di soggiorno:</span>
-          <span>{priceInfo.touristTax}€</span>
+          <span className="font-medium">{priceInfo.touristTax}€</span>
         </div>
         
         <Separator className="my-2" />
-        <div className="flex justify-between text-sm font-medium">
+        
+        <div className="flex justify-between text-sm font-semibold">
           <span>Totale con sconto applicato:</span>
           <span className="text-primary">{totalToPay}€</span>
         </div>
+        
         {priceInfo.discount > 0 && (
-          <div className="flex justify-between text-sm text-green-600">
+          <div className="flex justify-between text-sm text-green-500">
             <span>Risparmio (sconto):</span>
             <span>{priceInfo.discount}€</span>
           </div>
         )}
+        
         <Separator className="my-2" />
-        <div className="flex justify-between font-semibold text-base pt-2">
+        
+        <div className="flex justify-between font-bold text-lg">
           <span>Totale da pagare:</span>
           <span>{totalToPay}€</span>
         </div>
+        
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Caparra (30%):</span>
-          <span>{deposit}€</span>
+          <span className="font-medium">{deposit}€</span>
         </div>
+        
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Cauzione (restituibile):</span>
-          <span>200€</span>
+          <span className="font-medium">200€</span>
         </div>
       </div>
     </div>

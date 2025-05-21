@@ -2,66 +2,69 @@
 import React from "react";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
+import { PriceCalculation } from "@/utils/price/types";
 
 interface ApartmentListProps {
   apartments: Apartment[];
   selectedApartments: Apartment[];
   formValues: FormValues;
+  priceInfo: PriceCalculation;
 }
 
 const ApartmentList: React.FC<ApartmentListProps> = ({ 
   apartments, 
   selectedApartments, 
-  formValues
+  formValues,
+  priceInfo
 }) => {
-  // Helper to get persons per apartment
-  const getPersonsInApartment = (apartmentId: string) => {
-    if (formValues.personsPerApartment && formValues.personsPerApartment[apartmentId]) {
-      return formValues.personsPerApartment[apartmentId];
-    }
-    return 0;
-  };
-
   // Helper to check if an apartment has pets
   const hasPetsInApartment = (apartmentId: string) => {
     if (formValues.petsInApartment && formValues.petsInApartment[apartmentId]) {
       return true;
     }
-    return false;
+    return formValues.hasPets || false;
+  };
+
+  // Calculate rounded price for each apartment (round down to nearest 50€)
+  const getRoundedPrice = (apartmentId: string): number => {
+    const originalPrice = priceInfo.apartmentPrices?.[apartmentId] || 0;
+    return Math.floor(originalPrice / 50) * 50;
+  };
+
+  // Calculate discount for each apartment
+  const getDiscount = (apartmentId: string): number => {
+    const originalPrice = priceInfo.apartmentPrices?.[apartmentId] || 0;
+    const roundedPrice = getRoundedPrice(apartmentId);
+    return originalPrice - roundedPrice;
   };
 
   return (
-    <div className="border rounded-md p-4 space-y-3">
-      <h3 className="font-medium">Appartamenti e costi</h3>
-      
+    <div className="space-y-3">
       {selectedApartments.length > 0 ? (
         <div className="space-y-4">
           {selectedApartments.map((apartment, index) => {
-            const personsCount = getPersonsInApartment(apartment.id);
+            const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
+            const roundedPrice = getRoundedPrice(apartment.id);
+            const discount = getDiscount(apartment.id);
             const hasPets = hasPetsInApartment(apartment.id);
             const isLastItem = index === selectedApartments.length - 1;
-            
-            // Calcolo del costo base per appartamento
-            const baseApartmentCost = apartment.price * (formValues.checkIn && formValues.checkOut ? 
-              Math.ceil((formValues.checkOut.getTime() - formValues.checkIn.getTime()) / (1000 * 60 * 60 * 24)) : 0);
-            
-            // Costo biancheria
-            const linenCost = formValues.linenOption === "extra" && personsCount > 0 
-              ? personsCount * 15 
-              : 0;
-            
-            // Costo animali
-            const petsCost = hasPets ? 50 : 0;
-            
-            // Totale per appartamento
-            const apartmentTotal = baseApartmentCost + linenCost + petsCost;
             
             return (
               <div key={apartment.id} className={`pb-4 ${!isLastItem ? 'border-b' : ''}`}>
                 <div className="flex flex-col space-y-2">
                   <div className="flex justify-between items-center">
                     <h4 className="font-semibold text-md">{apartment.name}</h4>
-                    <span className="text-primary font-semibold">{baseApartmentCost}€</span>
+                    <div className="text-right">
+                      {discount > 0 && (
+                        <div className="flex flex-col">
+                          <span className="text-sm line-through text-muted-foreground">{apartmentPrice}€</span>
+                          <span className="text-primary font-semibold">{roundedPrice}€</span>
+                        </div>
+                      )}
+                      {discount === 0 && (
+                        <span className="text-primary font-semibold">{apartmentPrice}€</span>
+                      )}
+                    </div>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2 text-sm">
@@ -72,13 +75,6 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                     <span className="text-muted-foreground">Posizione:</span>
                     <span>Piano {apartment.floor}</span>
                     
-                    {personsCount > 0 && (
-                      <>
-                        <span className="text-muted-foreground">Persone:</span>
-                        <span>{personsCount}</span>
-                      </>
-                    )}
-                    
                     {hasPets && (
                       <>
                         <span className="text-muted-foreground">Animali:</span>
@@ -87,26 +83,10 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                     )}
                   </div>
                   
-                  {/* Costi aggiuntivi per appartamento */}
-                  {(linenCost > 0 || petsCost > 0) && (
-                    <div className="mt-2 space-y-1">
-                      <p className="text-sm font-medium">Costi aggiuntivi:</p>
-                      {linenCost > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Biancheria ({personsCount} persone):</span>
-                          <span>{linenCost}€</span>
-                        </div>
-                      )}
-                      {petsCost > 0 && (
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Animali domestici:</span>
-                          <span>{petsCost}€</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between text-sm font-medium pt-1">
-                        <span>Totale appartamento:</span>
-                        <span>{apartmentTotal}€</span>
-                      </div>
+                  {/* Sconto per appartamento */}
+                  {discount > 0 && (
+                    <div className="mt-1 text-sm text-green-500">
+                      Risparmio: {discount}€
                     </div>
                   )}
                 </div>

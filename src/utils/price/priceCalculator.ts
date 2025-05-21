@@ -5,16 +5,19 @@ import { emptyPriceCalculation, PriceCalculation } from "./types";
 import { calculateBasePrice } from "./basePrice";
 import { calculateExtras } from "./extrasCalculator";
 import { calculateDiscount } from "./discountCalculator";
-import { calculateNights } from "./dateUtils";
+import { calculateNights, getWeeklyPriceForDate } from "./dateUtils";
+import { usePrices } from "@/hooks/usePrices";
 
-// Get the storage key for prices
-const STORAGE_KEY = "apartmentPrices";
-
-// Helper to get price for a week
+/**
+ * Gets the weekly price for an apartment on a specific date
+ * @param apartmentId The ID of the apartment
+ * @param weekStart The start date of the week
+ * @returns The price for that week or 0 if not found
+ */
 const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
   try {
     // Get prices from storage
-    const savedPrices = localStorage.getItem(STORAGE_KEY);
+    const savedPrices = localStorage.getItem("seasonalPricing");
     if (!savedPrices) return 0;
     
     // Parse stored prices
@@ -22,8 +25,8 @@ const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
     const year = weekStart.getFullYear();
     
     // Get prices for the year
-    const yearPrices = allPrices[year];
-    if (!yearPrices) return 0;
+    const yearData = allPrices.find((season: any) => season.year === year);
+    if (!yearData) return 0;
     
     // Format the date for comparison (YYYY-MM-DD)
     const searchDate = new Date(weekStart);
@@ -31,8 +34,11 @@ const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
     const searchDateStr = searchDate.toISOString().split('T')[0];
     
     // Find matching price
-    const price = yearPrices.find((p: any) => {
-      const priceDateStr = new Date(p.weekStart).toISOString().split('T')[0];
+    const price = yearData.prices.find((p: any) => {
+      const priceDate = new Date(p.weekStart);
+      priceDate.setHours(0, 0, 0, 0);
+      const priceDateStr = priceDate.toISOString().split('T')[0];
+      
       return p.apartmentId === apartmentId && priceDateStr === searchDateStr;
     });
     
@@ -43,7 +49,9 @@ const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
   }
 };
 
-// Calculate total price with all components
+/**
+ * Calculates total prices for each apartment and overall price
+ */
 export function calculateTotalPrice(formValues: FormValues, apartments: Apartment[]): PriceCalculation {
   console.log("Starting price calculation...");
   
@@ -56,32 +64,45 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   
   // Calculate the number of nights
   const nights = calculateNights(formValues.checkIn, formValues.checkOut);
+  console.log(`Stay duration: ${nights} nights`);
   
-  // Calculate base price based on our saved weekly prices
+  // Track individual apartment prices
+  const apartmentPrices: Record<string, number> = {};
   let basePrice = 0;
   
   // For each apartment, get the weekly price for the check-in date
   selectedApartments.forEach(apartment => {
     const weekPrice = getPriceForWeek(apartment.id, new Date(formValues.checkIn));
-    basePrice += weekPrice;
+    console.log(`Found weekly price for ${apartment.id}: ${weekPrice}€`);
+    
+    if (weekPrice > 0) {
+      apartmentPrices[apartment.id] = weekPrice;
+      basePrice += weekPrice;
+    } else {
+      // Fallback to base price from apartment data if weekly price not found
+      apartmentPrices[apartment.id] = apartment.price || 0;
+      basePrice += apartment.price || 0;
+      console.log(`Using fallback price for ${apartment.id}: ${apartment.price}€`);
+    }
   });
   
-  // If no weekly price was found, fall back to the standard calculation
-  if (basePrice === 0) {
-    basePrice = calculateBasePrice(formValues, selectedApartments, nights);
-  }
+  console.log(`Total base price: ${basePrice}€`);
   
   // Calculate extras (cleaning fee, linen, pets, tourist tax)
   const { extrasCost, cleaningFee, touristTax } = calculateExtras(formValues, selectedApartments, nights);
+  console.log(`Extras: ${extrasCost}€, Cleaning: ${cleaningFee}€, Tax: ${touristTax}€`);
   
   // Calculate subtotal (before tourist tax)
   const subtotal = basePrice + extrasCost + cleaningFee;
+  console.log(`Subtotal: ${subtotal}€`);
   
   // Calculate total before discount (including tourist tax)
   const totalBeforeDiscount = subtotal + touristTax;
+  console.log(`Total before discount: ${totalBeforeDiscount}€`);
   
   // Calculate discount and final price
   const { totalAfterDiscount, discount, savings, deposit } = calculateDiscount(totalBeforeDiscount, touristTax);
+  console.log(`After discount: ${totalAfterDiscount}€, Savings: ${savings}€`);
   
   return {
     basePrice,
@@ -91,10 +112,11 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
     totalBeforeDiscount,
     totalAfterDiscount,
     discount,
-    savings: discount,
+    savings,
     deposit,
     nights,
     totalPrice: totalAfterDiscount,
-    subtotal
+    subtotal,
+    apartmentPrices // Add individual apartment prices
   };
 }

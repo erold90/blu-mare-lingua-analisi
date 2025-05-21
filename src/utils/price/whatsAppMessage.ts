@@ -1,92 +1,94 @@
 
-// Generate WhatsApp message from quote data
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
-import { formatDate } from "./dateUtils";
 import { calculateTotalPrice } from "./priceCalculator";
+import { format } from "date-fns";
 
-export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartment[]): string => {
-  const selectedApartmentIds = formValues.selectedApartments || [formValues.selectedApartment];
-  const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
-  
-  if (selectedApartments.length === 0 || !formValues.checkIn || !formValues.checkOut) return "";
-  
-  const priceInfo = calculateTotalPrice(formValues, apartments);
-  
-  // Create the WhatsApp message with complete summary information for the host
-  const clientName = formValues.name || "Cliente";
-  const clientContact = formValues.phone || formValues.email || "Contatto non specificato";
-  
-  let message = `*Richiesta Preventivo Villa MareBlu*\n\n`;
-  message += `Da: ${clientName}\n`;
-  message += `Contatto: ${clientContact}\n\n`;
-  message += `*Dettagli soggiorno:*\n`;
-  message += `- Check-in: ${formatDate(formValues.checkIn)}\n`;
-  message += `- Check-out: ${formatDate(formValues.checkOut)}\n`;
-  message += `- Durata: ${priceInfo.nights} notti\n\n`;
-  
-  message += `*Ospiti:*\n`;
-  message += `- ${formValues.adults} adulti\n`;
-  
-  if (formValues.children > 0) {
-    const childrenDetails = formValues.childrenDetails || [];
-    const sleepingWithParents = childrenDetails.filter(child => child.sleepsWithParents).length;
-    const sleepingInCribs = childrenDetails.filter(child => child.sleepsInCrib).length;
-    const normalChildren = formValues.children - sleepingWithParents - sleepingInCribs;
-    
-    message += `- ${formValues.children} bambini totali\n`;
-    
-    if (sleepingWithParents > 0) {
-      message += `  * ${sleepingWithParents} dormono con i genitori\n`;
-    }
-    
-    if (sleepingInCribs > 0) {
-      message += `  * ${sleepingInCribs} in culla\n`;
-    }
-    
-    if (normalChildren > 0) {
-      message += `  * ${normalChildren} in letto normale\n`;
-    }
+/**
+ * Creates a WhatsApp message with quote details
+ */
+export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartment[]): string | null => {
+  // Check if we have necessary data
+  if (!formValues.checkIn || !formValues.checkOut || !formValues.selectedApartment) {
+    return null;
   }
   
-  message += `\n*Appartamenti:*\n`;
-  selectedApartments.forEach(apartment => {
-    let personsCount = 0;
-    if (formValues.personsPerApartment && formValues.personsPerApartment[apartment.id]) {
-      personsCount = formValues.personsPerApartment[apartment.id];
+  try {
+    // Calculate prices
+    const priceInfo = calculateTotalPrice(formValues, apartments);
+    
+    // Get selected apartments
+    const selectedApartmentIds = formValues.selectedApartments || [formValues.selectedApartment];
+    const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
+    
+    if (selectedApartments.length === 0) {
+      return null;
     }
     
-    const hasPets = formValues.petsInApartment && formValues.petsInApartment[apartment.id];
+    // Format dates
+    const formattedCheckIn = format(formValues.checkIn, "dd/MM/yyyy");
+    const formattedCheckOut = format(formValues.checkOut, "dd/MM/yyyy");
     
-    message += `- ${apartment.name} (${personsCount} persone${hasPets ? ', con animali' : ''})\n`;
-  });
-  
-  message += `\n*Servizi extra:*\n`;
-  
-  // Biancheria
-  if (formValues.linenOption === "extra") {
-    message += `- Servizio biancheria: Sì\n`;
-  } else {
-    message += `- Servizio biancheria: No\n`;
+    // Create message
+    let message = `*Richiesta Preventivo* 📝\n\n`;
+    
+    // Guest info
+    message += `*Cliente:* ${formValues.name || "Cliente"}\n`;
+    message += `*Email:* ${formValues.email || "Non specificata"}\n`;
+    message += `*Telefono:* ${formValues.phone || "Non specificato"}\n\n`;
+    
+    // Stay details
+    message += `*Date soggiorno:*\n`;
+    message += `Check-in: ${formattedCheckIn}\n`;
+    message += `Check-out: ${formattedCheckOut}\n`;
+    message += `Durata: ${priceInfo.nights} notti\n\n`;
+    
+    // Guest details
+    message += `*Ospiti:*\n`;
+    message += `Adulti: ${formValues.adults}\n`;
+    message += `Bambini: ${formValues.children || 0}\n`;
+    message += `Totale: ${(formValues.adults || 0) + (formValues.children || 0)}\n\n`;
+    
+    // Apartments
+    message += `*Appartamenti:*\n`;
+    selectedApartments.forEach(apartment => {
+      const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
+      message += `- ${apartment.name}: ${apartmentPrice}€\n`;
+    });
+    message += `\n`;
+    
+    // Cost summary
+    message += `*Riepilogo costi:*\n`;
+    message += `Costo appartamenti: ${priceInfo.basePrice}€\n`;
+    message += `Pulizia finale: ${priceInfo.cleaningFee}€ (inclusa)\n`;
+    
+    if (priceInfo.extras > 0) {
+      message += `Servizi extra: ${priceInfo.extras}€\n`;
+    }
+    
+    message += `Subtotale: ${priceInfo.subtotal}€\n`;
+    message += `Tassa di soggiorno: ${priceInfo.touristTax}€\n`;
+    
+    if (priceInfo.discount > 0) {
+      message += `Totale con sconto: ${priceInfo.totalAfterDiscount}€\n`;
+      message += `Risparmio: ${priceInfo.discount}€\n`;
+    } else {
+      message += `Totale: ${priceInfo.totalAfterDiscount}€\n`;
+    }
+    
+    message += `\n*Totale da pagare: ${priceInfo.totalAfterDiscount}€*\n`;
+    message += `Caparra (30%): ${priceInfo.deposit}€\n\n`;
+    
+    // Additional notes
+    if (formValues.notes) {
+      message += `*Note:*\n${formValues.notes}\n\n`;
+    }
+    
+    message += `Grazie per la richiesta! Ti contatteremo al più presto per confermare la disponibilità.`;
+    
+    return message;
+  } catch (error) {
+    console.error("Error creating WhatsApp message:", error);
+    return null;
   }
-  
-  // Animali
-  if (formValues.hasPets) {
-    message += `- Animali domestici: Sì\n`;
-  } else {
-    message += `- Animali domestici: No\n`;
-  }
-  
-  // Note aggiuntive
-  if (formValues.notes && formValues.notes.trim()) {
-    message += `\n*Note:*\n${formValues.notes}\n`;
-  }
-  
-  message += `\n*Riepilogo costi:*\n`;
-  message += `- Totale: ${priceInfo.totalAfterDiscount}€\n`;
-  message += `- Caparra (30%): ${priceInfo.deposit}€\n`;
-  message += `- Cauzione: 200€ (restituibile)\n`;
-  message += `- Tassa di soggiorno: inclusa\n`;
-  
-  return message;
 };

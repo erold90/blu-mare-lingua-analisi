@@ -1,41 +1,26 @@
 
-// Calculate base price for apartments
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
-import { isHighSeason } from "./dateUtils";
-import { getSeasonalPrices, getWeeklyPrice } from "./seasonalPricing";
 
-export function calculateBasePrice(
+/**
+ * Calculate the base price of the stay based on apartment values
+ * This is a fallback function used when we don't have weekly prices
+ */
+export const calculateBasePrice = (
   formValues: FormValues, 
   selectedApartments: Apartment[],
   nights: number
-): number {
-  let basePrice = 0;
-  const checkIn = formValues.checkIn;
-  
-  if (!checkIn) return 0;
-  
-  // Check if we should use weekly pricing
-  const useWeeklyPrice = isHighSeason(checkIn);
-  const year = checkIn.getFullYear();
-  const seasonalPrices = getSeasonalPrices(year);
-  
-  console.log(`Calculating base price for ${selectedApartments.length} apartments, high season: ${useWeeklyPrice}`);
+): number => {
+  let totalBasePrice = 0;
   
   selectedApartments.forEach(apartment => {
-    if (useWeeklyPrice) {
-      // Get the weekly price based on season
-      const weeklyPrice = getWeeklyPrice(apartment, checkIn, seasonalPrices);
-      basePrice += weeklyPrice;
-      console.log(`Weekly price for ${apartment.name}: ${weeklyPrice}€`);
-    } else {
-      // Regular nightly pricing
-      const nightlyTotal = apartment.price * nights;
-      basePrice += nightlyTotal;
-      console.log(`Nightly price for ${apartment.name}: ${apartment.price}€ x ${nights} nights = ${nightlyTotal}€`);
-    }
+    // Calculate per-apartment price
+    const apartmentBasePrice = apartment.price * nights;
+    totalBasePrice += apartmentBasePrice;
+    
+    console.log(`Base price for ${apartment.name}: ${apartmentBasePrice}€ (${apartment.price}€ × ${nights} nights)`);
   });
   
-  console.log(`Total base price: ${basePrice}€`);
-  return basePrice;
-}
+  console.log(`Total base price for all apartments: ${totalBasePrice}€`);
+  return totalBasePrice;
+};

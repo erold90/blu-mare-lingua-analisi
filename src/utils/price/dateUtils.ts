@@ -1,28 +1,46 @@
 
-// Helper functions for date formatting and calculations
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 
-// Format date to the Italian format DD/MM/YYYY
-export function formatDate(date: Date): string {
-  const day = date.getDate().toString().padStart(2, '0');
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const year = date.getFullYear();
+// Get weekly price for a specific apartment and date
+export const getWeeklyPriceForDate = (
+  apartmentId: string, 
+  date: Date, 
+  prices: any[]
+): number => {
+  if (!prices || prices.length === 0) {
+    return 0;
+  }
   
-  return `${day}/${month}/${year}`;
-}
+  // Format the date for comparison (YYYY-MM-DD)
+  const searchDate = new Date(date);
+  searchDate.setHours(0, 0, 0, 0);
+  const searchDateStr = searchDate.toISOString().split('T')[0];
+  
+  // Find matching price
+  const price = prices.find((p) => {
+    const priceDate = new Date(p.weekStart);
+    priceDate.setHours(0, 0, 0, 0);
+    const priceDateStr = priceDate.toISOString().split('T')[0];
+    
+    return p.apartmentId === apartmentId && priceDateStr === searchDateStr;
+  });
+  
+  return price ? price.price : 0;
+};
 
-// Calculate the number of nights between two dates
-export function calculateNights(checkIn: Date, checkOut: Date): number {
-  return Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-}
+// Calculate number of nights between two dates
+export const calculateNights = (checkIn: Date, checkOut: Date): number => {
+  return differenceInDays(checkOut, checkIn);
+};
+
+// Format date to string
+export const formatDate = (date: Date): string => {
+  return format(date, "dd/MM/yyyy");
+};
 
 // Check if a date is in high season (June-September)
-export function isHighSeason(date: Date): boolean {
-  const month = date.getMonth(); // 0-indexed, 5 = June, 8 = September
+export const isHighSeason = (date: Date): boolean => {
+  const month = date.getMonth();
+  // June (5) to September (8)
   return month >= 5 && month <= 8;
-}
-
-// Check if a date is a Saturday
-export function isSaturday(date: Date): boolean {
-  return date.getDay() === 6; // 6 is Saturday
-}
+};

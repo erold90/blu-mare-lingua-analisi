@@ -1,123 +1,91 @@
 
-import { format, parseISO, isSameWeek } from "date-fns";
-import { WeeklyPrice, SeasonalPricing } from "./types";
+import { WeeklyPrice } from "./types";
+import { format } from "date-fns";
 
-/**
- * Returns a list of weeks for a specific year
- * Each week is represented by start and end dates
- */
+// Get weekly price for a specific apartment and date
+export const getWeeklyPriceForDate = (
+  apartmentId: string, 
+  date: Date, 
+  prices: WeeklyPrice[]
+): number => {
+  console.log(`Looking up price for apartment ${apartmentId} on ${format(date, 'yyyy-MM-dd')}`);
+  
+  if (!prices || prices.length === 0) {
+    console.log("No prices available");
+    return 0;
+  }
+  
+  // Format the date for comparison (YYYY-MM-DD)
+  const searchDate = new Date(date);
+  searchDate.setHours(0, 0, 0, 0);
+  const searchDateStr = searchDate.toISOString().split('T')[0];
+  
+  // Find matching price
+  const price = prices.find((p) => {
+    const priceDate = new Date(p.weekStart);
+    priceDate.setHours(0, 0, 0, 0);
+    const priceDateStr = priceDate.toISOString().split('T')[0];
+    
+    return p.apartmentId === apartmentId && priceDateStr === searchDateStr;
+  });
+  
+  if (price) {
+    console.log(`Found price for ${apartmentId} on ${searchDateStr}: ${price.price}€`);
+    return price.price;
+  } else {
+    console.log(`No price found for ${apartmentId} on ${searchDateStr}`);
+    return 0;
+  }
+};
+
+// Calculate weeks between dates
 export const getWeeksForYear = (year: number): { start: Date; end: Date }[] => {
   const weeks: { start: Date; end: Date }[] = [];
   
   // Start from first Saturday of June
-  let currentDate = new Date(year, 5, 1); // June 1st
+  const firstDay = new Date(year, 5, 1); // June 1st
+  const dayOfWeek = firstDay.getDay();
+  const daysUntilSaturday = dayOfWeek === 6 ? 0 : 6 - dayOfWeek;
   
-  // Find first Saturday (6 = Saturday)
-  while (currentDate.getDay() !== 6) {
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
+  const firstSaturday = new Date(firstDay);
+  firstSaturday.setDate(firstSaturday.getDate() + daysUntilSaturday);
   
-  // Generate weeks until end of September
-  while (currentDate < new Date(year, 9, 1)) { // Until October 1st
-    const weekStart = new Date(currentDate);
-    const weekEnd = new Date(currentDate);
-    weekEnd.setDate(weekEnd.getDate() + 6); // End of week (Friday)
+  // End at last week of September
+  const lastDay = new Date(year, 9, 0); // Last day of September
+  
+  let currentWeekStart = new Date(firstSaturday);
+  
+  while (currentWeekStart <= lastDay) {
+    const weekEnd = new Date(currentWeekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6); // End date is 6 days after start
     
     weeks.push({
-      start: weekStart,
-      end: weekEnd
+      start: new Date(currentWeekStart),
+      end: new Date(weekEnd)
     });
     
-    // Move to next Saturday
-    currentDate.setDate(currentDate.getDate() + 7);
+    // Move to next week
+    currentWeekStart = new Date(currentWeekStart);
+    currentWeekStart.setDate(currentWeekStart.getDate() + 7);
   }
   
   return weeks;
 };
 
-/**
- * Format a week range for display
- */
-export const formatWeekRange = (start: Date, end: Date): string => {
-  // Return a formatted date range string
-  return `${format(start, "d")} - ${format(end, "d MMM yyyy")}`;
+// Format date to Italian style
+export const formatDate = (date: Date): string => {
+  return format(date, 'dd/MM/yyyy');
 };
 
-/**
- * Get price for a specific apartment and week
- */
-export const getPriceForApartmentWeek = (
-  apartmentId: string,
-  weekStart: Date,
-  prices: WeeklyPrice[]
-): number => {
-  // Find the price for this specific apartment and week
-  const price = prices.find(p => {
-    // Convert ISO string to Date for comparison
-    const priceStartDate = parseISO(p.weekStart);
-    
-    // Only compare week start date (not time)
-    return (
-      p.apartmentId === apartmentId &&
-      isSameWeek(priceStartDate, weekStart)
-    );
-  });
-  
-  // Return found price or default
-  return price ? price.price : 0;
+// Calculate number of nights between two dates
+export const calculateNights = (checkIn: Date, checkOut: Date): number => {
+  const diffTime = Math.abs(checkOut.getTime() - checkIn.getTime());
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
 
-/**
- * Load pricing data from storage
- */
-export const loadPricesFromStorage = (): SeasonalPricing[] => {
-  try {
-    const storedPrices = localStorage.getItem("seasonalPricing");
-    return storedPrices ? JSON.parse(storedPrices) : [];
-  } catch (error) {
-    console.error("Error loading prices from storage:", error);
-    return [];
-  }
+// Check if a date falls within high season (June-September)
+export const isHighSeason = (date: Date): boolean => {
+  const month = date.getMonth();
+  return month >= 5 && month <= 8; // June (5) to September (8)
 };
 
-/**
- * Save pricing data to storage
- */
-export const savePricesToStorage = (pricing: SeasonalPricing[]): void => {
-  try {
-    localStorage.setItem("seasonalPricing", JSON.stringify(pricing));
-  } catch (error) {
-    console.error("Error saving prices to storage:", error);
-  }
-};
-
-/**
- * Debug function to log information about the pricing state
- */
-export const debugPricingState = (
-  year: number, 
-  prices: WeeklyPrice[],
-  seasonalPricing: SeasonalPricing[]
-) => {
-  console.log(`Debug pricing state for year ${year}`);
-  console.log(`Weekly prices: ${prices.length} items`);
-  
-  // Seasonal pricing stats
-  console.log(`Seasonal pricing has ${seasonalPricing.length} years of data`);
-  seasonalPricing.forEach(season => {
-    console.log(`Season ${season.year}: ${season.prices.length} prices`);
-  });
-  
-  // Sample prices for each year
-  seasonalPricing.forEach(season => {
-    if (season.prices.length > 0) {
-      const sample = season.prices[0];
-      console.log(`Sample price for ${season.year}: ${sample.apartmentId}, ${new Date(sample.weekStart).toLocaleDateString()}, ${sample.price}€`);
-      
-      // Check if weekEnd exists
-      if (sample.weekEnd) {
-        console.log(`  with weekEnd: ${new Date(sample.weekEnd).toLocaleDateString()}`);
-      }
-    }
-  });
-};

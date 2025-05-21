@@ -10,7 +10,7 @@ interface YearContentProps {
   year: number;
   weeks: { start: Date; end: Date }[];
   getPriceForWeek: (apartmentId: string, weekStart: Date) => number;
-  handlePriceChange: (apartmentId: string, weekStartStr: string, value: string) => void;
+  handlePriceChange: (apartmentId: string, weekStartStr: string, value: number) => void;
 }
 
 const YearContent: React.FC<YearContentProps> = ({
@@ -21,11 +21,6 @@ const YearContent: React.FC<YearContentProps> = ({
 }) => {
   const isMobile = useIsMobile();
   
-  // Wrapper function to convert string value to number before passing it on
-  const handlePriceChangeWrapper = (apartmentId: string, weekStartStr: string, newPrice: number) => {
-    handlePriceChange(apartmentId, weekStartStr, newPrice.toString());
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -41,14 +36,14 @@ const YearContent: React.FC<YearContentProps> = ({
           <MobilePriceList 
             weeks={weeks}
             getPriceForWeek={getPriceForWeek}
-            handlePriceChange={handlePriceChangeWrapper}
+            handlePriceChange={handlePriceChange}
             apartments={apartments}
           />
         ) : (
           <PriceTable 
             weeks={weeks}
             getPriceForWeek={getPriceForWeek}
-            handlePriceChange={handlePriceChangeWrapper}
+            handlePriceChange={handlePriceChange}
             apartments={apartments}
           />
         )}

@@ -1,8 +1,7 @@
 
-// Calculator for extra costs (cleaning, linen, pets, tourist tax)
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
-import { calculateLinenCost, calculatePetsCost, calculateCleaningFee, calculateTouristTax } from "./extrasCosts";
+import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
 
 interface ExtrasResult {
   extrasCost: number;
@@ -10,27 +9,39 @@ interface ExtrasResult {
   touristTax: number;
 }
 
-export function calculateExtras(
+// Calculate extras costs (linen, pets, cleaning fee, tourist tax)
+export const calculateExtras = (
   formValues: FormValues, 
   selectedApartments: Apartment[],
   nights: number
-): ExtrasResult {
-  // Calculate linen and pets costs
-  const linenCost = calculateLinenCost(formValues);
-  const petsCost = calculatePetsCost(formValues);
+): ExtrasResult => {
+  // Get effective guest count
+  const { adults, children } = getEffectiveGuestCount(formValues);
+  const totalGuests = adults + children;
   
-  // Combine into extras cost
+  // Calculate linen costs
+  let linenCost = 0;
+  if (formValues.linenOption === "extra") {
+    linenCost = totalGuests * 15; // 15€ per person for extra linen
+  } else if (formValues.linenOption === "deluxe") {
+    linenCost = totalGuests * 25; // 25€ per person for deluxe linen
+  }
+  
+  // Calculate pet costs
+  let petsCost = formValues.hasPets ? 50 : 0; // 50€ flat fee for pets
+  
+  // Calculate cleaning fee (fixed at 50€ per apartment)
+  const cleaningFee = selectedApartments.length * 50;
+  
+  // Calculate tourist tax (2€ per adult per night)
+  const touristTax = adults * 2 * nights;
+  
+  // Total extras
   const extrasCost = linenCost + petsCost;
-  
-  // Calculate cleaning fee
-  const cleaningFee = calculateCleaningFee(selectedApartments);
-  
-  // Calculate tourist tax
-  const touristTax = calculateTouristTax(formValues, nights);
   
   return {
     extrasCost,
     cleaningFee,
     touristTax
   };
-}
+};
