@@ -13,8 +13,10 @@ export function useQuoteActions(form: UseFormReturn<FormValues>) {
     
     try {
       // Pass form values and apartments to downloadPDF
-      downloadPDF(formValues, apartments, name);
-      toast.success(`Preventivo per ${name || "cliente"} scaricato con successo!`);
+      const filename = downloadPDF(formValues, apartments, name);
+      if (filename) {
+        toast.success(`Preventivo per ${name || "cliente"} scaricato con successo!`);
+      }
     } catch (error) {
       console.error("Errore durante la generazione del PDF:", error);
       toast.error("Si è verificato un errore durante la generazione del PDF");

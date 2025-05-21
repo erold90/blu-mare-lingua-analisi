@@ -14,9 +14,6 @@ import {
   generateNotesSection 
 } from "./sectionGenerators";
 
-// Register autoTable with jsPDF
-(jsPDF as any).API.autoTable = autoTable;
-
 // Main function to create and download the quote PDF
 export const downloadPDF = (formData: FormValues, apartments: Apartment[], clientName?: string) => {
   try {
@@ -35,6 +32,9 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     // Create a new PDF document
     const doc = new jsPDF();
     
+    // Explicitly register autoTable with jsPDF
+    doc.autoTable = autoTable;
+    
     // Add title
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
@@ -52,8 +52,8 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     // Generate the costs table data
     const tableBody = generateCostsTable(doc, priceCalculation, formData, yAfterApartment);
     
-    // Add the table to the PDF
-    (doc as any).autoTable({
+    // Add the table to the PDF using the properly registered autoTable method
+    doc.autoTable({
       startY: yAfterApartment + 20,
       head: [["Voce", "Dettagli", "Importo"]],
       body: tableBody,
@@ -66,8 +66,11 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
       }
     });
     
+    // Get the final Y position after the table
+    const finalY = doc.autoTable.previous.finalY;
+    
     // Add notes after the table
-    generateNotesSection(doc, (doc as any).lastAutoTable.finalY);
+    generateNotesSection(doc, finalY);
     
     // Add page numbers
     addPageNumbers(doc);

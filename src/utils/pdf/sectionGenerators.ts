@@ -1,4 +1,3 @@
-
 import { jsPDF } from "jspdf";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
@@ -152,7 +151,7 @@ export const generateNotesSection = (doc: jsPDF, yStart: number) => {
   y += 5;
   
   const notes = "Il presente preventivo ha validità di 7 giorni dalla data di emissione.";
-  const pageWidth = doc.internal.pageSize.width;
+  const pageWidth = doc.internal.pageSize.getWidth();
   const noteLines = doc.splitTextToSize(notes, pageWidth - 40);
   doc.text(noteLines, 20, y);
   y += noteLines.length * 5 + 10;
