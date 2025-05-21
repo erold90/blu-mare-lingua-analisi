@@ -27,8 +27,18 @@ const MobilePriceList: React.FC<MobilePriceListProps> = ({
     currentPrice: number;
   } | null>(null);
   
+  // Debug logs to check prices
+  React.useEffect(() => {
+    console.log("MobilePriceList - Weeks:", weeks.length);
+    if (apartments.length > 0 && weeks.length > 0) {
+      const samplePrice = getPriceForWeek(apartments[0].id, weeks[0].start);
+      console.log(`Sample price for ${apartments[0].name}, week ${format(weeks[0].start, "d MMM")}: ${samplePrice}€`);
+    }
+  }, [weeks, getPriceForWeek]);
+  
   const handleEditClick = (apartmentId: string, apartmentName: string, weekStart: Date, weekEnd: Date) => {
     const currentPrice = getPriceForWeek(apartmentId, weekStart);
+    console.log(`Editing price for ${apartmentName}, week of ${format(weekStart, "d MMM")}: ${currentPrice}€`);
     setEditingPrice({
       apartmentId,
       apartmentName,
@@ -40,6 +50,7 @@ const MobilePriceList: React.FC<MobilePriceListProps> = ({
   
   const handleSavePrice = (price: number) => {
     if (editingPrice) {
+      console.log(`Saving price: ${editingPrice.apartmentId}, ${format(editingPrice.weekStart, "yyyy-MM-dd")}, ${price}€`);
       handlePriceChange(
         editingPrice.apartmentId,
         editingPrice.weekStart.toISOString(),

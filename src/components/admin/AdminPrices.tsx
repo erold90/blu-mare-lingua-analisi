@@ -65,7 +65,9 @@ const AdminPrices = () => {
   ) => {
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue >= 0) {
+      console.log(`AdminPrices: Updating price for ${apartmentId}, week of ${new Date(weekStartStr).toLocaleDateString()}: ${numValue}€`);
       updateWeeklyPrice(apartmentId, weekStartStr, numValue);
+      toast.success(`Prezzo aggiornato a ${numValue}€`);
     }
   };
   
@@ -76,9 +78,20 @@ const AdminPrices = () => {
     
     // Find matching price entry
     const matchingPrice = weeklyPrices.find(price => {
+      // Extract just the date part from both date strings
       const priceStartDate = new Date(price.weekStart).toISOString().split('T')[0];
-      return price.apartmentId === apartmentId && priceStartDate === weekStartDateStr;
+      const match = price.apartmentId === apartmentId && priceStartDate === weekStartDateStr;
+      
+      if (apartmentId === "appartamento-1" && weekStartDateStr === "2025-06-07") {
+        console.log(`Comparing: ${price.apartmentId}/${apartmentId}, ${priceStartDate}/${weekStartDateStr}, match: ${match}`);
+      }
+      
+      return match;
     });
+    
+    if (apartmentId === "appartamento-1" && weekStartDateStr === "2025-06-07") {
+      console.log(`Price lookup for ${apartmentId}, ${weekStartDateStr}: ${matchingPrice ? matchingPrice.price : 'not found'}`);
+    }
     
     return matchingPrice ? matchingPrice.price : 0;
   };
@@ -102,11 +115,9 @@ const AdminPrices = () => {
     <div className="space-y-6">
       <div className="mb-4 flex justify-between">
         <h2 className="text-2xl font-bold">Gestione Prezzi</h2>
-        {process.env.NODE_ENV !== 'production' && __DEBUG_reset && (
-          <Button variant="destructive" size="sm" onClick={handleResetPricesClick}>
-            Reset Prezzi (Debug)
-          </Button>
-        )}
+        <Button variant="outline" size="sm" onClick={handleResetPricesClick}>
+          Inizializza Prezzi
+        </Button>
       </div>
       
       {weeklyPrices && weeklyPrices.length > 0 ? (

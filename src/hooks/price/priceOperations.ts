@@ -37,12 +37,13 @@ export const updateWeeklyPrice = (
   }
   
   // Format date strings for comparison
-  const weekStartDate = new Date(weekStart).toISOString().split('T')[0];
+  const weekStartDate = new Date(weekStart);
+  const weekStartDateStr = weekStartDate.toISOString().split('T')[0];
   
   // Update the specific price
   const priceIndex = updatedPricing[yearIndex].prices.findIndex(p => {
     const priceDate = new Date(p.weekStart).toISOString().split('T')[0];
-    return p.apartmentId === apartmentId && priceDate === weekStartDate;
+    return p.apartmentId === apartmentId && priceDate === weekStartDateStr;
   });
   
   if (priceIndex !== -1) {
@@ -51,12 +52,12 @@ export const updateWeeklyPrice = (
     console.log(`Updated existing price: ${apartmentId}, ${weekStart}, ${price}€`);
   } else {
     // Add new price entry if not found
-    const weekEndDate = new Date(weekStart);
+    const weekEndDate = new Date(weekStartDate);
     weekEndDate.setDate(weekEndDate.getDate() + 6); // End is 6 days later
     
     updatedPricing[yearIndex].prices.push({
       apartmentId,
-      weekStart: weekStart,
+      weekStart: weekStartDate.toISOString(),
       weekEnd: weekEndDate.toISOString(),
       price
     });
@@ -142,10 +143,14 @@ export const forceInitializePrices = (
   console.log(`Created ${prices2025.length} custom prices for 2025`);
   
   // Log detailed examples of the created prices
-  const examples = prices2025.slice(0, 4).map(p => 
-    `${p.apartmentId}: ${p.price}€ (${new Date(p.weekStart).toLocaleDateString()} - ${new Date(p.weekEnd).toLocaleDateString()})`
-  );
-  console.log("Sample prices:", examples);
+  const firstThreePricesPerApartment = {};
+  apartments.forEach(apt => {
+    const aptPrices = prices2025.filter(p => p.apartmentId === apt.id).slice(0, 3);
+    firstThreePricesPerApartment[apt.id] = aptPrices.map(p => 
+      `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
+    );
+  });
+  console.log("Sample prices by apartment:", firstThreePricesPerApartment);
   
   // Update state with new prices
   const initialPricing = [{ year: 2025, prices: prices2025 }];
@@ -153,7 +158,7 @@ export const forceInitializePrices = (
   
   // Save to localStorage immediately
   localStorage.setItem("seasonalPricing", JSON.stringify(initialPricing));
-  console.log("2025 seasonal prices saved to localStorage with values:", initialPricing);
+  console.log("2025 seasonal prices saved to localStorage with values:", initialPricing[0].prices.length);
   
   return prices2025;
 };

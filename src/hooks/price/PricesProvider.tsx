@@ -5,6 +5,7 @@ import { getPriceForDate, getCurrentOrCreateSeason, generateWeeksForSeason } fro
 import { useProviderState } from "./useProviderState";
 import { updateWeeklyPrice as updatePrice, initializeYearPricing, resetAllPrices, forceInitializePrices } from "./priceOperations";
 import { toast } from "sonner";
+import { apartments } from "@/data/apartments";
 
 // Create the context
 export const PricesContext = createContext<PricesContextType | undefined>(undefined);
@@ -43,13 +44,18 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.log(`PricesProvider: Found ${year2025.prices.length} prices for 2025`);
       
       // Log some sample prices for debugging
-      const sampleApt = year2025.prices.filter(p => p.apartmentId === "appartamento-1");
-      if (sampleApt.length > 0) {
-        console.log("Sample prices for appartamento-1:", 
-          sampleApt.slice(0, 3).map(p => 
-            `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
-          )
-        );
+      for (const apt of apartments) {
+        const aptPrices = year2025.prices.filter(p => p.apartmentId === apt.id);
+        if (aptPrices.length > 0) {
+          console.log(`PricesProvider: ${apt.name} has ${aptPrices.length} prices`);
+          console.log("First 3 prices:", 
+            aptPrices.slice(0, 3).map(p => 
+              `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
+            )
+          );
+        } else {
+          console.log(`PricesProvider: No prices found for ${apt.name}`);
+        }
       }
       
       setWeeklyPrices(year2025.prices);
@@ -74,6 +80,14 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const initialPrices = forceInitializePrices(setSeasonalPricing);
     setWeeklyPrices(initialPrices);
     console.log(`Reset complete, initialized ${initialPrices.length} prices`);
+    
+    // Debug - verify the new prices
+    const groupedByApartment = {};
+    apartments.forEach(apt => {
+      groupedByApartment[apt.id] = initialPrices.filter(p => p.apartmentId === apt.id);
+      console.log(`Reset created ${groupedByApartment[apt.id].length} prices for ${apt.name}`);
+    });
+    
     toast.success("Prezzi reimpostati correttamente");
   };
   
