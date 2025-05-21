@@ -385,10 +385,12 @@ const AdminCleaningManagementContent = () => {
                     );
                   }
                 }}
+                modifiersClassNames={{
+                  hasCleaningTask: "bg-accent text-accent-foreground"
+                }}
                 classNames={{
                   day_today: "font-bold text-primary",
-                  day_selected: "bg-primary text-primary-foreground",
-                  day_hasCleaningTask: "bg-accent text-accent-foreground"
+                  day_selected: "bg-primary text-primary-foreground"
                 }}
                 className="rounded-md border shadow-none"
               />
