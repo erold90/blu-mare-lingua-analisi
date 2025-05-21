@@ -14,7 +14,7 @@ export const generateWeeksForSeason = (year: number, startMonth: number, endMont
     currentDate = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000);
   }
   
-  console.log(`Primo sabato di ${startMonth}/${year}: ${currentDate.toLocaleDateString()}`);
+  console.log(`First Saturday of ${startMonth}/${year}: ${currentDate.toLocaleDateString()}`);
   
   // Generate weeks until the end of September
   while (currentDate.getMonth() < endMonth) {
@@ -36,28 +36,9 @@ export const generateWeeksForSeason = (year: number, startMonth: number, endMont
     currentDate.setDate(currentDate.getDate() + 7);
   }
   
-  console.log(`Generato ${weeks.length} settimane per la stagione ${year}`);
+  console.log(`Generated ${weeks.length} weeks for season ${year}`);
   return weeks;
 };
-
-// Generate default prices for a year
-export function generateDefaultPricesForYear(year: number): WeeklyPrice[] {
-  const weeks = generateWeeksForSeason(year, 6, 9); // June (6) to September (8)
-  const allPrices: WeeklyPrice[] = [];
-  
-  apartments.forEach(apartment => {
-    weeks.forEach(week => {
-      allPrices.push({
-        apartmentId: apartment.id,
-        weekStart: week.start.toISOString(),
-        weekEnd: week.end.toISOString(),
-        price: 0 // Default to 0 price
-      });
-    });
-  });
-  
-  return allPrices;
-}
 
 // Get price for a specific date and apartment
 export const getPriceForDate = (apartmentId: string, date: Date, seasonalPricing: SeasonalPricing[]): number => {
@@ -91,28 +72,20 @@ export const getCurrentOrCreateSeason = (
   setSeasonalPricing: React.Dispatch<React.SetStateAction<SeasonalPricing[]>>,
   setWeeklyPrices: React.Dispatch<React.SetStateAction<WeeklyPrice[]>>
 ): SeasonalPricing => {
-  const currentYear = 2025; // forziamo a 2025
+  const currentYear = 2025; // Force to 2025 as per requirements
   const currentSeason = seasonalPricing.find(season => season.year === currentYear);
   
-  if (!currentSeason) {
-    // Create a new season for the current year
-    const newSeason = {
-      year: currentYear,
-      prices: generateDefaultPricesForYear(currentYear)
-    };
-    
-    console.log(`Creata nuova stagione per il ${currentYear} con ${newSeason.prices.length} prezzi`);
-    
-    // Update seasonal pricing
-    const updatedPricing = [...seasonalPricing, newSeason];
-    setSeasonalPricing(updatedPricing);
-    setWeeklyPrices(newSeason.prices);
-    
-    // Save to localStorage
-    localStorage.setItem("seasonalPricing", JSON.stringify(updatedPricing));
-    
-    return newSeason;
+  if (currentSeason) {
+    return currentSeason;
   }
   
-  return currentSeason;
+  console.log(`No season found for ${currentYear}, forcing price initialization`);
+  
+  // Import function directly to avoid circular dependency
+  const { forceInitializePrices } = require('./priceOperations');
+  const newPrices = forceInitializePrices(setSeasonalPricing);
+  setWeeklyPrices(newPrices);
+  
+  // Return the newly created season
+  return { year: currentYear, prices: newPrices };
 };

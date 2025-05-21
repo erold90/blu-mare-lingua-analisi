@@ -19,4 +19,3 @@ export const usePrices = (): PricesContextType => {
 
 // Re-export everything from the refactored modules
 export * from './price';
-

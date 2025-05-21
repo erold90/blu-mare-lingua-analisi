@@ -20,32 +20,30 @@ const AdminPrices = () => {
   const [selectedYear, setSelectedYear] = React.useState<number>(2025);
   const [weeks, setWeeks] = React.useState<{ start: Date, end: Date }[]>([]);
 
-  // Inizializza le settimane all'avvio
+  // Initialize weeks on startup
   React.useEffect(() => {
-    console.log("AdminPrices: Inizializzando le settimane per la stagione");
+    console.log("AdminPrices: Initializing weeks for season");
     setWeeks(generateWeeksForSeason(selectedYear, 6, 9)); // June to September
   }, [generateWeeksForSeason, selectedYear]);
   
-  // Log di diagnostica
+  // Debug logging for price data
   React.useEffect(() => {
-    console.log("AdminPrices: weeklyPrices updated:", weeklyPrices.length);
+    console.log(`AdminPrices: ${weeklyPrices.length} weekly prices loaded`);
     
-    const year2025 = seasonalPricing.find(s => s.year === 2025);
-    if (year2025) {
-      const pricesForApt1 = year2025.prices.filter(p => p.apartmentId === "apt-1");
-      console.log(`Prezzi caricati per l'anno 2025 (Apt 1): ${pricesForApt1.length}`);
+    if (weeklyPrices.length > 0) {
+      const apt1Prices = weeklyPrices.filter(p => p.apartmentId === "apt-1");
+      console.log(`Loaded ${apt1Prices.length} prices for Apt 1`);
       
-      // Visualizza i primi 3 prezzi per debug
-      if (pricesForApt1.length > 0) {
-        const samplePrices = pricesForApt1
-          .slice(0, 3)
-          .map(p => `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`);
-        console.log("Sample prices for Apt 1:", samplePrices);
+      // Display first 3 prices for debugging
+      if (apt1Prices.length > 0) {
+        console.log("First 3 prices for Apt 1:", 
+          apt1Prices.slice(0, 3).map(p => 
+            `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
+          )
+        );
       }
-    } else {
-      console.warn("Nessun prezzo trovato per l'anno 2025");
     }
-  }, [seasonalPricing, weeklyPrices]);
+  }, [weeklyPrices]);
   
   // Re-generate weeks when selected year changes
   React.useEffect(() => {
@@ -58,7 +56,7 @@ const AdminPrices = () => {
     value: string
   ) => {
     const numValue = parseInt(value, 10);
-    if (!isNaN(numValue) && numValue > 0) {
+    if (!isNaN(numValue) && numValue >= 0) {
       updateWeeklyPrice(apartmentId, weekStartStr, numValue);
       toast.success(`Prezzo aggiornato: ${numValue}€`);
     }
@@ -66,24 +64,20 @@ const AdminPrices = () => {
   
   // Get price for a specific apartment and week
   const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
-    const weekStartStr = weekStart.toISOString();
-    
-    // 1. First try to find in weekly prices (most current)
-    const weeklyPrice = weeklyPrices.find(
+    // Find price in weekly prices array
+    const price = weeklyPrices.find(
       p => p.apartmentId === apartmentId && 
            new Date(p.weekStart).toDateString() === weekStart.toDateString()
     );
     
-    if (weeklyPrice) {
-      return weeklyPrice.price;
+    if (price) {
+      return price.price;
     }
     
-    // 2. Look in seasonal pricing for this year
-    const year = weekStart.getFullYear();
-    const season = seasonalPricing.find(s => s.year === year);
-    
-    if (season) {
-      const seasonPrice = season.prices.find(
+    // Fallback: check in seasonal pricing for this year
+    const yearPricing = seasonalPricing.find(s => s.year === selectedYear);
+    if (yearPricing) {
+      const seasonPrice = yearPricing.prices.find(
         p => p.apartmentId === apartmentId && 
              new Date(p.weekStart).toDateString() === weekStart.toDateString()
       );
@@ -93,11 +87,8 @@ const AdminPrices = () => {
       }
     }
     
-    // Debug per vedere cosa sta accadendo
-    console.log(`Prezzo non trovato per ${apartmentId} su ${weekStart.toDateString()}, uso il default`);
-    
-    // 3. Default to base price if not found
-    return 0; // Usiamo 0 come valore default invece di un prezzo fisso
+    // If no price is found, return 0
+    return 0;
   };
   
   const handleResetPricesClick = () => {
@@ -118,7 +109,7 @@ const AdminPrices = () => {
         )}
       </div>
       
-      {weeklyPrices.length > 0 ? (
+      {weeklyPrices && weeklyPrices.length > 0 ? (
         <YearTabs 
           years={years}
           selectedYear={selectedYear}

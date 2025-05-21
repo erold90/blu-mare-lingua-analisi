@@ -1,18 +1,18 @@
 
 import { useState, useEffect } from "react";
 import { WeeklyPrice, SeasonalPricing } from "./types";
-import { generateDefaultPricesForYear } from "./priceUtils";
 
 /**
  * Custom hook to manage the state for the prices provider
  */
 export const useProviderState = () => {
-  console.log("Inizializzazione di useProviderState");
+  console.log("Initializing useProviderState");
   
-  // Initial state with seasonal pricing for the current year
+  // Load seasonal pricing from localStorage
   const [seasonalPricing, setSeasonalPricing] = useState<SeasonalPricing[]>(() => {
     console.log("useProviderState: Loading seasonal pricing from localStorage");
     const savedPricing = localStorage.getItem("seasonalPricing");
+    
     if (savedPricing) {
       try {
         const parsedPricing = JSON.parse(savedPricing);
@@ -29,34 +29,35 @@ export const useProviderState = () => {
         return parsedPricing;
       } catch (error) {
         console.error("Failed to parse saved seasonal pricing:", error);
+        return [];
       }
     }
     
-    console.log("useProviderState: No seasonal pricing found, initializing with default");
+    console.log("useProviderState: No seasonal pricing found in localStorage");
     return [];
   });
   
-  // Current year's weekly prices
+  // Initialize weekly prices from 2025 season
   const [weeklyPrices, setWeeklyPrices] = useState<WeeklyPrice[]>(() => {
-    console.log("Inizializzazione dei prezzi settimanali");
+    console.log("Initializing weekly prices");
     const savedPricing = localStorage.getItem("seasonalPricing");
+    
     if (savedPricing) {
       try {
         const allPricing = JSON.parse(savedPricing);
         const year2025 = allPricing.find((season: SeasonalPricing) => season.year === 2025);
-        if (year2025) {
-          console.log(`Trovati ${year2025.prices.length} prezzi per il 2025 in localStorage`);
+        
+        if (year2025 && year2025.prices && year2025.prices.length > 0) {
+          console.log(`Found ${year2025.prices.length} prices for 2025 in localStorage`);
           
-          // Debug - log a few prices
-          if (year2025.prices.length > 0) {
-            const apt1Prices = year2025.prices.filter((p: WeeklyPrice) => p.apartmentId === "apt-1");
-            console.log(`Prezzi per apt-1 nel 2025: ${apt1Prices.length}`);
-            if (apt1Prices.length > 0) {
-              console.log("Primi 3 prezzi:", apt1Prices.slice(0, 3).map((p: WeeklyPrice) => 
-                `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
-              ));
-              console.log("Dettaglio primo prezzo:", apt1Prices[0]);
-            }
+          // Debug - log a few prices for verification
+          const apt1Prices = year2025.prices.filter((p: WeeklyPrice) => p.apartmentId === "apt-1");
+          console.log(`Prices for apt-1 in 2025: ${apt1Prices.length}`);
+          
+          if (apt1Prices.length > 0) {
+            console.log("First 3 prices:", apt1Prices.slice(0, 3).map((p: WeeklyPrice) => 
+              `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
+            ));
           }
           
           return year2025.prices;
@@ -66,14 +67,14 @@ export const useProviderState = () => {
       }
     }
     
-    console.log("Nessun prezzo trovato per il 2025, restituendo array vuoto");
+    console.log("No prices found for 2025, returning empty array");
     return [];
   });
 
-  // Aggiorniamo i prezzi settimanali quando cambia seasonalPricing
+  // Update weekly prices when seasonalPricing changes
   useEffect(() => {
     const year2025 = seasonalPricing.find(season => season.year === 2025);
-    if (year2025) {
+    if (year2025 && year2025.prices) {
       console.log(`useProviderState: Updating weekly prices with ${year2025.prices.length} prices from 2025`);
       setWeeklyPrices(year2025.prices);
     }
