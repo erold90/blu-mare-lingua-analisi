@@ -31,6 +31,7 @@ export interface PriceCalculation {
   extras: number;
   cleaningFee: number;
   touristTax: number;
+  touristTaxPerPerson: number; // Added missing property
   totalBeforeDiscount: number;
   totalAfterDiscount: number;
   discount: number;
@@ -47,7 +48,8 @@ export const emptyPriceCalculation: PriceCalculation = {
   basePrice: 0, 
   extras: 0,
   cleaningFee: 0,
-  touristTax: 0, 
+  touristTax: 0,
+  touristTaxPerPerson: 2.0, // Default value 
   totalBeforeDiscount: 0, 
   totalAfterDiscount: 0,
   discount: 0,

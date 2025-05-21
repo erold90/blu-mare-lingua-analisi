@@ -1,5 +1,6 @@
 
 import { jsPDF } from "jspdf";
+import { PriceCalculation } from "@/utils/price/types"; // Import from the central location
 
 // Type definition for the return value of autoTable
 export interface AutoTableResult {
@@ -26,40 +27,5 @@ declare module 'jspdf' {
   }
 }
 
-export interface PriceCalculation {
-  basePrice: number;
-  extras: number;
-  cleaningFee: number;
-  touristTax: number;
-  touristTaxPerPerson: number;  // Added missing property
-  totalBeforeDiscount: number;
-  totalAfterDiscount: number;
-  discount: number;
-  savings: number;
-  deposit: number;
-  nights: number;
-  totalPrice: number;
-  subtotal: number;
-  apartmentPrices: Record<string, number>;
-}
-
-export interface PdfDocumentOptions {
-  fontSizes?: {
-    title?: number;
-    subtitle?: number;
-    heading?: number;
-    text?: number;
-    small?: number;
-  };
-  margins?: {
-    left?: number;
-    right?: number;
-    top?: number;
-    bottom?: number;
-  };
-  colors?: {
-    primary?: [number, number, number];
-    secondary?: [number, number, number];
-    heading?: [number, number, number];
-  };
-}
+// Re-export the PriceCalculation interface from the central location
+export { PriceCalculation };

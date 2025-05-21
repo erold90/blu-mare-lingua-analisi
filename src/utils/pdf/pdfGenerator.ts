@@ -4,6 +4,7 @@ import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
+import { PriceCalculation } from "@/utils/price/types"; // Updated import
 import { Apartment } from "@/data/apartments";
 import { 
   addCenteredText, 

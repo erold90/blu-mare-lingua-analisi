@@ -2,7 +2,7 @@
 import { jsPDF } from "jspdf";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
-import { PriceCalculation } from "@/utils/pdf/types";  // Update import to use our extended type
+import { PriceCalculation } from "@/utils/price/types"; // Updated import
 import { formatItalianDate, addSeparatorLine, addHeaderBackground } from "./formatUtils";
 import { AutoTableResult } from "./types";
 
