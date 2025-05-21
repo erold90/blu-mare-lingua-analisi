@@ -371,9 +371,6 @@ const AdminCleaningManagementContent = () => {
                 mode="single"
                 selected={selectedDate}
                 onSelect={(date) => date && setSelectedDate(date)}
-                modifiersStyles={{
-                  today: { fontWeight: "bold", color: "var(--primary)" }
-                }}
                 modifiers={{
                   hasCleaningTask: (date) => {
                     const dateKey = format(date, "yyyy-MM-dd");
@@ -391,18 +388,7 @@ const AdminCleaningManagementContent = () => {
                 classNames={{
                   day_today: "font-bold text-primary",
                   day_selected: "bg-primary text-primary-foreground",
-                  day: (date) => {
-                    const dateKey = format(date, "yyyy-MM-dd");
-                    const day = specialDays[dateKey];
-                    
-                    if (!day) return "";
-                    
-                    if (selectedApartment !== "all" && !day.tasks.some(t => t.apartmentId === selectedApartment)) {
-                      return "";
-                    }
-                    
-                    return "bg-accent text-accent-foreground";
-                  }
+                  day_hasCleaningTask: "bg-accent text-accent-foreground"
                 }}
                 className="rounded-md border shadow-none"
               />
