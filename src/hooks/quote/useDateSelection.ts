@@ -5,8 +5,13 @@ import { FormValues } from "@/utils/quoteFormSchema";
 import { DateRange } from "react-day-picker";
 import { differenceInDays } from "date-fns";
 import { toast } from "sonner";
+import { usePrices } from "@/hooks/usePrices";
+import { apartments } from "@/data/apartments";
 
 export function useDateSelection(form: UseFormReturn<FormValues>) {
+  // Initialize prices hook to check for available prices
+  const { getPriceForWeek } = usePrices();
+  
   // Initialize date range from form values
   const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
     const checkIn = form.getValues("checkIn");
@@ -27,11 +32,29 @@ export function useDateSelection(form: UseFormReturn<FormValues>) {
     ? differenceInDays(dateRange.to, dateRange.from)
     : 0;
   
-  // Function to check if a date is disabled (not Sat, Sun, or Mon)
+  // Function to check if a date is disabled
   const isDateDisabled = (date: Date): boolean => {
     const day = date.getDay(); 
     // 0 = Sunday, 1 = Monday, 6 = Saturday
-    return day !== 0 && day !== 1 && day !== 6;
+    const isNotAllowedDay = day !== 0 && day !== 1 && day !== 6;
+    
+    // Block dates that don't have prices set for any apartment
+    // We consider a date available if at least one apartment has a price for that date
+    let hasAnyApartmentPrice = false;
+    
+    // Only check for prices if the day is allowed (sat, sun, mon)
+    if (!isNotAllowedDay) {
+      for (const apartment of apartments) {
+        const price = getPriceForWeek(apartment.id, date);
+        if (price > 0) {
+          hasAnyApartmentPrice = true;
+          break;
+        }
+      }
+    }
+    
+    // Date is disabled if it's not an allowed day OR if no apartment has a price for that date
+    return isNotAllowedDay || !hasAnyApartmentPrice;
   };
   
   // Handle date range selection
