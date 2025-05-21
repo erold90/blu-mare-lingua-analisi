@@ -29,9 +29,15 @@ export function calculateDiscount(totalBeforeDiscount: number, touristTax: numbe
   const savings = discount;
   console.log(`Total discount savings: ${savings}€`);
   
-  // Calculate deposit (30%)
-  const deposit = Math.ceil(roundedPrice * 0.3);
-  console.log(`Deposit (30%): ${deposit}€`);
+  // Calculate deposit: 
+  // 1. Calculate 35% of the total price
+  const maxDepositPercent = roundedPrice * 0.35;
+  // 2. Round to nearest 100€ by first dividing by 100, then rounding, then multiplying by 100
+  const deposit = Math.min(
+    Math.round(roundedPrice * 0.3 / 100) * 100,
+    Math.round(maxDepositPercent / 100) * 100
+  );
+  console.log(`Deposit (rounded to nearest 100€, max 35%): ${deposit}€`);
   
   return {
     totalAfterDiscount: roundedPrice,

@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { PriceCalculation } from "@/utils/price/types";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
-import { Euro, Percent, ReceiptText, Sparkles, PawPrint, BadgeEuro } from "lucide-react";
+import { Euro, Percent, ReceiptText, Sparkles, PawPrint, BadgeEuro, Minus } from "lucide-react";
 
 interface PriceSummaryProps {
   priceInfo: PriceCalculation;
@@ -41,7 +41,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   // The total to pay is the final amount after all discounts
   const totalToPay = priceInfo.totalAfterDiscount;
   
-  // The deposit is 30% of the total
+  // The deposit is calculated in discountCalculator and rounded to nearest 100€
   const deposit = priceInfo.deposit;
   
   // The discount is the difference between the original price and the rounded price
@@ -97,8 +97,8 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
               Pulizia finale:
             </span>
             <div className="flex items-center">
-              <del className="font-medium mr-1">{cleaningFee}€</del>
               <span className="text-green-500">(inclusa)</span>
+              <del className="font-medium ml-1">{cleaningFee}€</del>
             </div>
           </div>
           
@@ -117,18 +117,24 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
               Tassa di soggiorno:
             </span>
             <div className="flex items-center">
-              <del className="font-medium mr-1">{touristTax}€</del>
               <span className="text-green-500">(inclusa)</span>
+              <del className="font-medium ml-1">{touristTax}€</del>
             </div>
           </div>
           
           <Separator className="my-2" />
           
+          {/* Subtotal before discount */}
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Subtotale:</span>
+            <span className="font-medium">{subtotal}€</span>
+          </div>
+          
           {/* Discount (if any) */}
           {discount > 0 && (
             <div className="flex justify-between text-sm text-green-500">
               <span>Sconto:</span>
-              <span>{discount}€</span>
+              <span className="flex items-center"><Minus className="h-3 w-3 mr-0.5" />{discount}€</span>
             </div>
           )}
           
@@ -141,7 +147,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
           {/* Deposit and security deposit */}
           <div className="space-y-2 mt-2">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Caparra (30%):</span>
+              <span className="text-muted-foreground">Caparra:</span>
               <span className="font-medium">{deposit}€</span>
             </div>
             
@@ -172,7 +178,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         
         {/* Deposit */}
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Caparra (30%):</span>
+          <span className="text-muted-foreground">Caparra:</span>
           <span className="font-medium">{deposit}€</span>
         </div>
         

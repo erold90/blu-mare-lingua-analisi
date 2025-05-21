@@ -4,7 +4,7 @@ import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
 import { roundDownToNearest50 } from "@/utils/price/basePrice";
-import { Euro, PawPrint, Bed, SparklesIcon, Banknote, Receipt, CalendarDays } from "lucide-react";
+import { Euro, PawPrint, Bed, SparklesIcon, Banknote, Receipt, CalendarDays, Minus } from "lucide-react";
 
 interface ApartmentListProps {
   apartments: Apartment[];
@@ -134,20 +134,20 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                       <SparklesIcon className="h-3 w-3" />Pulizia finale:
                     </span>
                     <span className="flex items-center">
+                      <span className="text-green-500 text-[10px] mr-1">(inclusa)</span>
                       <del>{costs.cleaningFee}€</del>
-                      <span className="text-green-500 text-[10px] ml-1">(inclusa)</span>
                     </span>
                     
                     <span className="text-muted-foreground flex items-center gap-1">
                       <Banknote className="h-3 w-3" />Tassa soggiorno:
                     </span>
                     <span className="flex items-center">
+                      <span className="text-green-500 text-[10px] mr-1">(inclusa)</span>
                       <del>{costs.touristTax}€</del>
-                      <span className="text-green-500 text-[10px] ml-1">(inclusa)</span>
                     </span>
                     
                     <span className="text-muted-foreground font-medium flex items-center gap-1">
-                      <Euro className="h-3 w-3" />Totale:
+                      <Euro className="h-3 w-3" />Subtotale:
                     </span>
                     <span className="font-medium">{costs.totalBeforeDiscount}€</span>
                   </div>
@@ -156,7 +156,7 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                   {costs.discount > 0 && (
                     <div className="flex justify-between items-center text-sm mt-1">
                       <div className="text-green-500 flex items-center gap-1 text-sm">
-                        Sconto: {costs.discount}€
+                        Sconto: <Minus className="h-3 w-3 mx-0.5" />{costs.discount}€
                       </div>
                       <div className="font-semibold">
                         Totale scontato: {costs.roundedTotal}€
