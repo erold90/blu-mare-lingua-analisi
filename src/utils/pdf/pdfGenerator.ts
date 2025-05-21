@@ -34,7 +34,7 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     const doc = new jsPDF();
     
     // Apply autoTable to document
-    autoTable(doc, {}); // This is just to register the plugin
+    autoTable(doc, { startY: -100 }); // This is just to register the plugin
     
     // Add title
     doc.setFontSize(22);
@@ -54,7 +54,7 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     const tableBody = generateCostsTable(doc, priceCalculation, formData, yAfterApartment);
     
     // Add the table to the PDF
-    const result = doc.autoTable({
+    const tableResult = doc.autoTable({
       startY: yAfterApartment + 20,
       head: [["Voce", "Dettagli", "Importo"]],
       body: tableBody,
@@ -67,9 +67,15 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
       }
     });
     
-    // Get the final Y position after the table
-    // Access the result directly since we stored it
-    const finalY = result?.lastAutoTable?.finalY || result?.finalY || yAfterApartment + 50;
+    // Get the final Y position after the table - provide fallback value
+    let finalY = yAfterApartment + 150; // Default fallback position
+    if (tableResult && typeof tableResult === 'object') {
+      if ('lastAutoTable' in tableResult && tableResult.lastAutoTable?.finalY) {
+        finalY = tableResult.lastAutoTable.finalY;
+      } else if ('finalY' in tableResult && tableResult.finalY) {
+        finalY = tableResult.finalY;
+      }
+    }
     
     // Add notes after the table
     generateNotesSection(doc, finalY);

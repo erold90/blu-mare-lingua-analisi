@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { apartments } from "@/data/apartments";
-import { downloadPDF } from "@/utils/pdfGenerator";
+import { downloadPDF } from "@/utils/pdf/pdfGenerator";
 import { createWhatsAppMessage } from "@/utils/quoteCalculator";
 
 export function useQuoteActions(form: UseFormReturn<FormValues>) {
@@ -19,7 +19,13 @@ export function useQuoteActions(form: UseFormReturn<FormValues>) {
       }
     } catch (error) {
       console.error("Errore durante la generazione del PDF:", error);
-      toast.error("Si è verificato un errore durante la generazione del PDF");
+      
+      // More descriptive error message
+      const errorMessage = error instanceof Error 
+        ? `Errore: ${error.message}` 
+        : "Si è verificato un errore durante la generazione del PDF";
+        
+      toast.error(errorMessage);
     }
   };
   
