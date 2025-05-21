@@ -11,9 +11,13 @@ export const PricesContext = createContext<PricesContextType | undefined>(undefi
 export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { seasonalPricing, setSeasonalPricing, weeklyPrices, setWeeklyPrices } = useProviderState();
   
-  // Initialize 2025 season if it doesn't exist
+  // Initialize 2025 season with custom prices if it doesn't exist
   useEffect(() => {
+    console.log("PricesProvider: Initializing 2025 pricing with custom values if needed");
     initializeYearPricing(seasonalPricing, setSeasonalPricing);
+    
+    // Also ensure current year's prices are loaded
+    getCurrentOrCreateSeason(seasonalPricing, setSeasonalPricing, setWeeklyPrices);
   }, []);
   
   // Update a specific weekly price

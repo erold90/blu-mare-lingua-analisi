@@ -1,63 +1,48 @@
-
 import * as React from "react";
 import { usePrices } from "@/hooks/usePrices";
 import YearTabs from "./prices/YearTabs";
+import { apartments } from "@/data/apartments";
 
 const AdminPrices = () => {
-  const { weeklyPrices, updateWeeklyPrice, generateWeeksForSeason, getCurrentSeason } = usePrices();
+  const { 
+    weeklyPrices, 
+    updateWeeklyPrice, 
+    generateWeeksForSeason, 
+    getCurrentSeason,
+    seasonalPricing 
+  } = usePrices();
   
-  const currentYear = new Date().getFullYear();
   const years = [2025, 2026, 2027, 2028];
-  
   const [selectedYear, setSelectedYear] = React.useState<number>(2025);
   const [weeks, setWeeks] = React.useState<{ start: Date, end: Date }[]>(
     generateWeeksForSeason(selectedYear, 6, 9) // June to September
   );
   
-  // Keep track of whether we've already initialized the 2025 prices
-  const [prices2025Initialized, setPrices2025Initialized] = React.useState<boolean>(false);
+  // Keep track of whether we've already initialized the prices
+  const [pricesInitialized, setPricesInitialized] = React.useState<boolean>(false);
 
   // Initialize 2025 prices on first load only if needed
   React.useEffect(() => {
-    // Only run this once, when the component mounts and selectedYear is 2025
-    if (selectedYear === 2025 && !prices2025Initialized) {
-      console.log("Initializing 2025 prices...");
-      
-      // Check if 2025 prices already exist in localStorage
+    // Only run this once, when the component mounts
+    if (!pricesInitialized) {
+      // Check if prices already exist in localStorage
       const savedPricing = localStorage.getItem("seasonalPricing");
-      let has2025Prices = false;
+      let hasPrices = false;
       
       if (savedPricing) {
         try {
           const allPricing = JSON.parse(savedPricing);
-          has2025Prices = allPricing.some((season: any) => season.year === 2025);
+          hasPrices = allPricing.some((season: any) => season.year === 2025);
         } catch (error) {
           console.error("Failed to parse saved seasonal pricing:", error);
         }
       }
       
-      // Only initialize if no 2025 prices exist
-      if (!has2025Prices) {
-        // Set all apartment prices to 120€ for every week
-        const apartmentIds = apartments.map(apt => apt.id);
-        
-        // Get all weeks for 2025 season
-        const weeks2025 = generateWeeksForSeason(2025, 6, 9);
-        
-        // For each apartment and week, set the price to 120€
-        apartmentIds.forEach(aptId => {
-          weeks2025.forEach(week => {
-            const weekStartIso = week.start.toISOString();
-            updateWeeklyPrice(aptId, weekStartIso, 120);
-            console.log(`Updated price for ${aptId}, week ${weekStartIso}: 120€`);
-          });
-        });
-      }
-      
-      // Mark as initialized so we don't do it again
-      setPrices2025Initialized(true);
+      // We'll let the PricesProvider handle the initialization
+      // Just mark as initialized so we don't check repeatedly
+      setPricesInitialized(true);
     }
-  }, [selectedYear, prices2025Initialized, updateWeeklyPrice, generateWeeksForSeason]);
+  }, [pricesInitialized]);
   
   // Re-generate weeks when selected year changes
   React.useEffect(() => {
@@ -85,9 +70,18 @@ const AdminPrices = () => {
     
     if (price) return price.price;
     
-    // If no price found for this specific week, return 120 as default for 2025
-    if (weekStart.getFullYear() === 2025) {
-      return 120;
+    // Find the right year in seasonalPricing
+    const year = weekStart.getFullYear();
+    const season = seasonalPricing.find(s => s.year === year);
+    
+    if (season) {
+      // Try to find a price for this apartment and week
+      const matchingPrice = season.prices.find(
+        p => p.apartmentId === apartmentId && 
+             new Date(p.weekStart).toDateString() === weekStart.toDateString()
+      );
+      
+      if (matchingPrice) return matchingPrice.price;
     }
     
     // For other years, return the apartment's default price
@@ -110,6 +104,3 @@ const AdminPrices = () => {
 };
 
 export default AdminPrices;
-
-// Need to import apartments here since it's used in the component
-import { apartments } from "@/data/apartments";
