@@ -20,7 +20,7 @@ import { ReservationsProvider } from "./hooks/useReservations";
 import { PricesProvider } from "./hooks/price/PricesProvider";
 import { SettingsProvider } from "./hooks/useSettings";
 import { ActivityLogProvider } from "./hooks/useActivityLog";
-import { CleaningProvider } from "./hooks/useCleaningManagement";
+import { CleaningProvider } from "./hooks/cleaning";
 
 const queryClient = new QueryClient();
 

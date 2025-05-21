@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -17,7 +18,7 @@ import {
   Line,
 } from "recharts";
 import { useReservations } from "@/hooks/useReservations";
-import { useCleaningManagement } from "@/hooks/useCleaningManagement";
+import { CleaningProvider, useCleaningManagement } from "@/hooks/cleaning";
 import { 
   ChartContainer, 
   ChartTooltip, 
@@ -28,7 +29,6 @@ import { it } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, CalendarDays, Users, Building, EuroIcon, LayoutDashboard, ArrowUpRightIcon, TrendingUp, TrendingDown, Brush } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { CleaningProvider } from "@/hooks/useCleaningManagement";
 
 // Colori per i grafici
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#a855f7', '#ec4899'];
