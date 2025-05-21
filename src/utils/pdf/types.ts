@@ -5,6 +5,9 @@ import type { PriceCalculation } from "@/utils/price/types"; // Import using 'ty
 // Type definition for the return value of autoTable
 export interface AutoTableResult {
   finalY: number;
+  cursor?: {
+    y: number;
+  };
   [key: string]: any;
 }
 

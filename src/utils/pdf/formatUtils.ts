@@ -5,7 +5,7 @@ import { jsPDF } from "jspdf";
 
 // Format date using Italian locale
 export const formatItalianDate = (date: Date): string => {
-  return format(date, "dd MMMM yyyy", { locale: it });
+  return format(date, "dd/MM/yyyy", { locale: it });
 };
 
 // Helper for adding centered text
@@ -13,7 +13,6 @@ export const addCenteredText = (doc: jsPDF, text: string, y: number, fontSize = 
   const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFontSize(fontSize);
   
-  // Use correct method for string width calculation
   const textWidth = doc.getStringUnitWidth(text) * fontSize / doc.internal.scaleFactor;
   const x = (pageWidth - textWidth) / 2;
   doc.text(text, x, y);
@@ -24,7 +23,6 @@ export const addRightAlignedText = (doc: jsPDF, text: string, y: number, fontSiz
   const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFontSize(fontSize);
   
-  // Use correct method for string width calculation
   const textWidth = doc.getStringUnitWidth(text) * fontSize / doc.internal.scaleFactor;
   const x = pageWidth - textWidth - 20; // 20 is the right margin
   doc.text(text, x, y);
@@ -50,134 +48,87 @@ export const addPageNumbers = (doc: jsPDF) => {
   }
 };
 
-// Add a styled logo to the document
-export const addLogo = (doc: jsPDF, y = 15) => {
-  // Create a logo with better styling
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const logoX = 20;
+// Add a simple header with the title in a colored bar
+export const addHeader = (doc: jsPDF, title: string) => {
+  // Add a navy blue header bar
+  doc.setFillColor(0, 32, 76); // Deep navy blue
+  doc.rect(0, 0, doc.internal.pageSize.getWidth(), 30, 'F');
   
-  // Set color for the logo (a deeper, more elegant blue)
-  doc.setFillColor(47, 84, 150);
-  doc.setDrawColor(47, 84, 150);
-  
-  // Draw a rectangle with rounded corners for more polished look
-  doc.roundedRect(logoX, y, 50, 18, 3, 3, 'FD');
-  
-  // Add text over the rectangle with better spacing
+  // Add company name or title
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(11);
-  doc.setFont("helvetica", "bold");
-  doc.text("CASA VACANZE", logoX + 7, y + 11);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text(title, 10, 20);
   
-  // Reset text color
+  // Add the "Preventivo" text on the right
+  doc.text("Preventivo", doc.internal.pageSize.getWidth() - 60, 20);
+  
+  // Reset colors
   doc.setTextColor(0, 0, 0);
-  doc.setFont("helvetica", "normal");
-  
-  return y + 25; // Return the Y position after the logo
+  doc.setFont('helvetica', 'normal');
 };
 
-// Add a designer footer to the document
-export const addFooter = (doc: jsPDF) => {
+// Add a basic footer to all pages
+export const addBasicFooter = (doc: jsPDF) => {
+  const pageCount = doc.getNumberOfPages();
+  const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const footerY = pageHeight - 25;
   
-  // Add elegant separator line with gradient effect
-  doc.setDrawColor(47, 84, 150);
-  doc.setLineWidth(0.75);
-  addSeparatorLine(doc, footerY - 2, 15, 15);
-  
-  doc.setDrawColor(150, 150, 150);
-  doc.setLineWidth(0.5);
-  addSeparatorLine(doc, footerY - 0.5, 15, 15);
-  
-  // Add company info in a more elegant style
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(80, 80, 80);
-  addCenteredText(doc, "Casa Vacanze Toscana • Via delle Vacanze 123, 50100 Firenze • P.IVA 01234567890", footerY + 5, 9);
-  addCenteredText(doc, "Tel: +39 055 123 4567 • Email: info@casavacanzetoscana.it • www.casavacanzetoscana.it", footerY + 10, 9);
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    
+    // Add line
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    doc.line(10, pageHeight - 25, pageWidth - 10, pageHeight - 25);
+    
+    // Add company info
+    doc.setFontSize(8);
+    doc.text("Casa Vacanze Toscana", 10, pageHeight - 18);
+    doc.text("Via delle Vacanze 123, 50100 Firenze", pageWidth/2 - 30, pageHeight - 18);
+    doc.text("Tel: +39 055 123 4567", pageWidth - 60, pageHeight - 18);
+    
+    // Second line of footer
+    doc.text("P.IVA 01234567890", 10, pageHeight - 10);
+    doc.text("www.casavacanzetoscana.it", pageWidth/2 - 30, pageHeight - 10);
+    doc.text("info@casavacanzetoscana.it", pageWidth - 60, pageHeight - 10);
+  }
 };
 
-// Add a watermark to the document - FIXED to not use translate method
-export const addWatermark = (doc: jsPDF) => {
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const pageWidth = doc.internal.pageSize.getWidth();
+// Create a section with a title and light gray background
+export const createSection = (doc: jsPDF, title: string, y: number) => {
+  // Add gray background
+  doc.setFillColor(240, 240, 240);
+  doc.rect(10, y, doc.internal.pageSize.getWidth() - 20, 10, 'F');
   
-  // Save current state
-  const currentFontSize = doc.getFontSize();
-  
-  // Set watermark properties with a more subtle color
-  doc.setTextColor(235, 235, 235); // Lighter gray for elegance
-  doc.setFontSize(70);
-  doc.setFont("helvetica", "bold");
-  
-  // Position the watermark in the center with rotation
-  const text = "PREVENTIVO";
-  
-  // Add single centered watermark with proper angle
-  doc.text(text, pageWidth / 2, pageHeight / 2, {
-    align: "center",
-    angle: -45
-  });
-  
-  // Restore previous state
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(currentFontSize);
-  doc.setFont("helvetica", "normal");
-};
-
-// Add a decorative header background
-export const addHeaderBackground = (doc: jsPDF, y: number, height = 40) => {
-  const pageWidth = doc.internal.pageSize.getWidth();
-  
-  // Create a subtle gradient effect by layering rectangles
-  doc.setFillColor(245, 248, 252); // Base light blue
-  doc.rect(0, y - 10, pageWidth, height, 'F');
-  
-  // Add subtle accent line at the bottom
-  doc.setDrawColor(47, 84, 150);
-  doc.setLineWidth(1.5);
-  doc.line(0, y - 10 + height, pageWidth, y - 10 + height);
-  
-  return y + height - 10;
-};
-
-// Add a styled section header
-export const addSectionHeader = (doc: jsPDF, text: string, y: number) => {
-  // Add elegant section title background
-  doc.setFillColor(240, 244, 248);
-  doc.roundedRect(15, y - 5, doc.internal.pageSize.getWidth() - 30, 10, 2, 2, 'F');
-  
-  // Add section title text with accent
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(13);
-  doc.setTextColor(47, 84, 150); // Match the logo color for consistency
-  doc.text(text, 20, y + 2);
-  
-  // Reset text properties
-  doc.setTextColor(0, 0, 0);
-  doc.setFont("helvetica", "normal");
+  // Add section title
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text(title, 12, y + 7);
+  doc.setFont('helvetica', 'normal');
   
   return y + 10;
 };
 
-// Add a styled info box
-export const addInfoBox = (doc: jsPDF, title: string, content: string, y: number) => {
-  // Create box with light background
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(220, 225, 235);
-  doc.roundedRect(20, y, doc.internal.pageSize.getWidth() - 40, 25, 2, 2, 'FD');
-  
-  // Add title
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(11);
-  doc.text(title, 25, y + 8);
-  
-  // Add content
-  doc.setFont("helvetica", "normal");
+// Create a table row with a key-value pair
+export const createInfoRow = (doc: jsPDF, key: string, value: string, y: number) => {
   doc.setFontSize(10);
-  doc.text(content, 25, y + 18);
   
-  return y + 30;
+  // Add a subtle table row
+  doc.setFillColor(250, 250, 250);
+  doc.rect(10, y, doc.internal.pageSize.getWidth() - 20, 10, 'F');
+  
+  // Draw separator lines
+  doc.setDrawColor(240, 240, 240);
+  doc.setLineWidth(0.5);
+  doc.line(10, y + 10, doc.internal.pageSize.getWidth() - 10, y + 10);
+  
+  // Add key in normal font
+  doc.setFont('helvetica', 'normal');
+  doc.text(key, 12, y + 7);
+  
+  // Add value in normal font
+  doc.text(value, doc.internal.pageSize.getWidth() / 3, y + 7);
+  
+  return y + 10;
 };
