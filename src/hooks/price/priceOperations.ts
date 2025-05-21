@@ -59,7 +59,7 @@ export const updateWeeklyPrice = (
     updatedPricing[yearIndex].prices.push({
       apartmentId,
       weekStart: weekStartDate.toISOString(),
-      weekEnd: weekEndDate.toISOString(),
+      weekEnd: weekEndDate.toISOString(), // This is now allowed by the updated type
       price
     });
     console.log(`Added new price: ${apartmentId}, ${weekStart}, ${price}€`);

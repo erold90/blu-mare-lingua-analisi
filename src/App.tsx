@@ -18,7 +18,7 @@ import CookiePolicyPage from "./pages/CookiePolicyPage";
 import NotFound from "./pages/NotFound";
 import GalleryPage from "./pages/GalleryPage";
 import { ReservationsProvider } from "./hooks/useReservations";
-import { PricesProvider } from "./hooks/usePrices";
+import { PricesProvider } from "./hooks/price/PricesProvider";
 import { SettingsProvider } from "./hooks/useSettings";
 import { ActivityLogProvider } from "./hooks/useActivityLog";
 

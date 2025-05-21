@@ -4,6 +4,7 @@ import { Apartment } from "@/data/apartments";
 export interface WeeklyPrice {
   apartmentId: string;
   weekStart: string; // ISO date string
+  weekEnd?: string; // ISO date string (optional for backward compatibility)
   price: number;
 }
 

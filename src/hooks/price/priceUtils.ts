@@ -1,91 +1,123 @@
 
-import { isWithinInterval } from "date-fns";
+import { format, parseISO, isSameWeek } from "date-fns";
 import { WeeklyPrice, SeasonalPricing } from "./types";
-import { apartments } from "@/data/apartments";
 
-// Helper to generate weeks for a given season
-export const generateWeeksForSeason = (year: number, startMonth: number, endMonth: number) => {
-  // Create array to hold all weeks
-  const weeks: { start: Date, end: Date }[] = [];
+/**
+ * Returns a list of weeks for a specific year
+ * Each week is represented by start and end dates
+ */
+export const getWeeksForYear = (year: number): { start: Date; end: Date }[] => {
+  const weeks: { start: Date; end: Date }[] = [];
   
   // Start from first Saturday of June
-  let currentDate = new Date(year, startMonth - 1, 1); // June 1st (months are 0-indexed)
-  while (currentDate.getDay() !== 6) { // 6 is Saturday
-    currentDate = new Date(currentDate.getTime() + 24 * 60 * 60 * 1000);
+  let currentDate = new Date(year, 5, 1); // June 1st
+  
+  // Find first Saturday (6 = Saturday)
+  while (currentDate.getDay() !== 6) {
+    currentDate.setDate(currentDate.getDate() + 1);
   }
   
-  console.log(`First Saturday of ${startMonth}/${year}: ${currentDate.toLocaleDateString()}`);
-  
-  // Generate weeks until the end of September
-  while (currentDate.getMonth() < endMonth) {
+  // Generate weeks until end of September
+  while (currentDate < new Date(year, 9, 1)) { // Until October 1st
+    const weekStart = new Date(currentDate);
     const weekEnd = new Date(currentDate);
     weekEnd.setDate(weekEnd.getDate() + 6); // End of week (Friday)
     
     weeks.push({
-      start: new Date(currentDate),
+      start: weekStart,
       end: weekEnd
     });
     
-    // Debug logging
-    if (weeks.length <= 3 || weeks.length >= 15) {
-      console.log(`Week ${weeks.length}: ${currentDate.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`);
-    }
-    
     // Move to next Saturday
-    currentDate = new Date(currentDate);
     currentDate.setDate(currentDate.getDate() + 7);
   }
   
-  console.log(`Generated ${weeks.length} weeks for season ${year}`);
   return weeks;
 };
 
-// Get price for a specific date and apartment
-export const getPriceForDate = (apartmentId: string, date: Date, seasonalPricing: SeasonalPricing[]): number => {
-  // Find the apartment to get default price
-  const apartment = apartments.find(apt => apt.id === apartmentId);
-  if (!apartment) return 0;
-  
-  const year = date.getFullYear();
-  
-  // Find the season for this year
-  const season = seasonalPricing.find(s => s.year === year);
-  if (!season) return 0; // Return default price if no seasonal pricing
-  
-  // Find the week containing this date
-  const weekPrice = season.prices.find(price => {
-    if (price.apartmentId !== apartmentId) return false;
-    
-    const weekStart = new Date(price.weekStart);
-    const weekEnd = new Date(price.weekEnd);
-    
-    return isWithinInterval(date, { start: weekStart, end: weekEnd });
-  });
-  
-  // Return weekly price if found, otherwise default price
-  return weekPrice ? weekPrice.price : 0;
+/**
+ * Format a week range for display
+ */
+export const formatWeekRange = (start: Date, end: Date): string => {
+  // Return a formatted date range string
+  return `${format(start, "d")} - ${format(end, "d MMM yyyy")}`;
 };
 
-// Get or create season for current year
-export const getCurrentOrCreateSeason = (
-  seasonalPricing: SeasonalPricing[], 
-  setSeasonalPricing: React.Dispatch<React.SetStateAction<SeasonalPricing[]>>,
-  setWeeklyPrices: React.Dispatch<React.SetStateAction<WeeklyPrice[]>>
-): SeasonalPricing => {
-  const currentYear = 2025; // Force to 2025 as per requirements
-  const currentSeason = seasonalPricing.find(season => season.year === currentYear);
+/**
+ * Get price for a specific apartment and week
+ */
+export const getPriceForApartmentWeek = (
+  apartmentId: string,
+  weekStart: Date,
+  prices: WeeklyPrice[]
+): number => {
+  // Find the price for this specific apartment and week
+  const price = prices.find(p => {
+    // Convert ISO string to Date for comparison
+    const priceStartDate = parseISO(p.weekStart);
+    
+    // Only compare week start date (not time)
+    return (
+      p.apartmentId === apartmentId &&
+      isSameWeek(priceStartDate, weekStart)
+    );
+  });
   
-  if (currentSeason) {
-    return currentSeason;
+  // Return found price or default
+  return price ? price.price : 0;
+};
+
+/**
+ * Load pricing data from storage
+ */
+export const loadPricesFromStorage = (): SeasonalPricing[] => {
+  try {
+    const storedPrices = localStorage.getItem("seasonalPricing");
+    return storedPrices ? JSON.parse(storedPrices) : [];
+  } catch (error) {
+    console.error("Error loading prices from storage:", error);
+    return [];
   }
+};
+
+/**
+ * Save pricing data to storage
+ */
+export const savePricesToStorage = (pricing: SeasonalPricing[]): void => {
+  try {
+    localStorage.setItem("seasonalPricing", JSON.stringify(pricing));
+  } catch (error) {
+    console.error("Error saving prices to storage:", error);
+  }
+};
+
+/**
+ * Debug function to log information about the pricing state
+ */
+export const debugPricingState = (
+  year: number, 
+  prices: WeeklyPrice[],
+  seasonalPricing: SeasonalPricing[]
+) => {
+  console.log(`Debug pricing state for year ${year}`);
+  console.log(`Weekly prices: ${prices.length} items`);
   
-  console.log(`No season found for ${currentYear}, forcing price initialization`);
+  // Seasonal pricing stats
+  console.log(`Seasonal pricing has ${seasonalPricing.length} years of data`);
+  seasonalPricing.forEach(season => {
+    console.log(`Season ${season.year}: ${season.prices.length} prices`);
+  });
   
-  // Import function directly to avoid circular dependency
-  const { forceInitializePrices } = require('./priceOperations');
-  const newPrices = forceInitializePrices(setSeasonalPricing);
-  setWeeklyPrices(newPrices);
-  
-  // Return the newly created season
-  return { year: currentYear, prices: newPrices };
+  // Sample prices for each year
+  seasonalPricing.forEach(season => {
+    if (season.prices.length > 0) {
+      const sample = season.prices[0];
+      console.log(`Sample price for ${season.year}: ${sample.apartmentId}, ${new Date(sample.weekStart).toLocaleDateString()}, ${sample.price}€`);
+      
+      // Check if weekEnd exists
+      if (sample.weekEnd) {
+        console.log(`  with weekEnd: ${new Date(sample.weekEnd).toLocaleDateString()}`);
+      }
+    }
+  });
 };

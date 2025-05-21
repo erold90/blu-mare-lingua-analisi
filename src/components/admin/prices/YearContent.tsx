@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import PriceTable from "./PriceTable";
 import MobilePriceList from "./MobilePriceList";
+import { apartments } from "@/data/apartments";
 
 interface YearContentProps {
   year: number;
@@ -19,6 +20,11 @@ const YearContent: React.FC<YearContentProps> = ({
   handlePriceChange,
 }) => {
   const isMobile = useIsMobile();
+  
+  // Wrapper function to convert string value to number before passing it on
+  const handlePriceChangeWrapper = (apartmentId: string, weekStartStr: string, newPrice: number) => {
+    handlePriceChange(apartmentId, weekStartStr, newPrice.toString());
+  };
 
   return (
     <Card>
@@ -35,13 +41,15 @@ const YearContent: React.FC<YearContentProps> = ({
           <MobilePriceList 
             weeks={weeks}
             getPriceForWeek={getPriceForWeek}
-            handlePriceChange={handlePriceChange}
+            handlePriceChange={handlePriceChangeWrapper}
+            apartments={apartments}
           />
         ) : (
           <PriceTable 
             weeks={weeks}
             getPriceForWeek={getPriceForWeek}
-            handlePriceChange={handlePriceChange}
+            handlePriceChange={handlePriceChangeWrapper}
+            apartments={apartments}
           />
         )}
       </CardContent>

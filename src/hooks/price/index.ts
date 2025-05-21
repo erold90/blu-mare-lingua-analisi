@@ -4,3 +4,4 @@ export * from './types';
 export * from './priceUtils';
 export * from './usePrices';
 export * from './PricesProvider';
+export * from './priceOperations';
