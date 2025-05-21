@@ -59,6 +59,7 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Update a specific weekly price
   const updateWeeklyPrice = (apartmentId: string, weekStart: string, price: number) => {
     updatePrice(apartmentId, weekStart, price, seasonalPricing, setSeasonalPricing, setWeeklyPrices);
+    toast.success(`Prezzo aggiornato: ${price}€`);
   };
   
   // Get the current season or create it if it doesn't exist

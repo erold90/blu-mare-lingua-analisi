@@ -66,36 +66,21 @@ const AdminPrices = () => {
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue >= 0) {
       updateWeeklyPrice(apartmentId, weekStartStr, numValue);
-      toast.success(`Prezzo aggiornato: ${numValue}€`);
     }
   };
   
-  // Reformatted getPriceForWeek to use a more direct approach
+  // Improved getPriceForWeek to use exact date matching
   const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
-    // Convert to date strings for consistent comparison (YYYY-MM-DD)
+    // Format dates consistently for comparison (YYYY-MM-DD)
     const weekStartDateStr = weekStart.toISOString().split('T')[0];
     
-    // Debug logging
-    console.log(`Searching price for ${apartmentId} on ${weekStartDateStr}`);
-    
-    // Find price by matching apartment ID and comparing date strings
+    // Find matching price entry
     const matchingPrice = weeklyPrices.find(price => {
-      const priceDate = new Date(price.weekStart).toISOString().split('T')[0];
-      const isMatch = price.apartmentId === apartmentId && priceDate === weekStartDateStr;
-      
-      if (isMatch) {
-        console.log(`Match found: ${price.price}€`);
-      }
-      
-      return isMatch;
+      const priceStartDate = new Date(price.weekStart).toISOString().split('T')[0];
+      return price.apartmentId === apartmentId && priceStartDate === weekStartDateStr;
     });
     
-    if (matchingPrice) {
-      return matchingPrice.price;
-    }
-    
-    console.log(`No price found for ${apartmentId} on ${weekStartDateStr}`);
-    return 0;
+    return matchingPrice ? matchingPrice.price : 0;
   };
   
   const handleResetPricesClick = () => {
