@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogFooter,
   DialogClose,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Apartment } from "@/data/apartments";
 import { Edit } from "lucide-react";
@@ -253,5 +254,3 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
     </Dialog>
   );
 };
-
-export const DialogTrigger = Dialog.Trigger;
