@@ -23,7 +23,9 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   );
   
   // Calculate extra services (animals and extra linen)
-  const extraServices = priceInfo.extras;
+  const linenCost = priceInfo.extras - (formValues.hasPets ? 50 : 0);
+  const petCost = formValues.hasPets ? 50 : 0;
+  const extraServices = linenCost + petCost;
   const showExtraServices = extraServices > 0;
   
   // Get cleaning fee and tourist tax
@@ -31,7 +33,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   const touristTax = priceInfo.touristTax;
 
   // Use the subtotal from the price calculation
-  const subtotal = priceInfo.subtotal;
+  const subtotal = priceInfo.basePrice + extraServices;
 
   // The total to pay is the final amount after all discounts
   const totalToPay = priceInfo.totalAfterDiscount;

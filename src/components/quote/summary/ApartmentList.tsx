@@ -54,7 +54,7 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
     // Tourist tax: 1€ per person per night (included in price)
     const touristTax = peopleCount * priceInfo.nights * 1;
     
-    // Calculate total before discount
+    // Calculate total before discount (include all costs here)
     const totalBeforeDiscount = apartmentBasePrice + linenCost + petCost;
     
     // Round down to nearest 50€

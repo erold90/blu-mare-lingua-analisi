@@ -36,7 +36,7 @@ export const calculateExtras = (
         .filter(([_, hasPet]) => hasPet)
         .length;
       
-      petsCost = apartmentsWithPets * 50;
+      petsCost = apartmentsWithPets > 0 ? apartmentsWithPets * 50 : 50;
     } else {
       // Default to one apartment with pets
       petsCost = 50;
