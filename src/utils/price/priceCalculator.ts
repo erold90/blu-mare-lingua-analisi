@@ -136,7 +136,7 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   const totalBeforeDiscount = subtotal;
   console.log(`Total before discount: ${totalBeforeDiscount}€`);
   
-  // Calculate discount and final price (based on subtotal only, not including cleaning fee or tourist tax)
+  // Calculate discount and final price for the TOTAL amount, not per apartment
   const { totalAfterDiscount, discount, savings, deposit } = calculateDiscount(totalBeforeDiscount, touristTax);
   console.log(`After discount: ${totalAfterDiscount}€, Savings: ${savings}€`);
   

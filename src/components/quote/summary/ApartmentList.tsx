@@ -57,11 +57,12 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
     // Calculate total before discount (ONLY include actual costs that affect pricing)
     const totalBeforeDiscount = apartmentBasePrice + linenCost + petCost;
     
-    // Round down to nearest 50€
-    const roundedTotal = roundDownToNearest50(totalBeforeDiscount);
+    // Round down to nearest 50€ - IMPORTANT: no longer apply this individually
+    // We will sum everything up first, then apply the discount to the total
+    const roundedTotal = totalBeforeDiscount;
     
-    // Calculate discount
-    const discount = totalBeforeDiscount - roundedTotal;
+    // Calculate discount - no longer apply this individually
+    const discount = 0;
     
     return {
       basePrice: apartmentBasePrice,
@@ -84,6 +85,23 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
 
   // Check if we have multiple apartments
   const hasMultipleApartments = selectedApartments.length > 1;
+  
+  // Calculate total costs for display consistency
+  const calculateTotalCosts = () => {
+    if (!hasMultipleApartments) return null;
+    
+    let totalBeforeDiscount = 0;
+    
+    selectedApartments.forEach(apt => {
+      const costs = calculateApartmentCosts(apt);
+      totalBeforeDiscount += costs.totalBeforeDiscount;
+    });
+    
+    return totalBeforeDiscount;
+  };
+  
+  // Store overall total for consistency check
+  const totalBeforeDiscount = calculateTotalCosts();
 
   return (
     <div className="space-y-3">
@@ -93,6 +111,16 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
             const costs = calculateApartmentCosts(apartment);
             const hasPets = hasPetsInApartment(apartment.id);
             const isLastItem = index === selectedApartments.length - 1;
+            
+            // For multiple apartments, calculate individual discount
+            let individualDiscount = 0;
+            let individualRoundedTotal = costs.totalBeforeDiscount;
+            
+            if (hasMultipleApartments) {
+              // Round down to nearest 50€ for display purposes
+              individualRoundedTotal = roundDownToNearest50(costs.totalBeforeDiscount);
+              individualDiscount = costs.totalBeforeDiscount - individualRoundedTotal;
+            }
             
             return (
               <div key={apartment.id} className={`pb-4 ${!isLastItem ? 'border-b' : ''}`}>
@@ -181,13 +209,13 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                   )}
                   
                   {/* Sconto per appartamento - only shown for multiple apartments */}
-                  {hasMultipleApartments && costs.discount > 0 && (
+                  {hasMultipleApartments && individualDiscount > 0 && (
                     <div className="flex justify-between items-center text-sm mt-1">
                       <div className="text-green-500 flex items-center gap-1 text-sm">
-                        Sconto: <Minus className="h-3 w-3 mx-0.5" />{costs.discount}€
+                        Sconto: <Minus className="h-3 w-3 mx-0.5" />{individualDiscount}€
                       </div>
                       <div className="font-semibold">
-                        Totale scontato: {costs.roundedTotal}€
+                        Totale scontato: {individualRoundedTotal}€
                       </div>
                     </div>
                   )}

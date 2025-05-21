@@ -36,7 +36,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   const basePrice = priceInfo.basePrice;
   
   // Subtotal includes base price plus extras (BUT NOT cleaning fee or tourist tax)
-  const subtotal = basePrice + extraServices;
+  const subtotal = priceInfo.totalBeforeDiscount;
 
   // The total to pay is the final amount after all discounts
   const totalToPay = priceInfo.totalAfterDiscount;
@@ -161,7 +161,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
     );
   }
 
-  // Multiple apartments summary
+  // Multiple apartments summary - ensure the sum matches the individual apartment totals
   return (
     <div className="border rounded-md p-4 space-y-4">
       <h3 className="font-medium flex items-center gap-2">
@@ -173,7 +173,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         {/* Final total to pay */}
         <div className="flex justify-between font-bold text-lg">
           <span>Totale da pagare:</span>
-          <span>{totalToPay}€</span>
+          <span>{subtotal}€</span>
         </div>
         
         {/* Deposit */}
@@ -190,6 +190,6 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
       </div>
     </div>
   );
-};
+}
 
 export default PriceSummary;
