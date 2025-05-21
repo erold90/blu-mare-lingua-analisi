@@ -2,22 +2,25 @@
 import * as React from "react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { PencilIcon } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { apartments } from "@/data/apartments";
-import EditPriceModal from "./EditPriceModal";
+import { Apartment } from "@/data/apartments";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Card } from "@/components/ui/card";
+import PriceDialog from "./PriceDialog";
 
 interface MobilePriceListProps {
   weeks: { start: Date; end: Date }[];
   getPriceForWeek: (apartmentId: string, weekStart: Date) => number;
-  handlePriceChange: (apartmentId: string, weekStartStr: string, value: string) => void;
+  handlePriceChange: (apartmentId: string, weekStart: string, newPrice: number) => void;
+  apartments: Apartment[];
 }
 
 const MobilePriceList: React.FC<MobilePriceListProps> = ({
   weeks,
   getPriceForWeek,
   handlePriceChange,
+  apartments,
 }) => {
   const [editingPrice, setEditingPrice] = React.useState<{
     apartmentId: string;
@@ -27,34 +30,8 @@ const MobilePriceList: React.FC<MobilePriceListProps> = ({
     currentPrice: number;
   } | null>(null);
   
-  // Debug logs to check prices
-  React.useEffect(() => {
-    console.log("MobilePriceList - Weeks:", weeks.length);
-    if (apartments.length > 0 && weeks.length > 0) {
-      // Get first day formatted for logging
-      const firstWeekDateStr = weeks[0].start.toISOString().split('T')[0];
-      const samplePrice = getPriceForWeek(apartments[0].id, weeks[0].start);
-      console.log(`Sample price for ${apartments[0].name}, week ${firstWeekDateStr}: ${samplePrice}€`);
-      
-      // Check for the first week of June 2025 specifically
-      const jun2025 = weeks.find(w => {
-        const dateStr = w.start.toISOString().split('T')[0];
-        return dateStr.startsWith('2025-06-07');
-      });
-      
-      if (jun2025) {
-        console.log("Found June 7 2025 week, checking prices for all apartments:");
-        apartments.forEach(apt => {
-          const price = getPriceForWeek(apt.id, jun2025.start);
-          console.log(`${apt.name}: ${price}€`);
-        });
-      }
-    }
-  }, [weeks, getPriceForWeek]);
-  
   const handleEditClick = (apartmentId: string, apartmentName: string, weekStart: Date, weekEnd: Date) => {
     const currentPrice = getPriceForWeek(apartmentId, weekStart);
-    console.log(`Editing price for ${apartmentName}, week of ${format(weekStart, "yyyy-MM-dd")}: ${currentPrice}€`);
     setEditingPrice({
       apartmentId,
       apartmentName,
@@ -64,68 +41,105 @@ const MobilePriceList: React.FC<MobilePriceListProps> = ({
     });
   };
   
-  const handleSavePrice = (price: number) => {
+  const handleSavePrice = (newPrice: number) => {
     if (editingPrice) {
-      console.log(`Saving price: ${editingPrice.apartmentId}, ${format(editingPrice.weekStart, "yyyy-MM-dd")}, ${price}€`);
       handlePriceChange(
         editingPrice.apartmentId,
         editingPrice.weekStart.toISOString(),
-        price.toString()
+        newPrice
       );
       setEditingPrice(null);
     }
   };
   
-  const closeModal = () => {
-    setEditingPrice(null);
-  };
+  // Group weeks by month
+  const weeksByMonth = React.useMemo(() => {
+    const grouped: { [key: string]: { label: string; weeks: typeof weeks } } = {};
+    
+    weeks.forEach(week => {
+      const monthKey = format(week.start, "yyyy-MM");
+      const monthLabel = format(week.start, "MMMM yyyy", { locale: it });
+      
+      if (!grouped[monthKey]) {
+        grouped[monthKey] = {
+          label: monthLabel,
+          weeks: []
+        };
+      }
+      
+      grouped[monthKey].weeks.push(week);
+    });
+    
+    return Object.values(grouped);
+  }, [weeks]);
   
   return (
     <>
-      <div className="space-y-8">
+      <Accordion type="single" collapsible className="w-full space-y-2">
         {apartments.map(apartment => (
-          <div key={apartment.id} className="border rounded-lg p-4">
-            <h3 className="font-bold mb-2">{apartment.name}</h3>
-            <div className="space-y-3">
-              {weeks.map((week, idx) => {
-                // Get the price for this apartment and week
-                const price = getPriceForWeek(apartment.id, week.start);
-                
-                return (
-                  <div key={idx} className="grid grid-cols-2 gap-2 items-center">
-                    <Label className="text-xs">
-                      {format(week.start, "d MMM", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
-                    </Label>
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{price} €</span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditClick(apartment.id, apartment.name, week.start, week.end)}
-                        title="Modifica prezzo"
-                      >
-                        <PencilIcon className="h-4 w-4" />
-                      </Button>
+          <AccordionItem 
+            key={apartment.id}
+            value={apartment.id}
+            className="border rounded-lg overflow-hidden"
+          >
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <span className="font-medium">{apartment.name}</span>
+            </AccordionTrigger>
+            <AccordionContent className="pb-2">
+              <div className="space-y-3 px-4">
+                {weeksByMonth.map((monthGroup, monthIdx) => (
+                  <div key={monthIdx} className="space-y-2">
+                    <h4 className="font-semibold capitalize text-sm text-muted-foreground pt-2">
+                      {monthGroup.label}
+                    </h4>
+                    
+                    <div className="space-y-1.5">
+                      {monthGroup.weeks.map((week, weekIdx) => {
+                        const price = getPriceForWeek(apartment.id, week.start);
+                        
+                        return (
+                          <div 
+                            key={weekIdx} 
+                            className="flex items-center justify-between py-1.5 px-2 rounded-md hover:bg-muted/50"
+                          >
+                            <span className="text-sm">
+                              {format(week.start, "d", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
+                            </span>
+                            
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{price} €</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditClick(apartment.id, apartment.name, week.start, week.end)}
+                                title="Modifica prezzo"
+                                className="h-7 w-7 p-0"
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                                <span className="sr-only">Modifica</span>
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
         ))}
-      </div>
+      </Accordion>
 
-      {editingPrice && (
-        <EditPriceModal
-          isOpen={!!editingPrice}
-          onClose={closeModal}
-          onSave={handleSavePrice}
-          apartmentName={editingPrice.apartmentName}
-          weekStart={editingPrice.weekStart}
-          weekEnd={editingPrice.weekEnd}
-          currentPrice={editingPrice.currentPrice}
-        />
-      )}
+      <PriceDialog
+        isOpen={!!editingPrice}
+        onClose={() => setEditingPrice(null)}
+        onSave={handleSavePrice}
+        apartmentName={editingPrice?.apartmentName || ""}
+        weekStart={editingPrice?.weekStart || new Date()}
+        weekEnd={editingPrice?.weekEnd || new Date()}
+        currentPrice={editingPrice?.currentPrice || 0}
+      />
     </>
   );
 };

@@ -1,134 +1,83 @@
 
 import * as React from "react";
 import { usePrices } from "@/hooks/usePrices";
-import YearTabs from "./prices/YearTabs";
-import { apartments } from "@/data/apartments";
-import { Button } from "@/components/ui/button"; 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { DatabaseZap } from "lucide-react";
 import { toast } from "sonner";
+import PriceEditor from "./prices/PriceEditor";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const AdminPrices = () => {
   const { 
-    weeklyPrices, 
-    updateWeeklyPrice, 
-    generateWeeksForSeason, 
-    getCurrentSeason,
-    seasonalPricing,
-    __DEBUG_reset
+    availableYears,
+    selectedYear,
+    setSelectedYear,
+    resetPrices,
+    isLoading,
+    getWeeksForYear
   } = usePrices();
   
-  const years = [2025, 2026, 2027, 2028];
-  const [selectedYear, setSelectedYear] = React.useState<number>(2025);
-  const [weeks, setWeeks] = React.useState<{ start: Date, end: Date }[]>([]);
+  const isMobile = useIsMobile();
+  const weeks = getWeeksForYear(selectedYear);
 
-  // Initialize weeks on startup
-  React.useEffect(() => {
-    console.log("AdminPrices: Initializing weeks for season");
-    setWeeks(generateWeeksForSeason(selectedYear, 6, 9)); // June to September
-  }, [generateWeeksForSeason, selectedYear]);
-  
-  // Debug logging for price data
-  React.useEffect(() => {
-    console.log(`AdminPrices: ${weeklyPrices.length} weekly prices loaded`);
-    
-    if (weeklyPrices.length > 0) {
-      const samplePrices = weeklyPrices.filter(p => p.apartmentId === "appartamento-1");
-      console.log(`Loaded ${samplePrices.length} prices for ${apartments[0].name}`);
-      
-      // Display first 3 prices for debugging
-      if (samplePrices.length > 0) {
-        console.log("First 3 prices:", 
-          samplePrices.slice(0, 3).map(p => 
-            `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
-          )
-        );
-      } else {
-        console.log("No prices found for first apartment");
-      }
-    } else {
-      console.log("No weekly prices found. Forcing refresh...");
-      if (__DEBUG_reset) {
-        __DEBUG_reset();
-        toast.success("Prezzi reinizializzati con successo");
-      }
-    }
-  }, [weeklyPrices, __DEBUG_reset]);
-  
-  // Re-generate weeks when selected year changes
-  React.useEffect(() => {
-    setWeeks(generateWeeksForSeason(selectedYear, 6, 9));
-  }, [selectedYear, generateWeeksForSeason]);
-  
-  const handlePriceChange = (
-    apartmentId: string,
-    weekStartStr: string,
-    value: string
-  ) => {
-    const numValue = parseInt(value, 10);
-    if (!isNaN(numValue) && numValue >= 0) {
-      console.log(`AdminPrices: Updating price for ${apartmentId}, week of ${new Date(weekStartStr).toLocaleDateString()}: ${numValue}€`);
-      updateWeeklyPrice(apartmentId, weekStartStr, numValue);
-      toast.success(`Prezzo aggiornato a ${numValue}€`);
-    }
-  };
-  
-  // Fixed getPriceForWeek to correctly identify and match dates
-  const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
-    // Format dates consistently for comparison (YYYY-MM-DD)
-    const weekStartFormatted = weekStart.toISOString().split('T')[0];
-    
-    // Find matching price entry by comparing date strings directly
-    const price = weeklyPrices.find(p => {
-      const priceStartFormatted = new Date(p.weekStart).toISOString().split('T')[0];
-      return p.apartmentId === apartmentId && priceStartFormatted === weekStartFormatted;
-    });
-    
-    // Debug
-    if (apartmentId === "appartamento-1" && weekStartFormatted.startsWith("2025-06-07")) {
-      console.log(`Looking for price: ${apartmentId}, ${weekStartFormatted}`);
-      console.log(`Found price: ${price ? price.price : "not found"}`);
-    }
-    
-    return price ? price.price : 0;
-  };
-  
-  const handleResetPricesClick = () => {
-    if (__DEBUG_reset) {
-      __DEBUG_reset();
-      toast.success("Prezzi reimpostati con successo");
-    }
-  };
-
-  // Force price initialization if needed
-  React.useEffect(() => {
-    if (weeklyPrices.length === 0 && __DEBUG_reset) {
-      console.log("No prices found, forcing reset");
-      __DEBUG_reset();
-    }
-  }, [weeklyPrices.length, __DEBUG_reset]);
-  
   return (
-    <div className="space-y-6">
-      <div className="mb-4 flex justify-between">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestione Prezzi</h2>
-        <Button variant="outline" size="sm" onClick={handleResetPricesClick}>
-          Inizializza Prezzi
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={resetPrices}
+          className="flex items-center gap-1"
+        >
+          <DatabaseZap className="h-4 w-4" />
+          Reimposta Prezzi
         </Button>
       </div>
       
-      {weeklyPrices && weeklyPrices.length > 0 ? (
-        <YearTabs 
-          years={years}
-          selectedYear={selectedYear}
-          onYearChange={setSelectedYear}
-          weeks={weeks}
-          getPriceForWeek={getPriceForWeek}
-          handlePriceChange={handlePriceChange}
-        />
-      ) : (
-        <div className="p-8 text-center rounded-md border border-dashed">
-          <p className="text-muted-foreground">Caricamento prezzi in corso...</p>
-        </div>
-      )}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xl">Prezzi Settimanali</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-muted-foreground mb-4">
+            <p>I prezzi sono da intendersi per settimana (da sabato a sabato).</p>
+          </div>
+          
+          <Tabs 
+            defaultValue={selectedYear.toString()} 
+            value={selectedYear.toString()}
+            onValueChange={(value) => setSelectedYear(parseInt(value))}
+            className="w-full"
+          >
+            <TabsList className="mb-4 w-full sm:w-auto">
+              {availableYears.map(year => (
+                <TabsTrigger key={year} value={year.toString()}>
+                  {year}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            
+            {availableYears.map(year => (
+              <TabsContent key={year} value={year.toString()}>
+                {isLoading ? (
+                  <div className="flex justify-center py-12">
+                    <p className="text-muted-foreground">Caricamento prezzi in corso...</p>
+                  </div>
+                ) : (
+                  <PriceEditor 
+                    year={year}
+                    weeks={weeks}
+                    isMobile={isMobile}
+                  />
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };

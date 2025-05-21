@@ -1,11 +1,9 @@
 
-// Types related to pricing functionality
 import { Apartment } from "@/data/apartments";
 
 export interface WeeklyPrice {
   apartmentId: string;
-  weekStart: string; // ISO date string of the week start (always Saturday)
-  weekEnd: string;   // ISO date string of the week end (always Friday)
+  weekStart: string; // ISO date string
   price: number;
 }
 
@@ -15,11 +13,13 @@ export interface SeasonalPricing {
 }
 
 export interface PricesContextType {
-  seasonalPricing: SeasonalPricing[];
-  weeklyPrices: WeeklyPrice[];
-  updateWeeklyPrice: (apartmentId: string, weekStart: string, price: number) => void;
-  getPriceForDate: (apartmentId: string, date: Date) => number;
-  generateWeeksForSeason: (year: number, startMonth: number, endMonth: number) => { start: Date, end: Date }[];
-  getCurrentSeason: () => SeasonalPricing;
-  __DEBUG_reset?: () => void; // Funzione di reset per debug
+  prices: WeeklyPrice[];
+  isLoading: boolean;
+  updatePrice: (apartmentId: string, weekStart: string, price: number) => void;
+  getPriceForWeek: (apartmentId: string, weekStart: Date) => number;
+  getWeeksForYear: (year: number) => { start: Date; end: Date }[];
+  availableYears: number[];
+  selectedYear: number;
+  setSelectedYear: (year: number) => void;
+  resetPrices: () => void;
 }
