@@ -21,14 +21,13 @@ const YearTabs: React.FC<YearTabsProps> = ({
   handlePriceChange,
 }) => {
   return (
-    <Tabs defaultValue={selectedYear.toString()}>
+    <Tabs defaultValue={selectedYear.toString()} value={selectedYear.toString()} onValueChange={(value) => onYearChange(parseInt(value))}>
       <div className="flex justify-between items-center mb-4">
         <TabsList>
           {years.map(year => (
             <TabsTrigger 
               key={year}
               value={year.toString()}
-              onClick={() => onYearChange(year)}
             >
               {year}
             </TabsTrigger>

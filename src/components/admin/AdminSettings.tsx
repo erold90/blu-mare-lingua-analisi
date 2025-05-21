@@ -6,9 +6,11 @@ import { ImagesTab } from "@/components/admin/settings/ImagesTab";
 import { AccountTab } from "@/components/admin/settings/AccountTab";
 
 const AdminSettings = () => {
+  const [activeTab, setActiveTab] = React.useState("blocked-dates");
+  
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="blocked-dates">
+      <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="blocked-dates">
         <TabsList>
           <TabsTrigger value="blocked-dates">Date Bloccate</TabsTrigger>
           <TabsTrigger value="images">Immagini</TabsTrigger>

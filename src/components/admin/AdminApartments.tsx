@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +46,7 @@ const AdminApartments = () => {
   });
   
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
+  const [selectedApartmentId, setSelectedApartmentId] = useState<string | null>(null);
   const [editedApartment, setEditedApartment] = useState<Apartment | null>(null);
   const [apartmentImages, setApartmentImages] = useState<{ [key: string]: string[] }>({});
   const [coverImage, setCoverImage] = useState<{ [key: string]: number }>({});
@@ -119,8 +121,11 @@ const AdminApartments = () => {
   
   // Initialize selected apartment
   useEffect(() => {
-    if (apartments.length > 0 && !selectedApartment) {
-      setSelectedApartment(apartments[0]);
+    if (apartments.length > 0) {
+      if (!selectedApartment) {
+        setSelectedApartment(apartments[0]);
+        setSelectedApartmentId(apartments[0].id);
+      }
     }
   }, [apartments, selectedApartment]);
   
@@ -419,18 +424,27 @@ const AdminApartments = () => {
     <div className="space-y-4">
       {isMobile ? (
         <div className="mb-4">
-          <TabsList className="flex w-full overflow-x-auto pb-1 no-scrollbar">
-            {apartments.map(apartment => (
-              <TabsTrigger 
-                key={apartment.id}
-                value={apartment.id}
-                className="flex-shrink-0 whitespace-nowrap px-3"
-                onClick={() => setSelectedApartment(apartment)}
-              >
-                {apartment.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          {/* Fix: Wrap TabsList in Tabs */}
+          <Tabs 
+            value={selectedApartmentId || (apartments.length > 0 ? apartments[0].id : "")} 
+            onValueChange={(value) => {
+              setSelectedApartmentId(value);
+              const apt = apartments.find(a => a.id === value);
+              if (apt) setSelectedApartment(apt);
+            }}
+          >
+            <TabsList className="flex w-full overflow-x-auto pb-1 no-scrollbar">
+              {apartments.map(apartment => (
+                <TabsTrigger 
+                  key={apartment.id}
+                  value={apartment.id}
+                  className="flex-shrink-0 whitespace-nowrap px-3"
+                >
+                  {apartment.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
           
           {selectedApartment && (
             <Card className="mt-4">
@@ -690,6 +704,7 @@ const AdminApartments = () => {
           )}
         </div>
       ) : (
+        // Desktop view - no changes needed here
         <Tabs defaultValue={apartments[0]?.id || "default"}>
           <TabsList className="mb-4">
             {apartments.map(apartment => (
@@ -987,3 +1002,4 @@ const AdminApartments = () => {
 };
 
 export default AdminApartments;
+
