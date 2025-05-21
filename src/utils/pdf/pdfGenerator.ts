@@ -3,7 +3,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { format } from "date-fns";
 import { FormValues } from "@/utils/quoteFormSchema";
-import { calculateTotalPrice, PriceCalculation } from "@/utils/quoteCalculator";
+import { calculateTotalPrice } from "@/utils/quoteCalculator";
 import { Apartment } from "@/data/apartments";
 import { 
   addCenteredText, 
@@ -23,6 +23,11 @@ import {
   generatePaymentMethodsSection
 } from "./sectionGenerators";
 import { AutoTableResult } from "./types";
+
+// Make sure jspdf-autotable is properly attached to jsPDF
+if (typeof jsPDF !== "undefined" && jsPDF.prototype) {
+  require("jspdf-autotable");
+}
 
 // Main function to create and download the quote PDF
 export const downloadPDF = (formData: FormValues, apartments: Apartment[], clientName?: string) => {
@@ -69,7 +74,7 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     
     try {
       // Create table and store the result
-      const result: AutoTableResult = doc.autoTable({
+      const result = doc.autoTable({
         startY: yAfterApartment + 25,
         head: [["Voce", "Dettagli", "Importo"]],
         body: tableBody,

@@ -98,7 +98,7 @@ export const addWatermark = (doc: jsPDF) => {
   const pageWidth = doc.internal.pageSize.getWidth();
   
   // Save current state
-  const currentFontSize = doc.internal.getFontSize();
+  const currentFontSize = doc.getFontSize();
   
   // Set watermark properties
   doc.setTextColor(230, 230, 230);

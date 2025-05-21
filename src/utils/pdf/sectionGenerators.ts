@@ -2,7 +2,7 @@
 import { jsPDF } from "jspdf";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
-import { PriceCalculation } from "@/utils/quoteCalculator";
+import { PriceCalculation } from "@/utils/pdf/types";  // Update import to use our extended type
 import { formatItalianDate, addSeparatorLine, addHeaderBackground } from "./formatUtils";
 import { AutoTableResult } from "./types";
 
@@ -147,7 +147,8 @@ export const generateApartmentSection = (doc: jsPDF, selectedApt: Apartment, ySt
     y += 7;
   }
   
-  if (selectedApt.bathrooms) {
+  // Check if bathrooms property exists before using it
+  if ('bathrooms' in selectedApt && selectedApt.bathrooms) {
     doc.text(`Bagni: ${selectedApt.bathrooms}`, 20, y);
     y += 7;
   }
@@ -157,17 +158,17 @@ export const generateApartmentSection = (doc: jsPDF, selectedApt: Apartment, ySt
     y += 7;
   }
   
-  // Add a list of amenities if available
-  if (selectedApt.amenities && selectedApt.amenities.length > 0) {
+  // Add a list of services if available
+  if (selectedApt.services && selectedApt.services.length > 0) {
     y += 3;
     doc.setFont("helvetica", "bold");
     doc.text("Servizi inclusi:", 20, y);
     y += 7;
     doc.setFont("helvetica", "normal");
     
-    selectedApt.amenities.forEach((amenity, index) => {
+    selectedApt.services.forEach((service, index) => {
       if (index < 6) { // Limit to prevent overcrowding
-        doc.text(`- ${amenity}`, 30, y);
+        doc.text(`- ${service}`, 30, y);
         y += 7;
       } else if (index === 6) {
         doc.text(`- e altri servizi...`, 30, y);
@@ -221,7 +222,9 @@ export const generateCostsTable = (doc: jsPDF, priceCalculation: PriceCalculatio
   tableBody.push(["Pulizia finale", "Obbligatoria", `€ ${priceCalculation.cleaningFee.toFixed(2)}`]);
   
   // Tourist tax
-  const touristTaxDetails = `${priceCalculation.touristTaxPerPerson.toFixed(2)}€ x ${formData.adults} persone x ${priceCalculation.nights} notti`;
+  // Use default value of 2.0 if touristTaxPerPerson is not defined
+  const taxPerPerson = priceCalculation.touristTaxPerPerson || 2.0;
+  const touristTaxDetails = `${taxPerPerson.toFixed(2)}€ x ${formData.adults} persone x ${priceCalculation.nights} notti`;
   tableBody.push(["Tassa di soggiorno", touristTaxDetails, `€ ${priceCalculation.touristTax.toFixed(2)}`]);
   
   // Pets fee if applicable

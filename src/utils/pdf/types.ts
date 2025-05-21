@@ -12,6 +12,10 @@ declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => AutoTableResult;
     getNumberOfPages: () => number;
+    saveGraphicsState: () => jsPDF;
+    restoreGraphicsState: () => jsPDF;
+    translate: (x: number, y: number) => jsPDF;
+    rotate: (angle: number) => jsPDF;
   }
   
   // Add the missing internal methods without redefining the entire internal property
@@ -20,6 +24,23 @@ declare module 'jspdf' {
     function getStringUnitWidth(text: string): number;
     function getTextDimensions(text: string): { w: number; h: number };
   }
+}
+
+export interface PriceCalculation {
+  basePrice: number;
+  extras: number;
+  cleaningFee: number;
+  touristTax: number;
+  touristTaxPerPerson: number;  // Added missing property
+  totalBeforeDiscount: number;
+  totalAfterDiscount: number;
+  discount: number;
+  savings: number;
+  deposit: number;
+  nights: number;
+  totalPrice: number;
+  subtotal: number;
+  apartmentPrices: Record<string, number>;
 }
 
 export interface PdfDocumentOptions {

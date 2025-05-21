@@ -126,11 +126,15 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   const { totalAfterDiscount, discount, savings, deposit } = calculateDiscount(totalBeforeDiscount, touristTax);
   console.log(`After discount: ${totalAfterDiscount}€, Savings: ${savings}€`);
   
+  // Define tourist tax per person (default: 2.0 euros)
+  const touristTaxPerPerson = 2.0;
+  
   return {
     basePrice,
     extras: extrasCost,
     cleaningFee,
     touristTax,
+    touristTaxPerPerson,  // Add this property
     totalBeforeDiscount,
     totalAfterDiscount,
     discount,
