@@ -8,8 +8,6 @@ import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/price/priceCalculator";
 import { v4 as uuidv4 } from "uuid";
 import { useActivityLog } from "@/hooks/useActivityLog";
-import { format } from "date-fns";
-import { it } from "date-fns/locale";
 
 // Componenti separati per ogni sezione
 import DateDurationInfo from "./summary/DateDurationInfo";
