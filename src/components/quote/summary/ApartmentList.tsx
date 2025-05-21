@@ -48,13 +48,13 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
     // Pet cost: 50€ per apartment if there are pets
     const petCost = hasPets ? 50 : 0;
     
-    // Cleaning fee is fixed at 50€ per apartment (included in price)
+    // Cleaning fee is fixed at 50€ per apartment (for display only - not added to totals)
     const cleaningFee = 50;
     
-    // Tourist tax: 1€ per person per night (included in price)
+    // Tourist tax: 1€ per person per night (for display only - not added to totals)
     const touristTax = peopleCount * priceInfo.nights * 1;
     
-    // Calculate total before discount (include all costs here)
+    // Calculate total before discount (ONLY include actual costs that affect pricing)
     const totalBeforeDiscount = apartmentBasePrice + linenCost + petCost;
     
     // Round down to nearest 50€

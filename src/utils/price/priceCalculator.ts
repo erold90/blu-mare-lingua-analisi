@@ -123,19 +123,20 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   
   console.log(`Total base price for all apartments: ${basePrice}€`);
   
-  // Calculate extras (cleaning fee, linen, pets, tourist tax)
+  // Calculate extras (linen, pets), cleaning fee and tourist tax
+  // IMPORTANT: cleaningFee and touristTax are calculated for display only
   const { extrasCost, cleaningFee, touristTax } = calculateExtras(formValues, selectedApartments, nights);
   console.log(`Extras: ${extrasCost}€, Cleaning: ${cleaningFee}€, Tax: ${touristTax}€`);
   
-  // Calculate subtotal (before tourist tax)
-  const subtotal = basePrice + extrasCost + cleaningFee;
+  // Calculate subtotal (ONLY base price + extras, NOT cleaning fee or tourist tax)
+  const subtotal = basePrice + extrasCost;
   console.log(`Subtotal: ${subtotal}€`);
   
-  // Calculate total before discount (including tourist tax)
-  const totalBeforeDiscount = subtotal + touristTax;
+  // Calculate total before discount (ONLY base price + extras, NOT cleaning fee or tourist tax)
+  const totalBeforeDiscount = subtotal;
   console.log(`Total before discount: ${totalBeforeDiscount}€`);
   
-  // Calculate discount and final price
+  // Calculate discount and final price (based on subtotal only, not including cleaning fee or tourist tax)
   const { totalAfterDiscount, discount, savings, deposit } = calculateDiscount(totalBeforeDiscount, touristTax);
   console.log(`After discount: ${totalAfterDiscount}€, Savings: ${savings}€`);
   

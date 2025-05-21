@@ -28,12 +28,15 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   const extraServices = linenCost + petCost;
   const showExtraServices = extraServices > 0;
   
-  // Get cleaning fee and tourist tax
+  // Get cleaning fee and tourist tax - these are ONLY for display
   const cleaningFee = priceInfo.cleaningFee;
   const touristTax = priceInfo.touristTax;
 
-  // Use the subtotal from the price calculation
-  const subtotal = priceInfo.basePrice + extraServices;
+  // The base price is just the cost of apartments
+  const basePrice = priceInfo.basePrice;
+  
+  // Subtotal includes base price plus extras (BUT NOT cleaning fee or tourist tax)
+  const subtotal = basePrice + extraServices;
 
   // The total to pay is the final amount after all discounts
   const totalToPay = priceInfo.totalAfterDiscount;
@@ -76,7 +79,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
             <span className="text-muted-foreground">
               {formatApartmentCostText()}
             </span>
-            <span className="font-medium">{priceInfo.basePrice}€</span>
+            <span className="font-medium">{basePrice}€</span>
           </div>
           
           {/* Extra services (if any) */}

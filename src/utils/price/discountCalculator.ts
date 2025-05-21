@@ -11,6 +11,8 @@ interface DiscountResult {
  * Calculates the total price after applying discount by rounding down to the nearest 50€
  * When multiple apartments are selected, each apartment price is rounded individually
  * before being summed up for the final total
+ * 
+ * NOTE: touristTax is included only for reference - it does NOT affect the price calculations
  */
 export function calculateDiscount(totalBeforeDiscount: number, touristTax: number): DiscountResult {
   console.log(`Calculating discount. Total before discount: ${totalBeforeDiscount}€`);

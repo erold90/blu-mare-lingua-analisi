@@ -43,15 +43,15 @@ export const calculateExtras = (
     }
   }
   
-  // Calculate cleaning fee (fixed at 50€ per apartment)
+  // Calculate cleaning fee (fixed at 50€ per apartment) - FOR DISPLAY ONLY
   const cleaningFee = selectedApartments.length * 50;
   
-  // Calculate tourist tax (1€ per person per night)
+  // Calculate tourist tax (1€ per person per night) - FOR DISPLAY ONLY
   // Exclude children under 12
   const adultEquivalents = totalGuests - guestCountInfo.sleepingInCribs - guestCountInfo.sleepingWithParents;
   const touristTax = adultEquivalents * nights * 1;
   
-  // Total extras
+  // Total extras - ONLY linen and pets affect the actual price
   const extrasCost = linenCost + petsCost;
   
   return {
