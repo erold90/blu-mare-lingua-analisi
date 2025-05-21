@@ -8,6 +8,19 @@ export interface AutoTableResult {
   [key: string]: any;
 }
 
+// Type for table cell content with styles
+export interface TableCell {
+  content: string;
+  styles?: {
+    fontStyle?: 'bold' | 'italic' | 'normal';
+    fillColor?: number[];
+    textColor?: number[];
+    halign?: 'left' | 'center' | 'right';
+    valign?: 'top' | 'middle' | 'bottom';
+    fontSize?: number;
+  };
+}
+
 // Extended methods we need for our custom jsPDF functionality
 declare module 'jspdf' {
   interface jsPDF {

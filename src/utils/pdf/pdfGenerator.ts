@@ -48,10 +48,12 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     // Add logo
     const yAfterLogo = addLogo(doc);
     
-    // Add title
+    // Add title with elegant styling
     doc.setFontSize(22);
     doc.setFont("helvetica", "bold");
+    doc.setTextColor(47, 84, 150);
     addCenteredText(doc, "Preventivo Soggiorno", yAfterLogo, 22);
+    doc.setTextColor(0, 0, 0);
     
     // Add client information
     const yAfterClient = generateClientSection(doc, formData, clientName);
@@ -65,7 +67,7 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     // Generate the costs table data
     const tableBody = generateCostsTable(doc, priceCalculation, formData, yAfterApartment);
     
-    // Add the table to the PDF
+    // Add the table to the PDF with enhanced styling
     let finalY = yAfterApartment + 150; // Default fallback position
     
     try {
@@ -76,9 +78,10 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
         body: tableBody,
         theme: "grid",
         headStyles: { 
-          fillColor: [80, 80, 80],
+          fillColor: [47, 84, 150],
           textColor: [255, 255, 255],
-          fontStyle: 'bold'
+          fontStyle: 'bold',
+          halign: 'center'
         },
         columnStyles: {
           0: { cellWidth: 80 },
@@ -86,9 +89,15 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
           2: { cellWidth: 40, halign: "right" }
         },
         alternateRowStyles: {
-          fillColor: [240, 240, 240]
+          fillColor: [245, 248, 252]
         },
-        margin: { left: 20, right: 20 }
+        margin: { left: 20, right: 20 },
+        styles: {
+          fontSize: 10,
+          cellPadding: 5,
+        },
+        tableLineColor: [220, 220, 220],
+        tableLineWidth: 0.5
       });
       
       // Update finalY if available
@@ -127,11 +136,11 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     // Add page numbers
     addPageNumbers(doc);
     
-    // Save the PDF - risolto il problema con t.translate che era causato dal metodo di salvataggio
+    // Save the PDF
     const today = new Date();
     const fileName = `Preventivo_${clientName || formData.name || "Cliente"}_${format(today, "yyyyMMdd")}.pdf`;
     
-    // Usa il metodo save senza opzioni aggiuntive che potrebbero causare il problema t.translate
+    // Use the method save without options to avoid the t.translate error
     doc.save(fileName);
     
     return fileName;
