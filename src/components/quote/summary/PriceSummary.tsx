@@ -28,6 +28,15 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   
   // The deposit is 30% of the total
   const deposit = priceInfo.deposit;
+  
+  // Helper to format the stay duration text
+  const formatStayDurationText = () => {
+    if (weeks > 1) {
+      return `Costo appartamenti (${weeks} settimane, ${nights} notti):`;
+    } else {
+      return `Costo appartamenti (${nights} notti):`;
+    }
+  };
 
   return (
     <div className="border rounded-md p-4 space-y-4">
@@ -39,12 +48,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">
-            {isHighSeason ? 
-              weeks > 1 ? 
-                `Costo appartamenti (${weeks} settimane, ${nights} notti):` : 
-                'Costo appartamenti (settimanale):' 
-              : 
-              `Costo appartamenti (${priceInfo.nights} notti):`}
+            {formatStayDurationText()}
           </span>
           <span className="font-medium">{priceInfo.basePrice}€</span>
         </div>
