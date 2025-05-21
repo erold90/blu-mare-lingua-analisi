@@ -103,14 +103,10 @@ export const initializeYearPricing = (
       const parsedPricing = JSON.parse(savedPricing) as SeasonalPricing[];
       has2025Season = parsedPricing.some(season => season.year === 2025);
       
-      // Se esiste già, ma vogliamo forzare l'aggiornamento, rimuoviamolo
+      // Se esiste già, non forziamo più l'aggiornamento ogni volta
       if (has2025Season) {
-        console.log("Rimuovendo i prezzi 2025 esistenti per reinizializzare");
-        // Rimuovi la stagione 2025 per ricrearla
-        const updatedPricing = parsedPricing.filter(season => season.year !== 2025);
-        localStorage.setItem("seasonalPricing", JSON.stringify(updatedPricing));
-        setSeasonalPricing(updatedPricing);
-        has2025Season = false;
+        console.log("I prezzi 2025 esistono già, li utilizziamo");
+        return;
       }
     } catch (error) {
       console.error("Errore nel parsing dei prezzi stagionali salvati:", error);
@@ -171,12 +167,5 @@ export const initializeYearPricing = (
     // Save to localStorage immediately
     localStorage.setItem("seasonalPricing", JSON.stringify(updatedPricing));
     console.log("2025 seasonal prices initialized with custom values");
-    
-    // Forza il reload della pagina per caricare i nuovi prezzi
-    if (window.location.href.includes('/area-riservata/prezzi')) {
-      console.log("Forzando il reload della pagina per caricare i nuovi prezzi");
-      setTimeout(() => window.location.reload(), 500);
-    }
   }
 };
-

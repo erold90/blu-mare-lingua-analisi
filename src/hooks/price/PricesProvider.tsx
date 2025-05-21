@@ -11,11 +11,11 @@ export const PricesContext = createContext<PricesContextType | undefined>(undefi
 export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { seasonalPricing, setSeasonalPricing, weeklyPrices, setWeeklyPrices } = useProviderState();
   
-  // Initialize 2025 season with custom prices if it doesn't exist
+  // Initialize 2025 season with custom prices if it doesn't exist (una volta sola)
   useEffect(() => {
-    console.log("PricesProvider: Initializing 2025 pricing with custom values");
+    console.log("PricesProvider: Checking if 2025 pricing needs initialization");
     
-    // Forziamo sempre l'inizializzazione con valori personalizzati
+    // Inizializziamo i prezzi solo se necessario
     initializeYearPricing(seasonalPricing, setSeasonalPricing);
     
     // Also ensure current year's prices are loaded
@@ -32,6 +32,12 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return getCurrentOrCreateSeason(seasonalPricing, setSeasonalPricing, setWeeklyPrices);
   };
   
+  // Reset dei prezzi (solo per sviluppo)
+  const resetPrices = () => {
+    localStorage.removeItem("seasonalPricing");
+    window.location.reload();
+  };
+  
   // Create the context value object
   const contextValue: PricesContextType = {
     seasonalPricing,
@@ -39,7 +45,8 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     updateWeeklyPrice,
     getPriceForDate: (apartmentId: string, date: Date) => getPriceForDate(apartmentId, date, seasonalPricing),
     generateWeeksForSeason,
-    getCurrentSeason
+    getCurrentSeason,
+    __DEBUG_reset: process.env.NODE_ENV === 'development' ? resetPrices : undefined
   };
   
   return (
@@ -48,4 +55,3 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     </PricesContext.Provider>
   );
 };
-

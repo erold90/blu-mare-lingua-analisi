@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { usePrices } from "@/hooks/usePrices";
 import YearTabs from "./prices/YearTabs";
@@ -21,44 +22,23 @@ const AdminPrices = () => {
     generateWeeksForSeason(selectedYear, 6, 9) // June to September
   );
   
-  // Mostra il numero di prezzi caricati per anno 2025
+  // Log di diagnostica
   React.useEffect(() => {
     const year2025 = seasonalPricing.find(s => s.year === 2025);
     if (year2025) {
       const pricesForApt1 = year2025.prices.filter(p => p.apartmentId === "apt-1").length;
       console.log(`Prezzi caricati per l'anno 2025 (Apt 1): ${pricesForApt1}`);
+      
+      // Visualizza i primi 3 prezzi per debug
+      const samplePrices = year2025.prices
+        .filter(p => p.apartmentId === "apt-1")
+        .slice(0, 3)
+        .map(p => `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`);
+      console.log("Sample prices for Apt 1:", samplePrices);
     } else {
       console.warn("Nessun prezzo trovato per l'anno 2025");
     }
   }, [seasonalPricing]);
-  
-  // Keep track of whether we've already initialized the prices
-  const [pricesInitialized, setPricesInitialized] = React.useState<boolean>(false);
-
-  // Initialize 2025 prices on first load only if needed
-  React.useEffect(() => {
-    // Only run this once, when the component mounts
-    if (!pricesInitialized) {
-      // Check if prices already exist in localStorage
-      const savedPricing = localStorage.getItem("seasonalPricing");
-      let hasPrices = false;
-      
-      if (savedPricing) {
-        try {
-          const allPricing = JSON.parse(savedPricing);
-          hasPrices = allPricing.some((season: any) => season.year === 2025);
-        } catch (error) {
-          console.error("Failed to parse saved seasonal pricing:", error);
-        }
-      }
-      
-      // Forza l'inizializzazione attraverso usePrices
-      setTimeout(() => {
-        console.log("AdminPrices: Forza il rendering per assicurarsi che i prezzi siano caricati");
-        setPricesInitialized(true);
-      }, 200);
-    }
-  }, [pricesInitialized]);
   
   // Re-generate weeks when selected year changes
   React.useEffect(() => {
@@ -73,6 +53,7 @@ const AdminPrices = () => {
     const numValue = parseInt(value, 10);
     if (!isNaN(numValue) && numValue > 0) {
       updateWeeklyPrice(apartmentId, weekStartStr, numValue);
+      toast.success(`Prezzo aggiornato: ${numValue}€`);
     }
   };
   
@@ -84,7 +65,9 @@ const AdminPrices = () => {
            p.weekStart.substring(0, 10) === weekStartStr.substring(0, 10)
     );
     
-    if (price) return price.price;
+    if (price) {
+      return price.price;
+    }
     
     // Find the right year in seasonalPricing
     const year = weekStart.getFullYear();
