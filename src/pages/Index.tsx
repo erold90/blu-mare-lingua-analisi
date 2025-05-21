@@ -11,9 +11,11 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSettings } from "@/hooks/useSettings";
 
 const Index = () => {
   const isMobile = useIsMobile();
+  const { siteSettings } = useSettings();
   
   return (
     <div className="flex flex-col">
@@ -22,7 +24,7 @@ const Index = () => {
         <div className={`w-full ${isMobile ? "h-[70vh]" : "h-[70vh]"} relative overflow-hidden`}>
           <div 
             className="absolute inset-0 bg-cover bg-center" 
-            style={{backgroundImage: "url('https://www.villamareblu.it/wp-content/uploads/2024/01/esterno5-scaled.jpg')"}}
+            style={{backgroundImage: `url('${siteSettings.heroImage}')`}}
           />
           <div className="absolute inset-0 bg-black/30" />
           <div className={`absolute inset-0 flex flex-col justify-center items-center text-white p-6 text-center ${isMobile ? "pt-16" : ""}`}>

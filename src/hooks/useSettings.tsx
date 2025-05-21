@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 export interface SiteSettings {
@@ -69,6 +68,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Save settings to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("siteSettings", JSON.stringify(siteSettings));
+    console.log("Site settings saved:", siteSettings); // Add logging to debug
   }, [siteSettings]);
   
   useEffect(() => {
@@ -76,7 +76,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [adminSettings]);
   
   const updateSiteSettings = (settings: Partial<SiteSettings>) => {
-    setSiteSettings(prev => ({ ...prev, ...settings }));
+    setSiteSettings(prev => {
+      const updated = { ...prev, ...settings };
+      return updated;
+    });
   };
   
   const updateAdminSettings = (settings: Partial<AdminSettings>) => {
