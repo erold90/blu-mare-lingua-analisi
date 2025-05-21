@@ -54,15 +54,23 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
     // Tourist tax: 1€ per person per night (for display only - not added to totals)
     const touristTax = peopleCount * priceInfo.nights * 1;
     
-    // Calculate total before discount (ONLY include actual costs that affect pricing)
-    const totalBeforeDiscount = apartmentBasePrice + linenCost + petCost;
+    // For multiple apartments, get the base price plus extras
+    const baseWithExtras = apartmentBasePrice;
     
-    // Round down to nearest 50€ - IMPORTANT: no longer apply this individually
-    // We will sum everything up first, then apply the discount to the total
-    const roundedTotal = totalBeforeDiscount;
+    // For multiple apartments, use the already calculated discounted prices
+    const totalBeforeDiscount = hasMultipleApartments 
+      ? baseWithExtras + linenCost + petCost
+      : baseWithExtras;
     
-    // Calculate discount - no longer apply this individually
-    const discount = 0;
+    // If we have multiple apartments, get the discounted price from priceInfo
+    const roundedTotal = hasMultipleApartments && priceInfo.apartmentPrices 
+      ? priceInfo.apartmentPrices[apartment.id] 
+      : totalBeforeDiscount;
+    
+    // Calculate individual discount only for multiple apartments
+    const discount = hasMultipleApartments 
+      ? totalBeforeDiscount - roundedTotal 
+      : 0;
     
     return {
       basePrice: apartmentBasePrice,
@@ -85,23 +93,6 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
 
   // Check if we have multiple apartments
   const hasMultipleApartments = selectedApartments.length > 1;
-  
-  // Calculate total costs for display consistency
-  const calculateTotalCosts = () => {
-    if (!hasMultipleApartments) return null;
-    
-    let totalBeforeDiscount = 0;
-    
-    selectedApartments.forEach(apt => {
-      const costs = calculateApartmentCosts(apt);
-      totalBeforeDiscount += costs.totalBeforeDiscount;
-    });
-    
-    return totalBeforeDiscount;
-  };
-  
-  // Store overall total for consistency check
-  const totalBeforeDiscount = calculateTotalCosts();
 
   return (
     <div className="space-y-3">
@@ -111,16 +102,6 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
             const costs = calculateApartmentCosts(apartment);
             const hasPets = hasPetsInApartment(apartment.id);
             const isLastItem = index === selectedApartments.length - 1;
-            
-            // For multiple apartments, calculate individual discount
-            let individualDiscount = 0;
-            let individualRoundedTotal = costs.totalBeforeDiscount;
-            
-            if (hasMultipleApartments) {
-              // Round down to nearest 50€ for display purposes
-              individualRoundedTotal = roundDownToNearest50(costs.totalBeforeDiscount);
-              individualDiscount = costs.totalBeforeDiscount - individualRoundedTotal;
-            }
             
             return (
               <div key={apartment.id} className={`pb-4 ${!isLastItem ? 'border-b' : ''}`}>
@@ -209,13 +190,13 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                   )}
                   
                   {/* Sconto per appartamento - only shown for multiple apartments */}
-                  {hasMultipleApartments && individualDiscount > 0 && (
+                  {hasMultipleApartments && costs.discount > 0 && (
                     <div className="flex justify-between items-center text-sm mt-1">
                       <div className="text-green-500 flex items-center gap-1 text-sm">
-                        Sconto: <Minus className="h-3 w-3 mx-0.5" />{individualDiscount}€
+                        Sconto: <Minus className="h-3 w-3 mx-0.5" />{costs.discount}€
                       </div>
                       <div className="font-semibold">
-                        Totale scontato: {individualRoundedTotal}€
+                        Totale scontato: {costs.roundedTotal}€
                       </div>
                     </div>
                   )}

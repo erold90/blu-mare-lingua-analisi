@@ -173,7 +173,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         {/* Final total to pay */}
         <div className="flex justify-between font-bold text-lg">
           <span>Totale da pagare:</span>
-          <span>{subtotal}€</span>
+          <span>{totalToPay}€</span>
         </div>
         
         {/* Deposit */}

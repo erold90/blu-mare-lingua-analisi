@@ -135,28 +135,92 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   // Calculate total before discount (ONLY base price + extras, NOT cleaning fee or tourist tax)
   const totalBeforeDiscount = subtotal;
   console.log(`Total before discount: ${totalBeforeDiscount}€`);
-  
-  // Calculate discount and final price for the TOTAL amount, not per apartment
-  const { totalAfterDiscount, discount, savings, deposit } = calculateDiscount(totalBeforeDiscount, touristTax);
-  console.log(`After discount: ${totalAfterDiscount}€, Savings: ${savings}€`);
-  
-  // Define tourist tax per person (default: 2.0 euros)
-  const touristTaxPerPerson = 2.0;
-  
-  return {
-    basePrice,
-    extras: extrasCost,
-    cleaningFee,
-    touristTax,
-    touristTaxPerPerson,
-    totalBeforeDiscount,
-    totalAfterDiscount,
-    discount,
-    savings,
-    deposit,
-    nights,
-    totalPrice: totalAfterDiscount,
-    subtotal,
-    apartmentPrices
-  };
+
+  // Calculate discount and final price for each apartment individually
+  let sumOfDiscountedApartmentPrices = 0;
+  const discountedApartmentPrices: Record<string, number> = {};
+
+  if (selectedApartments.length > 1) {
+    // For multiple apartments, calculate individual discounts
+    selectedApartments.forEach(apartment => {
+      const baseApartmentPrice = apartmentPrices[apartment.id] || 0;
+      
+      // Get per-apartment extras (this is a simplified version; may need to be refined)
+      const hasPets = formValues.petsInApartment?.[apartment.id] || formValues.hasPets;
+      const petCost = hasPets ? 50 : 0;
+      
+      // Count people for this apartment
+      const peopleCount = formValues.personsPerApartment?.[apartment.id] || 
+                         ((formValues.adults || 0) + (formValues.children || 0));
+                         
+      // Calculate linen cost for this apartment
+      const linenCost = formValues.linenOption === "extra" ? peopleCount * 15 : 0;
+      
+      // Calculate apartment subtotal with extras
+      const apartmentSubtotal = baseApartmentPrice + linenCost + petCost;
+      
+      // Round down to nearest 50€ for this apartment
+      const discountedPrice = Math.floor(apartmentSubtotal / 50) * 50;
+      
+      // Save the discounted price
+      discountedApartmentPrices[apartment.id] = discountedPrice;
+      sumOfDiscountedApartmentPrices += discountedPrice;
+      
+      console.log(`Apartment ${apartment.id} subtotal: ${apartmentSubtotal}€, discounted: ${discountedPrice}€`);
+    });
+    
+    // The final price is the sum of individually discounted apartment prices
+    const totalAfterDiscount = sumOfDiscountedApartmentPrices;
+    const discount = totalBeforeDiscount - totalAfterDiscount;
+    
+    console.log(`Sum of discounted apartment prices: ${sumOfDiscountedApartmentPrices}€`);
+    console.log(`Total discount: ${discount}€`);
+    
+    // Calculate deposit based on total after discount (rounded to nearest 100€)
+    const deposit = Math.min(
+      Math.round(totalAfterDiscount * 0.3 / 100) * 100,
+      Math.round(totalAfterDiscount * 0.35 / 100) * 100
+    );
+    
+    // Return the calculation result with the corrected total
+    return {
+      basePrice,
+      extras: extrasCost,
+      cleaningFee,
+      touristTax,
+      touristTaxPerPerson: 2.0,
+      totalBeforeDiscount,
+      totalAfterDiscount,
+      discount,
+      savings: discount,
+      deposit,
+      nights,
+      totalPrice: totalAfterDiscount, // Make sure totalPrice matches totalAfterDiscount
+      subtotal,
+      apartmentPrices: discountedApartmentPrices // Use discounted prices per apartment
+    };
+  } else {
+    // For single apartment, use the standard discount calculation
+    const { totalAfterDiscount, discount, savings, deposit } = calculateDiscount(totalBeforeDiscount, touristTax);
+    
+    console.log(`Single apartment - After discount: ${totalAfterDiscount}€, Savings: ${savings}€`);
+    
+    // Return the calculation result for a single apartment
+    return {
+      basePrice,
+      extras: extrasCost,
+      cleaningFee,
+      touristTax,
+      touristTaxPerPerson: 2.0,
+      totalBeforeDiscount,
+      totalAfterDiscount,
+      discount,
+      savings,
+      deposit,
+      nights,
+      totalPrice: totalAfterDiscount,
+      subtotal,
+      apartmentPrices
+    };
+  }
 }
