@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -743,6 +744,8 @@ const AdminReservations = () => {
                           type="number" 
                           min={0} 
                           step="0.01"
+                          inputMode="decimal"
+                          pattern="[0-9]*[.,]?[0-9]*"
                           {...field}
                         />
                       </FormControl>
@@ -824,6 +827,8 @@ const AdminReservations = () => {
                             min={0} 
                             max={form.getValues("finalPrice")}
                             step="0.01"
+                            inputMode="decimal"
+                            pattern="[0-9]*[.,]?[0-9]*"
                             {...field}
                           />
                         </FormControl>
@@ -903,3 +908,4 @@ const AdminReservations = () => {
 };
 
 export default AdminReservations;
+
