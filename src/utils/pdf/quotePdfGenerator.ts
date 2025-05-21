@@ -1,6 +1,6 @@
 
 import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import "jspdf-autotable";
 import { format } from "date-fns";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types"; 

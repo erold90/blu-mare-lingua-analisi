@@ -132,3 +132,36 @@ export const createInfoRow = (doc: jsPDF, key: string, value: string, y: number)
   
   return y + 10;
 };
+
+// Add a header background for sections (new function)
+export const addHeaderBackground = (doc: jsPDF, y: number, height = 10) => {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  doc.setFillColor(240, 240, 240); // Light gray
+  doc.rect(10, y, pageWidth - 20, height, 'F');
+  return y + height;
+};
+
+// Add section header with styled background (new function)
+export const addSectionHeader = (doc: jsPDF, title: string, y: number) => {
+  // Add section header background
+  doc.setFillColor(240, 240, 240); // Light gray
+  doc.rect(10, y, doc.internal.pageSize.getWidth() - 20, 10, 'F');
+  
+  // Add section title
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text(title, 12, y + 7);
+  doc.setFont('helvetica', 'normal');
+  
+  return y + 10;
+};
+
+// Add info box with styled background (new function)
+export const addInfoBox = (doc: jsPDF, x: number, y: number, width: number, height: number, fillColor = [248, 250, 252]) => {
+  // Create box with light background
+  doc.setFillColor(fillColor[0], fillColor[1], fillColor[2]);
+  doc.setDrawColor(220, 225, 235);
+  doc.roundedRect(x, y, width, height, 3, 3, 'FD');
+  
+  return y + height;
+};

@@ -13,6 +13,13 @@ import {
 } from "./formatUtils";
 import { generateQuotePdf } from "./quotePdfGenerator";
 
+// Extend jsPDF with autoTable method
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: typeof autoTable;
+  }
+}
+
 // Main function to create and download the quote PDF
 export const downloadPDF = (formData: FormValues, apartments: Apartment[], clientName?: string) => {
   try {
