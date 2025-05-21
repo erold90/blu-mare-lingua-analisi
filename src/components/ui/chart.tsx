@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 
@@ -97,6 +98,22 @@ ${colorConfig
     />
   )
 }
+
+// Re-export recharts components that are needed by our dashboard
+const {
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  BarChart,
+  Bar,
+  Legend,
+} = RechartsPrimitive;
 
 const ChartTooltip = RechartsPrimitive.Tooltip
 
@@ -360,4 +377,17 @@ export {
   ChartLegend,
   ChartLegendContent,
   ChartStyle,
+  // Export the recharts components
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  BarChart,
+  Bar,
+  Legend
 }
