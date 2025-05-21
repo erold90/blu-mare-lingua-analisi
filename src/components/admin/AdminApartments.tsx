@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +17,7 @@ import {
   DialogClose
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { 
   DragDropContext, 
   Droppable, 
@@ -26,7 +26,7 @@ import {
 } from "@hello-pangea/dnd";
 import { toast } from "sonner";
 import { apartments as apartmentsData, Apartment } from "@/data/apartments";
-import { Plus, X, Move, CheckCircle, Image as ImageIcon, Edit } from "lucide-react";
+import { Plus, X, Move, CheckCircle, Image as ImageIcon, Edit, Camera, Bed, Home } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -48,6 +48,7 @@ const AdminApartments = () => {
   const [editedApartment, setEditedApartment] = useState<Apartment | null>(null);
   const [apartmentImages, setApartmentImages] = useState<{ [key: string]: string[] }>({});
   const [coverImage, setCoverImage] = useState<{ [key: string]: number }>({});
+  const [activeSection, setActiveSection] = useState<string>("details");
   const isMobile = useIsMobile();
   
   // Load saved images and cover image indices from localStorage on component mount
@@ -241,7 +242,6 @@ const AdminApartments = () => {
   
   const renderApartmentImages = (apartmentId: string) => {
     const images = apartmentImages[apartmentId] || [];
-    console.log(`Rendering images for apartment ${apartmentId}:`, images);
     
     return (
       <div className="mt-4">
@@ -252,8 +252,9 @@ const AdminApartments = () => {
               variant="outline" 
               size="sm" 
               onClick={() => document.getElementById(`file-upload-${apartmentId}`)?.click()}
+              className="flex items-center"
             >
-              <Plus className="h-4 w-4 mr-1" /> Aggiungi
+              <Camera className="h-4 w-4 mr-2" /> Aggiungi
             </Button>
             <Input 
               id={`file-upload-${apartmentId}`}
@@ -273,7 +274,7 @@ const AdminApartments = () => {
                 <div 
                   {...provided.droppableProps}
                   ref={provided.innerRef}
-                  className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3 md:grid-cols-4 lg:grid-cols-5'} gap-4`}
+                  className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
                 >
                   {images.map((imageUrl, index) => (
                     <Draggable key={`${apartmentId}-${index}`} draggableId={`${apartmentId}-${index}`} index={index}>
@@ -333,56 +334,126 @@ const AdminApartments = () => {
             </Droppable>
           </DragDropContext>
         ) : (
-          <div className="text-center py-8 border border-dashed rounded-lg">
-            <ImageIcon className="mx-auto h-10 w-10 text-muted-foreground opacity-50" />
+          <div className="text-center py-6 border border-dashed rounded-lg">
+            <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground opacity-50" />
             <p className="text-sm text-muted-foreground mt-2">
               Nessuna immagine caricata
             </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2"
+              onClick={() => document.getElementById(`file-upload-${apartmentId}`)?.click()}
+            >
+              <Camera className="h-4 w-4 mr-2" /> Carica immagini
+            </Button>
           </div>
         )}
       </div>
     );
   };
   
+  // New function to render apartment details in a more mobile-friendly format
+  const renderApartmentDetails = (apartment: Apartment) => {
+    return (
+      <>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+          <div className="col-span-2 sm:col-span-1">
+            <div className="flex items-center gap-2">
+              <Bed className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Capacità</span>
+            </div>
+            <p className="text-lg">{apartment.capacity} persone</p>
+          </div>
+          
+          <div className="col-span-2 sm:col-span-1">
+            <div className="flex items-center gap-2">
+              <Home className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">Piano</span>
+            </div>
+            <p className="text-lg">{apartment.floor}</p>
+          </div>
+          
+          <div className="col-span-2 sm:col-span-1">
+            <span className="text-sm font-medium">Vista</span>
+            <p className="text-lg">{apartment.view}</p>
+          </div>
+          
+          <div className="col-span-2 sm:col-span-1">
+            <span className="text-sm font-medium">Dimensione</span>
+            <p className="text-lg">{apartment.size} m²</p>
+          </div>
+          
+          <div className="col-span-2 sm:col-span-1">
+            <span className="text-sm font-medium">Prezzo base</span>
+            <p className="text-lg">{apartment.price}€ / notte</p>
+          </div>
+          
+          <div className="col-span-2 sm:col-span-1">
+            <span className="text-sm font-medium">Camere</span>
+            <p className="text-lg">{apartment.bedrooms || 1}</p>
+          </div>
+          
+          <div className="col-span-2 sm:col-span-1">
+            <span className="text-sm font-medium">Posti letto</span>
+            <p className="text-lg">{apartment.beds || apartment.capacity}</p>
+          </div>
+          
+          <div className="col-span-2 sm:col-span-1">
+            <span className="text-sm font-medium">Servizi</span>
+            <p className="text-lg">{apartment.services?.length || 0} servizi</p>
+          </div>
+          
+          {apartment.CIN && (
+            <div className="col-span-2">
+              <span className="text-sm font-medium">CIN</span>
+              <p className="text-lg break-all">{apartment.CIN}</p>
+            </div>
+          )}
+        </div>
+      </>
+    );
+  };
+  
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue={apartments[0]?.id || "default"}>
-        <div className="flex items-center justify-between mb-4">
-          <TabsList className={isMobile ? "flex-wrap justify-start" : ""}>
+    <div className="space-y-4">
+      {isMobile ? (
+        <div className="mb-4">
+          <TabsList className="flex w-full overflow-x-auto pb-1 no-scrollbar">
             {apartments.map(apartment => (
               <TabsTrigger 
                 key={apartment.id}
                 value={apartment.id}
+                className="flex-shrink-0 whitespace-nowrap px-3"
                 onClick={() => setSelectedApartment(apartment)}
               >
                 {apartment.name}
               </TabsTrigger>
             ))}
           </TabsList>
-        </div>
-        
-        {apartments.map(apartment => (
-          <TabsContent key={apartment.id} value={apartment.id} className="space-y-6">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{apartment.name}</CardTitle>
+          
+          {selectedApartment && (
+            <Card className="mt-4">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-xl">{selectedApartment.name}</CardTitle>
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
-                      onClick={() => setEditedApartment(apartment)}
+                      size="sm"
+                      onClick={() => setEditedApartment(selectedApartment)}
+                      className="flex items-center"
                     >
-                      <Edit className="h-4 w-4 mr-2" />
-                      Modifica dettagli
+                      <Edit className="h-4 w-4 mr-2" /> Modifica
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Modifica {apartment.name}</DialogTitle>
+                      <DialogTitle>Modifica {selectedApartment.name}</DialogTitle>
                     </DialogHeader>
                     
                     {editedApartment && (
-                      <div className="grid gap-4 py-4">
+                      <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
                         <div className="grid gap-2">
                           <Label htmlFor="name">Nome</Label>
                           <Input
@@ -567,78 +638,350 @@ const AdminApartments = () => {
                       </div>
                     )}
                     
-                    <DialogFooter>
+                    <DialogFooter className="flex flex-col sm:flex-row gap-2">
                       <DialogClose asChild>
-                        <Button variant="outline">Annulla</Button>
+                        <Button variant="outline" className="flex-1">Annulla</Button>
                       </DialogClose>
-                      <Button onClick={handleEditApartment}>Salva modifiche</Button>
+                      <Button onClick={handleEditApartment} className="flex-1">Salva modifiche</Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
               </CardHeader>
               
-              <CardContent>
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="font-medium mb-2">Dettagli appartamento</h3>
-                    <dl className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      <div>
-                        <dt className="text-sm font-normal text-muted-foreground">Capacità</dt>
-                        <dd>{apartment.capacity} persone</dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm font-normal text-muted-foreground">Piano</dt>
-                        <dd>{apartment.floor}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm font-normal text-muted-foreground">Vista</dt>
-                        <dd>{apartment.view}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm font-normal text-muted-foreground">Dimensione</dt>
-                        <dd>{apartment.size} m²</dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm font-normal text-muted-foreground">Prezzo base</dt>
-                        <dd>{apartment.price}€ / notte</dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm font-normal text-muted-foreground">CIN</dt>
-                        <dd>{apartment.CIN || 'Non specificato'}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm font-normal text-muted-foreground">Camere</dt>
-                        <dd>{apartment.bedrooms || 1}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm font-normal text-muted-foreground">Posti letto</dt>
-                        <dd>{apartment.beds || apartment.capacity}</dd>
-                      </div>
-                      <div>
-                        <dt className="text-sm font-normal text-muted-foreground">Servizi</dt>
-                        <dd>{apartment.services?.length || 0} servizi</dd>
-                      </div>
-                    </dl>
-                  </div>
+              <CardContent className="pt-0">
+                <Accordion type="single" collapsible className="w-full" defaultValue="details">
+                  <AccordionItem value="details">
+                    <AccordionTrigger className="py-2">
+                      Dettagli appartamento
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      {renderApartmentDetails(selectedApartment)}
+                    </AccordionContent>
+                  </AccordionItem>
                   
-                  <div>
-                    <h3 className="font-medium mb-2">Descrizione</h3>
-                    <p className="text-sm text-muted-foreground">{apartment.description}</p>
-                    {apartment.longDescription && (
-                      <div className="mt-4">
-                        <h4 className="text-sm font-medium">Descrizione completa</h4>
-                        <p className="text-sm text-muted-foreground mt-1">{apartment.longDescription}</p>
+                  <AccordionItem value="description">
+                    <AccordionTrigger className="py-2">
+                      Descrizione
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        <p>{selectedApartment.description}</p>
+                        {selectedApartment.longDescription && (
+                          <div>
+                            <p className="font-medium mt-2">Descrizione completa</p>
+                            <p className="text-muted-foreground">{selectedApartment.longDescription}</p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </AccordionContent>
+                  </AccordionItem>
                   
-                  {renderApartmentImages(apartment.id)}
-                </div>
+                  <AccordionItem value="images">
+                    <AccordionTrigger className="py-2">
+                      Immagini
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      {renderApartmentImages(selectedApartment.id)}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </CardContent>
             </Card>
-          </TabsContent>
-        ))}
-      </Tabs>
+          )}
+        </div>
+      ) : (
+        <Tabs defaultValue={apartments[0]?.id || "default"}>
+          <TabsList className="mb-4">
+            {apartments.map(apartment => (
+              <TabsTrigger 
+                key={apartment.id}
+                value={apartment.id}
+                onClick={() => setSelectedApartment(apartment)}
+              >
+                {apartment.name}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          
+          {apartments.map(apartment => (
+            <TabsContent key={apartment.id} value={apartment.id} className="space-y-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle>{apartment.name}</CardTitle>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        onClick={() => setEditedApartment(apartment)}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Modifica dettagli
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Modifica {apartment.name}</DialogTitle>
+                      </DialogHeader>
+                      
+                      {editedApartment && (
+                        <div className="grid gap-4 py-4">
+                          <div className="grid gap-2">
+                            <Label htmlFor="name">Nome</Label>
+                            <Input
+                              id="name"
+                              value={editedApartment.name}
+                              onChange={(e) => setEditedApartment({
+                                ...editedApartment,
+                                name: e.target.value
+                              })}
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="description">Descrizione breve</Label>
+                            <Input
+                              id="description"
+                              value={editedApartment.description}
+                              onChange={(e) => setEditedApartment({
+                                ...editedApartment,
+                                description: e.target.value
+                              })}
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor="longDescription">Descrizione completa</Label>
+                            <Textarea
+                              id="longDescription"
+                              rows={5}
+                              value={editedApartment.longDescription || ''}
+                              onChange={(e) => setEditedApartment({
+                                ...editedApartment,
+                                longDescription: e.target.value
+                              })}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                              <Label htmlFor="capacity">Capacità</Label>
+                              <Input
+                                id="capacity"
+                                type="number"
+                                min="1"
+                                value={editedApartment.capacity}
+                                onChange={(e) => setEditedApartment({
+                                  ...editedApartment,
+                                  capacity: parseInt(e.target.value)
+                                })}
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="floor">Piano</Label>
+                              <Input
+                                id="floor"
+                                value={editedApartment.floor}
+                                onChange={(e) => setEditedApartment({
+                                  ...editedApartment,
+                                  floor: e.target.value
+                                })}
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                              <Label htmlFor="size">Dimensioni (m²)</Label>
+                              <Input
+                                id="size"
+                                type="number"
+                                min="1"
+                                value={editedApartment.size}
+                                onChange={(e) => setEditedApartment({
+                                  ...editedApartment,
+                                  size: parseInt(e.target.value)
+                                })}
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="price">Prezzo base</Label>
+                              <Input
+                                id="price"
+                                type="number"
+                                min="1"
+                                value={editedApartment.price}
+                                onChange={(e) => setEditedApartment({
+                                  ...editedApartment,
+                                  price: parseInt(e.target.value)
+                                })}
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                              <Label htmlFor="bedrooms">Camere da letto</Label>
+                              <Input
+                                id="bedrooms"
+                                type="number"
+                                min="1"
+                                value={editedApartment.bedrooms || 1}
+                                onChange={(e) => setEditedApartment({
+                                  ...editedApartment,
+                                  bedrooms: parseInt(e.target.value)
+                                })}
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="beds">Posti letto</Label>
+                              <Input
+                                id="beds"
+                                type="number"
+                                min="1"
+                                value={editedApartment.beds || editedApartment.capacity}
+                                onChange={(e) => setEditedApartment({
+                                  ...editedApartment,
+                                  beds: parseInt(e.target.value)
+                                })}
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                              <Label htmlFor="cleaningFee">Costo pulizie</Label>
+                              <Input
+                                id="cleaningFee"
+                                type="number"
+                                min="0"
+                                value={editedApartment.cleaningFee || 50}
+                                onChange={(e) => setEditedApartment({
+                                  ...editedApartment,
+                                  cleaningFee: parseInt(e.target.value)
+                                })}
+                              />
+                            </div>
+                            <div className="grid gap-2">
+                              <Label htmlFor="view">Vista</Label>
+                              <Input
+                                id="view"
+                                value={editedApartment.view}
+                                onChange={(e) => setEditedApartment({
+                                  ...editedApartment,
+                                  view: e.target.value
+                                })}
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="grid gap-2">
+                            <Label>Servizi e caratteristiche</Label>
+                            <div className="flex flex-wrap gap-4 pt-1">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id="hasVeranda" 
+                                  checked={editedApartment.hasVeranda || false}
+                                  onCheckedChange={(checked) => setEditedApartment({
+                                    ...editedApartment,
+                                    hasVeranda: !!checked
+                                  })}
+                                />
+                                <Label htmlFor="hasVeranda">Veranda</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id="hasTerrace" 
+                                  checked={editedApartment.hasTerrace || false}
+                                  onCheckedChange={(checked) => setEditedApartment({
+                                    ...editedApartment,
+                                    hasTerrace: !!checked
+                                  })}
+                                />
+                                <Label htmlFor="hasTerrace">Terrazzo</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id="hasAirConditioning" 
+                                  checked={editedApartment.hasAirConditioning || false}
+                                  onCheckedChange={(checked) => setEditedApartment({
+                                    ...editedApartment,
+                                    hasAirConditioning: !!checked
+                                  })}
+                                />
+                                <Label htmlFor="hasAirConditioning">Aria Condizionata</Label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button variant="outline">Annulla</Button>
+                        </DialogClose>
+                        <Button onClick={handleEditApartment}>Salva modifiche</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </CardHeader>
+                
+                <CardContent>
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="font-medium mb-2">Dettagli appartamento</h3>
+                      <dl className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div>
+                          <dt className="text-sm font-normal text-muted-foreground">Capacità</dt>
+                          <dd>{apartment.capacity} persone</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm font-normal text-muted-foreground">Piano</dt>
+                          <dd>{apartment.floor}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm font-normal text-muted-foreground">Vista</dt>
+                          <dd>{apartment.view}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm font-normal text-muted-foreground">Dimensione</dt>
+                          <dd>{apartment.size} m²</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm font-normal text-muted-foreground">Prezzo base</dt>
+                          <dd>{apartment.price}€ / notte</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm font-normal text-muted-foreground">CIN</dt>
+                          <dd>{apartment.CIN || 'Non specificato'}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm font-normal text-muted-foreground">Camere</dt>
+                          <dd>{apartment.bedrooms || 1}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm font-normal text-muted-foreground">Posti letto</dt>
+                          <dd>{apartment.beds || apartment.capacity}</dd>
+                        </div>
+                        <div>
+                          <dt className="text-sm font-normal text-muted-foreground">Servizi</dt>
+                          <dd>{apartment.services?.length || 0} servizi</dd>
+                        </div>
+                      </dl>
+                    </div>
+                    
+                    <div>
+                      <h3 className="font-medium mb-2">Descrizione</h3>
+                      <p className="text-sm text-muted-foreground">{apartment.description}</p>
+                      {apartment.longDescription && (
+                        <div className="mt-4">
+                          <h4 className="text-sm font-medium">Descrizione completa</h4>
+                          <p className="text-sm text-muted-foreground mt-1">{apartment.longDescription}</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {renderApartmentImages(apartment.id)}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          ))}
+        </Tabs>
+      )}
     </div>
   );
 };
