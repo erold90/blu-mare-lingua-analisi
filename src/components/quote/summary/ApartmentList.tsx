@@ -4,7 +4,7 @@ import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
 import { roundDownToNearest50 } from "@/utils/price/basePrice";
-import { Euro, PawPrint } from "lucide-react";
+import { Euro, PawPrint, Bed, SparklesIcon, Banknote, Receipt } from "lucide-react";
 
 interface ApartmentListProps {
   apartments: Apartment[];
@@ -95,12 +95,16 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <span className="text-muted-foreground">Posti letto:</span>
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Bed className="h-3 w-3" />Posti letto:
+                    </span>
                     <span>{apartment.beds}</span>
                     
                     {costs.linenCost > 0 && (
                       <>
-                        <span className="text-muted-foreground">Biancheria extra:</span>
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Receipt className="h-3 w-3" />Biancheria extra:
+                        </span>
                         <span>{costs.linenCost}€</span>
                       </>
                     )}
@@ -114,19 +118,25 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                       </>
                     )}
                     
-                    <span className="text-muted-foreground">Pulizia finale:</span>
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <SparklesIcon className="h-3 w-3" />Pulizia finale:
+                    </span>
                     <span className="flex items-center">
                       {costs.cleaningFee}€
                       <span className="text-green-500 text-[10px] ml-1">(inclusa)</span>
                     </span>
                     
-                    <span className="text-muted-foreground">Tassa soggiorno:</span>
+                    <span className="text-muted-foreground flex items-center gap-1">
+                      <Banknote className="h-3 w-3" />Tassa soggiorno:
+                    </span>
                     <span className="flex items-center">
                       {costs.touristTax}€
                       <span className="text-green-500 text-[10px] ml-1">(inclusa)</span>
                     </span>
                     
-                    <span className="text-muted-foreground font-medium">Totale:</span>
+                    <span className="text-muted-foreground font-medium flex items-center gap-1">
+                      <Euro className="h-3 w-3" />Totale:
+                    </span>
                     <span className="font-medium">{costs.totalBeforeDiscount}€</span>
                   </div>
                   
