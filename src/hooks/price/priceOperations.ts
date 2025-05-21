@@ -95,28 +95,28 @@ export const forceInitializePrices = (
   // Define price tiers for each apartment and period
   const pricingData = [
     // June
-    { start: "2025-06-07", end: "2025-06-13", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
-    { start: "2025-06-14", end: "2025-06-20", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
-    { start: "2025-06-21", end: "2025-06-27", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
-    { start: "2025-06-28", end: "2025-07-04", prices: { "apt-1": 400, "apt-2": 500, "apt-3": 350, "apt-4": 375 } },
+    { start: "2025-06-07", end: "2025-06-13", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
+    { start: "2025-06-14", end: "2025-06-20", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
+    { start: "2025-06-21", end: "2025-06-27", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
+    { start: "2025-06-28", end: "2025-07-04", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
     
     // July
-    { start: "2025-07-05", end: "2025-07-11", prices: { "apt-1": 475, "apt-2": 575, "apt-3": 425, "apt-4": 450 } },
-    { start: "2025-07-12", end: "2025-07-18", prices: { "apt-1": 475, "apt-2": 575, "apt-3": 425, "apt-4": 450 } },
-    { start: "2025-07-19", end: "2025-07-25", prices: { "apt-1": 475, "apt-2": 575, "apt-3": 425, "apt-4": 450 } },
-    { start: "2025-07-26", end: "2025-08-01", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 665, "apt-4": 700 } },
+    { start: "2025-07-05", end: "2025-07-11", prices: { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 } },
+    { start: "2025-07-12", end: "2025-07-18", prices: { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 } },
+    { start: "2025-07-19", end: "2025-07-25", prices: { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 } },
+    { start: "2025-07-26", end: "2025-08-01", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 665, "appartamento-4": 700 } },
     
     // August
-    { start: "2025-08-02", end: "2025-08-08", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 665, "apt-4": 700 } },
-    { start: "2025-08-09", end: "2025-08-15", prices: { "apt-1": 1150, "apt-2": 1250, "apt-3": 1075, "apt-4": 1100 } },
-    { start: "2025-08-16", end: "2025-08-22", prices: { "apt-1": 1150, "apt-2": 1250, "apt-3": 1075, "apt-4": 1100 } },
-    { start: "2025-08-23", end: "2025-08-29", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 675, "apt-4": 700 } },
-    { start: "2025-08-30", end: "2025-09-05", prices: { "apt-1": 750, "apt-2": 850, "apt-3": 675, "apt-4": 700 } },
+    { start: "2025-08-02", end: "2025-08-08", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 665, "appartamento-4": 700 } },
+    { start: "2025-08-09", end: "2025-08-15", prices: { "appartamento-1": 1150, "appartamento-2": 1250, "appartamento-3": 1075, "appartamento-4": 1100 } },
+    { start: "2025-08-16", end: "2025-08-22", prices: { "appartamento-1": 1150, "appartamento-2": 1250, "appartamento-3": 1075, "appartamento-4": 1100 } },
+    { start: "2025-08-23", end: "2025-08-29", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 675, "appartamento-4": 700 } },
+    { start: "2025-08-30", end: "2025-09-05", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 675, "appartamento-4": 700 } },
     
     // September
-    { start: "2025-09-06", end: "2025-09-12", prices: { "apt-1": 500, "apt-2": 600, "apt-3": 425, "apt-4": 450 } },
-    { start: "2025-09-13", end: "2025-09-19", prices: { "apt-1": 500, "apt-2": 600, "apt-3": 425, "apt-4": 450 } },
-    { start: "2025-09-20", end: "2025-09-26", prices: { "apt-1": 500, "apt-2": 600, "apt-3": 425, "apt-4": 450 } },
+    { start: "2025-09-06", end: "2025-09-12", prices: { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 } },
+    { start: "2025-09-13", end: "2025-09-19", prices: { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 } },
+    { start: "2025-09-20", end: "2025-09-26", prices: { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 } },
   ];
 
   // Create price entries for each apartment and time period

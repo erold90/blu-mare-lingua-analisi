@@ -35,24 +35,29 @@ const PriceTable: React.FC<PriceTableProps> = ({
             <TableCell className="font-medium">
               {format(week.start, "d MMM", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
             </TableCell>
-            {apartments.map(apartment => (
-              <TableCell key={apartment.id}>
-                <div className="flex items-center">
-                  <Input
-                    type="number"
-                    min="0"
-                    value={getPriceForWeek(apartment.id, week.start)}
-                    onChange={(e) => handlePriceChange(
-                      apartment.id, 
-                      week.start.toISOString(), 
-                      e.target.value
-                    )}
-                    className="w-20 text-right"
-                  />
-                  <span className="ml-1">€</span>
-                </div>
-              </TableCell>
-            ))}
+            {apartments.map(apartment => {
+              // Get the price for this apartment and week
+              const price = getPriceForWeek(apartment.id, week.start);
+              
+              return (
+                <TableCell key={apartment.id}>
+                  <div className="flex items-center">
+                    <Input
+                      type="number"
+                      min="0"
+                      value={price || 0}
+                      onChange={(e) => handlePriceChange(
+                        apartment.id, 
+                        week.start.toISOString(), 
+                        e.target.value
+                      )}
+                      className="w-20 text-right"
+                    />
+                    <span className="ml-1">€</span>
+                  </div>
+                </TableCell>
+              );
+            })}
           </TableRow>
         ))}
       </TableBody>

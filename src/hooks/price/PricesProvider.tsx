@@ -16,8 +16,9 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     console.log("PricesProvider: Checking existing prices");
     
-    // Force initialization on first load to ensure prices are always set
+    // Clear and force initialization on first load
     console.log("Forcing price initialization with custom prices");
+    localStorage.removeItem("seasonalPricing"); // Clear any existing prices first
     const initialPrices = forceInitializePrices(setSeasonalPricing);
     setWeeklyPrices(initialPrices);
     toast.success("Prezzi 2025 inizializzati correttamente");

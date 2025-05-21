@@ -65,33 +65,19 @@ const AdminPrices = () => {
     }
   };
   
-  // Get price for a specific apartment and week
+  // FIXED: This function now properly compares dates as strings to find prices
   const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
-    // Find price in weekly prices array
-    const price = weeklyPrices.find(
-      p => p.apartmentId === apartmentId && 
-           new Date(p.weekStart).toDateString() === weekStart.toDateString()
-    );
+    // Convert weekStart to string format for comparison
+    const weekStartStr = weekStart.toISOString().substring(0, 10); // YYYY-MM-DD format
     
-    if (price) {
-      return price.price;
-    }
+    // Find the right apartment price
+    const matchingPrice = weeklyPrices.find(p => {
+      return p.apartmentId === apartmentId && 
+             new Date(p.weekStart).toISOString().substring(0, 10) === weekStartStr;
+    });
     
-    // Fallback: check in seasonal pricing for this year
-    const yearPricing = seasonalPricing.find(s => s.year === selectedYear);
-    if (yearPricing) {
-      const seasonPrice = yearPricing.prices.find(
-        p => p.apartmentId === apartmentId && 
-             new Date(p.weekStart).toDateString() === weekStart.toDateString()
-      );
-      
-      if (seasonPrice) {
-        return seasonPrice.price;
-      }
-    }
-    
-    // If no price is found, return 0
-    return 0;
+    // Return the price if found, otherwise return 0
+    return matchingPrice ? matchingPrice.price : 0;
   };
   
   const handleResetPricesClick = () => {

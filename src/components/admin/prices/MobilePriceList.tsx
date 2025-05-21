@@ -23,27 +23,32 @@ const MobilePriceList: React.FC<MobilePriceListProps> = ({
         <div key={apartment.id} className="border rounded-lg p-4">
           <h3 className="font-bold mb-2">{apartment.name}</h3>
           <div className="space-y-3">
-            {weeks.map((week, idx) => (
-              <div key={idx} className="grid grid-cols-2 gap-2 items-center">
-                <Label className="text-xs">
-                  {format(week.start, "d MMM", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
-                </Label>
-                <div className="flex items-center">
-                  <Input
-                    type="number"
-                    min="0"
-                    value={getPriceForWeek(apartment.id, week.start)}
-                    onChange={(e) => handlePriceChange(
-                      apartment.id, 
-                      week.start.toISOString(), 
-                      e.target.value
-                    )}
-                    className="w-20 text-right"
-                  />
-                  <span className="ml-1">€</span>
+            {weeks.map((week, idx) => {
+              // Get the price for this apartment and week
+              const price = getPriceForWeek(apartment.id, week.start);
+              
+              return (
+                <div key={idx} className="grid grid-cols-2 gap-2 items-center">
+                  <Label className="text-xs">
+                    {format(week.start, "d MMM", { locale: it })} - {format(week.end, "d MMM", { locale: it })}
+                  </Label>
+                  <div className="flex items-center">
+                    <Input
+                      type="number"
+                      min="0"
+                      value={price || 0}
+                      onChange={(e) => handlePriceChange(
+                        apartment.id, 
+                        week.start.toISOString(), 
+                        e.target.value
+                      )}
+                      className="w-20 text-right"
+                    />
+                    <span className="ml-1">€</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ))}
