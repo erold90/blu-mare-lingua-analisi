@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -27,7 +26,7 @@ import {
 import { format, addDays, isWithinInterval } from "date-fns";
 import { it } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, CalendarDays, Users, Building, Euro, CleaningIcon } from "lucide-react";
+import { Calendar, CalendarDays, Users, Building, EuroIcon, LayoutDashboard, ArrowUpRightIcon, TrendingUp, TrendingDown, Brush } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CleaningProvider } from "@/hooks/useCleaningManagement";
 
@@ -251,7 +250,7 @@ const AdminDashboardContent = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Pulizie da Fare
             </CardTitle>
-            <CleaningIcon className="h-4 w-4 text-muted-foreground" />
+            <Brush className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{pendingCleanings}</div>
@@ -283,7 +282,7 @@ const AdminDashboardContent = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Guadagno Totale
             </CardTitle>
-            <Euro className="h-4 w-4 text-muted-foreground" />
+            <EuroIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">€{totalRevenue.toLocaleString()}</div>
