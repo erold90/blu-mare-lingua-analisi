@@ -9,7 +9,7 @@ interface YearTabsProps {
   onYearChange: (year: number) => void;
   weeks: { start: Date; end: Date }[];
   getPriceForWeek: (apartmentId: string, weekStart: Date) => number;
-  handlePriceChange: (apartmentId: string, weekStartStr: string, value: string) => void;
+  handlePriceChange: (apartmentId: string, weekStartStr: string, value: number) => void;
 }
 
 const YearTabs: React.FC<YearTabsProps> = ({
@@ -41,7 +41,9 @@ const YearTabs: React.FC<YearTabsProps> = ({
             year={year}
             weeks={weeks}
             getPriceForWeek={getPriceForWeek}
-            handlePriceChange={handlePriceChange}
+            handlePriceChange={(apartmentId, weekStartStr, value) => 
+              handlePriceChange(apartmentId, weekStartStr, Number(value))
+            }
           />
         </TabsContent>
       ))}

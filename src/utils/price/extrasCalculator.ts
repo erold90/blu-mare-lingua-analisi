@@ -15,9 +15,9 @@ export const calculateExtras = (
   selectedApartments: Apartment[],
   nights: number
 ): ExtrasResult => {
-  // Get effective guest count
-  const { adults, children } = getEffectiveGuestCount(formValues);
-  const totalGuests = adults + children;
+  // Get effective guest count - adjust the destructuring to match the actual return type
+  const guestCountInfo = getEffectiveGuestCount(formValues);
+  const totalGuests = guestCountInfo.totalGuests;
   
   // Calculate linen costs
   let linenCost = 0;
@@ -34,6 +34,9 @@ export const calculateExtras = (
   const cleaningFee = selectedApartments.length * 50;
   
   // Calculate tourist tax (2€ per adult per night)
+  // Since we don't have direct access to adults count from getEffectiveGuestCount,
+  // let's get it from formValues instead
+  const adults = formValues.adults || 0;
   const touristTax = adults * 2 * nights;
   
   // Total extras
