@@ -86,35 +86,35 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   const apartmentPrices: Record<string, number> = {};
   let basePrice = 0;
   
-  // MODIFICA: Calcola il numero di settimane (arrotondando per eccesso)
+  // Calculate number of complete weeks (rounding up)
   const numberOfWeeks = Math.ceil(nights / 7);
   console.log(`Number of complete weeks: ${numberOfWeeks}`);
   
-  // Per ogni appartamento selezionato
+  // For each selected apartment
   selectedApartments.forEach(apartment => {
     let totalApartmentPrice = 0;
     
-    // Per ogni settimana di soggiorno, ottieni il prezzo corrispondente
+    // For each week of stay, get the corresponding price
     for (let week = 0; week < numberOfWeeks; week++) {
-      // Calcola la data di inizio di questa settimana
+      // Calculate the start date for this week
       const weekStartDate = new Date(formValues.checkIn);
       weekStartDate.setDate(weekStartDate.getDate() + (week * 7));
       
-      // Ottieni il prezzo per questa settimana
+      // Get the price for this week
       const weeklyPrice = getPriceForWeek(apartment.id, weekStartDate);
       console.log(`Week ${week+1} price for ${apartment.id}: ${weeklyPrice}€ (starting on ${weekStartDate.toISOString().split('T')[0]})`);
       
       if (weeklyPrice > 0) {
         totalApartmentPrice += weeklyPrice;
       } else {
-        // Utilizza il prezzo predefinito dell'appartamento se non è impostato un prezzo specifico
+        // Use the apartment's default price if no specific price is set
         const defaultPrice = apartment.price || 0;
         console.log(`No specific price found for week ${week+1}, using default price: ${defaultPrice}€`);
         totalApartmentPrice += defaultPrice;
       }
     }
     
-    // Salva il prezzo totale dell'appartamento
+    // Save the apartment's total price
     apartmentPrices[apartment.id] = totalApartmentPrice;
     basePrice += totalApartmentPrice;
     
