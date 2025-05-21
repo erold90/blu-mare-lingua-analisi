@@ -7,7 +7,8 @@ interface SummerOccupancyProps {
   summerOccupancy: Array<{ name: string; occupancy: number }>;
 }
 
-export const SummerOccupancy: React.FC<SummerOccupancyProps> = ({ summerOccupancy }) => {
+// Memoize component to prevent unnecessary re-renders
+export const SummerOccupancy: React.FC<SummerOccupancyProps> = React.memo(({ summerOccupancy }) => {
   return (
     <Card>
       <CardHeader>
@@ -29,4 +30,6 @@ export const SummerOccupancy: React.FC<SummerOccupancyProps> = ({ summerOccupanc
       </CardContent>
     </Card>
   );
-};
+});
+
+SummerOccupancy.displayName = "SummerOccupancy";

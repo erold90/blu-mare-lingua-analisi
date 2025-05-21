@@ -16,7 +16,8 @@ interface GuestDistributionChartProps {
   guestDistribution: Array<{ name: string; value: number }>;
 }
 
-export const GuestDistributionChart: React.FC<GuestDistributionChartProps> = ({ guestDistribution }) => {
+// Memoize component to prevent unnecessary re-renders
+export const GuestDistributionChart: React.FC<GuestDistributionChartProps> = React.memo(({ guestDistribution }) => {
   return (
     <Card>
       <CardHeader>
@@ -62,4 +63,6 @@ export const GuestDistributionChart: React.FC<GuestDistributionChartProps> = ({ 
       </CardContent>
     </Card>
   );
-};
+});
+
+GuestDistributionChart.displayName = "GuestDistributionChart";

@@ -10,7 +10,8 @@ interface DashboardMetricsProps {
   totalRevenue: number;
 }
 
-export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
+// Memoize component to prevent unnecessary re-renders
+export const DashboardMetrics: React.FC<DashboardMetricsProps> = React.memo(({
   futureReservations,
   pendingCleanings,
   totalGuests,
@@ -83,4 +84,6 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
       </Card>
     </div>
   );
-};
+});
+
+DashboardMetrics.displayName = "DashboardMetrics";

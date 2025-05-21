@@ -16,7 +16,8 @@ interface CleaningStatsProps {
   };
 }
 
-export const CleaningStats: React.FC<CleaningStatsProps> = ({ cleaningStats }) => {
+// Memoize component to prevent unnecessary re-renders
+export const CleaningStats: React.FC<CleaningStatsProps> = React.memo(({ cleaningStats }) => {
   return (
     <Card>
       <CardHeader>
@@ -81,4 +82,6 @@ export const CleaningStats: React.FC<CleaningStatsProps> = ({ cleaningStats }) =
       </CardContent>
     </Card>
   );
-};
+});
+
+CleaningStats.displayName = "CleaningStats";

@@ -19,7 +19,9 @@ const AdminDashboardWithProvider = () => (
 );
 
 // Contenuto del dashboard che utilizza il provider
-const AdminDashboardContent = () => {
+// Memoize this component to prevent unnecessary re-renders
+const AdminDashboardContent = React.memo(() => {
+  // Use the custom hook to get dashboard data
   const {
     futureReservations,
     pendingCleanings,
@@ -75,7 +77,9 @@ const AdminDashboardContent = () => {
       />
     </div>
   );
-};
+});
+
+AdminDashboardContent.displayName = "AdminDashboardContent";
 
 // Componente di export
 const AdminDashboard = () => {

@@ -15,7 +15,8 @@ interface MonthlyReservationsChartProps {
   reservationsByMonth: Array<{ name: string; count: number }>;
 }
 
-export const MonthlyReservationsChart: React.FC<MonthlyReservationsChartProps> = ({ reservationsByMonth }) => {
+// Memoize component to prevent unnecessary re-renders
+export const MonthlyReservationsChart: React.FC<MonthlyReservationsChartProps> = React.memo(({ reservationsByMonth }) => {
   return (
     <Card className="md:col-span-2">
       <CardHeader>
@@ -68,4 +69,6 @@ export const MonthlyReservationsChart: React.FC<MonthlyReservationsChartProps> =
       </CardContent>
     </Card>
   );
-};
+});
+
+MonthlyReservationsChart.displayName = "MonthlyReservationsChart";

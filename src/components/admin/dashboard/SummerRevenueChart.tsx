@@ -15,7 +15,8 @@ interface SummerRevenueChartProps {
   summerMonthlyRevenue: Array<{ name: string; revenue: number }>;
 }
 
-export const SummerRevenueChart: React.FC<SummerRevenueChartProps> = ({ summerMonthlyRevenue }) => {
+// Memoize component to prevent unnecessary re-renders
+export const SummerRevenueChart: React.FC<SummerRevenueChartProps> = React.memo(({ summerMonthlyRevenue }) => {
   return (
     <Card className="overflow-hidden">
       <CardHeader>
@@ -62,4 +63,6 @@ export const SummerRevenueChart: React.FC<SummerRevenueChartProps> = ({ summerMo
       </CardContent>
     </Card>
   );
-};
+});
+
+SummerRevenueChart.displayName = "SummerRevenueChart";

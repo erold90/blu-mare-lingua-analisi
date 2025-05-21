@@ -11,7 +11,8 @@ interface ActiveReservationsProps {
   apartments: Apartment[];
 }
 
-export const ActiveReservations: React.FC<ActiveReservationsProps> = ({ 
+// Memoize component to prevent unnecessary re-renders
+export const ActiveReservations: React.FC<ActiveReservationsProps> = React.memo(({ 
   activeReservations, 
   apartments 
 }) => {
@@ -69,4 +70,6 @@ export const ActiveReservations: React.FC<ActiveReservationsProps> = ({
       </CardContent>
     </Card>
   );
-};
+});
+
+ActiveReservations.displayName = "ActiveReservations";

@@ -12,7 +12,8 @@ interface UpcomingMovementsProps {
   apartments: Apartment[];
 }
 
-export const UpcomingMovements: React.FC<UpcomingMovementsProps> = ({ upcomingMovements, apartments }) => {
+// Memoize component to prevent unnecessary re-renders
+export const UpcomingMovements: React.FC<UpcomingMovementsProps> = React.memo(({ upcomingMovements, apartments }) => {
   const isMobile = useIsMobile();
   
   return (
@@ -64,4 +65,6 @@ export const UpcomingMovements: React.FC<UpcomingMovementsProps> = ({ upcomingMo
       </CardContent>
     </Card>
   );
-};
+});
+
+UpcomingMovements.displayName = "UpcomingMovements";
