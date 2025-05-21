@@ -1,7 +1,17 @@
 
 import * as React from "react";
 import { NavLink, useLocation, Link, useNavigate } from "react-router-dom";
-import { Calendar, LayoutDashboard, Image, Settings, EuroIcon, History, Home, Menu } from "lucide-react";
+import { 
+  Calendar, 
+  LayoutDashboard, 
+  Image, 
+  Settings, 
+  EuroIcon, 
+  History, 
+  Home, 
+  Menu, 
+  CleaningIcon, 
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
@@ -59,6 +69,18 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         <span>Dashboard</span>
       </NavLink>
       <NavLink
+        to="/area-riservata/calendario"
+        className={({ isActive }) =>
+          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
+            isActive ? "bg-accent font-medium" : "hover:bg-muted"
+          }`
+        }
+        onClick={() => setMenuOpen(false)}
+      >
+        <Calendar className="h-5 w-5" />
+        <span>Calendario</span>
+      </NavLink>
+      <NavLink
         to="/area-riservata/prenotazioni"
         className={({ isActive }) =>
           `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
@@ -69,6 +91,18 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       >
         <Calendar className="h-5 w-5" />
         <span>Prenotazioni</span>
+      </NavLink>
+      <NavLink
+        to="/area-riservata/pulizie"
+        className={({ isActive }) =>
+          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
+            isActive ? "bg-accent font-medium" : "hover:bg-muted"
+          }`
+        }
+        onClick={() => setMenuOpen(false)}
+      >
+        <CleaningIcon className="h-5 w-5" />
+        <span>Pulizie</span>
       </NavLink>
       <NavLink
         to="/area-riservata/prezzi"
@@ -150,7 +184,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
             <h1 className="text-xl font-bold">Area Amministrazione</h1>
             <p className="text-muted-foreground text-xs hidden sm:block">
               {isActive('dashboard') ? 'Statistiche e metriche' : 
+               isActive('calendario') ? 'Calendario unificato' :
                isActive('prenotazioni') ? 'Gestione prenotazioni' : 
+               isActive('pulizie') ? 'Gestione pulizie' :
                isActive('prezzi') ? 'Gestione prezzi stagionali' :
                isActive('appartamenti') ? 'Gestione appartamenti' :
                isActive('impostazioni') ? 'Impostazioni generali' :

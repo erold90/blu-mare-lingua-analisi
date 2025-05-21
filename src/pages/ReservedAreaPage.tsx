@@ -17,6 +17,9 @@ import AdminApartments from "@/components/admin/AdminApartments";
 import AdminSettings from "@/components/admin/AdminSettings";
 import AdminLog from "@/components/admin/AdminLog";
 import AdminLayout from "@/components/admin/AdminLayout";
+// Nuovi componenti
+import AdminCalendar from "@/components/admin/calendar/AdminCalendar";
+import AdminCleaningManagement from "@/components/admin/cleaning/AdminCleaningManagement";
 
 const LoginForm = () => {
   const [username, setUsername] = React.useState("");
@@ -142,6 +145,9 @@ const ReservedAreaPage = () => {
                 <Route path="appartamenti" element={<AdminApartments />} />
                 <Route path="impostazioni" element={<AdminSettings />} />
                 <Route path="log" element={<AdminLog />} />
+                {/* Nuove route */}
+                <Route path="calendario" element={<AdminCalendar />} />
+                <Route path="pulizie" element={<AdminCleaningManagement />} />
                 <Route path="*" element={<Navigate to="/area-riservata/dashboard" />} />
               </Routes>
             </AdminLayout>
