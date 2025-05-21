@@ -30,13 +30,6 @@ declare module 'jspdf' {
     autoTable: (options: any) => AutoTableResult;
     getNumberOfPages: () => number;
   }
-  
-  // Add the missing internal methods without redefining the entire internal property
-  namespace internal {
-    function getFontSize(): number;
-    function getStringUnitWidth(text: string): number;
-    function getTextDimensions(text: string): { w: number; h: number };
-  }
 }
 
 // Re-export the PriceCalculation interface from the central location using 'export type'

@@ -22,7 +22,15 @@ import { SettingsProvider } from "./hooks/useSettings";
 import { ActivityLogProvider } from "./hooks/useActivityLog";
 import { CleaningProvider } from "./hooks/cleaning";
 
-const queryClient = new QueryClient();
+// Create a new QueryClient instance (IMPORTANT: Don't use useState or useRef here!)
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    }
+  }
+});
 
 // Component to track page views
 const PageViewTracker = () => {

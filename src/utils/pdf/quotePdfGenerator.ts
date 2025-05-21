@@ -119,14 +119,12 @@ export const generateQuotePdf = (
       textColor: [0, 0, 0],
       fontStyle: 'bold',
     },
-    margin: { left: 10, right: 10 },
-    didDrawPage: (data) => {
-      // This ensures we know where the table ends
-      yPos = data.cursor.y;
-    }
+    margin: { left: 10, right: 10 }
   });
   
-  yPos += 10;
+  // Get the end position of the table
+  const tableEndY = (doc as any).lastAutoTable.finalY || yPos + 50;
+  yPos = tableEndY + 10;
   
   // Add original total, discount, and final total
   const originalTotal = priceCalculation.totalBeforeDiscount;
