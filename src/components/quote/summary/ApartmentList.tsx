@@ -157,8 +157,8 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                     </div>
                   )}
                   
-                  {/* For single apartments, only show extended details if there are extras */}
-                  {!hasMultipleApartments && (costs.linenCost > 0 || hasPets) && (
+                  {/* For single apartments, only show extras if they exist */}
+                  {!hasMultipleApartments && (
                     <div className="grid grid-cols-2 gap-2 text-xs">
                       {costs.linenCost > 0 && (
                         <>
