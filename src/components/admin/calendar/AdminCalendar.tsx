@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useState, useMemo } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
@@ -144,28 +143,9 @@ const AdminCalendar = () => {
                   );
                 }
               }}
-              styles={{
-                day: (date) => {
-                  const dateStr = format(date, "yyyy-MM-dd");
-                  const hasBooking = specialDays[dateStr];
-                  
-                  if (!hasBooking) return {};
-                  
-                  if (selectedApartment !== "all") {
-                    const hasSelectedApartment = hasBooking.reservations.some(r => 
-                      r.apartmentIds.includes(selectedApartment)
-                    );
-                    
-                    if (!hasSelectedApartment) return {};
-                  }
-                  
-                  return {
-                    position: "relative",
-                    backgroundColor: "var(--accent)",
-                    color: "var(--accent-foreground)",
-                    borderRadius: "0.375rem"
-                  };
-                }
+              classNames={{
+                day_today: "font-bold text-primary",
+                day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
               }}
             />
           </CardContent>

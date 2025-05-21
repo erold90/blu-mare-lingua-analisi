@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useState, useEffect, useMemo } from "react";
 import { Calendar } from "@/components/ui/calendar";
@@ -10,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, isSameDay, addDays } from "date-fns";
 import { it } from "date-fns/locale";
-import { CleaningIcon, Plus, Trash, CheckCircle, CircleAlert } from "lucide-react";
+import { Brush, Plus, Trash, CheckCircle, CircleAlert } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useReservations } from "@/hooks/useReservations";
 import { CleaningProvider, useCleaningManagement, CleaningTask } from "@/hooks/useCleaningManagement";
@@ -389,34 +388,10 @@ const AdminCleaningManagementContent = () => {
                     );
                   }
                 }}
-                styles={{
-                  day: (date) => {
-                    const dateStr = format(date, "yyyy-MM-dd");
-                    const hasTask = specialDays[dateStr];
-                    
-                    if (!hasTask) return {};
-                    
-                    if (selectedApartment !== "all") {
-                      const hasSelectedApartment = hasTask.tasks.some(t => 
-                        t.apartmentId === selectedApartment
-                      );
-                      
-                      if (!hasSelectedApartment) return {};
-                    }
-                    
-                    // Controlla se ci sono attività non completate
-                    const hasPending = hasTask.tasks.some(t => 
-                      t.status !== "completed" && 
-                      (selectedApartment === "all" || t.apartmentId === selectedApartment)
-                    );
-                    
-                    return {
-                      position: "relative",
-                      backgroundColor: hasPending ? "var(--warning-50)" : "var(--success-50)",
-                      color: "var(--accent-foreground)",
-                      borderRadius: "0.375rem"
-                    };
-                  }
+                classNames={{
+                  day_today: "font-bold text-primary",
+                  day_selected: "bg-primary text-primary-foreground",
+                  day_hasCleaningTask: "bg-accent text-accent-foreground",
                 }}
                 className="rounded-md border shadow-none"
               />
