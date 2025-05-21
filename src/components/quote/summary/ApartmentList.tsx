@@ -82,6 +82,9 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
     return weeks > 1 ? `${weeks} settimane (${nights} notti)` : `${nights} notti`;
   };
 
+  // Check if we have multiple apartments
+  const hasMultipleApartments = selectedApartments.length > 1;
+
   return (
     <div className="space-y-3">
       {selectedApartments.length > 0 ? (
@@ -101,59 +104,84 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Bed className="h-3 w-3" />Posti letto:
-                    </span>
-                    <span>{apartment.beds}</span>
-                    
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <CalendarDays className="h-3 w-3" />Periodo:
-                    </span>
-                    <span>{getWeeksInfo()}</span>
-                    
-                    {costs.linenCost > 0 && (
-                      <>
-                        <span className="text-muted-foreground flex items-center gap-1">
-                          <Receipt className="h-3 w-3" />Biancheria extra:
-                        </span>
-                        <span>{costs.linenCost}€</span>
-                      </>
-                    )}
-                    
-                    {hasPets && (
-                      <>
-                        <span className="text-muted-foreground flex items-center gap-1">
-                          <PawPrint className="h-3 w-3" />Animali:
-                        </span>
-                        <span>{costs.petCost}€</span>
-                      </>
-                    )}
-                    
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <SparklesIcon className="h-3 w-3" />Pulizia finale:
-                    </span>
-                    <span className="flex items-center">
-                      <span className="text-green-500 text-[10px] mr-1">(inclusa)</span>
-                      <del>{costs.cleaningFee}€</del>
-                    </span>
-                    
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Banknote className="h-3 w-3" />Tassa soggiorno:
-                    </span>
-                    <span className="flex items-center">
-                      <span className="text-green-500 text-[10px] mr-1">(inclusa)</span>
-                      <del>{costs.touristTax}€</del>
-                    </span>
-                    
-                    <span className="text-muted-foreground font-medium flex items-center gap-1">
-                      <Euro className="h-3 w-3" />Subtotale:
-                    </span>
-                    <span className="font-medium">{costs.totalBeforeDiscount}€</span>
-                  </div>
+                  {hasMultipleApartments && (
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Bed className="h-3 w-3" />Posti letto:
+                      </span>
+                      <span>{apartment.beds}</span>
+                      
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <CalendarDays className="h-3 w-3" />Periodo:
+                      </span>
+                      <span>{getWeeksInfo()}</span>
+                      
+                      {costs.linenCost > 0 && (
+                        <>
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Receipt className="h-3 w-3" />Biancheria extra:
+                          </span>
+                          <span>{costs.linenCost}€</span>
+                        </>
+                      )}
+                      
+                      {hasPets && (
+                        <>
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <PawPrint className="h-3 w-3" />Animali:
+                          </span>
+                          <span>{costs.petCost}€</span>
+                        </>
+                      )}
+                      
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <SparklesIcon className="h-3 w-3" />Pulizia finale:
+                      </span>
+                      <span className="flex items-center">
+                        <span className="text-green-500 text-[10px] mr-1">(inclusa)</span>
+                        <del>{costs.cleaningFee}€</del>
+                      </span>
+                      
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Banknote className="h-3 w-3" />Tassa soggiorno:
+                      </span>
+                      <span className="flex items-center">
+                        <span className="text-green-500 text-[10px] mr-1">(inclusa)</span>
+                        <del>{costs.touristTax}€</del>
+                      </span>
+                      
+                      <span className="text-muted-foreground font-medium flex items-center gap-1">
+                        <Euro className="h-3 w-3" />Subtotale:
+                      </span>
+                      <span className="font-medium">{costs.totalBeforeDiscount}€</span>
+                    </div>
+                  )}
                   
-                  {/* Sconto per appartamento */}
-                  {costs.discount > 0 && (
+                  {/* For single apartments, only show extended details if there are extras */}
+                  {!hasMultipleApartments && (costs.linenCost > 0 || hasPets) && (
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      {costs.linenCost > 0 && (
+                        <>
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Receipt className="h-3 w-3" />Biancheria extra:
+                          </span>
+                          <span>{costs.linenCost}€</span>
+                        </>
+                      )}
+                      
+                      {hasPets && (
+                        <>
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <PawPrint className="h-3 w-3" />Animali:
+                          </span>
+                          <span>{costs.petCost}€</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                  
+                  {/* Sconto per appartamento - only shown for multiple apartments */}
+                  {hasMultipleApartments && costs.discount > 0 && (
                     <div className="flex justify-between items-center text-sm mt-1">
                       <div className="text-green-500 flex items-center gap-1 text-sm">
                         Sconto: <Minus className="h-3 w-3 mx-0.5" />{costs.discount}€
