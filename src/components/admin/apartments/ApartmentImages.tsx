@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ImageIcon } from "lucide-react";
 import { toast } from "sonner";
-import { imageService } from "@/utils/imageService";
+import { imageService } from "@/utils/image"; // Aggiorniamo l'import per usare la nuova struttura
 
 interface ApartmentImagesProps {
   apartmentId: string;
@@ -34,6 +34,29 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
       const normalizedId = imageService.normalizeApartmentId(apartmentId);
       console.log(`ID normalizzato dell'appartamento: ${normalizedId}`);
       
+      // Prima cerchiamo nella cache 
+      const cachedImages = imageService.getApartmentImagesFromCache(apartmentId);
+      if (cachedImages && cachedImages.length > 0) {
+        console.log(`Trovate ${cachedImages.length} immagini in cache per ${apartmentId}`);
+        setLoadedImages(cachedImages);
+        
+        // Verifichiamo che le immagini esistano ancora
+        const stillValid = await Promise.all(
+          cachedImages.map(path => imageService.checkImageExists(path))
+        );
+        
+        // Se tutte sono valide, usiamo quelle
+        if (stillValid.every(Boolean)) {
+          console.log("Tutte le immagini cached sono ancora valide");
+          setLoadedImages(cachedImages);
+          onImagesChange(apartmentId, cachedImages);
+          setIsLoading(false);
+          return;
+        } else {
+          console.log("Alcune immagini cached non sono più valide, effettuo nuova scansione");
+        }
+      }
+      
       // Percorsi assoluti con ID normalizzato (controllo entrambi i formati per compatibilità)
       const potentialPaths = [
         // Formato con ID normalizzato
@@ -42,28 +65,24 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
         ...Array.from({ length: 16 }, (_, i) => `/images/apartments/${apartmentId}/image${i+1}.jpg`)
       ];
       
-      console.log(`Percorsi da controllare:`, potentialPaths);
+      console.log(`Percorsi da controllare:`, potentialPaths.length);
       
       // Array per tenere traccia delle immagini caricate con successo
       const validImages: string[] = [];
       
-      // Controlla ogni immagine
+      // Controlla ogni immagine con un timeout per evitare blocchi
       for (const path of potentialPaths) {
         try {
-          console.log(`Verificando immagine: ${path}`);
-          
-          // Questo utilizza il servizio migliorato per verificare se l'immagine esiste
           const exists = await imageService.checkImageExists(path);
           
           if (exists) {
             console.log(`✅ Immagine trovata: ${path}`);
             validImages.push(path);
             
-            // Debug aggiuntivo - forza il caricamento dell'immagine
-            await imageService.forceReloadImage(path);
+            // Forza il precaricamento dell'immagine in background
+            imageService.preloadImage(path);
             
             // Evitiamo duplicati (se troviamo l'immagine in un formato, non cerchiamo nell'altro)
-            // ad es. se troviamo image1.jpg nel formato normalizzato, saltiamo la ricerca nel formato originale
             const baseName = path.split('/').pop();
             if (baseName) {
               const otherPathsWithSameBaseName = potentialPaths.filter(p => 
@@ -77,8 +96,6 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
                 }
               }
             }
-          } else {
-            console.log(`❌ Immagine non trovata: ${path}`);
           }
         } catch (error) {
           console.error(`Errore nel controllare l'immagine ${path}:`, error);
@@ -91,11 +108,13 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
         // Debug per entrambi i formati di percorso
         await imageService.debugImage(`/images/apartments/${normalizedId}/image1.jpg`);
         await imageService.debugImage(`/images/apartments/${apartmentId}/image1.jpg`);
-        
-        // Provo anche il percorso diretto nella cartella apartments
-        await imageService.debugImage(`/images/apartments/image1.jpg`);
       } else {
         console.log(`Trovate ${validImages.length} immagini valide per ${apartmentId}`);
+        
+        // Salva nella cache per future richieste
+        if (validImages.length > 0) {
+          imageService.cacheApartmentImages(apartmentId, validImages);
+        }
       }
       
       setLoadedImages(validImages);
@@ -136,6 +155,9 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
     setIsLoading(true);
     toast.info("Ricerca immagini in corso...");
     
+    // Rimuoviamo prima le immagini dalla cache
+    imageService.cacheApartmentImages(apartmentId, []);
+    
     // Utilizziamo il normalizeApartmentId per assicurarci che il formato sia corretto
     const normalizedId = imageService.normalizeApartmentId(apartmentId);
     
@@ -153,6 +175,8 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
     // Controlla ogni immagine forzando il bypass della cache
     for (const path of potentialPaths) {
       try {
+        // Forziamo il reload per bypassare la cache
+        await imageService.forceReloadImage(path);
         const exists = await imageService.checkImageExists(path);
         
         if (exists) {
@@ -182,6 +206,11 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
     }
     
     setLoadedImages(validImages);
+    
+    // Salva nella cache per future richieste
+    if (validImages.length > 0) {
+      imageService.cacheApartmentImages(apartmentId, validImages);
+    }
       
     // Aggiorna il componente padre se abbiamo trovato immagini valide
     if (validImages.length > 0 && onImagesChange) {
