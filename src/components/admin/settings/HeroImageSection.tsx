@@ -9,23 +9,34 @@ import { useSettings } from "@/hooks/useSettings";
 import { ImagePositioner } from "./ImagePositioner";
 
 export const HeroImageSection = () => {
-  const { siteSettings, updateSiteSettings } = useSettings();
+  const { siteSettings, updateSiteSettings, saveImageToStorage, deleteImageFromStorage } = useSettings();
   const [imagePreviewPosition, setImagePreviewPosition] = React.useState(siteSettings.heroImagePosition || "center");
   
   React.useEffect(() => {
     setImagePreviewPosition(siteSettings.heroImagePosition || "center");
   }, [siteSettings.heroImagePosition]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
-    // In a real app, you would upload the file to a server and get back a URL
-    // For this demo, we'll use local file URLs
     const file = e.target.files[0];
-    const objectURL = URL.createObjectURL(file);
     
-    updateSiteSettings({ heroImage: objectURL });
-    toast.success("Immagine hero aggiornata");
+    try {
+      // Delete the old hero image if it exists and is a storage path
+      if (siteSettings.heroImage && siteSettings.heroImage.startsWith('/storage/')) {
+        deleteImageFromStorage(siteSettings.heroImage);
+      }
+      
+      // Save the new image
+      const storagePath = await saveImageToStorage(file, 'hero');
+      
+      // Update settings with the new path
+      updateSiteSettings({ heroImage: storagePath });
+      toast.success("Immagine hero aggiornata");
+    } catch (error) {
+      console.error('Error uploading hero image:', error);
+      toast.error(`Errore durante il caricamento dell'immagine: ${(error as Error).message}`);
+    }
   };
 
   const handlePositionChange = (position: string) => {
@@ -36,6 +47,19 @@ export const HeroImageSection = () => {
 
   const isValidImage = (url: string) => {
     return url && !url.includes("placeholder.svg");
+  };
+
+  // Helper to get the actual URL for an image path
+  const getImageUrl = (path: string): string => {
+    if (!path || path.includes("placeholder")) return path;
+    
+    if (path.startsWith('/storage/')) {
+      // Get the URL from our image storage
+      const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+      return imageStorage[path] || path;
+    }
+    
+    return path;
   };
 
   return (
@@ -51,7 +75,7 @@ export const HeroImageSection = () => {
           <div>
             {isValidImage(siteSettings.heroImage) ? (
               <ImagePositioner
-                imageUrl={siteSettings.heroImage}
+                imageUrl={getImageUrl(siteSettings.heroImage)}
                 currentPosition={imagePreviewPosition}
                 onPositionChange={handlePositionChange}
               />

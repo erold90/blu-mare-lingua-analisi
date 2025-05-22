@@ -9,7 +9,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { Image as ImageIcon } from "lucide-react";
 
 export const SocialMediaTab = () => {
-  const { siteSettings, updateSiteSettings } = useSettings();
+  const { siteSettings, updateSiteSettings, saveImageToStorage, deleteImageFromStorage } = useSettings();
   
   const [formData, setFormData] = React.useState({
     siteName: siteSettings.siteName || "Villa MareBlu",
@@ -39,15 +39,41 @@ export const SocialMediaTab = () => {
     toast.success("Impostazioni social media salvate");
   };
 
-  const handleImageUpload = (field: 'socialImage' | 'favicon') => (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (field: 'socialImage' | 'favicon') => async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
-    // In a real app, you would upload the file to a server and get back a URL
     const file = e.target.files[0];
-    const objectURL = URL.createObjectURL(file);
     
-    updateSiteSettings({ [field]: objectURL });
-    toast.success(field === 'socialImage' ? "Immagine social aggiornata" : "Favicon aggiornata");
+    try {
+      // First, delete the old image if it exists and is a storage path
+      const currentImage = siteSettings[field];
+      if (currentImage && currentImage.startsWith('/storage/')) {
+        deleteImageFromStorage(currentImage);
+      }
+      
+      // Now save the new image
+      const storagePath = await saveImageToStorage(file, field);
+      
+      // Update settings with the new path
+      updateSiteSettings({ [field]: storagePath });
+      toast.success(field === 'socialImage' ? "Immagine social aggiornata" : "Favicon aggiornata");
+    } catch (error) {
+      console.error(`Error uploading ${field}:`, error);
+      toast.error(`Errore durante il caricamento dell'immagine: ${(error as Error).message}`);
+    }
+  };
+
+  // This helper resolves image paths to their display URLs
+  const getImageUrl = (path: string): string => {
+    if (!path || path.includes("placeholder")) return path;
+    
+    if (path.startsWith('/storage/')) {
+      // Get the URL from our image storage
+      const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+      return imageStorage[path] || path;
+    }
+    
+    return path;
   };
 
   return (
@@ -94,7 +120,7 @@ export const SocialMediaTab = () => {
               <div className="flex-shrink-0 w-20 h-20 rounded-md border overflow-hidden bg-muted">
                 {siteSettings.socialImage && !siteSettings.socialImage.includes("placeholder") ? (
                   <img 
-                    src={siteSettings.socialImage} 
+                    src={getImageUrl(siteSettings.socialImage)} 
                     alt="Social preview" 
                     className="w-full h-full object-cover" 
                   />
@@ -132,7 +158,7 @@ export const SocialMediaTab = () => {
               <div className="flex-shrink-0 w-10 h-10 rounded-md border overflow-hidden bg-muted">
                 {siteSettings.favicon && !siteSettings.favicon.includes("favicon.ico") ? (
                   <img 
-                    src={siteSettings.favicon} 
+                    src={getImageUrl(siteSettings.favicon)} 
                     alt="Favicon" 
                     className="w-full h-full object-cover" 
                   />
@@ -182,7 +208,7 @@ export const SocialMediaTab = () => {
             <div className="bg-[#f0f0f0] p-3 border-b">
               <div className="flex items-center">
                 {siteSettings.favicon && !siteSettings.favicon.includes("favicon.ico") ? (
-                  <img src={siteSettings.favicon} alt="Site icon" className="w-8 h-8 rounded mr-2" />
+                  <img src={getImageUrl(siteSettings.favicon)} alt="Site icon" className="w-8 h-8 rounded mr-2" />
                 ) : (
                   <div className="w-8 h-8 bg-primary/20 rounded mr-2 flex items-center justify-center">
                     <span className="text-primary text-xs">VM</span>
@@ -198,7 +224,7 @@ export const SocialMediaTab = () => {
               {siteSettings.socialImage && !siteSettings.socialImage.includes("placeholder") ? (
                 <div className="aspect-[1.91/1] overflow-hidden">
                   <img 
-                    src={siteSettings.socialImage} 
+                    src={getImageUrl(siteSettings.socialImage)} 
                     alt="Social preview" 
                     className="w-full h-full object-cover" 
                   />

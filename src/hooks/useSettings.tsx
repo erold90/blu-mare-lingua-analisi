@@ -27,6 +27,8 @@ interface SettingsContextType {
   addBlockedDateRange: (start: string, end: string) => void;
   removeBlockedDateRange: (index: number) => void;
   isDateBlocked: (date: Date) => boolean;
+  saveImageToStorage: (file: File, category: 'hero' | 'home' | 'social' | 'favicon') => Promise<string>;
+  deleteImageFromStorage: (imagePath: string) => void;
 }
 
 const defaultSiteSettings: SiteSettings = {
@@ -75,6 +77,57 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return defaultAdminSettings;
   });
   
+  // Function to generate a unique filename
+  const generateUniqueFilename = (file: File, category: string): string => {
+    const timestamp = new Date().getTime();
+    const extension = file.name.split('.').pop();
+    return `${category}_${timestamp}.${extension}`;
+  };
+  
+  // Function to save image to storage
+  const saveImageToStorage = async (file: File, category: 'hero' | 'home' | 'social' | 'favicon'): Promise<string> => {
+    // Create a unique filename
+    const filename = generateUniqueFilename(file, category);
+    
+    // In a real app, we would upload to a server here
+    // For this demo, we'll use local storage with a persistent path convention
+    const objectURL = URL.createObjectURL(file);
+    
+    // Store the mapping between the objectURL and the permanent path
+    const storagePath = `/storage/${category}/${filename}`;
+    
+    // Save the mapping in localStorage (this simulates our "database")
+    const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+    imageStorage[storagePath] = objectURL;
+    localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
+    
+    return storagePath;
+  };
+  
+  // Function to delete image from storage
+  const deleteImageFromStorage = (imagePath: string): void => {
+    if (!imagePath || !imagePath.startsWith('/storage/')) return;
+    
+    const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+    
+    // If we have a blob URL stored for this path, revoke it
+    if (imageStorage[imagePath] && imageStorage[imagePath].startsWith('blob:')) {
+      URL.revokeObjectURL(imageStorage[imagePath]);
+    }
+    
+    // Remove from our storage mapping
+    delete imageStorage[imagePath];
+    localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
+  };
+  
+  // Replace object URLs with permanent paths when rendering
+  const resolveImagePath = (path: string): string => {
+    if (!path || !path.startsWith('/storage/')) return path;
+    
+    const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+    return imageStorage[path] || path;
+  };
+
   // Save settings to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("siteSettings", JSON.stringify(siteSettings));
@@ -135,9 +188,14 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [siteSettings.siteName, siteSettings.siteDescription, siteSettings.socialImage, siteSettings.favicon]);
   
+  // Override the updateSiteSettings function to handle image paths
   const updateSiteSettings = (settings: Partial<SiteSettings>) => {
     setSiteSettings(prev => {
-      const updated = { ...prev, ...settings };
+      // Handle special case for homeImages array (resolve all paths)
+      const updatedSettings = { ...settings };
+      
+      // Create the updated settings
+      const updated = { ...prev, ...updatedSettings };
       return updated;
     });
   };
@@ -200,7 +258,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       removeBlockedDate,
       addBlockedDateRange,
       removeBlockedDateRange,
-      isDateBlocked
+      isDateBlocked,
+      saveImageToStorage,
+      deleteImageFromStorage
     }}>
       {children}
     </SettingsContext.Provider>

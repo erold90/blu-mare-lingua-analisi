@@ -11,32 +11,52 @@ import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export const HomeImagesSection = () => {
-  const { siteSettings, updateSiteSettings } = useSettings();
+  const { siteSettings, updateSiteSettings, saveImageToStorage, deleteImageFromStorage } = useSettings();
   const isMobile = useIsMobile();
   const [previewImage, setPreviewImage] = React.useState<string | null>(null);
   
   // Assicurati che homeImages esista
   const homeImages = siteSettings.homeImages || [];
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
-    // In a real app, you would upload the file to a server and get back a URL
     const file = e.target.files[0];
-    const objectURL = URL.createObjectURL(file);
     
-    // Aggiungi la nuova immagine alla lista
-    updateSiteSettings({ 
-      homeImages: [...homeImages, objectURL] 
-    });
-    
-    toast.success("Immagine aggiunta");
+    try {
+      // Save the new image
+      const storagePath = await saveImageToStorage(file, 'home');
+      
+      // Update settings with the new path
+      updateSiteSettings({ 
+        homeImages: [...homeImages, storagePath] 
+      });
+      
+      toast.success("Immagine aggiunta");
+    } catch (error) {
+      console.error('Error uploading home image:', error);
+      toast.error(`Errore durante il caricamento dell'immagine: ${(error as Error).message}`);
+    }
   };
 
   const removeImage = (index: number) => {
+    const imagePath = homeImages[index];
+    
+    // Delete the image from storage if it's a storage path
+    if (imagePath && imagePath.startsWith('/storage/')) {
+      deleteImageFromStorage(imagePath);
+    }
+    
+    // Update the list
     const newImages = [...homeImages];
     newImages.splice(index, 1);
     updateSiteSettings({ homeImages: newImages });
+    
+    // Reset preview if this was the image being previewed
+    if (previewImage === getImageUrl(imagePath)) {
+      setPreviewImage(null);
+    }
+    
     toast.success("Immagine rimossa");
   };
 
@@ -56,6 +76,19 @@ export const HomeImagesSection = () => {
     
     updateSiteSettings({ homeImages: newImages });
     toast.success(`Immagine spostata ${direction === 'up' ? 'su' : 'giù'}`);
+  };
+  
+  // Helper to get the actual URL for an image path
+  const getImageUrl = (path: string): string => {
+    if (!path || path.includes("placeholder")) return path;
+    
+    if (path.startsWith('/storage/')) {
+      // Get the URL from our image storage
+      const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+      return imageStorage[path] || path;
+    }
+    
+    return path;
   };
 
   const ImagePreviewContent = () => (
@@ -101,17 +134,17 @@ export const HomeImagesSection = () => {
                 <p className="text-sm text-muted-foreground">Nessuna immagine caricata</p>
               </div>
             ) : (
-              homeImages.map((image, index) => (
+              homeImages.map((imagePath, index) => (
                 <div 
                   key={index} 
                   className="flex items-center gap-3 border rounded-md p-2 bg-card"
                 >
                   <div 
                     className="w-24 h-16 bg-muted rounded-sm overflow-hidden cursor-pointer"
-                    onClick={() => setPreviewImage(image)}
+                    onClick={() => setPreviewImage(getImageUrl(imagePath))}
                   >
                     <img 
-                      src={image} 
+                      src={getImageUrl(imagePath)} 
                       alt={`Immagine ${index + 1}`} 
                       className="w-full h-full object-cover" 
                     />
