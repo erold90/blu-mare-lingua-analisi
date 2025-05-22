@@ -13,6 +13,13 @@ import {
 } from "./formatUtils";
 import { generateQuotePdf } from "./quotePdfGenerator";
 
+// Add this line to ensure autoTable is available in this file
+declare module "jspdf" {
+  interface jsPDF {
+    autoTable: (options: any) => any;
+  }
+}
+
 /**
  * Main function to create and download the quote PDF
  * @param formData - Form data from the quote form

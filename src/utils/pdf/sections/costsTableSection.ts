@@ -6,6 +6,13 @@ import { PriceCalculation } from "@/utils/price/types";
 import { Apartment } from "@/data/apartments";
 import { createSection } from "../formatUtils";
 
+// Add this line to ensure autoTable is available
+declare module "jspdf" {
+  interface jsPDF {
+    autoTable: (options: any) => any;
+  }
+}
+
 /**
  * Generate the cost details table section of the quote
  * @param doc - PDF document

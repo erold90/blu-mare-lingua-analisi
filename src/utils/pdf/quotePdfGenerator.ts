@@ -13,6 +13,13 @@ import { generateTotalsSection } from "./sections/totalsSection";
 import { generateSecurityDepositSection } from "./sections/securityDepositSection";
 import { generateTermsSection } from "./sections/termsSection";
 
+// Add this line to explicitly augment jsPDF type with autoTable
+declare module "jspdf" {
+  interface jsPDF {
+    autoTable: (options: any) => any;
+  }
+}
+
 // Generate a minimalist quote PDF based on the provided example
 export const generateQuotePdf = (
   formData: FormValues, 
