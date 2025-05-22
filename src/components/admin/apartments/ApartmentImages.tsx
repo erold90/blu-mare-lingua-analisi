@@ -10,6 +10,7 @@ import { Camera, X, Move, CheckCircle, ImageIcon, Loader2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { saveImage, getImage } from "@/utils/imageStorage";
 import { deleteImageEverywhere, syncImageToServer } from "@/utils/imageManager";
+import { loadImageFromCloud } from "@/utils/cloudImageSync";
 
 interface ApartmentImagesProps {
   apartmentId: string;
