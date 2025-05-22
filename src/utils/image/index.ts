@@ -92,6 +92,34 @@ class ImageService {
   debugImage(path: string): Promise<void> {
     return imageLoaderService.debugImage(path);
   }
+
+  /**
+   * Update favicon in document
+   */
+  updateFavicon(faviconPath: string): void {
+    if (!faviconPath) return;
+    
+    console.log("Updating favicon to:", faviconPath);
+    
+    // Get all existing favicon links
+    const existingFavicons = document.querySelectorAll('link[rel="icon"]');
+    
+    // If there are existing favicons, update the href of the first one
+    if (existingFavicons.length > 0) {
+      const firstFavicon = existingFavicons[0] as HTMLLinkElement;
+      firstFavicon.href = this.getImageUrl(faviconPath);
+      console.log("Updated existing favicon link");
+      return;
+    }
+    
+    // If no favicon exists, create a new one
+    const link = document.createElement('link');
+    link.rel = 'icon';
+    link.href = this.getImageUrl(faviconPath);
+    link.type = faviconPath.endsWith('.ico') ? 'image/x-icon' : 'image/png';
+    document.head.appendChild(link);
+    console.log("Created new favicon link");
+  }
 }
 
 // Export single instance

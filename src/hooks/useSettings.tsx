@@ -242,17 +242,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         if (twitterImage) twitterImage.setAttribute('content', siteSettings.socialImage);
       }
       
-      // Update favicon if changed
+      // Update favicon with our improved method
       if (siteSettings.favicon && siteSettings.favicon !== '/favicon.ico') {
-        const faviconLink = document.querySelector('link[rel="icon"]');
-        if (faviconLink) {
-          faviconLink.setAttribute('href', siteSettings.favicon);
-        } else {
-          const newLink = document.createElement('link');
-          newLink.rel = 'icon';
-          newLink.href = siteSettings.favicon;
-          document.head.appendChild(newLink);
-        }
+        import('../utils/image').then(({ imageService }) => {
+          imageService.updateFavicon(siteSettings.favicon);
+        });
       }
     }
   }, [siteSettings.siteName, siteSettings.siteDescription, siteSettings.socialImage, siteSettings.favicon]);
