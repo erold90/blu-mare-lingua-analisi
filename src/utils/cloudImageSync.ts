@@ -1,20 +1,17 @@
-
 // This module enables cross-device sharing of images by syncing with a cloud storage provider
-// For now, we'll implement a simplified version that uses localStorage for immediate testing
-// In a production environment, this would be replaced with a proper cloud storage solution
+// In this implementation, we use a PHP API hosted on Aruba Linux Hosting
 
 import { toast } from "sonner";
 import { getStorageSize, getImage, StoredImage } from "./imageStorage";
 
-// Prefix for local storage keys
+// API endpoint base URL (modificare con il tuo dominio)
+const API_ENDPOINT = "https://tuodominio.it/api/images";
+
+// Prefix for image identifiers
 const CLOUD_SYNC_PREFIX = "villa_mareblu_cloud_";
 
-// Maximum allowed size for localStorage (approximately 5MB)
-const MAX_LOCAL_STORAGE_SIZE = 5 * 1024 * 1024;
-
 /**
- * Saves an image to cloud storage (currently localStorage)
- * In production, this would be replaced with an actual cloud storage API call
+ * Saves an image to cloud storage via API
  */
 export const saveImageToCloud = async (path: string): Promise<boolean> => {
   try {
@@ -30,38 +27,35 @@ export const saveImageToCloud = async (path: string): Promise<boolean> => {
       return false;
     }
     
-    // For testing: Store in localStorage (limited by browser)
-    // In production, this would be an API call to a cloud storage provider
-    try {
-      localStorage.setItem(`${CLOUD_SYNC_PREFIX}${path}`, JSON.stringify({
-        path: image.path,
-        data: image.data,
-        category: image.category,
-        timestamp: Date.now()
-      }));
-      
-      console.log("Image synced to cloud storage:", path);
+    // Prepare data for API
+    const formData = new FormData();
+    formData.append('action', 'save');
+    formData.append('path', path);
+    formData.append('data', image.data);
+    formData.append('category', image.category || 'general');
+    formData.append('timestamp', Date.now().toString());
+    
+    // Send to server via fetch API
+    const response = await fetch(`${API_ENDPOINT}/store.php`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Server responded with ${response.status}: ${await response.text()}`);
+    }
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log("Image successfully synced to cloud storage:", path);
       return true;
-    } catch (error) {
-      console.error("Error storing image in localStorage (probably size limit):", error);
-      // Clean up older images if we hit storage limits
-      cleanupOldCloudImages();
-      try {
-        // Try again after cleanup
-        localStorage.setItem(`${CLOUD_SYNC_PREFIX}${path}`, JSON.stringify({
-          path: image.path,
-          data: image.data,
-          category: image.category,
-          timestamp: Date.now()
-        }));
-        return true;
-      } catch (retryError) {
-        console.error("Still could not save to localStorage after cleanup:", retryError);
-        return false;
-      }
+    } else {
+      throw new Error(result.message || "Unknown error storing image");
     }
   } catch (error) {
     console.error("Error syncing image to cloud:", error);
+    toast.error("Errore nel salvataggio dell'immagine: " + (error as Error).message);
     return false;
   }
 };
@@ -69,21 +63,28 @@ export const saveImageToCloud = async (path: string): Promise<boolean> => {
 /**
  * Loads an image from cloud storage
  */
-export const loadImageFromCloud = (path: string): string | null => {
+export const loadImageFromCloud = async (path: string): Promise<string | null> => {
   try {
     // Skip if not a stored image
     if (!path || !path.startsWith('/upload/')) {
       return null;
     }
     
-    // Get from localStorage
-    const storedData = localStorage.getItem(`${CLOUD_SYNC_PREFIX}${path}`);
-    if (!storedData) {
-      return null;
+    // Request image from server
+    const response = await fetch(`${API_ENDPOINT}/retrieve.php?path=${encodeURIComponent(path)}`);
+    
+    if (!response.ok) {
+      throw new Error(`Server responded with ${response.status}`);
     }
     
-    const imageData = JSON.parse(storedData);
-    return imageData.data || null;
+    const result = await response.json();
+    
+    if (result.success && result.data) {
+      console.log("Image loaded from cloud storage:", path);
+      return result.data;
+    }
+    
+    return null;
   } catch (error) {
     console.error("Error loading image from cloud:", error);
     return null;
@@ -93,10 +94,22 @@ export const loadImageFromCloud = (path: string): string | null => {
 /**
  * Checks if an image exists in cloud storage
  */
-export const isImageInCloud = (path: string): boolean => {
+export const isImageInCloud = async (path: string): Promise<boolean> => {
   try {
-    return !!localStorage.getItem(`${CLOUD_SYNC_PREFIX}${path}`);
+    if (!path || !path.startsWith('/upload/')) {
+      return false;
+    }
+    
+    const response = await fetch(`${API_ENDPOINT}/check.php?path=${encodeURIComponent(path)}`);
+    
+    if (!response.ok) {
+      return false;
+    }
+    
+    const result = await response.json();
+    return result.exists === true;
   } catch (error) {
+    console.error("Error checking image in cloud:", error);
     return false;
   }
 };
@@ -104,54 +117,33 @@ export const isImageInCloud = (path: string): boolean => {
 /**
  * Removes older images from cloud storage when reaching storage limits
  */
-export const cleanupOldCloudImages = (): void => {
+export const cleanupOldCloudImages = async (): Promise<void> => {
   try {
-    // Get all cloud-synced images
-    const cloudImages: {path: string, timestamp: number}[] = [];
+    const response = await fetch(`${API_ENDPOINT}/cleanup.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        action: 'cleanup',
+        maxImages: 50 // Imposta il numero massimo di immagini da mantenere
+      })
+    });
     
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(CLOUD_SYNC_PREFIX)) {
-        try {
-          const data = JSON.parse(localStorage.getItem(key) || "{}");
-          cloudImages.push({
-            path: key.replace(CLOUD_SYNC_PREFIX, ""),
-            timestamp: data.timestamp || 0
-          });
-        } catch (e) {
-          // Skip invalid entries
-        }
-      }
+    if (!response.ok) {
+      throw new Error(`Server responded with ${response.status}`);
     }
     
-    // Sort by timestamp (oldest first)
-    cloudImages.sort((a, b) => a.timestamp - b.timestamp);
+    const result = await response.json();
     
-    // Remove oldest images until we're under the storage limit
-    while (cloudImages.length > 0 && getLocalStorageSize() > MAX_LOCAL_STORAGE_SIZE * 0.8) {
-      const oldest = cloudImages.shift();
-      if (oldest) {
-        localStorage.removeItem(`${CLOUD_SYNC_PREFIX}${oldest.path}`);
-        console.log("Removed old image from cloud storage:", oldest.path);
-      }
+    if (result.success) {
+      console.log(`Cleaned up ${result.removedCount || 0} old images from cloud storage`);
+    } else {
+      console.error("Error during cleanup:", result.message);
     }
   } catch (error) {
     console.error("Error cleaning up cloud images:", error);
   }
-};
-
-/**
- * Gets the current size of localStorage in bytes
- */
-const getLocalStorageSize = (): number => {
-  let totalSize = 0;
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key) {
-      totalSize += (localStorage.getItem(key) || "").length * 2; // Approximate: 2 bytes per character
-    }
-  }
-  return totalSize;
 };
 
 /**
@@ -160,16 +152,6 @@ const getLocalStorageSize = (): number => {
 export const syncAllImages = async (): Promise<void> => {
   try {
     console.log("Starting cloud image synchronization");
-    
-    // Check localStorage available space
-    const availableSpace = MAX_LOCAL_STORAGE_SIZE - getLocalStorageSize();
-    if (availableSpace < 1 * 1024 * 1024) { // Less than 1MB
-      cleanupOldCloudImages();
-    }
-    
-    // To better support cross-device functionality, we'll sync all
-    // images from IndexedDB to cloud storage (localStorage)
-    // This function is called when the app starts
     
     // 1. Get all critical images (home, hero, social, favicon)
     const categories = ['home', 'hero', 'social', 'favicon'];
@@ -198,6 +180,7 @@ export const syncAllImages = async (): Promise<void> => {
           
           if (syncCount > 0) {
             console.log(`Synced ${syncCount} images to cloud storage`);
+            toast.success(`Sincronizzate ${syncCount} immagini con il cloud`);
           }
         };
         
@@ -238,4 +221,3 @@ const openIndexedDB = (): Promise<IDBDatabase> => {
     };
   });
 };
-
