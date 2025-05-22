@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // Chiave per il localStorage per la cache delle immagini
@@ -345,6 +344,74 @@ class ImageService {
       window.dispatchEvent(new CustomEvent("apartmentImagesUpdated"));
     } catch (error) {
       console.error("Errore nel salvare le immagini in cache:", error);
+    }
+  }
+  
+  // Debug di un'immagine - aggiunge informazioni dettagliate sul percorso e disponibilità
+  async debugImage(path: string): Promise<void> {
+    console.log(`Debugging image path: ${path}`);
+    
+    try {
+      // Verifica se il path è assoluto o relativo
+      const isAbsolutePath = path.startsWith('/');
+      console.log(`Image path type: ${isAbsolutePath ? 'absolute' : 'relative'}`);
+      
+      // Costruisci il percorso completo per il controllo
+      const checkPath = isAbsolutePath ? path : `/${path}`;
+      console.log(`Full check path: ${checkPath}`);
+      
+      // Verifica se l'immagine esiste nella cache
+      const cachedStatus = this.imageExistenceCache.has(path);
+      console.log(`Image in cache: ${cachedStatus ? 'yes' : 'no'}`);
+      
+      if (cachedStatus) {
+        const exists = this.imageExistenceCache.get(path);
+        console.log(`Cached status: image ${exists ? 'exists' : 'does not exist'}`);
+      }
+      
+      // Esegue un controllo diretto con fetch per verificare l'esistenza
+      const timestamp = new Date().getTime();
+      const urlWithTimestamp = `${path}?t=${timestamp}`;
+      
+      console.log(`Checking image with URL: ${urlWithTimestamp}`);
+      
+      try {
+        const response = await fetch(urlWithTimestamp, { 
+          method: 'HEAD',
+          cache: 'no-store',
+          headers: { 
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
+        });
+        
+        console.log(`Fetch response status: ${response.status} (${response.ok ? 'OK' : 'Failed'})`);
+        console.log(`Response headers:`, Object.fromEntries(response.headers.entries()));
+        
+      } catch (fetchError) {
+        console.error(`Fetch error while checking image:`, fetchError);
+      }
+      
+      // Verifica anche con Image.onload
+      console.log(`Testing image loading with Image constructor...`);
+      const imgTestPromise = new Promise<boolean>((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          console.log(`Image loaded successfully via Image constructor`);
+          resolve(true);
+        };
+        img.onerror = (error) => {
+          console.error(`Failed to load image via Image constructor:`, error);
+          resolve(false);
+        };
+        img.src = urlWithTimestamp;
+      });
+      
+      const imageLoaded = await imgTestPromise;
+      console.log(`Final image load test result: ${imageLoaded ? 'Success' : 'Failed'}`);
+      
+    } catch (error) {
+      console.error(`Error during image debugging for ${path}:`, error);
     }
   }
 }
