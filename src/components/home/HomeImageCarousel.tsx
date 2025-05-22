@@ -86,20 +86,25 @@ export const HomeImageCarousel = () => {
                 });
               } else {
                 // Try from cloud storage as fallback
-                const cloudData = loadImageFromCloud(path);
-                
-                if (cloudData) {
-                  loadedImageData[path] = cloudData;
-                  setLoadingStatus(prev => ({...prev, [path]: 'loaded'}));
+                try {
+                  const cloudData = await loadImageFromCloud(path);
                   
-                  // Update loading state for this image
-                  setImagesLoaded(prev => {
-                    const newState = [...prev];
-                    newState[index] = true;
-                    return newState;
-                  });
-                } else {
-                  console.error(`Image not found in any storage: ${path}`);
+                  if (cloudData) {
+                    loadedImageData[path] = cloudData;
+                    setLoadingStatus(prev => ({...prev, [path]: 'loaded'}));
+                    
+                    // Update loading state for this image
+                    setImagesLoaded(prev => {
+                      const newState = [...prev];
+                      newState[index] = true;
+                      return newState;
+                    });
+                  } else {
+                    console.error(`Image not found in any storage: ${path}`);
+                    setLoadingStatus(prev => ({...prev, [path]: 'error'}));
+                  }
+                } catch (cloudError) {
+                  console.error(`Error loading image from cloud: ${path}`, cloudError);
                   setLoadingStatus(prev => ({...prev, [path]: 'error'}));
                 }
               }

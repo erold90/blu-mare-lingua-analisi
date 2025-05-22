@@ -230,34 +230,39 @@ export const getImage = async (path: string): Promise<StoredImage | null> => {
         reject(request.error);
       };
       
-      request.onsuccess = () => {
+      request.onsuccess = async () => {
         const imageData = request.result;
         
         if (imageData) {
           resolve(imageData);
         } else {
           // If not found in IndexedDB, try to get from cloud storage
-          const cloudData = loadImageFromCloud(path);
-          
-          if (cloudData) {
-            // Create a temporary StoredImage object from cloud data
-            const tempImage: StoredImage = {
-              id: path.split('_')[1] || Date.now().toString(),
-              path,
-              data: cloudData,
-              category: path.split('_')[0].replace('/upload/', '') as ImageCategory,
-              fileName: path.split('_').slice(2).join('_'),
-              createdAt: parseInt(path.split('_')[1]) || Date.now()
-            };
+          try {
+            const cloudData = await loadImageFromCloud(path);
             
-            // Save to IndexedDB for future use
-            const saveTransaction = db.transaction([STORE_NAME], 'readwrite');
-            const saveStore = saveTransaction.objectStore(STORE_NAME);
-            saveStore.put(tempImage);
-            
-            console.log("Image loaded from cloud and saved to IndexedDB:", path);
-            resolve(tempImage);
-          } else {
+            if (cloudData) {
+              // Create a temporary StoredImage object from cloud data
+              const tempImage: StoredImage = {
+                id: path.split('_')[1] || Date.now().toString(),
+                path,
+                data: cloudData,
+                category: path.split('_')[0].replace('/upload/', '') as ImageCategory,
+                fileName: path.split('_').slice(2).join('_'),
+                createdAt: parseInt(path.split('_')[1]) || Date.now()
+              };
+              
+              // Save to IndexedDB for future use
+              const saveTransaction = db.transaction([STORE_NAME], 'readwrite');
+              const saveStore = saveTransaction.objectStore(STORE_NAME);
+              saveStore.put(tempImage);
+              
+              console.log("Image loaded from cloud and saved to IndexedDB:", path);
+              resolve(tempImage);
+            } else {
+              resolve(null);
+            }
+          } catch (cloudError) {
+            console.error('Error retrieving image from cloud:', cloudError);
             resolve(null);
           }
         }
@@ -271,20 +276,24 @@ export const getImage = async (path: string): Promise<StoredImage | null> => {
     console.error('Error retrieving image:', error);
     
     // As a last resort, try to get from cloud storage
-    const cloudData = loadImageFromCloud(path);
-    
-    if (cloudData) {
-      // Create a temporary StoredImage object from cloud data
-      const tempImage: StoredImage = {
-        id: path.split('_')[1] || Date.now().toString(),
-        path,
-        data: cloudData,
-        category: path.split('_')[0].replace('/upload/', '') as ImageCategory,
-        fileName: path.split('_').slice(2).join('_'),
-        createdAt: parseInt(path.split('_')[1]) || Date.now()
-      };
+    try {
+      const cloudData = await loadImageFromCloud(path);
       
-      return tempImage;
+      if (cloudData) {
+        // Create a temporary StoredImage object from cloud data
+        const tempImage: StoredImage = {
+          id: path.split('_')[1] || Date.now().toString(),
+          path,
+          data: cloudData,
+          category: path.split('_')[0].replace('/upload/', '') as ImageCategory,
+          fileName: path.split('_').slice(2).join('_'),
+          createdAt: parseInt(path.split('_')[1]) || Date.now()
+        };
+        
+        return tempImage;
+      }
+    } catch (cloudError) {
+      console.error('Error retrieving image from cloud as fallback:', cloudError);
     }
     
     return null;

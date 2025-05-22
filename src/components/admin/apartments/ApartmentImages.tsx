@@ -56,33 +56,37 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
               imageData[path] = storedImage.data;
             } else {
               // Try cloud storage as fallback
-              const cloudData = loadImageFromCloud(path);
-              if (cloudData) {
-                imageData[path] = cloudData;
-                
-                // Save to IndexedDB for future use
-                try {
-                  const imageObj = {
-                    path,
-                    data: cloudData,
-                    category: 'home', // Default category for apartment images
-                    fileName: path.split('_').slice(2).join('_'),
-                    createdAt: parseInt(path.split('_')[1]) || Date.now(),
-                    id: path.split('_')[1] || Date.now().toString()
-                  };
+              try {
+                const cloudData = await loadImageFromCloud(path);
+                if (cloudData) {
+                  imageData[path] = cloudData;
                   
-                  const db = await openIndexedDB();
-                  const tx = db.transaction(['images'], 'readwrite');
-                  const store = tx.objectStore('images');
-                  store.put(imageObj);
-                  
-                  tx.oncomplete = () => {
-                    db.close();
-                    console.log(`Image ${path} saved to IndexedDB from cloud`);
-                  };
-                } catch (err) {
-                  console.error('Error saving cloud image to IndexedDB:', err);
+                  // Save to IndexedDB for future use
+                  try {
+                    const imageObj = {
+                      path,
+                      data: cloudData,
+                      category: 'home', // Default category for apartment images
+                      fileName: path.split('_').slice(2).join('_'),
+                      createdAt: parseInt(path.split('_')[1]) || Date.now(),
+                      id: path.split('_')[1] || Date.now().toString()
+                    };
+                    
+                    const db = await openIndexedDB();
+                    const tx = db.transaction(['images'], 'readwrite');
+                    const store = tx.objectStore('images');
+                    store.put(imageObj);
+                    
+                    tx.oncomplete = () => {
+                      db.close();
+                      console.log(`Image ${path} saved to IndexedDB from cloud`);
+                    };
+                  } catch (err) {
+                    console.error('Error saving cloud image to IndexedDB:', err);
+                  }
                 }
+              } catch (cloudError) {
+                console.error(`Error loading image ${path} from cloud:`, cloudError);
               }
             }
           } catch (error) {
