@@ -5,65 +5,9 @@ import { emptyPriceCalculation, PriceCalculation } from "./types";
 import { calculateBasePrice } from "./basePrice";
 import { calculateExtras } from "./extrasCalculator";
 import { calculateDiscount } from "./discountCalculator";
-import { calculateNights, getWeeklyPriceForDate } from "./dateUtils";
-import { usePrices } from "@/hooks/usePrices";
-
-/**
- * Gets the weekly price for an apartment on a specific date
- * using the configured prices in the admin area
- */
-const getPriceForWeek = (apartmentId: string, weekStart: Date): number => {
-  try {
-    // Get prices from storage
-    const savedPrices = localStorage.getItem("seasonalPricing");
-    if (!savedPrices) return 0;
-    
-    // Parse stored prices
-    const allPrices = JSON.parse(savedPrices);
-    const year = weekStart.getFullYear();
-    
-    // Get prices for the year
-    const yearData = allPrices.find((season: any) => season.year === year);
-    if (!yearData) return 0;
-    
-    // Format the date for comparison (YYYY-MM-DD)
-    const searchDate = new Date(weekStart);
-    searchDate.setHours(0, 0, 0, 0);
-    const searchDateStr = searchDate.toISOString().split('T')[0];
-    
-    console.log(`Looking for price: apartmentId=${apartmentId}, date=${searchDateStr}, year=${year}`);
-    
-    // Find matching price by finding the closest weekly start date
-    // that is not after our search date
-    let bestMatch = null;
-    let bestMatchDiff = Infinity;
-    
-    for (const p of yearData.prices) {
-      if (p.apartmentId === apartmentId) {
-        const priceDate = new Date(p.weekStart);
-        priceDate.setHours(0, 0, 0, 0);
-        
-        // Check if this price date is before or equal to our search date
-        const diff = searchDate.getTime() - priceDate.getTime();
-        if (diff >= 0 && diff < bestMatchDiff && diff < 7 * 24 * 60 * 60 * 1000) {
-          bestMatch = p;
-          bestMatchDiff = diff;
-        }
-      }
-    }
-    
-    if (bestMatch) {
-      console.log(`Found best match price for ${apartmentId}: ${bestMatch.price}€`);
-      return bestMatch.price;
-    }
-    
-    console.log(`No price found for ${apartmentId} on ${searchDateStr}`);
-    return 0;
-  } catch (error) {
-    console.error("Error getting price for date:", error);
-    return 0;
-  }
-};
+import { calculateNights } from "./dateUtils";
+import { getPriceForWeek } from "./weeklyPrice";
+import { calculateMultiApartmentPricing } from "./multiApartmentPricing";
 
 /**
  * Calculates total prices for each apartment and overall price
@@ -136,50 +80,20 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   const totalBeforeDiscount = subtotal;
   console.log(`Total before discount: ${totalBeforeDiscount}€`);
 
-  // Calculate discount and final price for each apartment individually
-  let sumOfDiscountedApartmentPrices = 0;
-  const discountedApartmentPrices: Record<string, number> = {};
-
+  // Handle pricing logic based on number of apartments
   if (selectedApartments.length > 1) {
     // For multiple apartments, calculate individual discounts
-    selectedApartments.forEach(apartment => {
-      const baseApartmentPrice = apartmentPrices[apartment.id] || 0;
-      
-      // Get per-apartment extras (this is a simplified version; may need to be refined)
-      const hasPets = formValues.petsInApartment?.[apartment.id] || formValues.hasPets;
-      const petCost = hasPets ? 50 : 0;
-      
-      // Count people for this apartment
-      const peopleCount = formValues.personsPerApartment?.[apartment.id] || 
-                         ((formValues.adults || 0) + (formValues.children || 0));
-                         
-      // Calculate linen cost for this apartment
-      const linenCost = formValues.linenOption === "extra" ? peopleCount * 15 : 0;
-      
-      // Calculate apartment subtotal with extras
-      const apartmentSubtotal = baseApartmentPrice + linenCost + petCost;
-      
-      // Round down to nearest 50€ for this apartment
-      const discountedPrice = Math.floor(apartmentSubtotal / 50) * 50;
-      
-      // Save the discounted price
-      discountedApartmentPrices[apartment.id] = discountedPrice;
-      sumOfDiscountedApartmentPrices += discountedPrice;
-      
-      console.log(`Apartment ${apartment.id} subtotal: ${apartmentSubtotal}€, discounted: ${discountedPrice}€`);
-    });
-    
-    // The final price is the sum of individually discounted apartment prices
-    const totalAfterDiscount = sumOfDiscountedApartmentPrices;
-    const discount = totalBeforeDiscount - totalAfterDiscount;
-    
-    console.log(`Sum of discounted apartment prices: ${sumOfDiscountedApartmentPrices}€`);
-    console.log(`Total discount: ${discount}€`);
-    
-    // Calculate deposit based on total after discount (rounded to nearest 100€)
-    const deposit = Math.min(
-      Math.round(totalAfterDiscount * 0.3 / 100) * 100,
-      Math.round(totalAfterDiscount * 0.35 / 100) * 100
+    const {
+      totalAfterDiscount,
+      discount,
+      discountedApartmentPrices,
+      deposit
+    } = calculateMultiApartmentPricing(
+      formValues,
+      selectedApartments,
+      apartmentPrices,
+      basePrice,
+      totalBeforeDiscount
     );
     
     // Return the calculation result with the corrected total
