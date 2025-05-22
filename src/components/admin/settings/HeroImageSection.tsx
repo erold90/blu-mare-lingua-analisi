@@ -23,7 +23,7 @@ export const HeroImageSection = () => {
     
     try {
       // Delete the old hero image if it exists and is a storage path
-      if (siteSettings.heroImage && (siteSettings.heroImage.startsWith('/storage/') || siteSettings.heroImage.startsWith('/images/'))) {
+      if (siteSettings.heroImage && (siteSettings.heroImage.startsWith('/images/') || siteSettings.heroImage.startsWith('/storage/'))) {
         deleteImageFromStorage(siteSettings.heroImage);
       }
       
@@ -49,19 +49,6 @@ export const HeroImageSection = () => {
     return url && !url.includes("placeholder.svg");
   };
 
-  // Helper to get the actual URL for an image path
-  const getImageUrl = (path: string): string => {
-    if (!path || path.includes("placeholder")) return path;
-    
-    if (path.startsWith('/images/') || path.startsWith('/storage/')) {
-      // Get the URL from our image storage
-      const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-      return imageStorage[path] || path;
-    }
-    
-    return path;
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -75,7 +62,7 @@ export const HeroImageSection = () => {
           <div>
             {isValidImage(siteSettings.heroImage) ? (
               <ImagePositioner
-                imageUrl={getImageUrl(siteSettings.heroImage)}
+                imageUrl={siteSettings.heroImage}
                 currentPosition={imagePreviewPosition}
                 onPositionChange={handlePositionChange}
               />

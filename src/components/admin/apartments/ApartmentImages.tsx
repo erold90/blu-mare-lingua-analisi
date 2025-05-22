@@ -47,7 +47,6 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
-    // In a real app, you would upload the files to a server and get back URLs
     // For this demo, we'll use local file URLs
     const newImages: string[] = [];
     
@@ -55,12 +54,8 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
       const file = e.target.files[i];
       const objectURL = URL.createObjectURL(file);
       
-      // Create a unique identifier for this image
-      const imageId = `apartment_${apartmentId}_${uuidv4()}`;
-      
-      // Store the image with its metadata
-      const imageWithMetadata = objectURL;
-      newImages.push(imageWithMetadata);
+      // We'll use the objectURL directly since we're not implementing file storage for this component
+      newImages.push(objectURL);
     }
     
     onImagesChange(apartmentId, [...images, ...newImages]);

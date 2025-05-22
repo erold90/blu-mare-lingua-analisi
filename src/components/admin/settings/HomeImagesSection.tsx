@@ -43,7 +43,7 @@ export const HomeImagesSection = () => {
     const imagePath = homeImages[index];
     
     // Delete the image from storage if it's a storage path
-    if (imagePath && imagePath.startsWith('/storage/')) {
+    if (imagePath && (imagePath.startsWith('/images/') || imagePath.startsWith('/storage/'))) {
       deleteImageFromStorage(imagePath);
     }
     
@@ -53,7 +53,7 @@ export const HomeImagesSection = () => {
     updateSiteSettings({ homeImages: newImages });
     
     // Reset preview if this was the image being previewed
-    if (previewImage === getImageUrl(imagePath)) {
+    if (previewImage === imagePath) {
       setPreviewImage(null);
     }
     
@@ -76,19 +76,6 @@ export const HomeImagesSection = () => {
     
     updateSiteSettings({ homeImages: newImages });
     toast.success(`Immagine spostata ${direction === 'up' ? 'su' : 'giù'}`);
-  };
-  
-  // Helper to get the actual URL for an image path
-  const getImageUrl = (path: string): string => {
-    if (!path || path.includes("placeholder")) return path;
-    
-    if (path.startsWith('/storage/')) {
-      // Get the URL from our image storage
-      const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-      return imageStorage[path] || path;
-    }
-    
-    return path;
   };
 
   const ImagePreviewContent = () => (
@@ -141,10 +128,10 @@ export const HomeImagesSection = () => {
                 >
                   <div 
                     className="w-24 h-16 bg-muted rounded-sm overflow-hidden cursor-pointer"
-                    onClick={() => setPreviewImage(getImageUrl(imagePath))}
+                    onClick={() => setPreviewImage(imagePath)}
                   >
                     <img 
-                      src={getImageUrl(imagePath)} 
+                      src={imagePath} 
                       alt={`Immagine ${index + 1}`} 
                       className="w-full h-full object-cover" 
                     />
