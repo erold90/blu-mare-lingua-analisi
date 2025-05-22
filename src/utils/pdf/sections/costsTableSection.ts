@@ -8,13 +8,11 @@ import { Apartment } from "@/data/apartments";
 import { createSection } from "../formatUtils";
 import { 
   generateTable, 
-  drawManualTable 
-} from "../tables/tableUtils";
-import { 
-  createApartmentRows, 
-  createExtrasRows, 
+  drawManualTable,
+  createApartmentRows,
+  createExtrasRows,
   createIncludedServicesRows 
-} from "../tables/priceTableData";
+} from "../tables";
 
 /**
  * Generate the cost details table section of the quote

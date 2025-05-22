@@ -1,0 +1,103 @@
+
+import { jsPDF } from "jspdf";
+import { TableCell } from "../../types";
+
+/**
+ * Manually draw a table when autoTable is not available
+ * @param doc - PDF document
+ * @param headers - Table headers
+ * @param tableBody - Table data
+ * @param startY - Starting Y position for the table
+ * @returns The Y position after the table
+ */
+export const drawManualTable = (
+  doc: jsPDF,
+  headers: string[][],
+  tableBody: (string | TableCell)[][],
+  startY: number
+): number => {
+  const startX = 10;
+  let currentY = startY;
+  
+  // Draw header row background
+  doc.setFillColor(240, 240, 240);
+  doc.rect(startX, currentY, 190, 10, 'F');
+  
+  // Draw header text
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", 'bold');
+  doc.setFontSize(10);
+  
+  // Draw headers
+  headers[0].forEach((header, index) => {
+    const x = index === 0 ? startX + 5 : startX + 145;
+    doc.text(header, x, currentY + 7);
+  });
+  
+  currentY += 10;
+  
+  // Draw data rows
+  doc.setFont("helvetica", 'normal');
+  tableBody.forEach((row, index) => {
+    // Draw row height to fit content (minimum 10)
+    const rowHeight = 10;
+    
+    // Set alternating row background
+    if (index % 2 === 1) {
+      doc.setFillColor(248, 248, 248);
+      doc.rect(startX, currentY, 190, rowHeight, 'F');
+    }
+    
+    const firstCell = row[0];
+    const secondCell = row[1];
+    
+    // Type-safe way to access content
+    const label = typeof firstCell === 'object' && firstCell !== null ? 
+      (firstCell as TableCell).content : String(firstCell);
+    
+    const value = typeof secondCell === 'object' && secondCell !== null ? 
+      (secondCell as TableCell).content : String(secondCell);
+    
+    // Set text color for styled cells
+    if (typeof firstCell === 'object' && firstCell !== null && 
+        (firstCell as TableCell).styles?.textColor) {
+      const color = (firstCell as TableCell).styles?.textColor;
+      if (Array.isArray(color) && color.length >= 3) {
+        doc.setTextColor(color[0], color[1], color[2]);
+      }
+    } else {
+      // Reset to default text color
+      doc.setTextColor(0, 0, 0);
+    }
+    
+    doc.text(label, startX + 5, currentY + 7);
+    
+    // Set text color for second cell
+    if (typeof secondCell === 'object' && secondCell !== null && 
+        (secondCell as TableCell).styles?.textColor) {
+      const color = (secondCell as TableCell).styles?.textColor;
+      if (Array.isArray(color) && color.length >= 3) {
+        doc.setTextColor(color[0], color[1], color[2]);
+      }
+    } else {
+      // Reset to default text color
+      doc.setTextColor(0, 0, 0);
+    }
+    
+    // Right align the value
+    const valueWidth = doc.getTextWidth(value);
+    doc.text(value, startX + 190 - 5 - valueWidth, currentY + 7);
+    
+    currentY += rowHeight;
+  });
+  
+  // Draw table borders
+  doc.setDrawColor(220, 220, 220);
+  doc.setLineWidth(0.3);
+  doc.rect(startX, startY, 190, currentY - startY);
+  
+  // Reset text color to default
+  doc.setTextColor(0, 0, 0);
+  
+  return currentY + 5; // Add a bit of padding at the end
+};

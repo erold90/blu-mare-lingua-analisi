@@ -1,134 +1,139 @@
 
 import { jsPDF } from "jspdf";
 import { PriceCalculation } from "@/utils/price/types";
-import { drawSeparatorLine, createKeyValueRow, formatText } from "../utils/pdfSharedUtils";
+import { createSection } from "../formatUtils";
+
+interface TotalSectionOptions {
+  keyWidth?: number;
+  valueX?: number;
+  fontSize?: number;
+  keyStyle?: 'bold' | 'normal' | 'italic';
+  valueStyle?: 'bold' | 'normal' | 'italic';
+}
 
 /**
- * Generate the totals section (original total, discount, and final total)
- * @param doc - PDF document
- * @param priceCalculation - Price calculation object
- * @param yPos - Current Y position
- * @returns Next Y position
+ * Generate the totals section of the quote
  */
 export const generateTotalsSection = (doc: jsPDF, priceCalculation: PriceCalculation, yPos: number): number => {
-  let currentY = yPos + 10; // Add some spacing before totals
+  // Add section heading with background
+  let currentY = createSection(doc, "TOTALE SOGGIORNO", yPos);
+  currentY += 10;
   
-  const basePrice = priceCalculation.basePrice;
-  const extras = priceCalculation.extras;
-  const originalTotal = priceCalculation.totalBeforeDiscount;
-  const discount = priceCalculation.discount;
-  const finalTotal = priceCalculation.totalAfterDiscount;
+  // Configure formatting for the totals section
+  const baseX = 15;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const midPoint = pageWidth / 2;
   
-  // Draw separator line
-  currentY = drawSeparatorLine(doc, currentY, {
-    marginLeft: doc.internal.pageSize.getWidth() - 100,
-    marginRight: 10
+  // Create a highlight box for the totals area
+  doc.setFillColor(245, 250, 255);
+  doc.setDrawColor(230, 240, 250);
+  doc.roundedRect(baseX - 5, currentY - 5, pageWidth - (baseX * 2) + 10, 90, 3, 3, 'FD');
+  
+  // Add subtotal row
+  currentY = addTotalRow(doc, "Totale appartamenti:", `€ ${priceCalculation.basePrice}`, currentY, {
+    valueX: 120
   });
   
-  // Show base price
-  doc.setFontSize(10);
+  // Add extras cost if applicable
+  if (priceCalculation.extras > 0) {
+    currentY = addTotalRow(doc, "Extra e servizi:", `€ ${priceCalculation.extras}`, currentY, {
+      valueX: 120
+    });
+  }
+  
+  // Add cleaning fee if applicable
+  if (priceCalculation.cleaningFee > 0) {
+    currentY = addTotalRow(doc, "Pulizia finale:", `€ ${priceCalculation.cleaningFee}`, currentY, {
+      valueX: 120
+    });
+  }
+  
+  // Add tourist tax if applicable
+  if (priceCalculation.touristTax > 0) {
+    currentY = addTotalRow(doc, "Tassa di soggiorno:", `€ ${priceCalculation.touristTax}`, currentY, {
+      valueX: 120
+    });
+  }
+  
+  // Add separator line before the total
+  currentY += 5;
+  doc.setDrawColor(190, 200, 220);
+  doc.setLineWidth(0.5);
+  doc.line(baseX, currentY, pageWidth - baseX, currentY);
+  currentY += 10;
+  
+  // Add grand total with highlight
+  doc.setFillColor(235, 245, 255);
+  doc.roundedRect(baseX - 2, currentY - 5, pageWidth - (baseX * 2) + 4, 25, 2, 2, 'F');
+  
+  // Format the total price
+  const formattedTotal = priceCalculation.total.toLocaleString('it-IT', {
+    style: 'currency',
+    currency: 'EUR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  });
+  
+  // Add the total amount with larger font
+  addTotalRow(doc, "TOTALE:", formattedTotal, currentY, {
+    fontSize: 12,
+    keyStyle: 'bold',
+    valueStyle: 'bold',
+    valueX: 120
+  });
+  
+  // Add a note about reservation
+  currentY += 30;
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'italic');
+  const reservationNote = "Per confermare la prenotazione è richiesto un acconto del 30% del totale.";
+  doc.text(reservationNote, baseX, currentY);
+  
+  // Add payment details
+  currentY += 8;
+  const paymentNote = "Il saldo dovrà essere versato all'arrivo in contanti o con carta di credito.";
+  doc.text(paymentNote, baseX, currentY);
+  
+  // Reset font
   doc.setFont('helvetica', 'normal');
-  currentY += 8;
-  const baseLabel = "Prezzo base:";
-  const baseValue = `€${basePrice}`;
-  doc.text(baseLabel, doc.internal.pageSize.getWidth() - 100, currentY);
-  doc.text(baseValue, doc.internal.pageSize.getWidth() - 20, currentY, { align: "right" });
-  
-  // Show extras if applicable
-  if (extras > 0) {
-    currentY += 8;
-    const extrasLabel = "Extra:";
-    const extrasValue = `€${extras}`;
-    doc.text(extrasLabel, doc.internal.pageSize.getWidth() - 100, currentY);
-    doc.text(extrasValue, doc.internal.pageSize.getWidth() - 20, currentY, { align: "right" });
-  }
-  
-  // Show subtotal
-  currentY += 8;
-  const subtotalLabel = "Subtotale:";
-  const subtotalValue = `€${originalTotal}`;
-  doc.text(subtotalLabel, doc.internal.pageSize.getWidth() - 100, currentY);
-  doc.text(subtotalValue, doc.internal.pageSize.getWidth() - 20, currentY, { align: "right" });
-  
-  // Show discount amount (only if there is a discount)
-  if (discount > 0) {
-    currentY += 8;
-    
-    // Use formatText utility for colored text
-    const discountLabel = formatText(doc, "Sconto:", { 
-      textColor: [0, 128, 0] // Green color for discount
-    });
-    doc.text(discountLabel.text, doc.internal.pageSize.getWidth() - 100, currentY);
-    
-    const discountValue = formatText(doc, `-€${discount}`, { 
-      textColor: [0, 128, 0] 
-    });
-    doc.text(discountValue.text, doc.internal.pageSize.getWidth() - 20, currentY, { align: "right" });
-    
-    // Reset text formatting
-    discountLabel.reset();
-    discountValue.reset();
-  }
-  
-  // Draw another separator line
-  currentY = drawSeparatorLine(doc, currentY + 8, {
-    marginLeft: doc.internal.pageSize.getWidth() - 100,
-    marginRight: 10
-  });
-  
-  // Show final total with bold formatting and background
-  currentY += 8;
-  
-  // Draw highlight box for final total
-  doc.setFillColor(245, 245, 245);
-  doc.roundedRect(doc.internal.pageSize.getWidth() - 105, currentY - 5, 95, 18, 2, 2, 'F');
-  
-  // Add final total text with bold formatting
-  const totalLabel = formatText(doc, "TOTALE FINALE:", { 
-    fontSize: 12,
-    fontStyle: "bold"
-  });
-  doc.text(totalLabel.text, doc.internal.pageSize.getWidth() - 100, currentY + 3);
-  
-  const totalValue = formatText(doc, `€${finalTotal}`, { 
-    fontSize: 12,
-    fontStyle: "bold"
-  });
-  doc.text(totalValue.text, doc.internal.pageSize.getWidth() - 20, currentY + 3, { align: "right" });
-  
-  // Reset text formatting
-  totalLabel.reset();
-  totalValue.reset();
-  
-  // Add deposit information using key-value row utility
-  currentY += 20;
-  currentY = createKeyValueRow(doc, 
-    "Caparra da versare:", 
-    `€${priceCalculation.deposit}`,
-    currentY,
-    {
-      keyX: doc.internal.pageSize.getWidth() - 100,
-      valueX: doc.internal.pageSize.getWidth() - 20,
-      fontSize: 10,
-      valueStyle: "normal",
-      align: "right"
-    }
-  );
-  
-  // Add saldo information using key-value row utility
-  const saldo = finalTotal - priceCalculation.deposit;
-  currentY = createKeyValueRow(doc, 
-    "Saldo all'arrivo:", 
-    `€${saldo}`,
-    currentY + 5,
-    {
-      keyX: doc.internal.pageSize.getWidth() - 100,
-      valueX: doc.internal.pageSize.getWidth() - 20,
-      fontSize: 10,
-      valueStyle: "normal",
-      align: "right"
-    }
-  );
   
   return currentY + 15; // Return next Y position with some padding
+};
+
+/**
+ * Helper function to add a total row with label and value
+ */
+const addTotalRow = (
+  doc: jsPDF, 
+  label: string, 
+  value: string, 
+  yPos: number,
+  options: TotalSectionOptions = {}
+): number => {
+  // Set default options
+  const {
+    fontSize = 10,
+    keyStyle = 'normal',
+    valueStyle = 'normal',
+    valueX = 120
+  } = options;
+  
+  const baseX = 15;
+  
+  // Set font size and style for label
+  doc.setFontSize(fontSize);
+  doc.setFont('helvetica', keyStyle);
+  doc.text(label, baseX, yPos);
+  
+  // Set font for value (may be different style)
+  doc.setFont('helvetica', valueStyle);
+  
+  // Add value at the correct position
+  doc.text(value, valueX, yPos);
+  
+  // Reset font
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10); // Reset to default font size
+  
+  return yPos + 8; // Return next Y position
 };

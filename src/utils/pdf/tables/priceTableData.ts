@@ -63,8 +63,8 @@ export const createExtrasRows = (
       linenCost = totalPeople * 15;
       
       // Add linen fee
-      const linenLabel = formData.linenOption === "deluxe" ? 
-        "Biancheria deluxe" : "Biancheria extra";
+      const linenLabel = formData.linenOption === "extra" ? 
+        "Biancheria extra" : "Biancheria deluxe";
       rows.push([linenLabel, `€${linenCost}`]);
     }
     

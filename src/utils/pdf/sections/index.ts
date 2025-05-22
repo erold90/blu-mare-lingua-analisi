@@ -17,10 +17,8 @@ export { generateTotalsSection } from './totalsSection';
 export { generateSecurityDepositSection } from './securityDepositSection';
 export { generateTermsSection } from './termsSection';
 
-// Table utilities (newly added)
-export * from '../tables/tableUtils';
-export * from '../tables/priceTableData';
+// Include tables from the refactored tables directory
+export * from '../tables';
 
-// Shared PDF utilities (newly added)
+// Shared PDF utilities
 export * from '../utils/pdfSharedUtils';
-
