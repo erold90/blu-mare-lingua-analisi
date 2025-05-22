@@ -45,8 +45,11 @@ export const SocialMediaTab = () => {
     const file = e.target.files[0];
     
     try {
-      // Now save the new image
-      const storagePath = await saveImageToStorage(file, field);
+      // Map the field name to the correct category expected by saveImageToStorage
+      const category = field === 'socialImage' ? 'social' : 'favicon';
+      
+      // Now save the new image with the correct category
+      const storagePath = await saveImageToStorage(file, category);
       
       // Update settings with the new path
       updateSiteSettings({ [field]: storagePath });
