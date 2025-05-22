@@ -195,21 +195,24 @@ const ApartmentModal = ({ apartment }: { apartment: Apartment & { gallery?: stri
 const ApartmentsPage = () => {
   const [apartments, setApartments] = useState<Apartment[]>(defaultApartments);
   const [apartmentImages, setApartmentImages] = useState<{ [key: string]: string[] }>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Cambio cruciale: inizializza a false
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoadingAdditionalImages, setIsLoadingAdditionalImages] = useState(false);
   
   // Funzione ottimizzata per caricare le immagini
-  const loadApartmentImages = useCallback(async (apartments: Apartment[]) => {
-    // Informa l'utente che stiamo caricando le immagini
-    setLoading(true);
-    setLoadingProgress(0);
+  const loadApartmentImages = useCallback(async (apartments: Apartment[], showLoadingState = false) => {
+    // Mostra il loader solo se richiesto esplicitamente (per refresh manuali)
+    if (showLoadingState) {
+      setLoading(true);
+      setLoadingProgress(0);
+    }
     
     const result: { [key: string]: string[] } = {};
     const total = apartments.length;
     
     // Carichiamo le immagini con un limite di concorrenza
     // per evitare di sovraccaricare il browser
-    const concurrencyLimit = 2;
+    const concurrencyLimit = 3; // Aumentato da 2 a 3 per velocizzare
     let completed = 0;
     
     const loadBatch = async (startIdx: number) => {
@@ -224,7 +227,9 @@ const ApartmentsPage = () => {
               result[apt.id] = images;
             }
             completed++;
-            setLoadingProgress(Math.round((completed / total) * 100));
+            if (showLoadingState) {
+              setLoadingProgress(Math.round((completed / total) * 100));
+            }
           })
         );
       }
@@ -252,8 +257,10 @@ const ApartmentsPage = () => {
     // Notifica altri componenti
     window.dispatchEvent(new CustomEvent("apartmentImagesUpdated"));
     
-    // Finito di caricare
-    setLoading(false);
+    // Finito di caricare - solo se stavamo mostrando lo stato di caricamento
+    if (showLoadingState) {
+      setLoading(false);
+    }
     
     return result;
   }, []);
@@ -281,30 +288,35 @@ const ApartmentsPage = () => {
           const parsedImages = JSON.parse(savedImages);
           setApartmentImages(parsedImages);
           
-          // Pre-carica le immagini in background
+          // Precarica immediatamente le prime immagini di copertina per visualizzazione istantanea
+          const coverImages: string[] = [];
           Object.values(parsedImages).forEach(images => {
             if (Array.isArray(images) && images.length > 0) {
-              // Precarica le prime immagini di ogni appartamento
-              imageService.preloadImages(images.slice(0, 2));
+              coverImages.push(images[0]);
             }
           });
           
+          // Precarica subito tutte le immagini di copertina
+          imageService.preloadImages(coverImages, 4);
+          
           // Carica in background le immagini aggiornate senza bloccare l'interfaccia
+          // e senza mostrare il loader per non disturbare l'utente
+          setIsLoadingAdditionalImages(true);
           setTimeout(() => {
-            loadApartmentImages(currentApartments);
-          }, 1000);
+            loadApartmentImages(currentApartments, false).finally(() => {
+              setIsLoadingAdditionalImages(false);
+            });
+          }, 500);
         } catch (error) {
           console.error("Errore nel parsing delle immagini:", error);
           // In caso di errore, carica le immagini normalmente
-          loadApartmentImages(currentApartments);
+          loadApartmentImages(currentApartments, false);
         }
       } else {
-        // Nessun dato in cache, carica le immagini
-        await loadApartmentImages(currentApartments);
+        // Nessun dato in cache, carica le immagini ma senza mostrare il loader
+        // per dare l'impressione che la pagina sia già pronta
+        loadApartmentImages(currentApartments, false);
       }
-      
-      // Sia che ci sia cache o meno, non mostriamo il loader
-      setLoading(false);
     };
     
     loadData();
@@ -336,8 +348,8 @@ const ApartmentsPage = () => {
     // Prima pulisci la cache
     imageService.clearImageCache();
     
-    // Poi ricarica le immagini
-    await loadApartmentImages(apartments);
+    // Poi ricarica le immagini mostrando il loader
+    await loadApartmentImages(apartments, true);
     
     toast.success("Immagini aggiornate con successo!");
   };
@@ -455,11 +467,11 @@ const ApartmentsPage = () => {
         <Button 
           variant="outline"
           onClick={refreshImages}
-          disabled={loading}
+          disabled={loading || isLoadingAdditionalImages}
           className="flex items-center gap-2"
         >
-          <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          Aggiorna immagini
+          <RefreshCcw className={`h-4 w-4 ${loading || isLoadingAdditionalImages ? 'animate-spin' : ''}`} />
+          {isLoadingAdditionalImages ? "Ottimizzazione immagini..." : "Aggiorna immagini"}
         </Button>
       </div>
     </div>

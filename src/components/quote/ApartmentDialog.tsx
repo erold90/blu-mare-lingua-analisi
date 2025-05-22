@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -68,16 +69,19 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
   const apartment = apartments.find(apt => apt.id === apartmentId);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
     if (apartment) {
       // Reimpostare l'indice delle immagini quando cambia l'appartamento
       setCurrentImageIndex(0);
+      setIsLoading(true);
       
       // Controllo prima nella cache per un caricamento istantaneo
       const cachedImages = imageService.getApartmentImagesFromCache(apartment.id);
       if (cachedImages && cachedImages.length > 0) {
         setGalleryImages(cachedImages);
+        setIsLoading(false);
         
         // Precarica le immagini successive in background per transizioni fluide
         if (cachedImages.length > 1) {
@@ -89,10 +93,12 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
       // Fallback alle immagini predefinite dell'appartamento se presenti
       if (apartment.images && apartment.images.length > 0) {
         setGalleryImages(apartment.images);
+        setIsLoading(false);
       }
       
       // In background, cerca comunque le immagini più recenti senza bloccare l'interfaccia
       imageService.scanApartmentImages(apartment.id).then(images => {
+        setIsLoading(false);
         if (images && images.length > 0) {
           setGalleryImages(images);
           
