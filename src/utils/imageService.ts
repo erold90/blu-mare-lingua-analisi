@@ -1,319 +1,338 @@
 
 import { toast } from "sonner";
 
+// Chiave per il localStorage per la cache delle immagini
+const IMAGE_CACHE_KEY = "imageCache";
+const IMAGE_TIMESTAMP_KEY = "imageCacheTimestamp";
+const CACHE_VALIDITY_HOURS = 24; // La cache è valida per 24 ore
+
 class ImageService {
-  // Verifica se un'immagine esiste a un determinato percorso
-  async checkImageExists(path: string): Promise<boolean> {
+  private imageExistenceCache: Map<string, boolean> = new Map();
+  private loadingPromises: Map<string, Promise<boolean>> = new Map();
+  private preloadedImages: Set<string> = new Set();
+  
+  constructor() {
+    // Carica la cache dal localStorage all'avvio
+    this.loadCacheFromStorage();
+  }
+  
+  // Carica la cache da localStorage
+  private loadCacheFromStorage(): void {
     try {
-      console.log("Verifico esistenza immagine:", path);
+      const cachedData = localStorage.getItem(IMAGE_CACHE_KEY);
+      const timestamp = localStorage.getItem(IMAGE_TIMESTAMP_KEY);
       
-      // Aggiungo timestamp per evitare problemi di cache
-      const timestamp = new Date().getTime();
-      const urlWithTimestamp = `${path}?t=${timestamp}`;
-      
-      const response = await fetch(urlWithTimestamp, { 
-        method: 'HEAD',
-        cache: 'no-store',  // Previene completamente il caching
-        headers: { 
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
+      if (cachedData && timestamp) {
+        const currentTime = new Date().getTime();
+        const cacheTime = Number(timestamp);
+        const hoursSinceCache = (currentTime - cacheTime) / (1000 * 60 * 60);
+        
+        // Usa la cache solo se è recente
+        if (hoursSinceCache < CACHE_VALIDITY_HOURS) {
+          const data = JSON.parse(cachedData);
+          
+          // Popola la cache in memoria
+          Object.entries(data).forEach(([path, exists]) => {
+            this.imageExistenceCache.set(path, exists as boolean);
+          });
+          
+          console.log(`Cache delle immagini caricata con ${this.imageExistenceCache.size} elementi`);
+        } else {
+          console.log("Cache delle immagini scaduta, verrà ricostruita");
+          this.clearImageCache(); // Pulisce la cache scaduta
         }
-      });
-      
-      console.log(`Risultato verifica per ${path}:`, response.status, response.ok);
-      return response.ok;
+      }
     } catch (error) {
-      console.error('Errore nella verifica immagine:', error);
-      return false;
+      console.error("Errore nel caricamento della cache delle immagini:", error);
     }
   }
   
-  // Helper per il debugging dei problemi con le immagini
-  async debugImage(path: string): Promise<void> {
-    console.log(`Avvio debug immagine per ${path}`);
-    
-    // Aggiungo timestamp per evitare problemi di cache
-    const timestamp = new Date().getTime();
-    const urlWithTimestamp = `${path}?t=${timestamp}`;
-    
+  // Salva la cache nel localStorage
+  private saveCacheToStorage(): void {
     try {
-      console.log("Tentativo di accesso all'immagine con URL:", urlWithTimestamp);
+      const data: Record<string, boolean> = {};
       
-      // Prima provo con HEAD request
-      const headResponse = await fetch(urlWithTimestamp, { 
-        method: 'HEAD',
-        cache: 'no-store',
-        headers: { 
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache' 
-        }
+      // Converti Map in oggetto per il localStorage
+      this.imageExistenceCache.forEach((exists, path) => {
+        data[path] = exists;
       });
       
-      console.log(`Risposta HEAD per ${path}:`, {
-        status: headResponse.status,
-        statusText: headResponse.statusText,
-        ok: headResponse.ok,
-        headers: [...headResponse.headers.entries()]
-      });
+      localStorage.setItem(IMAGE_CACHE_KEY, JSON.stringify(data));
+      localStorage.setItem(IMAGE_TIMESTAMP_KEY, String(new Date().getTime()));
       
-      // Poi provo con GET request
-      const getResponse = await fetch(urlWithTimestamp, {
-        cache: 'no-store',
-        headers: { 
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        }
-      });
-      
-      console.log(`Risposta GET per ${path}:`, {
-        status: getResponse.status,
-        statusText: getResponse.statusText,
-        ok: getResponse.ok,
-        contentType: getResponse.headers.get('content-type')
-      });
-      
-      // Se abbiamo ottenuto una risposta positiva, verifichiamo che sia un'immagine
-      if (getResponse.ok && getResponse.headers.get('content-type')?.startsWith('image/')) {
-        console.log(`${path} è un'immagine valida`);
+      console.log(`Cache delle immagini salvata con ${Object.keys(data).length} elementi`);
+    } catch (error) {
+      console.error("Errore nel salvare la cache delle immagini:", error);
+    }
+  }
+
+  // Verifica se un'immagine esiste a un determinato percorso (con cache ottimizzata)
+  async checkImageExists(path: string): Promise<boolean> {
+    // Verifica prima nella cache in memoria
+    if (this.imageExistenceCache.has(path)) {
+      return this.imageExistenceCache.get(path) || false;
+    }
+    
+    // Se è già in corso una verifica per lo stesso percorso, riusa la Promise
+    if (this.loadingPromises.has(path)) {
+      return this.loadingPromises.get(path) || false;
+    }
+
+    // Crea una nuova Promise per la verifica
+    const checkPromise = new Promise<boolean>(async (resolve) => {
+      try {
+        // Aggiungi timestamp per evitare problemi di cache
+        const timestamp = new Date().getTime();
+        const urlWithTimestamp = `${path}?t=${timestamp}`;
         
-        // Verifichiamo anche se possiamo creare un blob
-        const blob = await getResponse.blob();
-        console.log(`Blob creato da ${path}:`, {
-          size: blob.size,
-          type: blob.type
+        // Usa fetch con HEAD per verificare l'esistenza
+        const response = await fetch(urlWithTimestamp, { 
+          method: 'HEAD',
+          cache: 'no-store',
+          headers: { 
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache'
+          }
         });
         
-        // Crea un URL per il blob e prova a caricarlo come immagine
-        const blobUrl = URL.createObjectURL(blob);
-        this.loadImageDirectly(blobUrl, path);
-      } else {
-        console.error(`${path} NON è un'immagine valida o non è stata trovata`);
+        const exists = response.ok;
+        
+        // Aggiorna la cache in memoria
+        this.imageExistenceCache.set(path, exists);
+        
+        // Salva la cache nel localStorage periodicamente (ogni 10 nuove voci)
+        if (this.imageExistenceCache.size % 10 === 0) {
+          this.saveCacheToStorage();
+        }
+        
+        resolve(exists);
+      } catch (error) {
+        console.error('Errore nella verifica immagine:', error);
+        resolve(false);
+      } finally {
+        // Rimuovi dalla mappa delle promise in corso
+        this.loadingPromises.delete(path);
       }
-      
-      // Provo anche a caricare direttamente l'immagine come oggetto Image
-      this.loadImageDirectly(urlWithTimestamp, path);
-      
-    } catch (error) {
-      console.error("Errore debug immagine:", error);
-    }
-
-    // Prova anche altre varianti del percorso (maiuscole/minuscole)
-    const pathParts = path.split('/');
-    const fileName = pathParts.pop() || '';
-    const directory = pathParts.join('/');
+    });
     
-    // Prova con varianti del nome file (maiuscole/minuscole)
-    const fileNameVariants = [
-      fileName,
-      fileName.toLowerCase(),
-      fileName.toUpperCase(),
-      this.capitalizeFirstLetter(fileName)
-    ];
+    // Memorizza la Promise in corso
+    this.loadingPromises.set(path, checkPromise);
     
-    // Controlla ogni variante
-    for (const variant of fileNameVariants) {
-      if (variant === fileName) continue; // Salta la variante originale già controllata
-      
-      const variantPath = `${directory}/${variant}`;
-      console.log(`Verifico variante: ${variantPath}`);
-      const existsVariant = await this.checkImageExists(variantPath);
-      if (existsVariant) {
-        console.log(`✅ Variante trovata: ${variantPath}`);
-      }
-    }
-
-    // Prova anche con file JPG/PNG/JPEG in caso di estensione sbagliata
-    const extensionVariants = ['jpg', 'JPG', 'jpeg', 'JPEG', 'png', 'PNG'];
-    const baseFileName = fileName.split('.')[0];
-    
-    for (const ext of extensionVariants) {
-      const extPath = `${directory}/${baseFileName}.${ext}`;
-      if (extPath === path) continue; // Salta la variante originale
-      
-      console.log(`Verifico estensione alternativa: ${extPath}`);
-      const existsExt = await this.checkImageExists(extPath);
-      if (existsExt) {
-        console.log(`✅ Estensione alternativa trovata: ${extPath}`);
-      }
-    }
-
-    // Debug della struttura della directory
-    try {
-      const response = await fetch(`${directory}?t=${timestamp}`);
-      console.log(`Tentativo accesso alla directory ${directory}:`, {
-        status: response.status,
-        ok: response.ok
-      });
-    } catch (error) {
-      console.error(`Errore nell'accedere alla directory ${directory}:`, error);
-    }
+    return checkPromise;
   }
   
-  // Carica direttamente un'immagine usando l'oggetto Image
-  private loadImageDirectly(src: string, originalPath: string): void {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.onload = () => console.log(`Immagine caricata con successo: ${originalPath} (${img.width}x${img.height})`);
-    img.onerror = (err) => console.error(`Errore nel caricare l'immagine: ${originalPath}`, err);
-    img.src = src;
-  }
-
-  // Ottieni l'URL completo per un path con cache busting
-  getImageUrl(path: string): string {
-    const timestamp = new Date().getTime();
-    return `${path}?t=${timestamp}`;
-  }
-  
-  // Force reload dell'immagine
-  forceReloadImage(path: string): Promise<boolean> {
+  // Precarica un'immagine in background
+  preloadImage(path: string): Promise<boolean> {
+    // Evita di precarica immagini già caricate
+    if (this.preloadedImages.has(path)) {
+      return Promise.resolve(true);
+    }
+    
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
-        console.log(`Ricaricamento forzato immagine: ${path} completato`);
+        this.preloadedImages.add(path);
         resolve(true);
       };
-      img.onerror = () => {
-        console.error(`Ricaricamento forzato immagine: ${path} fallito`);
-        resolve(false);
-      };
+      img.onerror = () => resolve(false);
       img.src = this.getImageUrl(path);
     });
   }
   
+  // Precarica un gruppo di immagini in background con limite di concorrenza
+  preloadImages(paths: string[], concurrency = 3): void {
+    if (!paths.length) return;
+    
+    let index = 0;
+    const loadNext = () => {
+      if (index >= paths.length) return;
+      
+      const path = paths[index++];
+      this.preloadImage(path).finally(() => {
+        loadNext(); // Carica la successiva quando questa è terminata
+      });
+    };
+    
+    // Avvia il precaricamento con la concorrenza specificata
+    for (let i = 0; i < Math.min(concurrency, paths.length); i++) {
+      loadNext();
+    }
+  }
+
+  // Ottieni l'URL completo per un path con cache busting ottimizzato
+  getImageUrl(path: string): string {
+    // Usa un timestamp di sessione invece di uno nuovo ogni volta
+    // Questo migliora il caching del browser durante l'uso dell'app
+    const sessionTimestamp = this.getSessionTimestamp();
+    return `${path}?t=${sessionTimestamp}`;
+  }
+  
+  // Usa un timestamp di sessione per evitare di invalidare continuamente la cache
+  private getSessionTimestamp(): string {
+    const key = "sessionImageTimestamp";
+    let timestamp = sessionStorage.getItem(key);
+    
+    if (!timestamp) {
+      timestamp = String(new Date().getTime());
+      sessionStorage.setItem(key, timestamp);
+    }
+    
+    return timestamp;
+  }
+  
+  // Forza un nuovo timestamp di sessione (per refresh espliciti)
+  resetSessionTimestamp(): void {
+    const key = "sessionImageTimestamp";
+    const timestamp = String(new Date().getTime());
+    sessionStorage.setItem(key, timestamp);
+  }
+  
+  // Force reload dell'immagine
+  forceReloadImage(path: string): Promise<boolean> {
+    // Rimuovi dalla cache e forza nuovo caricamento
+    this.imageExistenceCache.delete(path);
+    this.preloadedImages.delete(path);
+    
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        this.preloadedImages.add(path);
+        resolve(true);
+      };
+      img.onerror = () => resolve(false);
+      
+      // Usa un nuovo timestamp per forzare il ricaricamento
+      const timestamp = new Date().getTime();
+      img.src = `${path}?t=${timestamp}`;
+    });
+  }
+  
+  // OTTIMIZZATO: Pulisce la cache delle immagini
+  clearImageCache(): void {
+    console.log("Pulizia cache immagini...");
+    
+    // Pulisci cache in memoria
+    this.imageExistenceCache.clear();
+    this.preloadedImages.clear();
+    
+    // Rimuovi da localStorage
+    localStorage.removeItem(IMAGE_CACHE_KEY);
+    localStorage.removeItem(IMAGE_TIMESTAMP_KEY);
+    localStorage.removeItem("apartmentImages");
+    
+    // Aggiorna il timestamp di sessione
+    this.resetSessionTimestamp();
+    
+    // Pulisci anche la Cache API del browser se disponibile
+    if ('caches' in window) {
+      caches.keys().then(cacheNames => {
+        cacheNames.forEach(cacheName => {
+          if (cacheName.includes('image')) {
+            caches.delete(cacheName);
+          }
+        });
+      });
+    }
+    
+    toast.success("Cache delle immagini pulita con successo");
+  }
+  
   // Normalizza il nome dell'appartamento per i file
   normalizeApartmentId(id: string): string {
-    // Rimuove eventuali spazi e converte in lowercase
     return id.toLowerCase().replace(/\s+/g, '-');
   }
 
-  // NUOVO: Converte la prima lettera in maiuscolo
-  capitalizeFirstLetter(string: string): string {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  }
-
-  // NUOVO: Pulisce la cache delle immagini
-  clearImageCache(): void {
-    console.log("Pulizia cache immagini in corso...");
+  // OTTIMIZZATO: Cerca tutte le immagini per un appartamento in modo efficiente
+  async scanApartmentImages(apartmentId: string, maxImages = 20): Promise<string[]> {
+    console.log(`Scansione immagini per appartamento ${apartmentId}`);
     
-    const now = new Date().getTime();
-    const cachePromises = [
-      // Prova a eliminare le cache specifiche per immagini
-      caches.delete('image-cache'),
-      caches.delete('images-cache')
-    ];
-    
-    // Pulisci anche le cache generiche
-    caches.keys().then(cacheNames => {
-      cacheNames.forEach(cacheName => {
-        cachePromises.push(caches.delete(cacheName));
-      });
-    });
-    
-    Promise.all(cachePromises)
-      .then(() => console.log("Pulizia cache completata"))
-      .catch(error => console.error("Errore nella pulizia cache:", error));
+    // Prima controlla se abbiamo già le immagini in cache
+    const cachedAptImages = this.getApartmentImagesFromCache(apartmentId);
+    if (cachedAptImages && cachedAptImages.length > 0) {
+      console.log(`Trovate ${cachedAptImages.length} immagini in cache per ${apartmentId}`);
       
-    // Prova anche a forzare la pulizia via localStorage
-    const cacheKey = 'image-cache-timestamp';
-    localStorage.setItem(cacheKey, now.toString());
-  }
-
-  // NUOVO: Verifica tutti i percorsi possibili per un'immagine di appartamento
-  async findApartmentImage(apartmentId: string, imageNumber: number): Promise<string | null> {
-    console.log(`Ricerca approfondita immagine ${imageNumber} per appartamento ${apartmentId}`);
+      // Precarica le immagini in background per renderle più veloci da visualizzare
+      this.preloadImages(cachedAptImages);
+      
+      return cachedAptImages;
+    }
     
     // Normalizza l'ID dell'appartamento
     const normalizedId = this.normalizeApartmentId(apartmentId);
     
-    // Crea tutti i possibili percorsi delle immagini
-    const potentialPaths = [
-      // Percorso standard con ID normalizzato
-      `/images/apartments/${normalizedId}/image${imageNumber}.jpg`,
-      // Percorso con ID originale
-      `/images/apartments/${apartmentId}/image${imageNumber}.jpg`,
-      // Varianti con maiuscole
-      `/images/apartments/${normalizedId}/Image${imageNumber}.jpg`,
-      `/images/apartments/${apartmentId}/Image${imageNumber}.jpg`,
-      // Varianti con estensione JPG maiuscolo
-      `/images/apartments/${normalizedId}/image${imageNumber}.JPG`,
-      `/images/apartments/${apartmentId}/image${imageNumber}.JPG`,
-      // Varianti con JPEG
-      `/images/apartments/${normalizedId}/image${imageNumber}.jpeg`,
-      `/images/apartments/${apartmentId}/image${imageNumber}.jpeg`,
-      // Varianti con PNG
-      `/images/apartments/${normalizedId}/image${imageNumber}.png`,
-      `/images/apartments/${apartmentId}/image${imageNumber}.png`,
+    // Percorsi base da controllare
+    const basePaths = [
+      `/images/apartments/${normalizedId}`,
+      `/images/apartments/${apartmentId}`
     ];
     
-    // Prova con numerazione diversa (01, 001, ecc.)
-    if (imageNumber < 10) {
-      potentialPaths.push(
-        `/images/apartments/${normalizedId}/image0${imageNumber}.jpg`,
-        `/images/apartments/${apartmentId}/image0${imageNumber}.jpg`
-      );
-    }
-    
-    // Verifica ogni percorso
-    for (const path of potentialPaths) {
-      try {
-        const exists = await this.checkImageExists(path);
-        if (exists) {
-          console.log(`✅ Immagine trovata: ${path}`);
-          return path;
-        }
-      } catch (error) {
-        console.error(`Errore nel controllare ${path}:`, error);
-      }
-    }
-    
-    console.log(`❌ Nessuna immagine trovata per appartamento ${apartmentId}, numero ${imageNumber}`);
-    return null;
-  }
-
-  // NUOVO: Scansiona e trova tutte le immagini per un appartamento
-  async scanApartmentImages(apartmentId: string, maxImages = 20): Promise<string[]> {
-    console.log(`Scansione completa immagini per appartamento ${apartmentId} (max: ${maxImages})`);
-    
+    // Array per memorizzare i percorsi validi trovati
     const validImages: string[] = [];
     
-    // Pulisci la cache prima di iniziare
-    this.clearImageCache();
-    
-    // Cerca le immagini con numerazione progressiva
-    for (let i = 1; i <= maxImages; i++) {
-      const imagePath = await this.findApartmentImage(apartmentId, i);
-      if (imagePath) {
-        validImages.push(imagePath);
-        await this.forceReloadImage(imagePath); // Precarica l'immagine
-      } else {
-        // Se non troviamo 3 immagini consecutive, assumiamo che non ce ne siano altre
-        if (i > 3 && 
-            !await this.findApartmentImage(apartmentId, i+1) && 
-            !await this.findApartmentImage(apartmentId, i+2)) {
-          console.log(`Terminata la ricerca dopo ${i+2} tentativi senza trovare immagini`);
-          break;
-        }
+    // Controlla i percorsi in parallelo con un limite di concorrenza
+    const checkBatch = async (startIdx: number, endIdx: number, basePath: string) => {
+      const batchPromises = [];
+      
+      for (let i = startIdx; i <= endIdx; i++) {
+        const path = `${basePath}/image${i}.jpg`;
+        batchPromises.push(
+          this.checkImageExists(path).then(exists => {
+            if (exists) validImages.push(path);
+            return exists;
+          })
+        );
       }
+      
+      await Promise.all(batchPromises);
+    };
+    
+    // Verifica prima le prime 5 immagini di ogni percorso (sono quelle più probabili)
+    for (const basePath of basePaths) {
+      await checkBatch(1, 5, basePath);
     }
     
+    // Se abbiamo trovato almeno un'immagine, continua a cercare sul percorso che ha funzionato
     if (validImages.length > 0) {
-      console.log(`✅ Trovate ${validImages.length} immagini per appartamento ${apartmentId}`);
+      // Estrai il percorso base che ha funzionato
+      const workingBasePath = validImages[0].substring(0, validImages[0].lastIndexOf('/'));
       
-      // Salva i risultati in localStorage per uso futuro
+      // Continua a cercare dal numero 6 fino a maxImages
+      await checkBatch(6, maxImages, workingBasePath);
+    }
+    
+    // Ordina le immagini numericamente
+    validImages.sort((a, b) => {
+      const numA = parseInt(a.match(/image(\d+)\.jpg/)?.[1] || "0");
+      const numB = parseInt(b.match(/image(\d+)\.jpg/)?.[1] || "0");
+      return numA - numB;
+    });
+    
+    // Salva i risultati nella cache
+    if (validImages.length > 0) {
       this.cacheApartmentImages(apartmentId, validImages);
-    } else {
-      console.warn(`⚠️ Nessuna immagine trovata per appartamento ${apartmentId}`);
       
-      // Debug avanzato se non troviamo immagini
-      console.log("Avvio debug approfondito...");
-      await this.debugImage(`/images/apartments/${apartmentId}/image1.jpg`);
-      await this.debugImage(`/images/apartments/${this.normalizeApartmentId(apartmentId)}/image1.jpg`);
+      // Precarica le immagini in background
+      this.preloadImages(validImages);
     }
     
     return validImages;
   }
   
-  // NUOVO: Salva i risultati delle immagini nella cache
+  // Ottieni le immagini di un appartamento dalla cache
+  getApartmentImagesFromCache(apartmentId: string): string[] | null {
+    try {
+      const storedImagesStr = localStorage.getItem("apartmentImages");
+      if (!storedImagesStr) return null;
+      
+      const storedImages = JSON.parse(storedImagesStr);
+      return storedImages[apartmentId] || null;
+    } catch (error) {
+      console.error("Errore nel recuperare le immagini dalla cache:", error);
+      return null;
+    }
+  }
+  
+  // Salva i risultati delle immagini nella cache
   cacheApartmentImages(apartmentId: string, images: string[]): void {
     try {
       const storedImagesStr = localStorage.getItem("apartmentImages");
@@ -321,8 +340,6 @@ class ImageService {
       
       storedImages[apartmentId] = images;
       localStorage.setItem("apartmentImages", JSON.stringify(storedImages));
-      
-      console.log(`Cache aggiornata per ${apartmentId} con ${images.length} immagini`);
       
       // Notifica altri componenti del cambiamento
       window.dispatchEvent(new CustomEvent("apartmentImagesUpdated"));

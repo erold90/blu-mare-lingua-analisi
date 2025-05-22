@@ -1,6 +1,5 @@
-
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { 
@@ -19,9 +18,52 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Bed, Home, ArrowRight, ArrowLeft, Sun, ThermometerSun } from "lucide-react";
+import { Bed, Home, ArrowRight, ArrowLeft, Sun, ThermometerSun, RefreshCcw } from "lucide-react";
 import { apartments as defaultApartments, Apartment } from "@/data/apartments";
 import { imageService } from "@/utils/imageService";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+
+// Componente ottimizzato per il caricamento progressivo delle immagini
+const ProgressiveImage = ({ src, alt, className }: { src: string, alt: string, className?: string }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [imgSrc, setImgSrc] = useState("/placeholder.svg");
+  
+  useEffect(() => {
+    // Reset dello stato quando cambia il src
+    if (src !== "/placeholder.svg") {
+      setIsLoaded(false);
+      setImgSrc("/placeholder.svg");
+      
+      const img = new Image();
+      img.onload = () => {
+        setImgSrc(src);
+        setIsLoaded(true);
+      };
+      img.onerror = () => {
+        console.error(`Failed to load image: ${src}`);
+        setImgSrc("/placeholder.svg");
+        setIsLoaded(true);
+      };
+      img.src = src;
+    }
+  }, [src]);
+  
+  return (
+    <>
+      {!isLoaded && <Skeleton className={`${className} absolute inset-0`} />}
+      <img 
+        src={imgSrc}
+        alt={alt}
+        className={`${className} transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        onError={(e) => {
+          console.error(`Error in image render: ${src}`);
+          e.currentTarget.src = "/placeholder.svg";
+        }}
+      />
+    </>
+  );
+};
 
 const ApartmentGallery = ({ images }: { images: string[] }) => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
@@ -34,17 +76,21 @@ const ApartmentGallery = ({ images }: { images: string[] }) => {
     setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
   };
 
+  // Precarica la prossima immagine per una transizione più fluida
+  useEffect(() => {
+    if (images.length > 1) {
+      const nextIdx = (currentIndex + 1) % images.length;
+      imageService.preloadImage(images[nextIdx]);
+    }
+  }, [currentIndex, images]);
+
   return (
     <div className="relative w-full h-64 md:h-80 overflow-hidden rounded-md mt-4">
       <div className="absolute inset-0">
-        <img 
+        <ProgressiveImage 
           src={imageService.getImageUrl(images[currentIndex]) || "/placeholder.svg"} 
           alt={`Immagine ${currentIndex + 1}`} 
-          className="w-full h-full object-cover transition-opacity duration-300"
-          onError={(e) => {
-            console.error(`Failed to load image in gallery: ${images[currentIndex]}`);
-            e.currentTarget.src = "/placeholder.svg";
-          }}
+          className="w-full h-full object-cover"
         />
       </div>
       <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1">
@@ -150,88 +196,126 @@ const ApartmentsPage = () => {
   const [apartments, setApartments] = useState<Apartment[]>(defaultApartments);
   const [apartmentImages, setApartmentImages] = useState<{ [key: string]: string[] }>({});
   const [loading, setLoading] = useState(true);
-
-  // Load apartments and their images from localStorage
-  useEffect(() => {
-    // ... keep existing code (loadData function)
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  
+  // Funzione ottimizzata per caricare le immagini
+  const loadApartmentImages = useCallback(async (apartments: Apartment[]) => {
+    // Informa l'utente che stiamo caricando le immagini
+    setLoading(true);
+    setLoadingProgress(0);
     
-    const checkApartmentImages = async () => {
-      const result: { [key: string]: string[] } = {};
-      setLoading(true);
+    const result: { [key: string]: string[] } = {};
+    const total = apartments.length;
+    
+    // Carichiamo le immagini con un limite di concorrenza
+    // per evitare di sovraccaricare il browser
+    const concurrencyLimit = 2;
+    let completed = 0;
+    
+    const loadBatch = async (startIdx: number) => {
+      const endIdx = Math.min(startIdx + concurrencyLimit - 1, apartments.length - 1);
       
-      // Prima pulisci la cache delle immagini
-      imageService.clearImageCache();
-      
-      // Utilizzare il nuovo metodo scanApartmentImages per ogni appartamento
-      for (const apt of apartments) {
-        console.log(`Scansione immagini per appartamento ${apt.id}...`);
-        const images = await imageService.scanApartmentImages(apt.id);
-        
-        if (images && images.length > 0) {
-          result[apt.id] = images;
-          console.log(`Trovate ${images.length} immagini per ${apt.id}`);
-        }
+      const batchPromises = [];
+      for (let i = startIdx; i <= endIdx; i++) {
+        const apt = apartments[i];
+        batchPromises.push(
+          imageService.scanApartmentImages(apt.id).then(images => {
+            if (images && images.length > 0) {
+              result[apt.id] = images;
+            }
+            completed++;
+            setLoadingProgress(Math.round((completed / total) * 100));
+          })
+        );
       }
       
-      // Aggiorna lo stato solo se abbiamo trovato nuove immagini
-      if (Object.keys(result).length > 0) {
-        setApartmentImages(prevState => ({...prevState, ...result}));
-        
-        // Salva in localStorage
-        const existingImagesStr = localStorage.getItem("apartmentImages");
-        const existingImages = existingImagesStr ? JSON.parse(existingImagesStr) : {};
-        const updatedImages = {...existingImages, ...result};
-        localStorage.setItem("apartmentImages", JSON.stringify(updatedImages));
-        
-        // Notifica altri componenti del cambiamento
-        window.dispatchEvent(new CustomEvent("apartmentImagesUpdated"));
-      }
+      await Promise.all(batchPromises);
       
-      setLoading(false);
+      // Se ci sono altri appartamenti da processare, carica il prossimo batch
+      if (endIdx < apartments.length - 1) {
+        return loadBatch(endIdx + 1);
+      }
     };
     
-    // Carica dati da localStorage
-    const loadData = () => {
-      console.log("Caricamento appartamenti e immagini da localStorage");
-      
-      // Load apartments
+    // Inizia il caricamento
+    await loadBatch(0);
+    
+    // Aggiorna lo stato con le immagini trovate
+    setApartmentImages(prevState => ({...prevState, ...result}));
+    
+    // Salva in localStorage
+    const existingImagesStr = localStorage.getItem("apartmentImages");
+    const existingImages = existingImagesStr ? JSON.parse(existingImagesStr) : {};
+    const updatedImages = {...existingImages, ...result};
+    localStorage.setItem("apartmentImages", JSON.stringify(updatedImages));
+    
+    // Notifica altri componenti
+    window.dispatchEvent(new CustomEvent("apartmentImagesUpdated"));
+    
+    // Finito di caricare
+    setLoading(false);
+    
+    return result;
+  }, []);
+  
+  // Carica dati e immagini all'avvio
+  useEffect(() => {
+    const loadData = async () => {
+      // Carica appartamenti da localStorage
       const savedApartments = localStorage.getItem("apartments");
+      let currentApartments = [...defaultApartments];
+      
       if (savedApartments) {
         try {
-          const parsedApartments = JSON.parse(savedApartments);
-          console.log("Appartamenti caricati:", parsedApartments);
-          setApartments(parsedApartments);
+          currentApartments = JSON.parse(savedApartments);
+          setApartments(currentApartments);
         } catch (error) {
-          console.error("Errore nel parsing degli appartamenti salvati:", error);
+          console.error("Errore nel parsing degli appartamenti:", error);
         }
       }
       
-      // Load apartment images
+      // Carica immagini appartamenti da localStorage (estremamente veloce)
       const savedImages = localStorage.getItem("apartmentImages");
       if (savedImages) {
         try {
           const parsedImages = JSON.parse(savedImages);
-          console.log("Immagini appartamenti caricate:", parsedImages);
           setApartmentImages(parsedImages);
+          
+          // Pre-carica le immagini in background
+          Object.values(parsedImages).forEach(images => {
+            if (Array.isArray(images) && images.length > 0) {
+              // Precarica le prime immagini di ogni appartamento
+              imageService.preloadImages(images.slice(0, 2));
+            }
+          });
+          
+          // Carica in background le immagini aggiornate senza bloccare l'interfaccia
+          setTimeout(() => {
+            loadApartmentImages(currentApartments);
+          }, 1000);
         } catch (error) {
-          console.error("Errore nel parsing delle immagini degli appartamenti:", error);
+          console.error("Errore nel parsing delle immagini:", error);
+          // In caso di errore, carica le immagini normalmente
+          loadApartmentImages(currentApartments);
         }
+      } else {
+        // Nessun dato in cache, carica le immagini
+        await loadApartmentImages(currentApartments);
       }
       
-      // Cerca immagini degli appartamenti sul server
-      checkApartmentImages();
+      // Sia che ci sia cache o meno, non mostriamo il loader
+      setLoading(false);
     };
     
     loadData();
     
-    // Listen for storage changes
+    // Listen for storage changes and custom events
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "apartments" || e.key === "apartmentImages" || e.key === "apartmentCovers") {
+      if (e.key === "apartments" || e.key === "apartmentImages") {
         loadData();
       }
     };
     
-    // Also listen for custom events for same-window updates
     const handleCustomEvent = () => {
       loadData();
     };
@@ -239,21 +323,24 @@ const ApartmentsPage = () => {
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("apartmentImagesUpdated", handleCustomEvent);
     
-    // Aggiungi handler per la pressione del tasto F5
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "F5" || (e.ctrlKey && e.key === "r")) {
-        checkApartmentImages();
-      }
-    };
-    
-    window.addEventListener("keydown", handleKeyDown);
-    
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("apartmentImagesUpdated", handleCustomEvent);
-      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [apartments]);
+  }, [loadApartmentImages]);
+  
+  // Funzione per aggiornare manualmente le immagini
+  const refreshImages = async () => {
+    toast.info("Aggiornamento immagini in corso...");
+    
+    // Prima pulisci la cache
+    imageService.clearImageCache();
+    
+    // Poi ricarica le immagini
+    await loadApartmentImages(apartments);
+    
+    toast.success("Immagini aggiornate con successo!");
+  };
   
   // Prepare apartment data with gallery images
   const apartmentData = apartments.map(apt => {
@@ -264,7 +351,6 @@ const ApartmentsPage = () => {
         try {
           return JSON.parse(savedCovers);
         } catch (error) {
-          console.error("Failed to parse saved cover indices:", error);
           return {};
         }
       }
@@ -280,9 +366,6 @@ const ApartmentsPage = () => {
     } else if (apt.images && apt.images.length > 0) {
       coverImage = apt.images[0];
     }
-    
-    console.log(`Apartment ${apt.id} cover image:`, coverImage);
-    console.log(`Apartment ${apt.id} gallery images:`, aptImages);
     
     return {
       ...apt,
@@ -301,23 +384,28 @@ const ApartmentsPage = () => {
         </p>
       </div>
       
-      {loading ? (
+      {loading && loadingProgress > 0 ? (
         <div className="text-center py-8">
-          <p className="text-lg text-muted-foreground">Caricamento appartamenti in corso...</p>
+          <div className="flex flex-col items-center gap-4">
+            <p className="text-lg">Caricamento immagini...</p>
+            <div className="w-full max-w-md h-2 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-300 ease-in-out"
+                style={{ width: `${loadingProgress}%` }}
+              />
+            </div>
+            <p className="text-sm text-muted-foreground">{loadingProgress}%</p>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
           {apartmentData.map((apartment) => (
             <Card key={apartment.id} className="overflow-hidden h-full flex flex-col">
-              <div className="aspect-[4/3] relative">
-                <img 
+              <div className="aspect-[4/3] relative bg-muted">
+                <ProgressiveImage 
                   src={imageService.getImageUrl(apartment.images[0])} 
                   alt={apartment.name}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    console.error(`Failed to load apartment image: ${apartment.images[0]}`);
-                    e.currentTarget.src = "/placeholder.svg";
-                  }}
                 />
               </div>
               <CardHeader>
@@ -366,12 +454,12 @@ const ApartmentsPage = () => {
       <div className="mt-8 text-center">
         <Button 
           variant="outline"
-          onClick={() => {
-            imageService.clearImageCache();
-            window.location.reload();
-          }}
+          onClick={refreshImages}
+          disabled={loading}
+          className="flex items-center gap-2"
         >
-          Aggiorna visualizzazione immagini
+          <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          Aggiorna immagini
         </Button>
       </div>
     </div>

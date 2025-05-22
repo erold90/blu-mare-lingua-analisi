@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Apartment } from "@/data/apartments";
 import { Bed, BedDouble, MapPin, Sun, ThermometerSun, ArrowLeft, ArrowRight } from "lucide-react";
 import { imageService } from "@/utils/imageService";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ApartmentDialogProps {
   apartmentId: string | null;
@@ -18,6 +19,45 @@ interface ApartmentDialogProps {
   onOpenChange: (open: boolean) => void;
   onSelect: (id: string) => void;
 }
+
+// Componente di immagine progressiva per caricamento ottimizzato
+const ProgressiveImage = ({ src, alt, className }: { src: string, alt: string, className?: string }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [imgSrc, setImgSrc] = useState("/placeholder.svg");
+  
+  useEffect(() => {
+    if (src !== "/placeholder.svg") {
+      setIsLoaded(false);
+      
+      const img = new Image();
+      img.onload = () => {
+        setImgSrc(src);
+        setIsLoaded(true);
+      };
+      img.onerror = () => {
+        console.error(`Failed to load image: ${src}`);
+        setImgSrc("/placeholder.svg");
+        setIsLoaded(true);
+      };
+      img.src = src;
+    }
+  }, [src]);
+  
+  return (
+    <>
+      {!isLoaded && <Skeleton className={`${className} absolute inset-0`} />}
+      <img 
+        src={imgSrc}
+        alt={alt}
+        className={`${className} transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+        onError={(e) => {
+          console.error(`Error in image render: ${src}`);
+          e.currentTarget.src = "/placeholder.svg";
+        }}
+      />
+    </>
+  );
+};
 
 const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
   apartmentId,
@@ -31,95 +71,47 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
   
   useEffect(() => {
     if (apartment) {
-      // Try to load gallery images from localStorage
-      try {
-        const apartmentImagesStr = localStorage.getItem("apartmentImages");
-        if (apartmentImagesStr) {
-          const allApartmentImages = JSON.parse(apartmentImagesStr);
-          const aptImages = allApartmentImages[apartment.id] || [];
-          
-          if (aptImages.length > 0) {
-            console.log(`Immagini per appartamento ${apartment.id} dal localStorage:`, aptImages);
-            setGalleryImages(aptImages);
-            return;
-          }
+      // Reimpostare l'indice delle immagini quando cambia l'appartamento
+      setCurrentImageIndex(0);
+      
+      // Controllo prima nella cache per un caricamento istantaneo
+      const cachedImages = imageService.getApartmentImagesFromCache(apartment.id);
+      if (cachedImages && cachedImages.length > 0) {
+        setGalleryImages(cachedImages);
+        
+        // Precarica le immagini successive in background per transizioni fluide
+        if (cachedImages.length > 1) {
+          imageService.preloadImages(cachedImages.slice(1, 4)); // Precarica le prossime 3
         }
-        
-        // Se non abbiamo trovato immagini nel localStorage, prova a verificare se ci sono immagini
-        // nella cartella pubblica
-        const checkForPublicImages = async () => {
-          console.log(`Cercando immagini pubbliche per ${apartment.id}...`);
-          
-          // Utilizziamo il normalizeApartmentId per assicurarci che il formato sia corretto
-          const normalizedId = imageService.normalizeApartmentId(apartment.id);
-          
-          // Controlliamo entrambi i percorsi (originale e normalizzato)
-          const potentialImagePaths = [
-            ...Array.from({ length: 16 }, (_, i) => 
-              `/images/apartments/${normalizedId}/image${i+1}.jpg`
-            ),
-            ...Array.from({ length: 16 }, (_, i) => 
-              `/images/apartments/${apartment.id}/image${i+1}.jpg`
-            )
-          ];
-          
-          const validImages: string[] = [];
-          
-          for (const path of potentialImagePaths) {
-            try {
-              const exists = await imageService.checkImageExists(path);
-              if (exists) {
-                validImages.push(path);
-                console.log(`Trovata immagine pubblica: ${path}`);
-                
-                // Evitiamo duplicati
-                const baseName = path.split('/').pop();
-                if (baseName) {
-                  const otherPathsWithSameBaseName = potentialImagePaths.filter(p => 
-                    p !== path && p.split('/').pop() === baseName
-                  );
-                  
-                  for (const otherPath of otherPathsWithSameBaseName) {
-                    const index = potentialImagePaths.indexOf(otherPath);
-                    if (index > -1) {
-                      potentialImagePaths.splice(index, 1);
-                    }
-                  }
-                }
-              }
-            } catch (error) {
-              console.error(`Errore nel controllare l'immagine ${path}:`, error);
-            }
-          }
-          
-          if (validImages.length > 0) {
-            console.log(`Trovate ${validImages.length} immagini pubbliche per ${apartment.id}`);
-            setGalleryImages(validImages);
-            return;
-          }
-          
-          // Debug se non abbiamo trovato immagini
-          if (validImages.length === 0) {
-            console.warn(`Nessuna immagine pubblica trovata per ${apartment.id}, debug in corso...`);
-            await imageService.debugImage(`/images/apartments/${normalizedId}/image1.jpg`);
-            await imageService.debugImage(`/images/apartments/${apartment.id}/image1.jpg`);
-          }
-          
-          // Fallback to apartment's default image
-          console.log(`Nessuna immagine trovata, uso immagini di default per ${apartment.id}`, apartment.images);
-          setGalleryImages(apartment.images);
-        };
-        
-        checkForPublicImages();
-      } catch (error) {
-        console.error("Error loading apartment images:", error);
+        return;
+      }
+      
+      // Fallback alle immagini predefinite dell'appartamento se presenti
+      if (apartment.images && apartment.images.length > 0) {
         setGalleryImages(apartment.images);
       }
       
-      // Reset image index when apartment changes
-      setCurrentImageIndex(0);
+      // In background, cerca comunque le immagini più recenti senza bloccare l'interfaccia
+      imageService.scanApartmentImages(apartment.id).then(images => {
+        if (images && images.length > 0) {
+          setGalleryImages(images);
+          
+          // Precarica le prossime immagini
+          if (images.length > 1) {
+            imageService.preloadImages(images.slice(1, 4));
+          }
+        }
+      });
     }
   }, [apartment]);
+  
+  // Precarica l'immagine successiva quando cambia l'indice corrente
+  useEffect(() => {
+    if (galleryImages.length > 1) {
+      const nextIndex = (currentImageIndex + 1) % galleryImages.length;
+      imageService.preloadImage(galleryImages[nextIndex]);
+    }
+  }, [currentImageIndex, galleryImages]);
   
   const nextImage = () => {
     if (galleryImages.length > 1) {
@@ -137,8 +129,8 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
     return null;
   }
 
-  // Determina l'URL dell'immagine corrente, aggiungendo un timestamp per evitare problemi di cache
-  const currentImage = galleryImages[currentImageIndex] || apartment.images[0];
+  // Determina l'URL dell'immagine corrente
+  const currentImage = galleryImages[currentImageIndex] || apartment.images[0] || "/placeholder.svg";
   const imageUrl = currentImage.startsWith('/images/apartments/')
     ? imageService.getImageUrl(currentImage)
     : currentImage;
@@ -155,14 +147,10 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
         
         <div className="space-y-4">
           <div className="aspect-video bg-muted rounded-md overflow-hidden relative">
-            <img 
+            <ProgressiveImage 
               src={imageUrl} 
               alt={apartment.name} 
               className="w-full h-full object-cover"
-              onError={(e) => {
-                console.error(`Errore nel caricare l'immagine ${currentImage}`);
-                e.currentTarget.src = "/placeholder.svg";
-              }}
             />
             
             {galleryImages.length > 1 && (
