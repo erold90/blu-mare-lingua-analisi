@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -84,7 +85,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
 
   // Funzione per convertire un file in Base64
-  const fileToBase64 = (file: File): Promise<string> => {
+  const fileToBase64 = (file: Blob): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
@@ -94,7 +95,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
   
   // Funzione per ottimizzare un'immagine prima del salvataggio
-  const optimizeImage = async (file: File, maxWidth = 1920): Promise<Blob> => {
+  const optimizeImage = async (file: File, maxWidth = 1920): Promise<File> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
@@ -124,7 +125,16 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         canvas.toBlob(
           blob => {
             if (blob) {
-              resolve(blob);
+              // Convert Blob to File by adding required properties
+              const optimizedFile = new File(
+                [blob], 
+                file.name, 
+                { 
+                  type: file.type,
+                  lastModified: new Date().getTime()
+                }
+              );
+              resolve(optimizedFile);
             } else {
               reject(new Error("Failed to create blob from canvas"));
             }
