@@ -4,7 +4,6 @@ import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { apartments } from "@/data/apartments";
 import { createWhatsAppMessage } from "@/utils/quoteCalculator";
-import { useState } from "react";
 
 export function useQuoteActions(form: UseFormReturn<FormValues>) {
   // Send quote via WhatsApp

@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Download, MessageCircle, FileText, Send } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +7,6 @@ import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { calculateTotalPrice } from "@/utils/price/priceCalculator";
 import { Separator } from "@/components/ui/separator";
-import QuoteConfirmationDialog from "./QuoteConfirmationDialog";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -17,7 +15,6 @@ interface ContactStepProps {
   apartments: Apartment[];
   prevStep: () => void;
   onSubmit: () => void;
-  downloadQuote: (name?: string) => void;
   sendWhatsApp: () => void;
 }
 
@@ -26,19 +23,12 @@ const ContactStep: React.FC<ContactStepProps> = ({
   apartments,
   prevStep, 
   onSubmit,
-  downloadQuote, 
   sendWhatsApp 
 }) => {
-  const [showPdfDialog, setShowPdfDialog] = useState(false);
   const formValues = form.getValues();
   const priceInfo = calculateTotalPrice(formValues, apartments);
   const selectedApartmentIds = formValues.selectedApartments || [formValues.selectedApartment];
   const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
-  
-  // Function to handle PDF download directly
-  const handleDownloadClick = () => {
-    setShowPdfDialog(true);
-  };
   
   return (
     <>
@@ -93,7 +83,7 @@ const ContactStep: React.FC<ContactStepProps> = ({
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-users">
                         <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
                         <circle cx="9" cy="7" r="4" />
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M22 21v-2a4 4 0 0 1 0 7.75" />
                         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                       </svg>
                       Ospiti:
@@ -196,15 +186,6 @@ const ContactStep: React.FC<ContactStepProps> = ({
                 <h3 className="font-medium mb-2">Azioni disponibili</h3>
                 <div className="flex flex-col gap-2">
                   <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="justify-start gap-2 text-sm"
-                    onClick={handleDownloadClick}
-                  >
-                    <FileText className="h-4 w-4" />
-                    Scarica PDF del preventivo
-                  </Button>
-                  <Button 
                     type="button"
                     className="justify-start gap-2 bg-green-600 hover:bg-green-700 text-sm"
                     onClick={sendWhatsApp}
@@ -251,19 +232,6 @@ const ContactStep: React.FC<ContactStepProps> = ({
           </Button>
         </CardFooter>
       </Card>
-      
-      <QuoteConfirmationDialog 
-        open={showPdfDialog} 
-        onOpenChange={setShowPdfDialog}
-        onConfirm={(name) => {
-          downloadQuote(name);
-          setShowPdfDialog(false);
-        }}
-        onSkip={() => {
-          downloadQuote();
-          setShowPdfDialog(false);
-        }}
-      />
     </>
   );
 };

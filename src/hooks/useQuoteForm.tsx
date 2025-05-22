@@ -56,12 +56,9 @@ export function useQuoteForm() {
   } = useGroupManagement(form, setChildrenArray);
   
   const { 
-    downloadQuote, 
     sendWhatsApp, 
     onSubmitHandler, 
-    handleSubmitWrapper,
-    showConfirmationDialog,
-    setShowConfirmationDialog
+    handleSubmitWrapper
   } = useQuoteActions(form);
   
   // Setup effect hooks
@@ -75,8 +72,6 @@ export function useQuoteForm() {
     apartmentDialog,
     groupDialog,
     familyGroups,
-    showConfirmationDialog,
-    setShowConfirmationDialog,
     incrementAdults,
     decrementAdults,
     incrementChildren,
@@ -90,7 +85,6 @@ export function useQuoteForm() {
     openGroupDialog,
     closeGroupDialog,
     setFamilyGroups,
-    downloadQuote,
     sendWhatsApp,
     onSubmitHandler,
     handleSubmitWrapper
