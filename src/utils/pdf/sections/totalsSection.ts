@@ -66,8 +66,8 @@ export const generateTotalsSection = (doc: jsPDF, priceCalculation: PriceCalcula
   doc.setFillColor(235, 245, 255);
   doc.roundedRect(baseX - 2, currentY - 5, pageWidth - (baseX * 2) + 4, 25, 2, 2, 'F');
   
-  // Format the total price
-  const formattedTotal = priceCalculation.total.toLocaleString('it-IT', {
+  // Format the total price - Fix: use totalAfterDiscount instead of total
+  const formattedTotal = priceCalculation.totalAfterDiscount.toLocaleString('it-IT', {
     style: 'currency',
     currency: 'EUR',
     minimumFractionDigits: 0,

@@ -37,9 +37,16 @@ export const generateQuotePdf = (
   // Generate the document sections
   let yPos = generateQuoteHeader(doc);
   yPos = generateStayInfoSection(doc, formData, priceCalculation, yPos);
+  
+  // Adjust position for apartment list
+  if (yPos > doc.internal.pageSize.getHeight() - 150) {
+    doc.addPage();
+    yPos = 20; // Reset Y position on new page
+  }
+  
   yPos = generateApartmentListSection(doc, selectedApts, yPos);
   
-  // Ensure we have enough space for the costs table - always start on a new page for better layout
+  // Always start the costs table on a new page for better layout
   doc.addPage();
   yPos = 20; // Reset Y position on new page
   
@@ -51,7 +58,7 @@ export const generateQuotePdf = (
   yPos = generateCostsTableSection(doc, selectedApts, priceCalculation, formData, yPos);
   
   // Make sure we have space for the totals section
-  if (yPos > doc.internal.pageSize.getHeight() - 100) {
+  if (yPos > doc.internal.pageSize.getHeight() - 120) {
     doc.addPage();
     yPos = 20;
   }
@@ -60,7 +67,7 @@ export const generateQuotePdf = (
   yPos = generateTotalsSection(doc, priceCalculation, yPos);
   
   // Make sure we have space for the security deposit section
-  if (yPos > doc.internal.pageSize.getHeight() - 60) {
+  if (yPos > doc.internal.pageSize.getHeight() - 80) {
     doc.addPage();
     yPos = 20;
   }
@@ -69,7 +76,7 @@ export const generateQuotePdf = (
   yPos = generateSecurityDepositSection(doc, selectedApts, yPos);
   
   // Add terms and conditions at the bottom
-  if (yPos > doc.internal.pageSize.getHeight() - 60) {
+  if (yPos > doc.internal.pageSize.getHeight() - 100) {
     doc.addPage();
     yPos = 20;
   }
