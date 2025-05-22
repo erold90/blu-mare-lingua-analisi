@@ -1,4 +1,3 @@
-
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
 import { Apartment } from "@/data/apartments";
@@ -30,7 +29,7 @@ export const createApartmentRows = (
     const pricePerNight = Math.round(aptPrice / priceCalculation.nights);
     
     rows.push([
-      `${apt.name} (${apt.bedrooms} camere, ${apt.maxGuests} ospiti max)`, 
+      `${apt.name} (${apt.bedrooms} camere, ${apt.capacity} ospiti max)`, 
       ""
     ]);
     
@@ -46,7 +45,7 @@ export const createApartmentRows = (
       const pricePerNight = Math.round(aptPrice / priceCalculation.nights);
       
       rows.push([
-        `${apt.name} (${apt.bedrooms} camere, ${apt.maxGuests} ospiti max)`, 
+        `${apt.name} (${apt.bedrooms} camere, ${apt.capacity} ospiti max)`, 
         ""
       ]);
       
