@@ -27,7 +27,7 @@ interface SettingsContextType {
   addBlockedDateRange: (start: string, end: string) => void;
   removeBlockedDateRange: (index: number) => void;
   isDateBlocked: (date: Date) => boolean;
-  saveImageToStorage: (file: File, category: 'hero' | 'home' | 'social' | 'favicon') => Promise<string>;
+  saveImageToStorage: (file: File, category: 'hero' | 'home' | 'social' | 'favicon' | 'socialImage') => Promise<string>;
   deleteImageFromStorage: (imagePath: string) => void;
 }
 
@@ -85,16 +85,19 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
   
   // Function to save image to storage
-  const saveImageToStorage = async (file: File, category: 'hero' | 'home' | 'social' | 'favicon'): Promise<string> => {
+  const saveImageToStorage = async (file: File, category: 'hero' | 'home' | 'social' | 'favicon' | 'socialImage'): Promise<string> => {
+    // For consistency, map 'socialImage' to 'social' category in storage path
+    const storageCategory = category === 'socialImage' ? 'social' : category;
+    
     // Create a unique filename
-    const filename = generateUniqueFilename(file, category);
+    const filename = generateUniqueFilename(file, storageCategory);
     
     // In a real app, we would upload to a server here
     // For this demo, we'll use local storage with a persistent path convention
     const objectURL = URL.createObjectURL(file);
     
     // Store the mapping between the objectURL and the permanent path
-    const storagePath = `/storage/${category}/${filename}`;
+    const storagePath = `/storage/${storageCategory}/${filename}`;
     
     // Save the mapping in localStorage (this simulates our "database")
     const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
