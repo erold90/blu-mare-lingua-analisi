@@ -39,7 +39,6 @@ const RequestQuotePage = () => {
     openGroupDialog,
     closeGroupDialog,
     setFamilyGroups,
-    downloadQuote,
     sendWhatsApp,
     onSubmitHandler,
     handleSubmitWrapper
@@ -118,7 +117,6 @@ const RequestQuotePage = () => {
                 form={form}
                 apartments={apartments}
                 prevStep={prevStep}
-                downloadQuote={downloadQuote}
                 sendWhatsApp={sendWhatsApp}
               />
             )}

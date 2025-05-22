@@ -16,7 +16,6 @@ interface SummaryStepProps {
   form: UseFormReturn<FormValues>;
   apartments: Apartment[];
   prevStep: () => void;
-  downloadQuote: () => void;
   sendWhatsApp: () => void;
 }
 
@@ -24,7 +23,6 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
   form, 
   apartments, 
   prevStep,
-  downloadQuote,
   sendWhatsApp
 }) => {
   const formValues = form.getValues();
@@ -61,7 +59,6 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
   const footerActions = (
     <QuoteActions 
       prevStep={prevStep} 
-      downloadQuote={downloadQuote}
       sendWhatsApp={sendWhatsApp}
     />
   );

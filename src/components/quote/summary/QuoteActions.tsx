@@ -1,17 +1,15 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { FileText, MessageSquare } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 
 interface QuoteActionsProps {
   prevStep: () => void;
-  downloadQuote: () => void;
   sendWhatsApp: () => void;
 }
 
 const QuoteActions: React.FC<QuoteActionsProps> = ({
   prevStep,
-  downloadQuote,
   sendWhatsApp
 }) => {
   return (
@@ -19,25 +17,14 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
       <Button type="button" variant="outline" onClick={prevStep}>
         Indietro
       </Button>
-      <div className="flex gap-3 flex-col md:flex-row w-full md:w-auto">
-        <Button
-          type="button"
-          className="w-full md:w-auto"
-          onClick={downloadQuote}
-          variant="secondary"
-        >
-          <FileText className="mr-2" />
-          Scarica preventivo PDF
-        </Button>
-        <Button
-          type="button"
-          className="w-full md:w-auto"
-          onClick={sendWhatsApp}
-        >
-          <MessageSquare className="mr-2" />
-          Invia preventivo via WhatsApp
-        </Button>
-      </div>
+      <Button
+        type="button"
+        className="w-full md:w-auto"
+        onClick={sendWhatsApp}
+      >
+        <MessageSquare className="mr-2" />
+        Invia preventivo via WhatsApp
+      </Button>
     </div>
   );
 };
