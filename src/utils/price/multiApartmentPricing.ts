@@ -6,6 +6,12 @@ import { PriceCalculation } from "./types";
 /**
  * Calculate individual apartment prices with discount
  * Each apartment is discounted separately before summing up
+ * @param formValues - Form values from the quote form
+ * @param selectedApartments - List of selected apartments
+ * @param apartmentPrices - Base prices for each apartment
+ * @param basePrice - Total base price
+ * @param totalBeforeDiscount - Total price before discount
+ * @returns Object with pricing details
  */
 export const calculateMultiApartmentPricing = (
   formValues: FormValues,
@@ -19,18 +25,20 @@ export const calculateMultiApartmentPricing = (
   discountedApartmentPrices: Record<string, number>;
   deposit: number;
 } => {
-  // Calculate discounted price for each apartment individually
-  let sumOfDiscountedApartmentPrices = 0;
+  // Create a map for tracking calculations
   const discountedApartmentPrices: Record<string, number> = {};
+  let sumOfDiscountedApartmentPrices = 0;
 
+  // Process each apartment separately
   selectedApartments.forEach(apartment => {
     const baseApartmentPrice = apartmentPrices[apartment.id] || 0;
     
-    // Get per-apartment extras (this is a simplified version; may need to be refined)
-    const hasPets = formValues.petsInApartment?.[apartment.id] || formValues.hasPets;
+    // Determine if this apartment has pets
+    const hasPets = formValues.petsInApartment?.[apartment.id] || 
+                   (formValues.hasPets && selectedApartments.length === 1);
     const petCost = hasPets ? 50 : 0;
     
-    // Count people for this apartment
+    // Calculate people count for this apartment
     const peopleCount = formValues.personsPerApartment?.[apartment.id] || 
                        ((formValues.adults || 0) + (formValues.children || 0));
                        
@@ -54,14 +62,11 @@ export const calculateMultiApartmentPricing = (
   const totalAfterDiscount = sumOfDiscountedApartmentPrices;
   const discount = totalBeforeDiscount - totalAfterDiscount;
   
-  console.log(`Sum of discounted apartment prices: ${sumOfDiscountedApartmentPrices}€`);
+  console.log(`Sum of discounted apartment prices: ${totalAfterDiscount}€`);
   console.log(`Total discount: ${discount}€`);
   
-  // Calculate deposit based on total after discount (rounded to nearest 100€)
-  const deposit = Math.min(
-    Math.round(totalAfterDiscount * 0.3 / 100) * 100,
-    Math.round(totalAfterDiscount * 0.35 / 100) * 100
-  );
+  // Calculate deposit (30-35% of total, rounded to nearest 100€)
+  const deposit = calculateOptimalDeposit(totalAfterDiscount);
 
   return {
     totalAfterDiscount,
@@ -70,3 +75,15 @@ export const calculateMultiApartmentPricing = (
     deposit
   };
 };
+
+/**
+ * Calculate optimal deposit amount between 30-35% of total, rounded to nearest 100€
+ * @param total - Total price after discount
+ * @returns Deposit amount
+ */
+function calculateOptimalDeposit(total: number): number {
+  return Math.min(
+    Math.round(total * 0.3 / 100) * 100,
+    Math.round(total * 0.35 / 100) * 100
+  );
+}

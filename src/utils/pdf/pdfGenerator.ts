@@ -13,9 +13,20 @@ import {
 } from "./formatUtils";
 import { generateQuotePdf } from "./quotePdfGenerator";
 
-// Main function to create and download the quote PDF
-export const downloadPDF = (formData: FormValues, apartments: Apartment[], clientName?: string) => {
+/**
+ * Main function to create and download the quote PDF
+ * @param formData - Form data from the quote form
+ * @param apartments - List of all apartments
+ * @param clientName - Optional client name
+ * @returns Filename of the generated PDF
+ */
+export const downloadPDF = (formData: FormValues, apartments: Apartment[], clientName?: string): string => {
   try {
+    // Validate input data
+    if (!formData.checkIn || !formData.checkOut) {
+      throw new Error("Date di arrivo/partenza non specificate");
+    }
+    
     // Find the selected apartments
     const selectedApartmentIds = formData.selectedApartments || [formData.selectedApartment];
     const selectedApts = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
@@ -24,10 +35,13 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
       throw new Error("Nessun appartamento selezionato");
     }
     
-    // Calculate the total price
+    // Calculate the total price - use memoized version if available
+    console.time("Price calculation");
     const priceCalculation = calculateTotalPrice(formData, apartments);
+    console.timeEnd("Price calculation");
     
-    // Generate the PDF using the new minimalist template
+    // Generate the PDF using the minimalist template
+    console.time("PDF generation");
     const doc = generateQuotePdf(formData, selectedApts, priceCalculation, clientName);
     
     // Add page numbers if multiple pages
@@ -35,15 +49,21 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
       addPageNumbers(doc);
     }
     
-    // Add basic footer
+    // Add basic footer with company information
     addBasicFooter(doc);
+    console.timeEnd("PDF generation");
+    
+    // Generate a meaningful filename
+    const safeName = (clientName || formData.name || "Cliente")
+      .replace(/[^a-zA-Z0-9]/g, '_')
+      .substring(0, 30);
+    const today = new Date();
+    const fileName = `Preventivo_${safeName}_${format(today, "yyyyMMdd")}.pdf`;
     
     // Save the PDF
-    const today = new Date();
-    const fileName = `Preventivo_${clientName || formData.name || "Cliente"}_${format(today, "yyyyMMdd")}.pdf`;
-    
     doc.save(fileName);
     
+    console.log(`PDF preventivo generato: ${fileName}`);
     return fileName;
   } catch (error) {
     console.error("Errore durante la generazione del PDF:", error);
