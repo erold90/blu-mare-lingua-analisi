@@ -13,7 +13,7 @@ export const HeroSection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   
-  // Hero image path from the public folder
+  // Hero image path - directly from the public folder
   const heroImagePath = '/images/hero/hero.jpg';
   
   // Fallback image in case the hero image is not found
@@ -24,6 +24,7 @@ export const HeroSection = () => {
   
   const handleImageLoad = () => {
     setIsLoading(false);
+    console.log("Hero image loaded successfully:", heroImagePath);
   };
 
   const handleImageError = () => {
@@ -35,13 +36,13 @@ export const HeroSection = () => {
   return (
     <div className="relative w-full">
       <div className={`w-full ${isMobile ? "h-[70vh]" : "h-[80vh]"} relative overflow-hidden`}>
-        {/* Hidden image to detect load/error events */}
+        {/* Load image directly and handle events */}
         <img 
-          src={heroImagePath} 
-          className="hidden" 
-          onLoad={handleImageLoad} 
-          onError={handleImageError} 
-          alt="Hidden loader" 
+          src={heroImagePath}
+          className="hidden"
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+          alt="Hidden loader"
         />
         
         {isLoading ? (
