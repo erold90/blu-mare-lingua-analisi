@@ -14,9 +14,9 @@ export const generateQuoteHeader = (doc: jsPDF): number => {
   // Format the quote number with year-month-sequential 
   const quoteNumber = `${currentYear}-${currentMonth}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
   
-  // Add quote identification
+  // Add quote identification - more compact
   doc.setFillColor(245, 248, 252);
-  doc.roundedRect(10, 40, doc.internal.pageSize.getWidth() - 20, 15, 2, 2, 'F');
+  doc.roundedRect(10, 40, doc.internal.pageSize.getWidth() - 20, 12, 2, 2, 'F'); // Reduced height
   
   doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
@@ -30,5 +30,5 @@ export const generateQuoteHeader = (doc: jsPDF): number => {
   // Reset font
   doc.setFont('helvetica', 'normal');
   
-  return 60; // Return next Y position
+  return 55; // Return next Y position (reduced from 60)
 };

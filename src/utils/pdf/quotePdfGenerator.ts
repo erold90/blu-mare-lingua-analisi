@@ -17,7 +17,7 @@ import { generateSecurityDepositSection } from "./sections/securityDepositSectio
 import { generateTermsSection } from "./sections/termsSection";
 import { verifyAutoTable } from "./jspdfConfig";
 
-// Generate an elegant and professional quote PDF
+// Generate a compact, professional quote PDF
 export const generateQuotePdf = (
   formData: FormValues, 
   selectedApts: Apartment[], 
@@ -33,57 +33,33 @@ export const generateQuotePdf = (
   const villaName = "VILLA MAREBLU"; // This would ideally come from settings
   addHeader(doc, villaName);
   
-  // Generate the document sections
+  // Generate the document sections with minimal spacing
   let yPos = generateQuoteHeader(doc);
   
   // Add the stay info section with a professional layout
   yPos = generateStayInfoSection(doc, formData, priceCalculation, yPos);
+  yPos += 5; // Small spacing between sections
   
-  // Add the apartment list section - keep it on the same page if possible
-  if (yPos > doc.internal.pageSize.getHeight() - 80) {
-    doc.addPage();
-    yPos = 20; // Reset Y position on new page
-  }
-  
+  // Add the apartment list section - keep it brief
   yPos = generateApartmentListSection(doc, selectedApts, yPos);
+  yPos += 5; // Small spacing between sections
   
-  // Generate costs section - position it right after apartment list with proper spacing
-  if (yPos > doc.internal.pageSize.getHeight() - 180) {
-    doc.addPage();
-    yPos = 20; // Reset Y position on new page
-  } else {
-    yPos += 10; // Add spacing between sections
-  }
-  
-  // Generate the costs table with detailed breakdown
+  // Generate costs section right after
   yPos = generateCostsTableSection(doc, selectedApts, priceCalculation, formData, yPos);
+  yPos += 5; // Small spacing between sections
   
-  // Position the totals section properly
-  if (yPos > doc.internal.pageSize.getHeight() - 130) {
-    doc.addPage();
-    yPos = 20;
-  }
-  
-  // Generate the totals section with final price
+  // Generate the totals section
   yPos = generateTotalsSection(doc, priceCalculation, yPos);
+  yPos += 5; // Small spacing between sections
   
   // Add security deposit section
-  if (yPos > doc.internal.pageSize.getHeight() - 80) {
-    doc.addPage();
-    yPos = 20;
-  }
-  
   yPos = generateSecurityDepositSection(doc, selectedApts, yPos);
+  yPos += 5; // Small spacing between sections
   
-  // Add terms and conditions at the bottom
-  if (yPos > doc.internal.pageSize.getHeight() - 100) {
-    doc.addPage();
-    yPos = 20;
-  }
+  // Add compact terms and conditions
+  yPos = generateTermsSection(doc, yPos);
   
-  generateTermsSection(doc, yPos);
-  
-  // Add page numbers and footer to all pages
+  // Add page numbers and footer only if multiple pages
   if (doc.getNumberOfPages() > 1) {
     addPageNumbers(doc);
   }

@@ -14,13 +14,15 @@ export const generateStayInfoSection = (doc: jsPDF, formData: FormValues, priceC
   // Add a light background to make the section stand out
   const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFillColor(245, 248, 252);
-  doc.roundedRect(10, currentY, pageWidth - 20, 90, 3, 3, 'F');
+  doc.roundedRect(10, currentY, pageWidth - 20, 60, 3, 3, 'F'); // Reduced height
   
   // Add some padding
-  currentY += 10;
+  currentY += 5; // Reduced padding
   
   // Configure label position
   const labelX = 25; // X position for labels
+  const valueX = 85; // X position for values
+  const lineHeight = 6; // Reduced line height
   
   // Check if dates are available
   if (formData.checkIn && formData.checkOut) {
@@ -36,14 +38,14 @@ export const generateStayInfoSection = (doc: jsPDF, formData: FormValues, priceC
     doc.setFont('helvetica', 'bold');
     doc.text("Periodo:", labelX, currentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(`Dal ${checkInFormatted} al ${checkOutFormatted}`, labelX + 60, currentY);
-    currentY += 8;
+    doc.text(`Dal ${checkInFormatted} al ${checkOutFormatted}`, valueX, currentY);
+    currentY += lineHeight;
     
     doc.setFont('helvetica', 'bold');
     doc.text("Durata:", labelX, currentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(`${nights} notti`, labelX + 60, currentY);
-    currentY += 8;
+    doc.text(`${nights} notti`, valueX, currentY);
+    currentY += lineHeight;
   }
   
   // Add guest composition with more details
@@ -54,16 +56,16 @@ export const generateStayInfoSection = (doc: jsPDF, formData: FormValues, priceC
   doc.setFont('helvetica', 'bold');
   doc.text("Ospiti:", labelX, currentY);
   doc.setFont('helvetica', 'normal');
-  doc.text(`${totalGuests} totali (${adults} adulti, ${children} bambini)`, labelX + 60, currentY);
-  currentY += 8;
+  doc.text(`${totalGuests} totali (${adults} adulti, ${children} bambini)`, valueX, currentY);
+  currentY += lineHeight;
   
   // Add name if available with better formatting
   if (formData.name) {
     doc.setFont('helvetica', 'bold');
     doc.text("Nome:", labelX, currentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(formData.name, labelX + 60, currentY);
-    currentY += 8;
+    doc.text(formData.name, valueX, currentY);
+    currentY += lineHeight;
   }
   
   // Add email if available
@@ -71,8 +73,8 @@ export const generateStayInfoSection = (doc: jsPDF, formData: FormValues, priceC
     doc.setFont('helvetica', 'bold');
     doc.text("Email:", labelX, currentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(formData.email, labelX + 60, currentY);
-    currentY += 8;
+    doc.text(formData.email, valueX, currentY);
+    currentY += lineHeight;
   }
   
   // Add phone if available
@@ -80,22 +82,21 @@ export const generateStayInfoSection = (doc: jsPDF, formData: FormValues, priceC
     doc.setFont('helvetica', 'bold');
     doc.text("Telefono:", labelX, currentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(formData.phone, labelX + 60, currentY);
-    currentY += 8;
+    doc.text(formData.phone, valueX, currentY);
+    currentY += lineHeight;
   }
   
-  // Add a note about the guest
+  // Add a note about the guest - only if there's space
   if (formData.notes) {
-    currentY += 5;
     doc.setFont('helvetica', 'bold');
     doc.text("Note:", labelX, currentY);
     doc.setFont('helvetica', 'normal');
-    doc.text(formData.notes, labelX + 60, currentY);
-    currentY += 8;
+    doc.text(formData.notes, valueX, currentY);
+    currentY += lineHeight;
   }
   
   // Reset font
   doc.setFont('helvetica', 'normal');
   
-  return currentY + 10; // Return next Y position with padding
+  return currentY + 5; // Return next Y position with minimal padding
 };

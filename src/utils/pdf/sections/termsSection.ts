@@ -3,73 +3,62 @@ import { jsPDF } from "jspdf";
 import { createSection } from "../formatUtils";
 
 /**
- * Generate the terms and conditions section of the quote
+ * Generate the terms & conditions section
  */
 export const generateTermsSection = (doc: jsPDF, yPos: number): number => {
-  // Create section heading with background
+  // Add section title
   let currentY = createSection(doc, "TERMINI E CONDIZIONI", yPos);
-  currentY += 10;
+  currentY += 3; // Reduced spacing
   
-  // Set font for terms
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  
-  // Add terms content with better formatting
-  const baseX = 15;
+  // Create a box for the terms
   const pageWidth = doc.internal.pageSize.getWidth();
-  const contentWidth = pageWidth - 30;
+  doc.setFillColor(250, 250, 252);
+  doc.roundedRect(10, currentY, pageWidth - 20, 40, 2, 2, 'F'); // Reduced height
   
-  // Add light background for terms
-  doc.setFillColor(248, 250, 252);
-  doc.setDrawColor(230, 235, 240);
-  doc.roundedRect(baseX - 5, currentY - 5, contentWidth + 10, 100, 3, 3, 'FD');
-  
-  // Add individual terms with proper spacing
-  doc.setFont('helvetica', 'bold');
-  doc.text("1. Prenotazione e pagamento", baseX, currentY);
+  // Add the terms content
+  doc.setFontSize(8); // Reduced font size
   doc.setFont('helvetica', 'normal');
-  currentY += 10;
-  doc.text(
-    "La prenotazione è considerata confermata solo dopo il versamento della caparra confirmatoria del 30% dell'importo totale. " +
-    "Il saldo dovrà essere versato all'arrivo in contanti o con carta di credito.",
-    baseX, currentY, { maxWidth: contentWidth }
-  );
   
-  currentY += 15;
-  doc.setFont('helvetica', 'bold');
-  doc.text("2. Cancellazione", baseX, currentY);
-  doc.setFont('helvetica', 'normal');
-  currentY += 10;
-  doc.text(
-    "In caso di cancellazione fino a 30 giorni prima dell'arrivo, la caparra verrà restituita al 100%. " +
-    "Per cancellazioni tra 30 e 15 giorni prima dell'arrivo, verrà trattenuto il 50% della caparra. " +
-    "Per cancellazioni a meno di 15 giorni dall'arrivo, l'intera caparra verrà trattenuta.",
-    baseX, currentY, { maxWidth: contentWidth }
-  );
+  // Create an array of terms - compact version
+  const terms = [
+    "• Validità preventivo: 7 giorni dalla data di emissione",
+    "• Acconto: 30% tramite bonifico per conferma",
+    "• Saldo: all'arrivo in contanti/carta",
+    "• Check-in: 15:00-19:00, Check-out: entro 10:00",
+    "• Cancellazione: fino a 30gg rimborso 50%, entro 15gg no rimborso"
+  ];
   
-  currentY += 20;
-  doc.setFont('helvetica', 'bold');
-  doc.text("3. Check-in e Check-out", baseX, currentY);
-  doc.setFont('helvetica', 'normal');
-  currentY += 10;
-  doc.text(
-    "Il check-in è previsto dalle ore 15:00 alle 19:00. Il check-out deve essere effettuato entro le ore 10:00. " +
-    "Orari diversi devono essere concordati in anticipo.",
-    baseX, currentY, { maxWidth: contentWidth }
-  );
+  // Add terms as bullet points in a compact format
+  let termY = currentY + 5;
+  const columnWidth = (pageWidth - 30) / 2;
+  const middleX = 15 + columnWidth;
   
-  // Add note about full terms
-  currentY += 20;
+  // First column
+  for (let i = 0; i < Math.ceil(terms.length / 2); i++) {
+    doc.text(terms[i], 15, termY);
+    termY += 6; // Reduced spacing
+  }
+  
+  // Reset for second column
+  termY = currentY + 5;
+  
+  // Second column
+  for (let i = Math.ceil(terms.length / 2); i < terms.length; i++) {
+    doc.text(terms[i], middleX, termY);
+    termY += 6; // Reduced spacing
+  }
+  
+  // Add footer note
+  currentY += 30; // Position after the terms box
   doc.setFont('helvetica', 'italic');
-  doc.text(
-    "Questo preventivo è valido per 7 giorni dalla data di emissione. Il regolamento completo della struttura " + 
-    "sarà disponibile all'arrivo o su richiesta.",
-    baseX, currentY, { maxWidth: contentWidth }
-  );
+  doc.setFontSize(8);
+  doc.setTextColor(80, 80, 120);
+  doc.text("Grazie per aver scelto Villa Mareblu per il vostro soggiorno.", pageWidth / 2, currentY, { 
+    align: "center" 
+  });
   
-  // Reset font
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
+  // Reset text color
+  doc.setTextColor(0, 0, 0);
   
-  return currentY + 15;
+  return currentY + 5; // Return next Y position
 };

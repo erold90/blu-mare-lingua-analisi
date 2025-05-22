@@ -14,7 +14,7 @@ export const drawManualTable = (
 ): number => {
   let currentY = startY;
   const margin = 15;
-  const cellPadding = 5;
+  const cellPadding = 3; // Reduced padding
   const columnWidths = [110, 40]; // Adjust as needed
   
   // Function to draw a cell
@@ -32,7 +32,7 @@ export const drawManualTable = (
     }
     
     // Safely access style properties with default values
-    const fontSize = styles?.fontSize || 10;
+    const fontSize = styles?.fontSize || 9; // Reduced font size
     const fontStyle = (styles?.fontStyle || 'normal') as 'bold' | 'italic' | 'normal';
     const textColor = styles?.textColor || [0, 0, 0];
     
@@ -54,7 +54,7 @@ export const drawManualTable = (
   
   // Draw headers
   let currentX = margin;
-  const headerHeight = 20;
+  const headerHeight = 14; // Reduced header height
   headers.forEach(headerRow => {
     headerRow.forEach((header, i) => {
       drawCell(currentX, currentY, columnWidths[i], headerHeight, header, true);
@@ -65,7 +65,7 @@ export const drawManualTable = (
   });
   
   // Draw body
-  const rowHeight = 15;
+  const rowHeight = 12; // Reduced row height
   body.forEach(row => {
     currentX = margin;
     row.forEach((cell, i) => {
@@ -76,5 +76,5 @@ export const drawManualTable = (
   });
   
   // Return the Y position after the table
-  return startY + (body.length * 10);
+  return currentY;
 };

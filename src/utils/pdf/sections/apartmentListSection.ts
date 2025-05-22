@@ -1,30 +1,43 @@
 
 import { jsPDF } from "jspdf";
 import { Apartment } from "@/data/apartments";
-import { createSection, createInfoRow } from "../formatUtils";
+import { createSection } from "../formatUtils";
 
 /**
  * Generate the apartment list section of the quote
  */
 export const generateApartmentListSection = (doc: jsPDF, selectedApts: Apartment[], yPos: number): number => {
-  // Add a short description before listing apartments
   let currentY = yPos;
+  const lineHeight = 6; // Reduced line height
   
   // Add selected apartments with detailed information
   if (selectedApts.length === 1) {
-    // Single apartment scenario
+    // Single apartment scenario - more compact
     const apt = selectedApts[0];
-    currentY = createInfoRow(doc, "Appartamento:", apt.name, currentY);
-    currentY = createInfoRow(doc, "Posti letto:", `${apt.beds} (${apt.bedrooms} camere)`, currentY);
-    currentY = createInfoRow(doc, "Dimensione:", `${apt.size} m²`, currentY);
-  } else {
-    // Multiple apartments scenario
-    currentY = createInfoRow(doc, "Appartamenti:", selectedApts.map(apt => apt.name).join(', '), currentY);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Appartamento:", 15, currentY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(apt.name, 85, currentY);
+    currentY += lineHeight;
     
-    // Add a detail row for each apartment
+    doc.setFont('helvetica', 'bold');
+    doc.text("Caratteristiche:", 15, currentY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${apt.beds} posti letto, ${apt.bedrooms} camere, ${apt.size} m²`, 85, currentY);
+    currentY += lineHeight;
+  } else {
+    // Multiple apartments scenario - more compact list
+    doc.setFont('helvetica', 'bold');
+    doc.text("Appartamenti:", 15, currentY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(selectedApts.map(apt => apt.name).join(', '), 85, currentY);
+    currentY += lineHeight;
+    
+    // Add a compact detail row for each apartment
     selectedApts.forEach(apt => {
-      const aptDetails = `${apt.name}: ${apt.beds} posti letto, ${apt.bedrooms} camere, ${apt.size} m²`;
-      currentY = createInfoRow(doc, "", aptDetails, currentY);
+      const aptDetails = `${apt.name}: ${apt.beds} posti, ${apt.bedrooms} camere, ${apt.size} m²`;
+      doc.text(aptDetails, 15, currentY);
+      currentY += lineHeight;
     });
   }
   
