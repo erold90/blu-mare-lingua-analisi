@@ -25,8 +25,13 @@ export interface TableCell {
   };
 }
 
-// We don't need to declare the module here since we're importing the package
-// which already augments the jsPDF type
+// Extend the jsPDF interface to include autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => AutoTableResult;
+    lastAutoTable?: AutoTableResult;
+  }
+}
 
 // Re-export the PriceCalculation interface from the central location
 export type { PriceCalculation };
