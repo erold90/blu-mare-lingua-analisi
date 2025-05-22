@@ -11,25 +11,12 @@ import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export const HomeImagesSection = () => {
-  const { siteSettings, updateSiteSettings, saveImageToStorage, deleteImageFromStorage } = useSettings();
+  const { siteSettings, updateSiteSettings, saveImageToStorage } = useSettings();
   const isMobile = useIsMobile();
   const [previewImage, setPreviewImage] = React.useState<string | null>(null);
   
   // Assicurati che homeImages esista
   const homeImages = siteSettings.homeImages || [];
-  
-  // Funzione per caricare l'immagine dal suo percorso
-  const getImageFromStorage = (imagePath: string): string => {
-    if (!imagePath) return '/placeholder.svg';
-    
-    if (imagePath.startsWith('/images/')) {
-      // Recupera l'immagine dallo storage
-      const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-      return imageStorage[imagePath] || imagePath;
-    }
-    
-    return imagePath;
-  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -53,20 +40,12 @@ export const HomeImagesSection = () => {
   };
 
   const removeImage = (index: number) => {
-    const imagePath = homeImages[index];
-    
-    // Delete the image from storage if it's a storage path
-    if (imagePath && (imagePath.startsWith('/images/') || imagePath.startsWith('/storage/'))) {
-      deleteImageFromStorage(imagePath);
-    }
-    
-    // Update the list
     const newImages = [...homeImages];
     newImages.splice(index, 1);
     updateSiteSettings({ homeImages: newImages });
     
     // Reset preview if this was the image being previewed
-    if (previewImage === imagePath) {
+    if (previewImage === homeImages[index]) {
       setPreviewImage(null);
     }
     
@@ -92,8 +71,7 @@ export const HomeImagesSection = () => {
   };
 
   const handlePreviewClick = (imagePath: string) => {
-    const imageUrl = getImageFromStorage(imagePath);
-    setPreviewImage(imageUrl);
+    setPreviewImage(imagePath);
   };
 
   const ImagePreviewContent = () => (
@@ -149,7 +127,7 @@ export const HomeImagesSection = () => {
                     onClick={() => handlePreviewClick(imagePath)}
                   >
                     <img 
-                      src={getImageFromStorage(imagePath)} 
+                      src={imagePath} 
                       alt={`Immagine ${index + 1}`} 
                       className="w-full h-full object-cover"
                       onError={(e) => {

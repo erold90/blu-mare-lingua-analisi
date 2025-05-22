@@ -9,7 +9,7 @@ import { useSettings } from "@/hooks/useSettings";
 import { Image as ImageIcon } from "lucide-react";
 
 export const SocialMediaTab = () => {
-  const { siteSettings, updateSiteSettings, saveImageToStorage, deleteImageFromStorage } = useSettings();
+  const { siteSettings, updateSiteSettings, saveImageToStorage } = useSettings();
   
   const [formData, setFormData] = React.useState({
     siteName: siteSettings.siteName || "Villa MareBlu",
@@ -45,12 +45,6 @@ export const SocialMediaTab = () => {
     const file = e.target.files[0];
     
     try {
-      // First, delete the old image if it exists and is a storage path
-      const currentImage = siteSettings[field];
-      if (currentImage && (currentImage.startsWith('/images/') || currentImage.startsWith('/storage/'))) {
-        deleteImageFromStorage(currentImage);
-      }
-      
       // Now save the new image
       const storagePath = await saveImageToStorage(file, field);
       

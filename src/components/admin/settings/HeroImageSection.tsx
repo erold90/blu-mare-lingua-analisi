@@ -9,32 +9,14 @@ import { useSettings } from "@/hooks/useSettings";
 import { ImagePositioner } from "./ImagePositioner";
 
 export const HeroImageSection = () => {
-  const { siteSettings, updateSiteSettings, saveImageToStorage, deleteImageFromStorage } = useSettings();
+  const { siteSettings, updateSiteSettings, saveImageToStorage } = useSettings();
   const [imagePreviewPosition, setImagePreviewPosition] = React.useState(siteSettings.heroImagePosition || "center");
   
   React.useEffect(() => {
     setImagePreviewPosition(siteSettings.heroImagePosition || "center");
   }, [siteSettings.heroImagePosition]);
 
-  // Funzione per caricare l'immagine dal suo percorso
-  const getImageFromStorage = (imagePath: string): string => {
-    if (!imagePath) return '/placeholder.svg';
-    
-    if (imagePath.startsWith('/images/')) {
-      // Recupera l'immagine dallo storage
-      try {
-        const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-        return imageStorage[imagePath] || '/placeholder.svg';
-      } catch (error) {
-        console.error("Failed to get image from storage:", error);
-        return '/placeholder.svg';
-      }
-    }
-    
-    return imagePath;
-  };
-  
-  const currentHeroImage = siteSettings.heroImage ? getImageFromStorage(siteSettings.heroImage) : '/placeholder.svg';
+  const currentHeroImage = siteSettings.heroImage || '/placeholder.svg';
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -42,11 +24,6 @@ export const HeroImageSection = () => {
     const file = e.target.files[0];
     
     try {
-      // Delete the old hero image if it exists and is a storage path
-      if (siteSettings.heroImage && (siteSettings.heroImage.startsWith('/images/') || siteSettings.heroImage.startsWith('/storage/'))) {
-        deleteImageFromStorage(siteSettings.heroImage);
-      }
-      
       // Save the new image
       const imagePath = await saveImageToStorage(file, 'hero');
       

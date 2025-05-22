@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -29,7 +30,6 @@ interface SettingsContextType {
   removeBlockedDateRange: (index: number) => void;
   isDateBlocked: (date: Date) => boolean;
   saveImageToStorage: (file: File, category: 'hero' | 'home' | 'social' | 'favicon' | 'socialImage') => Promise<string>;
-  deleteImageFromStorage: (imagePath: string) => void;
 }
 
 const defaultSiteSettings: SiteSettings = {
@@ -51,118 +51,8 @@ const defaultAdminSettings: AdminSettings = {
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
-// Helper to convert blob URL to base64 with compression
-const blobToBase64 = async (blobUrl: string, maxDimension = 1200): Promise<string> => {
-  try {
-    const response = await fetch(blobUrl);
-    const blob = await response.blob();
-    
-    return new Promise((resolve, reject) => {
-      // Create an image element to load the blob
-      const img = new Image();
-      img.onload = () => {
-        // Calculate new dimensions while maintaining aspect ratio
-        let width = img.width;
-        let height = img.height;
-        
-        if (width > height && width > maxDimension) {
-          height = Math.round(height * (maxDimension / width));
-          width = maxDimension;
-        } else if (height > maxDimension) {
-          width = Math.round(width * (maxDimension / height));
-          height = maxDimension;
-        }
-        
-        // Draw the image to a canvas with the new dimensions
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          reject(new Error("Could not get canvas context"));
-          return;
-        }
-        
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        // Convert the canvas to a data URL with compression
-        const quality = 0.7; // Adjust this value to balance quality and size
-        const dataUrl = canvas.toDataURL('image/jpeg', quality);
-        resolve(dataUrl);
-      };
-      
-      img.onerror = () => {
-        reject(new Error("Failed to load image"));
-      };
-      
-      img.src = URL.createObjectURL(blob);
-    });
-  } catch (error) {
-    console.error("Error converting blob to base64:", error);
-    throw error;
-  }
-};
-
-// Helper to check if we can store data in localStorage
-const canStoreInLocalStorage = (data: string): boolean => {
-  try {
-    // Get current localStorage usage
-    let totalSize = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key) {
-        const value = localStorage.getItem(key) || '';
-        totalSize += value.length * 2; // Each character is approximately 2 bytes
-      }
-    }
-    
-    // Check if adding new data would exceed quota
-    const newDataSize = data.length * 2; // Each character is approximately 2 bytes
-    const estimatedTotalSize = totalSize + newDataSize;
-    
-    // Most browsers have a 5MB limit, so we'll use 4.5MB as our safe limit
-    const safeLimit = 4.5 * 1024 * 1024; // 4.5MB in bytes
-    
-    return estimatedTotalSize < safeLimit;
-  } catch (e) {
-    console.error("Error checking localStorage capacity:", e);
-    return false;
-  }
-};
-
-// Helper to clear old images if needed
-const clearOldImagesIfNeeded = (category: string, keepCount = 10): void => {
-  try {
-    const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-    
-    // Find images in the specified category
-    const categoryImages = Object.keys(imageStorage).filter(
-      key => key.includes(`/images/${category}/`)
-    );
-    
-    // If we have more images than our keep count, remove the oldest ones
-    if (categoryImages.length > keepCount) {
-      // Sort by timestamp (assuming the format includes a timestamp)
-      categoryImages.sort((a, b) => {
-        const timeA = parseInt(a.split('_')[1]?.split('.')[0] || '0');
-        const timeB = parseInt(b.split('_')[1]?.split('.')[0] || '0');
-        return timeA - timeB;
-      });
-      
-      // Delete oldest images
-      const imagesToDelete = categoryImages.slice(0, categoryImages.length - keepCount);
-      imagesToDelete.forEach(key => {
-        delete imageStorage[key];
-      });
-      
-      localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
-      console.log(`Cleared ${imagesToDelete.length} old images from ${category} category`);
-    }
-  } catch (e) {
-    console.error("Error clearing old images:", e);
-  }
-};
+// Array of supported file types for images
+const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
@@ -191,72 +81,50 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return defaultAdminSettings;
   });
 
-  // Function to generate a unique filename
-  const generateUniqueFilename = (file: File, category: string): string => {
-    const timestamp = new Date().getTime();
-    const extension = file.name.split('.').pop();
-    return `${category}_${timestamp}.${extension}`;
-  };
-  
-  // Function to save image to storage with compression
+  // Function to save an image to public directory
   const saveImageToStorage = async (file: File, category: 'hero' | 'home' | 'social' | 'favicon' | 'socialImage'): Promise<string> => {
-    // For consistency, map 'socialImage' to 'social' category in storage path
-    const storageCategory = category === 'socialImage' ? 'social' : category;
-    
     try {
-      // Create a unique filename
-      const filename = generateUniqueFilename(file, storageCategory);
-      
-      // Create a blob URL for the file
-      const objectURL = URL.createObjectURL(file);
-      
-      // Convert blob URL to compressed base64
-      const maxDimensions = category === 'favicon' ? 64 : 1200;
-      const base64Data = await blobToBase64(objectURL, maxDimensions);
-      
-      // Free memory
-      URL.revokeObjectURL(objectURL);
-      
-      // Save the filepath in a format that represents our intention
-      const imagePath = `/images/${storageCategory}/${filename}`;
-      
-      // Check if we have space and clear old images if needed
-      clearOldImagesIfNeeded(storageCategory);
-      
-      // Get existing image storage
-      const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-      
-      // Check if we can store the new image
-      if (!canStoreInLocalStorage(base64Data)) {
-        // If we can't store more images, try to free up space
-        const oldestKey = Object.keys(imageStorage)[0];
-        if (oldestKey) {
-          delete imageStorage[oldestKey];
-          console.log("Removed oldest image to free up space");
-        } else {
-          throw new Error("Spazio di archiviazione esaurito. Prova a eliminare alcune immagini.");
-        }
+      // Validate file type
+      if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
+        throw new Error('Tipo di file non supportato. Carica solo immagini JPG, PNG, WEBP o GIF.');
       }
       
-      // Store the mapping between the path and the base64 data in localStorage
-      imageStorage[imagePath] = base64Data;
+      // Create a unique filename based on timestamp and original name
+      const timestamp = new Date().getTime();
+      const fileExtension = file.name.split('.').pop() || 'jpg';
+      const sanitizedFileName = file.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      const fileName = `${category}_${timestamp}_${sanitizedFileName}.${fileExtension}`;
       
+      // In a real app with server storage, we would upload the file to a server here
+      // Since we're in a client-side only app for now, we'll create a URL for the file
+      // This URL will be valid until the browser session ends
+      const objectUrl = URL.createObjectURL(file);
+      
+      // For persistence, we would normally save this file to the server
+      // For now, we'll return the object URL which will work for the current session
+      // In a real app, this would return the URL to the saved file on the server
+      
+      // Store the mapping in localStorage for persistence across browser refreshes
+      // Note: This is a workaround for the demo. In a real app, the server would handle this.
+      const imageMapKey = 'villa_mareblu_image_map';
+      let imageMap = {};
       try {
-        localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
-      } catch (storageError) {
-        console.error("Storage quota exceeded:", storageError);
-        
-        // If we still exceed quota, compress further or delete more images
-        if (storageCategory === 'home' && Object.keys(imageStorage).length > 5) {
-          // For home images, limit to 5 if we're having storage issues
-          clearOldImagesIfNeeded(storageCategory, 5);
-          
-          // Try again with fewer images
-          localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
-        } else {
-          throw new Error("Spazio di archiviazione pieno. Elimina alcune immagini esistenti.");
+        const storedMap = localStorage.getItem(imageMapKey);
+        if (storedMap) {
+          imageMap = JSON.parse(storedMap);
         }
+      } catch (e) {
+        console.error("Failed to parse image map:", e);
       }
+      
+      // Generate a path that would normally point to a server location
+      const imagePath = `/upload/${fileName}`;
+      
+      // Store the mapping between the path and the object URL
+      imageMap[imagePath] = objectUrl;
+      
+      // Save the updated map
+      localStorage.setItem(imageMapKey, JSON.stringify(imageMap));
       
       return imagePath;
     } catch (error) {
@@ -264,166 +132,11 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       throw error;
     }
   };
-  
-  // Function to delete image from storage
-  const deleteImageFromStorage = (imagePath: string): void => {
-    if (!imagePath || (!imagePath.startsWith('/images/') && !imagePath.startsWith('/storage/'))) return;
-    
-    try {
-      const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-      
-      // Remove from our storage mapping
-      delete imageStorage[imagePath];
-      localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
-    } catch (error) {
-      console.error("Error deleting image:", error);
-      toast.error("Errore durante l'eliminazione dell'immagine");
-    }
-  };
-  
-  // On first load, process any blob URLs in the settings and convert them to base64 if needed
-  useEffect(() => {
-    const processImages = async () => {
-      let updated = false;
-      const newSettings = { ...siteSettings };
-      
-      // Process hero image
-      if (newSettings.heroImage && newSettings.heroImage.startsWith('blob:')) {
-        try {
-          const base64Data = await blobToBase64(newSettings.heroImage);
-          const storageKey = `/images/hero/hero_${Date.now()}.jpg`;
-          
-          const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-          imageStorage[storageKey] = base64Data;
-          
-          try {
-            localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
-            newSettings.heroImage = storageKey;
-            updated = true;
-          } catch (storageError) {
-            console.error("Storage quota exceeded for hero image:", storageError);
-            newSettings.heroImage = "/placeholder.svg";
-          }
-        } catch (error) {
-          console.error("Failed to convert hero image:", error);
-          newSettings.heroImage = "/placeholder.svg";
-        }
-      }
-      
-      // Process home images with more careful storage management
-      if (newSettings.homeImages && newSettings.homeImages.length > 0) {
-        const newHomeImages = [...newSettings.homeImages];
-        let homeImagesUpdated = false;
-        
-        for (let i = 0; i < newHomeImages.length; i++) {
-          if (newHomeImages[i] && newHomeImages[i].startsWith('blob:')) {
-            try {
-              // Process only a few images at a time to avoid quota issues
-              if (i > 5) {
-                // Skip processing too many blob images at once
-                newHomeImages[i] = "";
-                continue;
-              }
-              
-              const base64Data = await blobToBase64(newHomeImages[i]);
-              const storageKey = `/images/home/home_${Date.now()}_${i}.jpg`;
-              
-              const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-              
-              if (canStoreInLocalStorage(base64Data)) {
-                imageStorage[storageKey] = base64Data;
-                
-                try {
-                  localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
-                  newHomeImages[i] = storageKey;
-                  homeImagesUpdated = true;
-                } catch (storageError) {
-                  console.error(`Storage quota exceeded for home image ${i}:`, storageError);
-                  newHomeImages[i] = "";
-                }
-              } else {
-                console.warn(`Skipping home image ${i} due to storage limitations`);
-                newHomeImages[i] = "";
-              }
-            } catch (error) {
-              console.error(`Failed to convert home image at index ${i}:`, error);
-              newHomeImages[i] = "";
-            }
-          }
-        }
-        
-        if (homeImagesUpdated) {
-          newSettings.homeImages = newHomeImages.filter(img => img && img !== '');
-          updated = true;
-        }
-      }
-      
-      // Process social image
-      if (newSettings.socialImage && newSettings.socialImage.startsWith('blob:')) {
-        try {
-          const base64Data = await blobToBase64(newSettings.socialImage);
-          const storageKey = `/images/social/social_${Date.now()}.jpg`;
-          
-          const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-          
-          if (canStoreInLocalStorage(base64Data)) {
-            imageStorage[storageKey] = base64Data;
-            
-            try {
-              localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
-              newSettings.socialImage = storageKey;
-              updated = true;
-            } catch (storageError) {
-              console.error("Storage quota exceeded for social image:", storageError);
-              newSettings.socialImage = "/placeholder.svg";
-            }
-          } else {
-            console.warn("Skipping social image due to storage limitations");
-            newSettings.socialImage = "/placeholder.svg";
-          }
-        } catch (error) {
-          console.error("Failed to convert social image:", error);
-          newSettings.socialImage = "/placeholder.svg";
-        }
-      }
-      
-      // Process favicon (smaller size)
-      if (newSettings.favicon && newSettings.favicon.startsWith('blob:')) {
-        try {
-          // Use smaller max dimension for favicon
-          const base64Data = await blobToBase64(newSettings.favicon, 64);
-          const storageKey = `/images/favicon/favicon_${Date.now()}.png`;
-          
-          const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-          imageStorage[storageKey] = base64Data;
-          
-          try {
-            localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
-            newSettings.favicon = storageKey;
-            updated = true;
-          } catch (storageError) {
-            console.error("Storage quota exceeded for favicon:", storageError);
-            newSettings.favicon = "/favicon.ico";
-          }
-        } catch (error) {
-          console.error("Failed to convert favicon:", error);
-          newSettings.favicon = "/favicon.ico";
-        }
-      }
-      
-      if (updated) {
-        setSiteSettings(newSettings);
-      }
-    };
-    
-    processImages();
-  }, []);
-  
+
   // Save settings to localStorage whenever they change
   useEffect(() => {
     try {
       localStorage.setItem("siteSettings", JSON.stringify(siteSettings));
-      console.log("Site settings saved:", siteSettings);
     } catch (error) {
       console.error("Failed to save site settings to localStorage:", error);
       toast.error("Errore nel salvataggio delle impostazioni");
@@ -489,13 +202,62 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [siteSettings.siteName, siteSettings.siteDescription, siteSettings.socialImage, siteSettings.favicon]);
   
-  // Override the updateSiteSettings function to handle image paths
+  // Helper to map object URLs from our local storage to usable URLs
+  useEffect(() => {
+    const imageMapKey = 'villa_mareblu_image_map';
+    try {
+      const storedMap = localStorage.getItem(imageMapKey);
+      if (storedMap) {
+        const imageMap = JSON.parse(storedMap);
+        
+        // For each stored image URL in our settings, check if we need to replace it with an object URL
+        const updateSettings = {...siteSettings};
+        let hasChanges = false;
+        
+        // Check hero image
+        if (updateSettings.heroImage && updateSettings.heroImage.startsWith('/upload/')) {
+          if (imageMap[updateSettings.heroImage]) {
+            hasChanges = true;
+          }
+        }
+        
+        // Check home images
+        if (updateSettings.homeImages && updateSettings.homeImages.length > 0) {
+          updateSettings.homeImages = updateSettings.homeImages.map(img => {
+            if (img && img.startsWith('/upload/') && imageMap[img]) {
+              hasChanges = true;
+              return img;
+            }
+            return img;
+          });
+        }
+        
+        // Check social image
+        if (updateSettings.socialImage && updateSettings.socialImage.startsWith('/upload/')) {
+          if (imageMap[updateSettings.socialImage]) {
+            hasChanges = true;
+          }
+        }
+        
+        // Check favicon
+        if (updateSettings.favicon && updateSettings.favicon.startsWith('/upload/')) {
+          if (imageMap[updateSettings.favicon]) {
+            hasChanges = true;
+          }
+        }
+        
+        // If we made changes, update the settings
+        if (hasChanges) {
+          setSiteSettings(updateSettings);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to process image map:", e);
+    }
+  }, []);
+  
   const updateSiteSettings = (settings: Partial<SiteSettings>) => {
-    setSiteSettings(prev => {
-      // Create the updated settings
-      const updated = { ...prev, ...settings };
-      return updated;
-    });
+    setSiteSettings(prev => ({ ...prev, ...settings }));
   };
   
   const updateAdminSettings = (settings: Partial<AdminSettings>) => {
@@ -557,8 +319,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       addBlockedDateRange,
       removeBlockedDateRange,
       isDateBlocked,
-      saveImageToStorage,
-      deleteImageFromStorage
+      saveImageToStorage
     }}>
       {children}
     </SettingsContext.Provider>

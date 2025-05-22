@@ -10,7 +10,7 @@ export const HeroSection = () => {
   const { siteSettings } = useSettings();
   
   // Verify if the hero image is valid and not the placeholder
-  const heroImage = siteSettings.heroImage && !siteSettings.heroImage.includes("placeholder.svg") 
+  const heroImage = siteSettings.heroImage && siteSettings.heroImage !== "/placeholder.svg"
     ? siteSettings.heroImage 
     : "https://images.unsplash.com/photo-1559627398-8284fd5e51b1?q=80&w=2000&auto=format&fit=crop";
   
