@@ -32,6 +32,20 @@ export const HomeImageCarousel = () => {
     };
   }, [api]);
 
+  // Function to get the actual image URL
+  const getImageUrl = (path: string): string => {
+    if (!path || path.includes("placeholder")) return path;
+    
+    // Check if this is a path that we need to resolve
+    if (path.startsWith('/images/') || path.startsWith('/storage/')) {
+      // Try to get the URL from our image storage
+      const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+      return imageStorage[path] || path;
+    }
+    
+    return path;
+  };
+
   const hasImages = siteSettings.homeImages && siteSettings.homeImages.length > 0;
   
   return (
@@ -48,7 +62,7 @@ export const HomeImageCarousel = () => {
               <CarouselItem key={index}>
                 <div className="aspect-video overflow-hidden rounded-lg">
                   <img 
-                    src={image} 
+                    src={getImageUrl(image)} 
                     alt={`Villa MareBlu immagine ${index + 1}`} 
                     className="w-full h-full object-cover transition-all duration-300 hover:scale-105"
                   />

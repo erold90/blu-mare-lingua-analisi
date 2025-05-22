@@ -23,15 +23,15 @@ export const HeroImageSection = () => {
     
     try {
       // Delete the old hero image if it exists and is a storage path
-      if (siteSettings.heroImage && siteSettings.heroImage.startsWith('/storage/')) {
+      if (siteSettings.heroImage && (siteSettings.heroImage.startsWith('/storage/') || siteSettings.heroImage.startsWith('/images/'))) {
         deleteImageFromStorage(siteSettings.heroImage);
       }
       
       // Save the new image
-      const storagePath = await saveImageToStorage(file, 'hero');
+      const imagePath = await saveImageToStorage(file, 'hero');
       
       // Update settings with the new path
-      updateSiteSettings({ heroImage: storagePath });
+      updateSiteSettings({ heroImage: imagePath });
       toast.success("Immagine hero aggiornata");
     } catch (error) {
       console.error('Error uploading hero image:', error);
@@ -53,7 +53,7 @@ export const HeroImageSection = () => {
   const getImageUrl = (path: string): string => {
     if (!path || path.includes("placeholder")) return path;
     
-    if (path.startsWith('/storage/')) {
+    if (path.startsWith('/images/') || path.startsWith('/storage/')) {
       // Get the URL from our image storage
       const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
       return imageStorage[path] || path;

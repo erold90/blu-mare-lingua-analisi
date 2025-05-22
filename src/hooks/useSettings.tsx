@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 export interface SiteSettings {
@@ -92,24 +93,28 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Create a unique filename
     const filename = generateUniqueFilename(file, storageCategory);
     
-    // In a real app, we would upload to a server here
-    // For this demo, we'll use local storage with a persistent path convention
+    // In a real app with direct file system access, we would save the file to the filesystem
+    // However, in a browser environment we can't directly write to the file system
+    // This would typically be handled by a server-side upload endpoint
+    // For this simulation, we'll still use object URLs but with a different path convention
+    
+    // Create a blob URL for the file
     const objectURL = URL.createObjectURL(file);
     
-    // Store the mapping between the objectURL and the permanent path
-    const storagePath = `/storage/${storageCategory}/${filename}`;
+    // Save the filepath in a format that represents our intention
+    const imagePath = `/images/${storageCategory}/${filename}`;
     
-    // Save the mapping in localStorage (this simulates our "database")
+    // Store the mapping between the path and the objectURL (simulating our file system)
     const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-    imageStorage[storagePath] = objectURL;
+    imageStorage[imagePath] = objectURL;
     localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
     
-    return storagePath;
+    return imagePath;
   };
   
   // Function to delete image from storage
   const deleteImageFromStorage = (imagePath: string): void => {
-    if (!imagePath || !imagePath.startsWith('/storage/')) return;
+    if (!imagePath || (!imagePath.startsWith('/images/') && !imagePath.startsWith('/storage/'))) return;
     
     const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
     
@@ -123,18 +128,10 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
   };
   
-  // Replace object URLs with permanent paths when rendering
-  const resolveImagePath = (path: string): string => {
-    if (!path || !path.startsWith('/storage/')) return path;
-    
-    const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-    return imageStorage[path] || path;
-  };
-
   // Save settings to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem("siteSettings", JSON.stringify(siteSettings));
-    console.log("Site settings saved:", siteSettings); // Add logging to debug
+    console.log("Site settings saved:", siteSettings);
   }, [siteSettings]);
   
   useEffect(() => {
@@ -194,11 +191,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Override the updateSiteSettings function to handle image paths
   const updateSiteSettings = (settings: Partial<SiteSettings>) => {
     setSiteSettings(prev => {
-      // Handle special case for homeImages array (resolve all paths)
-      const updatedSettings = { ...settings };
-      
       // Create the updated settings
-      const updated = { ...prev, ...updatedSettings };
+      const updated = { ...prev, ...settings };
       return updated;
     });
   };
