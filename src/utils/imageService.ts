@@ -1,5 +1,6 @@
 
 import { toast } from "sonner";
+import { imageManager } from "./imageManager";
 
 // Costanti di configurazione
 const API_BASE_URL = "/api/images.php";
@@ -48,6 +49,19 @@ export interface ImageDeleteResult {
  * Servizio completo per la gestione delle immagini
  */
 class ImageService {
+  // Flag per tenere traccia della connettività
+  private serverAvailable: boolean = true;
+  
+  constructor() {
+    // Verifica iniziale della connettività
+    this.checkServerConnection().then(available => {
+      this.serverAvailable = available;
+      if (!available) {
+        console.warn("Server immagini non raggiungibile, si utilizzerà solo lo storage locale");
+      }
+    });
+  }
+
   /**
    * Carica un'immagine sul server
    */
@@ -85,6 +99,11 @@ class ImageService {
       
       onProgress?.(50);
 
+      // Se il server non è disponibile, salva solo in locale
+      if (!this.serverAvailable) {
+        return this.saveImageLocalOnly(optimizedFile, category, additionalData, onProgress);
+      }
+
       // Usa un timeout per la richiesta così da non bloccare per troppo tempo
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 secondi di timeout
@@ -111,6 +130,32 @@ class ImageService {
           throw new Error(result.message || 'Errore durante il caricamento dell\'immagine');
         }
         
+        onProgress?.(95);
+        
+        // Ora sincronizziamo anche con il sistema di cartelle organizzate
+        const metadata = result.metadata;
+        if (metadata) {
+          // Crea una copia locale dell'immagine convertita in base64
+          const imageBase64 = await this.fileToBase64(optimizedFile);
+          
+          try {
+            // Invia al server con l'organizzazione in cartelle separata
+            const organizedResult = await this.saveToOrganizedStorage(
+              metadata.path,
+              imageBase64,
+              category,
+              file.name
+            );
+            
+            if (organizedResult) {
+              console.log(`Immagine salvata anche nella directory organizzata: ${category}`);
+            }
+          } catch (organizedError) {
+            console.error("Errore nel salvataggio organizzato:", organizedError);
+            // Non blocchiamo il processo se questo fallisce
+          }
+        }
+        
         onProgress?.(100);
         
         return {
@@ -127,23 +172,12 @@ class ImageService {
              fetchError.message.includes('Failed to fetch') || 
              fetchError.message.includes('NetworkError'))) {
           console.warn('Errore di rete durante il caricamento dell\'immagine sul server. L\'immagine verrà salvata solo localmente.');
-          toast.warning("Caricamento sul server non riuscito. L'immagine è disponibile solo su questo dispositivo.");
           
-          // Qui si potrebbe implementare una logica per salvare solo localmente l'immagine
-          // e provare a sincronizzarla successivamente
-          return {
-            success: true, // Consideriamo comunque un successo
-            message: 'Immagine salvata solo localmente',
-            metadata: {
-              id: `local_${Date.now()}`,
-              path: URL.createObjectURL(file), // Usare solo per visualizzazione immediata
-              originalName: file.name,
-              category: category,
-              timestamp: Date.now(),
-              size: file.size,
-              ...additionalData
-            }
-          };
+          // Segna il server come non disponibile
+          this.serverAvailable = false;
+          
+          // Tentativo di salvataggio in locale
+          return this.saveImageLocalOnly(optimizedFile, category, additionalData, onProgress);
         }
         
         throw fetchError; // Rilancio altri tipi di errore
@@ -158,10 +192,106 @@ class ImageService {
   }
   
   /**
+   * Salva un'immagine solo localmente quando il server non è raggiungibile
+   */
+  private async saveImageLocalOnly(
+    file: File,
+    category: ImageCategory,
+    additionalData: { apartmentId?: string; isCover?: boolean } = {},
+    onProgress?: (progress: number) => void
+  ): Promise<ImageUploadResult> {
+    try {
+      // Mostro una notifica all'utente
+      toast.warning("Caricamento sul server non riuscito. L'immagine è disponibile solo su questo dispositivo.");
+      
+      onProgress?.(70);
+      
+      // Genera un ID locale
+      const localId = `local_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      
+      // Crea un URL locale per l'immagine
+      const localUrl = URL.createObjectURL(file);
+      
+      // Salva i metadati
+      const metadata: ImageMetadata = {
+        id: localId,
+        path: localUrl,
+        originalName: file.name,
+        category: category,
+        timestamp: Date.now(),
+        size: file.size,
+        ...additionalData
+      };
+      
+      onProgress?.(100);
+      
+      return {
+        success: true,
+        message: 'Immagine salvata solo localmente',
+        metadata
+      };
+    } catch (error) {
+      console.error("Errore nel salvataggio locale:", error);
+      return {
+        success: false,
+        message: (error as Error).message || 'Errore durante il salvataggio locale dell\'immagine'
+      };
+    }
+  }
+  
+  /**
+   * Salva un'immagine nell'archiviazione organizzata sul server
+   */
+  private async saveToOrganizedStorage(
+    imagePath: string, 
+    imageData: string, 
+    category: ImageCategory, 
+    originalName: string
+  ): Promise<boolean> {
+    try {
+      // Indirizza al nuovo script PHP per l'organizzazione delle cartelle
+      const formData = new FormData();
+      formData.append('path', imagePath);
+      formData.append('data', imageData);
+      formData.append('folder', category);
+      formData.append('category', category);
+      formData.append('originalName', originalName);
+      formData.append('timestamp', Date.now().toString());
+      
+      const response = await fetch('/api/images/organized_store.php', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Errore server: ${response.status} ${response.statusText}`);
+      }
+      
+      const result = await response.json();
+      return result.success;
+    } catch (error) {
+      console.error("Errore nel salvataggio organizzato:", error);
+      return false;
+    }
+  }
+  
+  /**
+   * Converte un File in stringa base64
+   */
+  private async fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  }
+  
+  /**
    * Ottimizza un'immagine ridimensionandola se necessario
    */
   private async optimizeImage(file: File, maxWidth = 1920): Promise<File> {
-    console.info('Ottimizzazione immagine hero:', file.name);
+    console.info('Ottimizzazione immagine:', file.name);
     return new Promise((resolve, reject) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
@@ -224,6 +354,16 @@ class ImageService {
    */
   async getImages(category: ImageCategory, apartmentId?: string): Promise<ImageListResult> {
     try {
+      // Se il server non è disponibile, restituisci lista vuota
+      if (!this.serverAvailable) {
+        console.warn("Server non disponibile, impossibile recuperare immagini");
+        return {
+          success: true,
+          message: 'Server non disponibile, nessuna immagine recuperata',
+          images: []
+        };
+      }
+      
       let url = `${API_BASE_URL}?action=list&category=${category}`;
       
       if (apartmentId) {
@@ -262,7 +402,9 @@ class ImageService {
              fetchError.message.includes('Failed to fetch') || 
              fetchError.message.includes('NetworkError'))) {
           console.warn(`Errore di rete durante il recupero delle immagini (${category}). Verranno mostrate solo le immagini locali.`);
-          toast.warning("Connessione al server non riuscita. Alcune immagini potrebbero non essere visibili.");
+          
+          // Segna il server come non disponibile
+          this.serverAvailable = false;
           
           return {
             success: true,
@@ -474,15 +616,18 @@ class ImageService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 secondi di timeout
       
-      const response = await fetch(`${API_BASE_URL}?action=check`, { 
+      const response = await fetch(`/api/images/check.php`, { 
         signal: controller.signal,
         method: 'HEAD' // Usiamo HEAD per un check leggero
       });
       
       clearTimeout(timeoutId);
-      return response.ok;
+      const isConnected = response.ok;
+      this.serverAvailable = isConnected; // Aggiorna lo stato interno
+      return isConnected;
     } catch (error) {
       console.warn('Server delle immagini non raggiungibile:', error);
+      this.serverAvailable = false;
       return false;
     }
   }

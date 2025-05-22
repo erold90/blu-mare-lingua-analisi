@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Plus, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { ImagePositioner } from "./ImagePositioner";
+import { imageService, IMAGE_CATEGORIES } from "@/utils/imageService";
 
 export const HeroImageSection = () => {
   const { siteSettings, updateSiteSettings, saveImageToStorage } = useSettings();
@@ -29,27 +30,29 @@ export const HeroImageSection = () => {
       setIsUploading(true);
       setUploadProgress(10);
       
-      // Simulazione di un caricamento progressivo
-      const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 300);
-
-      // Save the new image
-      const imagePath = await saveImageToStorage(file, 'hero');
+      // Usa imageService per caricare l'immagine sul server e salvarla nelle directory organizzate
+      const result = await imageService.uploadImage(
+        file, 
+        IMAGE_CATEGORIES.HERO,
+        {},
+        (progress) => setUploadProgress(progress)
+      );
       
-      clearInterval(progressInterval);
-      setUploadProgress(100);
+      if (!result.success || !result.metadata) {
+        throw new Error(result.message || "Errore durante il caricamento dell'immagine");
+      }
       
-      console.log("Immagine hero salvata con successo:", imagePath);
+      // Salva anche in IndexedDB per accesso locale più veloce
+      const localPath = await saveImageToStorage(file, 'hero');
+      
+      console.log("Immagine hero salvata con successo:", result.metadata.path);
+      console.log("Immagine hero salvata anche in locale:", localPath);
+      
+      // Usa il percorso restituito dal server se disponibile, altrimenti usa il percorso locale
+      const finalPath = result.metadata.path || localPath;
       
       // Update settings with the new path
-      updateSiteSettings({ heroImage: imagePath });
+      updateSiteSettings({ heroImage: finalPath });
       toast.success("Immagine hero aggiornata");
       
       // Ritardo prima di resettare lo stato di caricamento
