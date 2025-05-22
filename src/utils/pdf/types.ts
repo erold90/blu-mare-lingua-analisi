@@ -1,7 +1,7 @@
 
 import { jsPDF } from "jspdf";
 import type { PriceCalculation } from "@/utils/price/types";
-import type { UserOptions } from "jspdf-autotable";
+import "jspdf-autotable"; // Import the module to ensure types are loaded
 
 // Type definition for the return value of autoTable
 export interface AutoTableResult {
@@ -25,14 +25,8 @@ export interface TableCell {
   };
 }
 
-// Central declaration for jsPDF with autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: UserOptions) => AutoTableResult;
-    getNumberOfPages: () => number;
-    lastAutoTable?: AutoTableResult;
-  }
-}
+// We don't need to declare the module here since we're importing the package
+// which already augments the jsPDF type
 
 // Re-export the PriceCalculation interface from the central location
 export type { PriceCalculation };
