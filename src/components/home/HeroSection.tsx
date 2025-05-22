@@ -13,18 +13,37 @@ export const HeroSection = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
   
-  // Default hero image path
+  // Hero image path from the public folder
   const heroImagePath = '/images/hero/hero.jpg';
   
-  // Default fallback image
+  // Fallback image in case the hero image is not found
   const fallbackImage = "https://images.unsplash.com/photo-1559627398-8284fd5e51b1?q=80&w=2000&auto=format&fit=crop";
   
-  // Get image position, default to center if not set
+  // Get image position from settings, default to center
   const imagePosition = siteSettings.heroImagePosition || "center";
+  
+  const handleImageLoad = () => {
+    setIsLoading(false);
+  };
+
+  const handleImageError = () => {
+    setIsLoading(false);
+    setImageError(true);
+    console.error("Failed to load hero image from:", heroImagePath);
+  };
   
   return (
     <div className="relative w-full">
       <div className={`w-full ${isMobile ? "h-[70vh]" : "h-[80vh]"} relative overflow-hidden`}>
+        {/* Hidden image to detect load/error events */}
+        <img 
+          src={heroImagePath} 
+          className="hidden" 
+          onLoad={handleImageLoad} 
+          onError={handleImageError} 
+          alt="Hidden loader" 
+        />
+        
         {isLoading ? (
           <Skeleton className="absolute inset-0" />
         ) : (
