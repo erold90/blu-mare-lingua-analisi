@@ -1,6 +1,6 @@
 
 import { jsPDF } from "jspdf";
-import "jspdf-autotable"; // This registers autoTable with jsPDF
+import "jspdf-autotable"; // Assicuriamoci che questo import sia sempre prima di qualsiasi utilizzo di autoTable
 import { format } from "date-fns";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";

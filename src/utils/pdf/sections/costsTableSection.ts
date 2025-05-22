@@ -1,10 +1,11 @@
 
 import { jsPDF } from "jspdf";
-import "jspdf-autotable"; // This registers autoTable with jsPDF
+import "jspdf-autotable"; // Questo è cruciale per registrare il plugin
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
 import { Apartment } from "@/data/apartments";
 import { createSection } from "../formatUtils";
+import { TableCell } from "../types";
 
 /**
  * Generate the cost details table section of the quote
@@ -119,6 +120,9 @@ export const generateCostsTableSection = (
     content: "inclusa",
     styles: { textColor: [0, 128, 0], halign: 'right' }
   }]);
+  
+  // Add console.log for debugging
+  console.log("Prima di chiamare autoTable", !!doc.autoTable);
   
   // Add the cost details table
   doc.autoTable({

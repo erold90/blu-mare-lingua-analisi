@@ -1,6 +1,6 @@
 
 import { jsPDF } from "jspdf";
-import "jspdf-autotable"; // This registers autoTable with jsPDF
+import "jspdf-autotable"; // Questo registra autoTable con jsPDF
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types"; 
 import { Apartment } from "@/data/apartments";
