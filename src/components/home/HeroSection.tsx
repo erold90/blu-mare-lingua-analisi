@@ -1,64 +1,26 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useSettings } from "@/hooks/useSettings";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { getImage } from "@/utils/imageStorage";
 import { ImageIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const HeroSection = () => {
   const isMobile = useIsMobile();
   const { siteSettings } = useSettings();
-  const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
+  
+  // Default hero image path
+  const heroImagePath = '/images/hero/hero.jpg';
   
   // Default fallback image
   const fallbackImage = "https://images.unsplash.com/photo-1559627398-8284fd5e51b1?q=80&w=2000&auto=format&fit=crop";
   
-  useEffect(() => {
-    const loadHeroImage = async () => {
-      setIsLoading(true);
-      setImageError(false);
-      
-      if (siteSettings.heroImage && siteSettings.heroImage !== "/placeholder.svg") {
-        if (siteSettings.heroImage.startsWith('/upload/')) {
-          // This is a stored image, get it from IndexedDB
-          try {
-            console.log("Loading hero image from storage:", siteSettings.heroImage);
-            const storedImage = await getImage(siteSettings.heroImage);
-            
-            if (storedImage && storedImage.data) {
-              setHeroImageUrl(storedImage.data);
-            } else {
-              console.error("Hero image not found in storage:", siteSettings.heroImage);
-              setImageError(true);
-            }
-          } catch (error) {
-            console.error("Error loading hero image:", error);
-            setImageError(true);
-          }
-        } else {
-          // External URL
-          setHeroImageUrl(siteSettings.heroImage);
-        }
-      } else {
-        setImageError(true);
-      }
-      
-      setIsLoading(false);
-    };
-    
-    loadHeroImage();
-  }, [siteSettings.heroImage]);
-  
   // Get image position, default to center if not set
   const imagePosition = siteSettings.heroImagePosition || "center";
-  
-  // The URL to use for the hero image
-  const effectiveImageUrl = imageError ? fallbackImage : (heroImageUrl || fallbackImage);
   
   return (
     <div className="relative w-full">
@@ -69,12 +31,8 @@ export const HeroSection = () => {
           <div 
             className="absolute inset-0 bg-cover bg-no-repeat transition-transform duration-700 hover:scale-105"
             style={{
-              backgroundImage: `url('${effectiveImageUrl}')`,
+              backgroundImage: `url('${imageError ? fallbackImage : heroImagePath}')`,
               backgroundPosition: imagePosition
-            }}
-            onError={() => {
-              console.error("Error loading hero image:", heroImageUrl);
-              setImageError(true);
             }}
           />
         )}
