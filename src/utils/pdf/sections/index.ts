@@ -20,3 +20,7 @@ export { generateTermsSection } from './termsSection';
 // Table utilities (newly added)
 export * from '../tables/tableUtils';
 export * from '../tables/priceTableData';
+
+// Shared PDF utilities (newly added)
+export * from '../utils/pdfSharedUtils';
+
