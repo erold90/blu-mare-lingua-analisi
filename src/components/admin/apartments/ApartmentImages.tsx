@@ -1,14 +1,15 @@
 
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { toast } from "sonner";
-import { Camera, X, Move, CheckCircle, ImageIcon } from "lucide-react";
+import { Camera, X, Move, CheckCircle, ImageIcon, Loader2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { v4 as uuidv4 } from 'uuid';
+import { saveImage, getImage, deleteImage } from "@/utils/imageStorage";
 
 interface ApartmentImagesProps {
   apartmentId: string;
@@ -26,6 +27,50 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
   onCoverImageChange,
 }) => {
   const isMobile = useIsMobile();
+  const [loadedImages, setLoadedImages] = useState<{[key: string]: string}>({});
+  const [loadingStates, setLoadingStates] = useState<{[key: string]: boolean}>({});
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Load all images on component mount
+  useEffect(() => {
+    const loadAllImages = async () => {
+      // Initialize loading states
+      const initialLoadingStates: {[key: string]: boolean} = {};
+      images.forEach(path => {
+        initialLoadingStates[path] = true;
+      });
+      setLoadingStates(initialLoadingStates);
+      
+      // Load each image
+      const imageData: {[key: string]: string} = {};
+      
+      for (const path of images) {
+        if (path.startsWith('/upload/')) {
+          try {
+            const storedImage = await getImage(path);
+            if (storedImage && storedImage.data) {
+              imageData[path] = storedImage.data;
+            }
+          } catch (error) {
+            console.error(`Error loading image ${path}:`, error);
+          }
+        } else {
+          imageData[path] = path;
+        }
+        
+        // Update loading state for this image
+        setLoadingStates(prev => ({
+          ...prev,
+          [path]: false
+        }));
+      }
+      
+      setLoadedImages(imageData);
+    };
+    
+    loadAllImages();
+  }, [images]);
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -44,31 +89,69 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
     toast.success("Ordine immagini aggiornato");
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
-    // For this demo, we'll use local file URLs
-    const newImages: string[] = [];
+    setUploadingImage(true);
+    setUploadProgress(0);
     
-    for (let i = 0; i < e.target.files.length; i++) {
-      const file = e.target.files[i];
-      const objectURL = URL.createObjectURL(file);
+    // Create an array to store new image paths
+    const newImagePaths: string[] = [];
+    
+    try {
+      for (let i = 0; i < e.target.files.length; i++) {
+        const file = e.target.files[i];
+        
+        // Calculate percentage progress for this file
+        const fileProgress = (i) / e.target.files.length * 100;
+        setUploadProgress(fileProgress);
+        
+        // Save image to IndexedDB
+        const imagePath = await saveImage(
+          file,
+          'home', // Using 'home' for apartments too since it's the same image type
+          (progress) => {
+            // Convert individual file progress to overall progress
+            const fileWeight = 100 / e.target.files.length;
+            const overallProgress = fileProgress + (progress / 100 * fileWeight);
+            setUploadProgress(Math.min(overallProgress, 99));
+          }
+        );
+        
+        newImagePaths.push(imagePath);
+        
+        // Load the image immediately
+        const imageData = await getImage(imagePath);
+        if (imageData && imageData.data) {
+          setLoadedImages(prev => ({
+            ...prev,
+            [imagePath]: imageData.data
+          }));
+        }
+      }
       
-      // We'll use the objectURL directly since we're not implementing file storage for this component
-      newImages.push(objectURL);
+      // Update apartment images with the new paths
+      onImagesChange(apartmentId, [...images, ...newImagePaths]);
+      
+      // Set the first image as cover if no cover is set
+      if (coverImageIndex === undefined && newImagePaths.length > 0 && images.length === 0) {
+        onCoverImageChange(apartmentId, 0);
+      }
+      
+      setUploadProgress(100);
+      toast.success(`${newImagePaths.length} immagini caricate`);
+    } catch (error) {
+      console.error('Error uploading apartment images:', error);
+      toast.error(`Errore durante il caricamento delle immagini: ${(error as Error).message}`);
+    } finally {
+      setUploadingImage(false);
     }
-    
-    onImagesChange(apartmentId, [...images, ...newImages]);
-    
-    // Set the first image as cover if no cover is set
-    if (coverImageIndex === undefined && newImages.length > 0) {
-      onCoverImageChange(apartmentId, 0);
-    }
-    
-    toast.success(`${newImages.length} immagini caricate`);
   };
 
-  const removeImage = (index: number) => {
+  const removeImage = async (index: number) => {
+    const imageToRemove = images[index];
+    
+    // Create a new array without this image
     const updatedImages = [...images];
     updatedImages.splice(index, 1);
     onImagesChange(apartmentId, updatedImages);
@@ -82,7 +165,21 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
       onCoverImageChange(apartmentId, coverImageIndex - 1);
     }
     
+    // Delete the image from storage if it's a stored image
+    if (imageToRemove.startsWith('/upload/')) {
+      try {
+        await deleteImage(imageToRemove);
+      } catch (error) {
+        console.error('Error deleting image:', error);
+      }
+    }
+    
     toast.success("Immagine rimossa");
+  };
+
+  // Get image data for display
+  const getImageData = (path: string): string => {
+    return loadedImages[path] || path;
   };
 
   return (
@@ -95,8 +192,14 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
             size="sm" 
             onClick={() => document.getElementById(`file-upload-${apartmentId}`)?.click()}
             className="flex items-center"
+            disabled={uploadingImage}
           >
-            <Camera className="h-4 w-4 mr-2" /> Aggiungi
+            {uploadingImage ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" /> 
+            ) : (
+              <Camera className="h-4 w-4 mr-2" />
+            )}
+            Aggiungi
           </Button>
           <Input 
             id={`file-upload-${apartmentId}`}
@@ -105,9 +208,17 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
             accept="image/*"
             className="hidden"
             onChange={handleImageUpload}
+            disabled={uploadingImage}
           />
         </div>
       </div>
+      
+      {uploadingImage && (
+        <div className="mb-4">
+          <Progress value={uploadProgress} className="h-2" />
+          <p className="text-xs text-muted-foreground mt-1">Caricamento in corso...</p>
+        </div>
+      )}
       
       {images.length > 0 ? (
         <DragDropContext onDragEnd={handleDragEnd}>
@@ -118,7 +229,7 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
                 ref={provided.innerRef}
                 className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
               >
-                {images.map((imageUrl, index) => (
+                {images.map((imagePath, index) => (
                   <Draggable key={`${apartmentId}-${index}`} draggableId={`${apartmentId}-${index}`} index={index}>
                     {(provided) => (
                       <div
@@ -129,15 +240,21 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
                         }`}
                       >
                         <div className="aspect-square relative">
-                          <img 
-                            src={imageUrl} 
-                            alt={`Apartment ${index+1}`}
-                            className="absolute inset-0 w-full h-full object-cover"
-                            onError={(e) => {
-                              console.error(`Failed to load image: ${imageUrl}`);
-                              e.currentTarget.src = "/placeholder.svg";
-                            }}
-                          />
+                          {loadingStates[imagePath] ? (
+                            <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                            </div>
+                          ) : (
+                            <img 
+                              src={getImageData(imagePath)} 
+                              alt={`Apartment ${index+1}`}
+                              className="absolute inset-0 w-full h-full object-cover"
+                              onError={(e) => {
+                                console.error(`Failed to load image: ${imagePath}`);
+                                e.currentTarget.src = "/placeholder.svg";
+                              }}
+                            />
+                          )}
                         </div>
                         <div className="absolute top-1 right-1 flex gap-1">
                           <Button

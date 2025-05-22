@@ -10,12 +10,16 @@ import {
 import { useSettings } from "@/hooks/useSettings";
 import Autoplay from "embla-carousel-autoplay";
 import { ImageIcon } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getImage } from "@/utils/imageStorage";
 
 export const HomeImageCarousel = () => {
   const { siteSettings } = useSettings();
   const [api, setApi] = useState<any>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [loadedImages, setLoadedImages] = useState<{ [key: string]: string }>({});
   const [imagesLoaded, setImagesLoaded] = useState<boolean[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Autoreplay plugin - will pause on hover/interaction
   const autoplayPlugin = Autoplay({ delay: 5000, stopOnInteraction: true });
@@ -33,19 +37,75 @@ export const HomeImageCarousel = () => {
       api.off("select", onSelect);
     };
   }, [api]);
-
-  // Verifica se ci sono immagini valide
+  
+  // Load all images from IndexedDB
+  useEffect(() => {
+    const loadImages = async () => {
+      setIsLoading(true);
+      
+      // Get valid image paths from settings
+      const validPaths = siteSettings.homeImages?.filter(img => img && img !== '') || [];
+      
+      if (validPaths.length === 0) {
+        setIsLoading(false);
+        return;
+      }
+      
+      // Initialize loading state array
+      setImagesLoaded(new Array(validPaths.length).fill(false));
+      
+      // Load each image from storage
+      const loadedImageData: { [key: string]: string } = {};
+      
+      await Promise.all(
+        validPaths.map(async (path, index) => {
+          if (path.startsWith('/upload/')) {
+            try {
+              const storedImage = await getImage(path);
+              if (storedImage && storedImage.data) {
+                loadedImageData[path] = storedImage.data;
+                
+                // Update loading state for this image
+                setImagesLoaded(prev => {
+                  const newState = [...prev];
+                  newState[index] = true;
+                  return newState;
+                });
+              }
+            } catch (error) {
+              console.error(`Error loading image ${path}:`, error);
+            }
+          } else {
+            // External URL
+            loadedImageData[path] = path;
+            
+            // Update loading state for this image
+            setImagesLoaded(prev => {
+              const newState = [...prev];
+              newState[index] = true;
+              return newState;
+            });
+          }
+        })
+      );
+      
+      setLoadedImages(loadedImageData);
+      setIsLoading(false);
+    };
+    
+    loadImages();
+  }, [siteSettings.homeImages]);
+  
+  // Get image data for a given path
+  const getImageData = (path: string): string => {
+    return loadedImages[path] || path;
+  };
+  
+  // When there are no valid images, show a placeholder
   const validImages = siteSettings.homeImages?.filter(img => img && img !== '') || [];
   const hasImages = validImages.length > 0;
   
-  // Inizializza lo stato di caricamento delle immagini
-  useEffect(() => {
-    if (hasImages) {
-      setImagesLoaded(new Array(validImages.length).fill(false));
-    }
-  }, [hasImages, validImages.length]);
-  
-  // Gestisce il caricamento delle immagini
+  // Handle image load event
   const handleImageLoad = (index: number) => {
     setImagesLoaded(prev => {
       const updated = [...prev];
@@ -54,19 +114,16 @@ export const HomeImageCarousel = () => {
     });
   };
   
-  // Gestisce gli errori di caricamento delle immagini
+  // Handle image error event
   const handleImageError = (index: number) => {
-    console.error(`Errore nel caricamento dell'immagine ${index}:`, validImages[index]);
+    console.error(`Error loading image ${index}:`, validImages[index]);
     setImagesLoaded(prev => {
       const updated = [...prev];
       updated[index] = false;
       return updated;
     });
   };
-  
-  // Quando non ci sono immagini valide, mostriamo un placeholder
-  const placeholderImage = "/placeholder.svg";
-  
+
   return (
     <div className="relative w-full py-10">
       <Carousel 
@@ -76,8 +133,16 @@ export const HomeImageCarousel = () => {
         className="w-full max-w-5xl mx-auto"
       >
         <CarouselContent>
-          {hasImages ? (
-            validImages.map((image, index) => (
+          {isLoading ? (
+            // Loading skeleton
+            <CarouselItem>
+              <div className="aspect-video rounded-lg overflow-hidden">
+                <Skeleton className="w-full h-full" />
+              </div>
+            </CarouselItem>
+          ) : hasImages ? (
+            // Display actual images
+            validImages.map((imagePath, index) => (
               <CarouselItem key={index}>
                 <div className="aspect-video overflow-hidden rounded-lg bg-muted relative">
                   {!imagesLoaded[index] && (
@@ -86,7 +151,7 @@ export const HomeImageCarousel = () => {
                     </div>
                   )}
                   <img 
-                    src={image} 
+                    src={getImageData(imagePath)} 
                     alt={`Villa MareBlu immagine ${index + 1}`} 
                     className={`w-full h-full object-cover transition-all duration-300 hover:scale-105 ${
                       imagesLoaded[index] ? 'opacity-100' : 'opacity-0'
@@ -98,6 +163,7 @@ export const HomeImageCarousel = () => {
               </CarouselItem>
             ))
           ) : (
+            // No images available
             <CarouselItem>
               <div className="aspect-video overflow-hidden rounded-lg bg-muted flex items-center justify-center">
                 <div className="flex flex-col items-center gap-2">
