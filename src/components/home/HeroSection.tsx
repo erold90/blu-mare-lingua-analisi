@@ -9,13 +9,31 @@ export const HeroSection = () => {
   const isMobile = useIsMobile();
   const { siteSettings } = useSettings();
   
-  // Verify if the hero image is valid and not the placeholder
-  const heroImage = siteSettings.heroImage && siteSettings.heroImage !== "/placeholder.svg"
-    ? siteSettings.heroImage 
-    : "https://images.unsplash.com/photo-1559627398-8284fd5e51b1?q=80&w=2000&auto=format&fit=crop";
+  // Implementazione migliorata per la gestione dell'immagine hero
+  const [heroImageUrl, setHeroImageUrl] = React.useState<string | null>(null);
+  const [imageError, setImageError] = React.useState(false);
+  
+  // Immagine di fallback da utilizzare se l'immagine hero non è disponibile
+  const fallbackImage = "https://images.unsplash.com/photo-1559627398-8284fd5e51b1?q=80&w=2000&auto=format&fit=crop";
+  
+  React.useEffect(() => {
+    // Resetta lo stato di errore quando cambia l'URL dell'immagine
+    setImageError(false);
+    
+    if (siteSettings.heroImage && siteSettings.heroImage !== "/placeholder.svg") {
+      console.log("Caricamento immagine hero:", siteSettings.heroImage);
+      setHeroImageUrl(siteSettings.heroImage);
+    } else {
+      console.log("Nessuna immagine hero valida trovata, uso fallback");
+      setHeroImageUrl(fallbackImage);
+    }
+  }, [siteSettings.heroImage]);
   
   // Get image position, default to center if not set
   const imagePosition = siteSettings.heroImagePosition || "center";
+  
+  // L'URL effettivo dell'immagine da utilizzare
+  const effectiveImageUrl = imageError ? fallbackImage : (heroImageUrl || fallbackImage);
 
   return (
     <div className="relative w-full">
@@ -23,8 +41,12 @@ export const HeroSection = () => {
         <div 
           className="absolute inset-0 bg-cover bg-no-repeat transition-transform duration-700 hover:scale-105"
           style={{
-            backgroundImage: `url('${heroImage}')`,
+            backgroundImage: `url('${effectiveImageUrl}')`,
             backgroundPosition: imagePosition
+          }}
+          onError={() => {
+            console.error("Errore nel caricamento dell'immagine hero:", heroImageUrl);
+            setImageError(true);
           }}
         />
         <div className="absolute inset-0 bg-black/40" />

@@ -4,13 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Plus, Image as ImageIcon } from "lucide-react";
+import { Plus, Image as ImageIcon, Loader2 } from "lucide-react";
 import { useSettings } from "@/hooks/useSettings";
 import { ImagePositioner } from "./ImagePositioner";
 
 export const HeroImageSection = () => {
   const { siteSettings, updateSiteSettings, saveImageToStorage } = useSettings();
   const [imagePreviewPosition, setImagePreviewPosition] = React.useState(siteSettings.heroImagePosition || "center");
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState(0);
   
   React.useEffect(() => {
     setImagePreviewPosition(siteSettings.heroImagePosition || "center");
@@ -24,14 +26,41 @@ export const HeroImageSection = () => {
     const file = e.target.files[0];
     
     try {
+      setIsUploading(true);
+      setUploadProgress(10);
+      
+      // Simulazione di un caricamento progressivo
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 300);
+
       // Save the new image
       const imagePath = await saveImageToStorage(file, 'hero');
+      
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+      
+      console.log("Immagine hero salvata con successo:", imagePath);
       
       // Update settings with the new path
       updateSiteSettings({ heroImage: imagePath });
       toast.success("Immagine hero aggiornata");
+      
+      // Ritardo prima di resettare lo stato di caricamento
+      setTimeout(() => {
+        setIsUploading(false);
+        setUploadProgress(0);
+      }, 500);
     } catch (error) {
       console.error('Error uploading hero image:', error);
+      setIsUploading(false);
+      setUploadProgress(0);
       toast.error(`Errore durante il caricamento dell'immagine: ${(error as Error).message}`);
     }
   };
@@ -76,19 +105,35 @@ export const HeroImageSection = () => {
             </p>
           </div>
           <div>
-            <Button
-              variant="outline"
-              onClick={() => document.getElementById('hero-upload')?.click()}
-              className="flex items-center"
-            >
-              <Plus className="h-4 w-4 mr-1" /> Cambia immagine
-            </Button>
+            {isUploading ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm">Caricamento in corso ({uploadProgress}%)...</span>
+                </div>
+                <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-primary h-full transition-all duration-300" 
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => document.getElementById('hero-upload')?.click()}
+                className="flex items-center"
+              >
+                <Plus className="h-4 w-4 mr-1" /> Cambia immagine
+              </Button>
+            )}
             <Input
               id="hero-upload"
               type="file"
               accept="image/*"
               className="hidden"
               onChange={handleImageUpload}
+              disabled={isUploading}
             />
           </div>
         </div>

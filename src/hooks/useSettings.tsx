@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -54,6 +53,9 @@ const SettingsContext = createContext<SettingsContextType | undefined>(undefined
 // Array of supported file types for images
 const SUPPORTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
+// Chiave per lo storage delle immagini
+const IMAGE_STORAGE_KEY = 'villa_mareblu_images';
+
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
     const savedSettings = localStorage.getItem("siteSettings");
@@ -81,7 +83,67 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return defaultAdminSettings;
   });
 
-  // Function to save an image to public directory
+  // Funzione per convertire un file in Base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+  
+  // Funzione per ottimizzare un'immagine prima del salvataggio
+  const optimizeImage = async (file: File, maxWidth = 1920): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        
+        // Se l'immagine è già più piccola del massimo, non ridimensionare
+        if (img.width <= maxWidth) {
+          resolve(file);
+          return;
+        }
+        
+        const canvas = document.createElement('canvas');
+        const ratio = maxWidth / img.width;
+        canvas.width = maxWidth;
+        canvas.height = img.height * ratio;
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error("Failed to get canvas context"));
+          return;
+        }
+        
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        canvas.toBlob(
+          blob => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error("Failed to create blob from canvas"));
+            }
+          },
+          file.type,
+          0.85 // Qualità dell'immagine (85%)
+        );
+      };
+      
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Failed to load image for optimization"));
+      };
+      
+      img.src = url;
+    });
+  };
+
+  // Funzione per salvare un'immagine nello storage
   const saveImageToStorage = async (file: File, category: 'hero' | 'home' | 'social' | 'favicon' | 'socialImage'): Promise<string> => {
     try {
       // Validate file type
@@ -89,47 +151,116 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         throw new Error('Tipo di file non supportato. Carica solo immagini JPG, PNG, WEBP o GIF.');
       }
       
+      console.log(`Inizio processo di salvataggio immagine ${category}:`, file.name);
+      
+      // Ottimizza l'immagine prima del salvataggio
+      const optimizedImage = await optimizeImage(file);
+      console.log("Immagine ottimizzata:", optimizedImage.size, "bytes");
+      
       // Create a unique filename based on timestamp and original name
       const timestamp = new Date().getTime();
       const fileExtension = file.name.split('.').pop() || 'jpg';
       const sanitizedFileName = file.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
       const fileName = `${category}_${timestamp}_${sanitizedFileName}.${fileExtension}`;
       
-      // In a real app with server storage, we would upload the file to a server here
-      // Since we're in a client-side only app for now, we'll create a URL for the file
-      // This URL will be valid until the browser session ends
-      const objectUrl = URL.createObjectURL(file);
-      
-      // For persistence, we would normally save this file to the server
-      // For now, we'll return the object URL which will work for the current session
-      // In a real app, this would return the URL to the saved file on the server
-      
-      // Store the mapping in localStorage for persistence across browser refreshes
-      // Note: This is a workaround for the demo. In a real app, the server would handle this.
-      const imageMapKey = 'villa_mareblu_image_map';
-      let imageMap = {};
-      try {
-        const storedMap = localStorage.getItem(imageMapKey);
-        if (storedMap) {
-          imageMap = JSON.parse(storedMap);
-        }
-      } catch (e) {
-        console.error("Failed to parse image map:", e);
-      }
+      // Convert the image to base64
+      const base64Data = await fileToBase64(optimizedImage);
+      console.log(`Immagine convertita in base64, lunghezza: ${base64Data.length}`);
       
       // Generate a path that would normally point to a server location
       const imagePath = `/upload/${fileName}`;
       
-      // Store the mapping between the path and the object URL
-      imageMap[imagePath] = objectUrl;
+      // Retrieve existing image storage
+      let imageStorage: Record<string, string> = {};
+      try {
+        const storedImages = localStorage.getItem(IMAGE_STORAGE_KEY);
+        if (storedImages) {
+          imageStorage = JSON.parse(storedImages);
+        }
+      } catch (error) {
+        console.error("Errore nel recupero delle immagini salvate:", error);
+      }
       
-      // Save the updated map
-      localStorage.setItem(imageMapKey, JSON.stringify(imageMap));
+      // Check storage size before adding new image
+      const storageSize = JSON.stringify(imageStorage).length;
+      console.log(`Dimensione storage attuale: ${storageSize} bytes`);
+      
+      // If we're getting close to localStorage limits (5MB typical), remove old images
+      // Lasciamo circa 1MB di spazio per la nuova immagine
+      if (storageSize > 4 * 1024 * 1024) {
+        console.log("Storage quasi pieno, rimozione immagini vecchie...");
+        
+        // Keep only essential images and most recent ones
+        const essentialCategories = ['hero', 'favicon'];
+        const newStorage: Record<string, string> = {};
+        
+        // First pass: keep essential images (hero, favicon)
+        Object.entries(imageStorage).forEach(([path, data]) => {
+          if (essentialCategories.some(cat => path.includes(`/${cat}_`))) {
+            newStorage[path] = data;
+          }
+        });
+        
+        // Second pass: add some recent images if there's room
+        const remainingEntries = Object.entries(imageStorage)
+          .filter(([path]) => !Object.keys(newStorage).includes(path))
+          .sort((a, b) => {
+            // Extract timestamps from filenames for sorting
+            const tsA = parseInt(a[0].split('_')[1] || '0');
+            const tsB = parseInt(b[0].split('_')[1] || '0');
+            return tsB - tsA; // Sort descending (newest first)
+          });
+        
+        // Add recent images until we hit ~3MB limit
+        let currentSize = JSON.stringify(newStorage).length;
+        for (const [path, data] of remainingEntries) {
+          if (currentSize + data.length < 3 * 1024 * 1024) {
+            newStorage[path] = data;
+            currentSize += data.length;
+          } else {
+            break;
+          }
+        }
+        
+        // Update storage with pruned data
+        imageStorage = newStorage;
+        console.log(`Storage ridotto a ${Object.keys(imageStorage).length} immagini`);
+      }
+      
+      // Add the new image to storage
+      imageStorage[imagePath] = base64Data;
+      
+      // Save the updated image storage
+      try {
+        localStorage.setItem(IMAGE_STORAGE_KEY, JSON.stringify(imageStorage));
+        console.log(`Immagine ${category} salvata con successo in localStorage:`, imagePath);
+      } catch (error) {
+        console.error("Errore nel salvataggio delle immagini:", error);
+        throw new Error("Impossibile salvare l'immagine a causa di limiti di storage. Prova a eliminare alcune immagini.");
+      }
       
       return imagePath;
     } catch (error) {
       console.error(`Error saving ${category} image:`, error);
       throw error;
+    }
+  };
+  
+  // Funzione per recuperare un'immagine dallo storage
+  const getImageFromStorage = (path: string): string | null => {
+    if (!path || !path.startsWith('/upload/')) {
+      return path; // Not a stored image, return as is
+    }
+    
+    try {
+      const imageStorage = localStorage.getItem(IMAGE_STORAGE_KEY);
+      if (!imageStorage) return null;
+      
+      const images = JSON.parse(imageStorage);
+      return images[path] || null;
+    } catch (error) {
+      console.error("Error retrieving image from storage:", error);
+      return null;
     }
   };
 
@@ -202,59 +333,65 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [siteSettings.siteName, siteSettings.siteDescription, siteSettings.socialImage, siteSettings.favicon]);
   
-  // Helper to map object URLs from our local storage to usable URLs
+  // Monitor localStorage for image changes from other tabs
   useEffect(() => {
-    const imageMapKey = 'villa_mareblu_image_map';
-    try {
-      const storedMap = localStorage.getItem(imageMapKey);
-      if (storedMap) {
-        const imageMap = JSON.parse(storedMap);
-        
-        // For each stored image URL in our settings, check if we need to replace it with an object URL
-        const updateSettings = {...siteSettings};
-        let hasChanges = false;
-        
-        // Check hero image
-        if (updateSettings.heroImage && updateSettings.heroImage.startsWith('/upload/')) {
-          if (imageMap[updateSettings.heroImage]) {
-            hasChanges = true;
-          }
-        }
-        
-        // Check home images
-        if (updateSettings.homeImages && updateSettings.homeImages.length > 0) {
-          updateSettings.homeImages = updateSettings.homeImages.map(img => {
-            if (img && img.startsWith('/upload/') && imageMap[img]) {
-              hasChanges = true;
-              return img;
-            }
-            return img;
-          });
-        }
-        
-        // Check social image
-        if (updateSettings.socialImage && updateSettings.socialImage.startsWith('/upload/')) {
-          if (imageMap[updateSettings.socialImage]) {
-            hasChanges = true;
-          }
-        }
-        
-        // Check favicon
-        if (updateSettings.favicon && updateSettings.favicon.startsWith('/upload/')) {
-          if (imageMap[updateSettings.favicon]) {
-            hasChanges = true;
-          }
-        }
-        
-        // If we made changes, update the settings
-        if (hasChanges) {
-          setSiteSettings(updateSettings);
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === IMAGE_STORAGE_KEY && e.newValue) {
+        console.log("Rilevate modifiche alle immagini in un'altra scheda");
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+  
+  // Replace URL paths with base64 data for images in settings
+  useEffect(() => {
+    const processImages = () => {
+      let hasChanges = false;
+      const updatedSettings = {...siteSettings};
+      
+      // Processa l'immagine hero
+      if (updatedSettings.heroImage && updatedSettings.heroImage.startsWith('/upload/')) {
+        const heroImageData = getImageFromStorage(updatedSettings.heroImage);
+        if (heroImageData && heroImageData !== updatedSettings.heroImage) {
+          console.log("Recuperata immagine hero da localStorage");
+          hasChanges = true;
         }
       }
-    } catch (e) {
-      console.error("Failed to process image map:", e);
-    }
-  }, []);
+      
+      // Processa le immagini home
+      if (updatedSettings.homeImages && updatedSettings.homeImages.length > 0) {
+        updatedSettings.homeImages = updatedSettings.homeImages.map(img => {
+          if (img && img.startsWith('/upload/')) {
+            const imageData = getImageFromStorage(img);
+            if (imageData) {
+              hasChanges = true;
+              return img; // Mantieni il riferimento, sarà sostituito al momento dell'uso
+            }
+          }
+          return img;
+        });
+      }
+      
+      // Processa l'immagine social
+      if (updatedSettings.socialImage && updatedSettings.socialImage.startsWith('/upload/')) {
+        const socialImageData = getImageFromStorage(updatedSettings.socialImage);
+        if (socialImageData && socialImageData !== updatedSettings.socialImage) {
+          hasChanges = true;
+        }
+      }
+      
+      // Aggiorna le impostazioni solo se ci sono cambiamenti
+      if (hasChanges) {
+        console.log("Aggiornamento impostazioni con immagini da localStorage");
+      }
+    };
+    
+    processImages();
+  }, [siteSettings]);
   
   const updateSiteSettings = (settings: Partial<SiteSettings>) => {
     setSiteSettings(prev => ({ ...prev, ...settings }));
@@ -308,9 +445,28 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     });
   };
   
+  // Creare un proxy per le immagini che sostituisce i percorsi con i dati effettivi
+  const getProxiedSettings = (): SiteSettings => {
+    const proxiedSettings = {...siteSettings};
+    
+    // Sostituisci i percorsi delle immagini con i dati base64
+    if (proxiedSettings.heroImage && proxiedSettings.heroImage.startsWith('/upload/')) {
+      const imageData = getImageFromStorage(proxiedSettings.heroImage);
+      if (imageData) {
+        Object.defineProperty(proxiedSettings, 'heroImage', {
+          get: () => imageData,
+          enumerable: true,
+          configurable: true
+        });
+      }
+    }
+    
+    return proxiedSettings;
+  };
+  
   return (
     <SettingsContext.Provider value={{
-      siteSettings,
+      siteSettings: getProxiedSettings(),
       adminSettings,
       updateSiteSettings,
       updateAdminSettings,
