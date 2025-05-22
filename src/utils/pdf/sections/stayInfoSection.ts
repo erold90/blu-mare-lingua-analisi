@@ -2,7 +2,7 @@
 import { jsPDF } from "jspdf";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
-import { createSection, createInfoRow, formatItalianDate } from "../formatUtils";
+import { createSection, formatItalianDate } from "../formatUtils";
 
 /**
  * Generate the stay details section of the quote with elegant design
@@ -21,7 +21,6 @@ export const generateStayInfoSection = (doc: jsPDF, formData: FormValues, priceC
   
   // Configure label position
   const labelX = 25; // X position for labels
-  doc.setFont('helvetica', 'bold');
   
   // Check if dates are available
   if (formData.checkIn && formData.checkOut) {
@@ -34,6 +33,7 @@ export const generateStayInfoSection = (doc: jsPDF, formData: FormValues, priceC
     const checkOutFormatted = formatItalianDate(checkOutDate);
     
     // Improved layout with clear date information
+    doc.setFont('helvetica', 'bold');
     doc.text("Periodo:", labelX, currentY);
     doc.setFont('helvetica', 'normal');
     doc.text(`Dal ${checkInFormatted} al ${checkOutFormatted}`, labelX + 60, currentY);

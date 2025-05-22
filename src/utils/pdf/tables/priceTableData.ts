@@ -1,4 +1,3 @@
-
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
 import { Apartment } from "@/data/apartments";
@@ -39,7 +38,7 @@ export const createApartmentRows = (
       }
     ]);
     
-    // Add apartment features - removed bathrooms property which doesn't exist
+    // Add apartment features - without bathrooms which doesn't exist
     rows.push([
       `  • ${apt.size} m² • ${apt.beds} posti letto`, 
       ""
@@ -64,7 +63,7 @@ export const createApartmentRows = (
         }
       ]);
       
-      // Add apartment features - removed bathrooms property which doesn't exist
+      // Add apartment features - without bathrooms which doesn't exist
       rows.push([
         `  • ${apt.size} m² • ${apt.beds} posti letto`, 
         ""

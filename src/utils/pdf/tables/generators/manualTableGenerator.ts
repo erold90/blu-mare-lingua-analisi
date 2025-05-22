@@ -1,3 +1,4 @@
+
 import { jsPDF } from "jspdf";
 import { TableCell } from "../../types";
 
@@ -21,7 +22,7 @@ export const drawManualTable = (
     doc.rect(x, y, width, height);
     
     let content = '';
-    let styles = {};
+    let styles: TableCell['styles'] = {};
     
     if (typeof text === 'string') {
       content = text;
@@ -30,18 +31,16 @@ export const drawManualTable = (
       styles = text.styles || {};
     }
     
-    doc.setFontSize(styles.fontSize || 10);
-    if (styles.fontStyle) {
-      doc.setFont('helvetica', styles.fontStyle as 'bold' | 'italic' | 'normal');
-    } else {
-      doc.setFont('helvetica', 'normal');
-    }
+    // Safely access style properties with default values
+    const fontSize = styles?.fontSize || 10;
+    const fontStyle = (styles?.fontStyle || 'normal') as 'bold' | 'italic' | 'normal';
+    const textColor = styles?.textColor || [0, 0, 0];
     
-    if (styles.textColor) {
-      doc.setTextColor(styles.textColor[0], styles.textColor[1], styles.textColor[2]);
-    } else {
-      doc.setTextColor(0, 0, 0);
-    }
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', fontStyle);
+    
+    // Use the text color if provided, or default to black
+    doc.setTextColor(textColor[0] || 0, textColor[1] || 0, textColor[2] || 0);
     
     const textX = x + cellPadding;
     const textY = y + cellPadding + (height - 2 * cellPadding) / 2 + 1; // Vertically center

@@ -5,6 +5,7 @@ import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
 import { Apartment } from "@/data/apartments";
 import { createSection } from "../formatUtils";
+import { TableCell } from "../types";
 import { 
   generateTable, 
   drawManualTable,
@@ -35,7 +36,7 @@ export const generateCostsTableSection = (
   doc.rect(10, currentY - 3, pageWidth - 20, 150, 'F');
   
   // Create table headers with better styling
-  const headers = [
+  const headers: (string | TableCell)[][] = [
     [{ content: "Descrizione", styles: { fontStyle: 'bold', fillColor: [230, 236, 242] } }, 
      { content: "Importo", styles: { fontStyle: 'bold', fillColor: [230, 236, 242], halign: 'right' } }]
   ];
