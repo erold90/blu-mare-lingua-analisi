@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -8,9 +9,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 import { toast } from "sonner";
 import { Camera, X, Move, CheckCircle, ImageIcon, Loader2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { saveImage, getImage } from "@/utils/imageStorage";
-import { deleteImageEverywhere, syncImageToServer } from "@/utils/imageManager";
-import { loadImageFromCloud } from "@/utils/cloudImageSync";
+import { imageService, IMAGE_CATEGORIES, ImageMetadata } from "@/utils/imageService";
 
 interface ApartmentImagesProps {
   apartmentId: string;
@@ -28,126 +27,76 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
   onCoverImageChange,
 }) => {
   const isMobile = useIsMobile();
-  const [loadedImages, setLoadedImages] = useState<{[key: string]: string}>({});
-  const [loadingStates, setLoadingStates] = useState<{[key: string]: boolean}>({});
+  const [loadingImages, setLoadingImages] = useState(true);
+  const [apartmentImages, setApartmentImages] = useState<ImageMetadata[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Load all images on component mount
+  // Carica le immagini quando cambia l'ID dell'appartamento
   useEffect(() => {
-    const loadAllImages = async () => {
-      // Initialize loading states
-      const initialLoadingStates: {[key: string]: boolean} = {};
-      images.forEach(path => {
-        initialLoadingStates[path] = true;
-      });
-      setLoadingStates(initialLoadingStates);
-      
-      // Load each image
-      const imageData: {[key: string]: string} = {};
-      
-      for (const path of images) {
-        if (path.startsWith('/upload/')) {
-          try {
-            // Try local storage first
-            const storedImage = await getImage(path);
-            
-            if (storedImage && storedImage.data) {
-              imageData[path] = storedImage.data;
-            } else {
-              // Try cloud storage as fallback
-              try {
-                const cloudData = await loadImageFromCloud(path);
-                if (cloudData) {
-                  imageData[path] = cloudData;
-                  
-                  // Save to IndexedDB for future use
-                  try {
-                    const imageObj = {
-                      path,
-                      data: cloudData,
-                      category: 'home', // Default category for apartment images
-                      fileName: path.split('_').slice(2).join('_'),
-                      createdAt: parseInt(path.split('_')[1]) || Date.now(),
-                      id: path.split('_')[1] || Date.now().toString()
-                    };
-                    
-                    const db = await openIndexedDB();
-                    const tx = db.transaction(['images'], 'readwrite');
-                    const store = tx.objectStore('images');
-                    store.put(imageObj);
-                    
-                    tx.oncomplete = () => {
-                      db.close();
-                      console.log(`Image ${path} saved to IndexedDB from cloud`);
-                    };
-                  } catch (err) {
-                    console.error('Error saving cloud image to IndexedDB:', err);
-                  }
-                }
-              } catch (cloudError) {
-                console.error(`Error loading image ${path} from cloud:`, cloudError);
-              }
-            }
-          } catch (error) {
-            console.error(`Error loading image ${path}:`, error);
+    const loadImages = async () => {
+      setLoadingImages(true);
+      try {
+        const result = await imageService.getImages(IMAGE_CATEGORIES.APARTMENTS, apartmentId);
+        
+        if (result.success) {
+          setApartmentImages(result.images);
+          
+          // Aggiorna il componente parent con i nuovi percorsi delle immagini
+          const imagePaths = result.images.map(img => img.path);
+          onImagesChange(apartmentId, imagePaths);
+          
+          // Trova l'indice dell'immagine di copertina
+          const coverIndex = result.images.findIndex(img => img.isCover);
+          if (coverIndex >= 0) {
+            onCoverImageChange(apartmentId, coverIndex);
           }
         } else {
-          imageData[path] = path;
+          toast.error("Errore nel caricamento delle immagini: " + result.message);
         }
-        
-        // Update loading state for this image
-        setLoadingStates(prev => ({
-          ...prev,
-          [path]: false
-        }));
+      } catch (error) {
+        console.error("Errore nel caricamento delle immagini:", error);
+        toast.error("Errore nel caricamento delle immagini");
+      } finally {
+        setLoadingImages(false);
       }
-      
-      setLoadedImages(imageData);
     };
     
-    loadAllImages();
-  }, [images]);
-  
-  // Opens the IndexedDB database
-  const openIndexedDB = (): Promise<IDBDatabase> => {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open('villaMarePluImages', 1);
-      
-      request.onerror = () => {
-        reject(request.error);
-      };
-      
-      request.onsuccess = () => {
-        resolve(request.result);
-      };
-      
-      request.onupgradeneeded = (event) => {
-        const db = request.result;
-        if (!db.objectStoreNames.contains('images')) {
-          const store = db.createObjectStore('images', { keyPath: 'path' });
-          store.createIndex('category', 'category', { unique: false });
-          store.createIndex('createdAt', 'createdAt', { unique: false });
-        }
-      };
-    });
-  };
+    if (apartmentId) {
+      loadImages();
+    }
+  }, [apartmentId, onImagesChange, onCoverImageChange]);
 
-  const handleDragEnd = (result: DropResult) => {
+  const handleDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
     
-    const items = Array.from(images);
+    const items = Array.from(apartmentImages);
     const [reorderedItem] = items.splice(result.source.index, 1);
     items.splice(result.destination.index, 0, reorderedItem);
     
-    onImagesChange(apartmentId, items);
+    setApartmentImages(items);
     
-    // If the cover image was moved, update its index
+    // Aggiorna il componente parent con i nuovi percorsi delle immagini
+    const imagePaths = items.map(img => img.path);
+    onImagesChange(apartmentId, imagePaths);
+    
+    // Se l'immagine di copertina è stata spostata, aggiorna il suo indice
     if (coverImageIndex === result.source.index) {
       onCoverImageChange(apartmentId, result.destination.index);
     }
     
-    toast.success("Ordine immagini aggiornato");
+    // Salva il nuovo ordine sul server
+    try {
+      const imageIds = items.map(img => img.id);
+      const success = await imageService.updateImagesOrder(apartmentId, imageIds);
+      
+      if (success) {
+        toast.success("Ordine immagini aggiornato");
+      }
+    } catch (error) {
+      console.error("Errore nell'aggiornamento dell'ordine:", error);
+      toast.error("Errore nell'aggiornamento dell'ordine delle immagini");
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -156,56 +105,48 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
     setUploadingImage(true);
     setUploadProgress(0);
     
-    // Create an array to store new image paths
-    const newImagePaths: string[] = [];
-    
     try {
       for (let i = 0; i < e.target.files.length; i++) {
         const file = e.target.files[i];
         
-        // Calculate percentage progress for this file
+        // Calcola la percentuale di avanzamento per questo file
         const fileProgress = (i) / e.target.files.length * 100;
         setUploadProgress(fileProgress);
         
-        // Save image to IndexedDB
-        const imagePath = await saveImage(
+        // Carica l'immagine
+        const isCover = apartmentImages.length === 0; // Prima immagine = copertina
+        const result = await imageService.uploadImage(
           file,
-          'home', // Using 'home' for apartments too since it's the same image type
+          IMAGE_CATEGORIES.APARTMENTS,
+          { apartmentId, isCover },
           (progress) => {
-            // Convert individual file progress to overall progress
+            // Converti il progresso individuale in progresso complessivo
             const fileWeight = 100 / e.target.files.length;
             const overallProgress = fileProgress + (progress / 100 * fileWeight);
             setUploadProgress(Math.min(overallProgress, 99));
           }
         );
         
-        // Sync to server with automatic organization
-        await syncImageToServer(imagePath);
-        
-        newImagePaths.push(imagePath);
-        
-        // Load the image immediately
-        const imageData = await getImage(imagePath);
-        if (imageData && imageData.data) {
-          setLoadedImages(prev => ({
-            ...prev,
-            [imagePath]: imageData.data
-          }));
+        if (result.success && result.metadata) {
+          // Aggiungi l'immagine caricata all'elenco
+          setApartmentImages(prev => [...prev, result.metadata!]);
+          
+          // Aggiorna il componente parent
+          onImagesChange(apartmentId, [...images, result.metadata!.path]);
+          
+          // Se è la prima immagine o impostata come copertina, aggiorna l'indice di copertina
+          if (isCover) {
+            onCoverImageChange(apartmentId, apartmentImages.length);
+          }
+        } else {
+          toast.error("Errore nel caricamento dell'immagine: " + result.message);
         }
       }
       
-      // Update apartment images with the new paths
-      onImagesChange(apartmentId, [...images, ...newImagePaths]);
-      
-      // Set the first image as cover if no cover is set
-      if (coverImageIndex === undefined && newImagePaths.length > 0 && images.length === 0) {
-        onCoverImageChange(apartmentId, 0);
-      }
-      
       setUploadProgress(100);
-      toast.success(`${newImagePaths.length} immagini caricate`);
+      toast.success(`${e.target.files.length} immagini caricate`);
     } catch (error) {
-      console.error('Error uploading apartment images:', error);
+      console.error('Errore nel caricamento delle immagini:', error);
       toast.error(`Errore durante il caricamento delle immagini: ${(error as Error).message}`);
     } finally {
       setUploadingImage(false);
@@ -213,45 +154,73 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
   };
 
   const removeImage = async (index: number) => {
-    const imageToRemove = images[index];
+    const imageToRemove = apartmentImages[index];
     
-    // Create a new array without this image
-    const updatedImages = [...images];
-    updatedImages.splice(index, 1);
-    onImagesChange(apartmentId, updatedImages);
-    
-    // Adjust cover image index if needed
-    if (coverImageIndex === index) {
-      // If we removed the cover image, set the first image as cover or clear it
-      onCoverImageChange(apartmentId, updatedImages.length > 0 ? 0 : -1);
-    } else if (coverImageIndex !== undefined && coverImageIndex > index) {
-      // If we removed an image before the cover, adjust the index
-      onCoverImageChange(apartmentId, coverImageIndex - 1);
-    }
-    
-    // Delete the image from both local storage and server
-    if (imageToRemove.startsWith('/upload/')) {
-      try {
-        await deleteImageEverywhere(imageToRemove);
-        toast.success("Immagine rimossa dal server");
-      } catch (error) {
-        console.error('Error deleting image:', error);
-        toast.error("Errore durante l'eliminazione dell'immagine dal server");
+    try {
+      // Elimina l'immagine dal server
+      const result = await imageService.deleteImage(
+        imageToRemove.id,
+        IMAGE_CATEGORIES.APARTMENTS,
+        apartmentId
+      );
+      
+      if (result.success) {
+        // Rimuovi l'immagine dall'elenco locale
+        const updatedImages = [...apartmentImages];
+        updatedImages.splice(index, 1);
+        setApartmentImages(updatedImages);
+        
+        // Aggiorna il componente parent
+        onImagesChange(apartmentId, updatedImages.map(img => img.path));
+        
+        // Aggiusta l'indice dell'immagine di copertina se necessario
+        if (coverImageIndex === index) {
+          // Se abbiamo rimosso l'immagine di copertina, imposta la prima immagine come copertina o nessuna
+          onCoverImageChange(apartmentId, updatedImages.length > 0 ? 0 : -1);
+        } else if (coverImageIndex !== undefined && coverImageIndex > index) {
+          // Se abbiamo rimosso un'immagine prima della copertina, aggiusta l'indice
+          onCoverImageChange(apartmentId, coverImageIndex - 1);
+        }
+        
+        toast.success("Immagine rimossa");
+      } else {
+        toast.error("Errore nella rimozione dell'immagine: " + result.message);
       }
+    } catch (error) {
+      console.error('Errore nella rimozione dell\'immagine:', error);
+      toast.error("Errore nella rimozione dell'immagine");
     }
-    
-    toast.success("Immagine rimossa");
   };
 
-  // Get image data for display
-  const getImageData = (path: string): string => {
-    return loadedImages[path] || path;
+  const setCoverImage = async (index: number) => {
+    const image = apartmentImages[index];
+    
+    try {
+      const success = await imageService.setCoverImage(image.id, apartmentId);
+      
+      if (success) {
+        onCoverImageChange(apartmentId, index);
+        
+        // Aggiorna anche lo stato locale
+        setApartmentImages(prev => 
+          prev.map((img, i) => ({
+            ...img,
+            isCover: i === index
+          }))
+        );
+        
+        toast.success("Immagine di copertina impostata");
+      }
+    } catch (error) {
+      console.error('Errore nell\'impostazione dell\'immagine di copertina:', error);
+      toast.error("Errore nell'impostazione dell'immagine di copertina");
+    }
   };
 
   return (
     <div className="mt-4">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="font-medium">Immagini ({images.length})</h3>
+        <h3 className="font-medium">Immagini ({apartmentImages.length})</h3>
         <div className="flex gap-2">
           <Button 
             variant="outline" 
@@ -286,7 +255,12 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
         </div>
       )}
       
-      {images.length > 0 ? (
+      {loadingImages ? (
+        <div className="text-center py-6">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+          <p className="text-muted-foreground mt-2">Caricamento immagini...</p>
+        </div>
+      ) : apartmentImages.length > 0 ? (
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="apartment-images" direction={isMobile ? "vertical" : "horizontal"}>
             {(provided) => (
@@ -295,8 +269,8 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
                 ref={provided.innerRef}
                 className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
               >
-                {images.map((imagePath, index) => (
-                  <Draggable key={`${apartmentId}-${index}`} draggableId={`${apartmentId}-${index}`} index={index}>
+                {apartmentImages.map((image, index) => (
+                  <Draggable key={image.id} draggableId={image.id} index={index}>
                     {(provided) => (
                       <div
                         ref={provided.innerRef}
@@ -306,31 +280,15 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
                         }`}
                       >
                         <div className="aspect-square relative">
-                          {loadingStates[imagePath] ? (
-                            <div className="absolute inset-0 flex items-center justify-center bg-muted">
-                              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                            </div>
-                          ) : (
-                            <img 
-                              src={getImageData(imagePath)} 
-                              alt={`Apartment ${index+1}`}
-                              className="absolute inset-0 w-full h-full object-cover"
-                              onLoad={() => {
-                                setLoadingStates(prev => ({
-                                  ...prev,
-                                  [imagePath]: false
-                                }));
-                              }}
-                              onError={(e) => {
-                                console.error(`Failed to load image: ${imagePath}`);
-                                e.currentTarget.src = "/placeholder.svg";
-                                setLoadingStates(prev => ({
-                                  ...prev,
-                                  [imagePath]: false
-                                }));
-                              }}
-                            />
-                          )}
+                          <img 
+                            src={image.path} 
+                            alt={`Appartamento ${index+1}`}
+                            className="absolute inset-0 w-full h-full object-cover"
+                            onError={(e) => {
+                              console.error(`Failed to load image: ${image.path}`);
+                              e.currentTarget.src = "/placeholder.svg";
+                            }}
+                          />
                         </div>
                         <div className="absolute top-1 right-1 flex gap-1">
                           <Button
@@ -345,7 +303,7 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6 bg-white/80 hover:bg-white"
-                            onClick={() => onCoverImageChange(apartmentId, index)}
+                            onClick={() => setCoverImage(index)}
                           >
                             <CheckCircle className={`h-3 w-3 ${coverImageIndex === index ? 'text-primary' : ''}`} />
                           </Button>

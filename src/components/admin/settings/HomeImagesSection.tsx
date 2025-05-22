@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,107 +10,118 @@ import { Plus, X, MoveUp, MoveDown, Image as ImageIcon, Loader2 } from "lucide-r
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { getImage } from "@/utils/imageStorage";
-import { deleteImageEverywhere, syncImageToServer } from "@/utils/imageManager";
+import { imageService, IMAGE_CATEGORIES, ImageMetadata } from "@/utils/imageService";
 
 export const HomeImagesSection = () => {
-  const { siteSettings, updateSiteSettings, saveImageToStorage, isImageLoading, uploadProgress } = useSettings();
+  const { siteSettings, updateSiteSettings } = useSettings();
   const isMobile = useIsMobile();
   const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-  const [loadedImages, setLoadedImages] = React.useState<{[key: string]: string}>({});
-  const [loadingStates, setLoadingStates] = React.useState<{[key: string]: boolean}>({});
+  const [loadingImages, setLoadingImages] = React.useState(true);
+  const [homeImages, setHomeImages] = React.useState<ImageMetadata[]>([]);
+  const [uploadingImage, setUploadingImage] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState(0);
   
-  // Ensure homeImages array exists
-  const homeImages = siteSettings.homeImages || [];
-  
-  // Load all images on component mount
+  // Carica le immagini all'avvio del componente
   React.useEffect(() => {
-    const loadAllImages = async () => {
-      // Initialize loading states
-      const initialLoadingStates: {[key: string]: boolean} = {};
-      homeImages.forEach(path => {
-        initialLoadingStates[path] = true;
-      });
-      setLoadingStates(initialLoadingStates);
-      
-      // Load each image
-      const imageData: {[key: string]: string} = {};
-      
-      for (const path of homeImages) {
-        if (path.startsWith('/upload/')) {
-          try {
-            const storedImage = await getImage(path);
-            if (storedImage && storedImage.data) {
-              imageData[path] = storedImage.data;
-            }
-          } catch (error) {
-            console.error(`Error loading image ${path}:`, error);
-          }
-        } else {
-          imageData[path] = path;
-        }
+    const loadImages = async () => {
+      setLoadingImages(true);
+      try {
+        const result = await imageService.getImages(IMAGE_CATEGORIES.HERO);
         
-        // Update loading state for this image
-        setLoadingStates(prev => ({
-          ...prev,
-          [path]: false
-        }));
+        if (result.success) {
+          setHomeImages(result.images);
+          
+          // Aggiorna i settings con i percorsi delle immagini
+          updateSiteSettings({ 
+            homeImages: result.images.map(img => img.path) 
+          });
+        } else {
+          toast.error("Errore nel caricamento delle immagini: " + result.message);
+        }
+      } catch (error) {
+        console.error("Errore nel caricamento delle immagini:", error);
+        toast.error("Errore nel caricamento delle immagini");
+      } finally {
+        setLoadingImages(false);
       }
-      
-      setLoadedImages(imageData);
     };
     
-    loadAllImages();
-  }, [homeImages]);
+    loadImages();
+  }, [updateSiteSettings]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
     const file = e.target.files[0];
+    setUploadingImage(true);
+    setUploadProgress(0);
     
     try {
-      // Save the new image
-      const imagePath = await saveImageToStorage(file, 'home');
+      const result = await imageService.uploadImage(
+        file,
+        IMAGE_CATEGORIES.HERO,
+        {},
+        setUploadProgress
+      );
       
-      // Sync to server with automatic organization
-      await syncImageToServer(imagePath);
-      
-      toast.success("Immagine aggiunta e sincronizzata con il server");
+      if (result.success && result.metadata) {
+        // Aggiorna l'elenco locale delle immagini
+        setHomeImages(prev => [...prev, result.metadata!]);
+        
+        // Aggiorna i settings con i nuovi percorsi
+        updateSiteSettings({
+          homeImages: [...homeImages.map(img => img.path), result.metadata!.path]
+        });
+        
+        toast.success("Immagine aggiunta con successo");
+      } else {
+        toast.error("Errore nel caricamento dell'immagine: " + result.message);
+      }
     } catch (error) {
-      console.error('Error uploading home image:', error);
+      console.error('Errore nel caricamento dell\'immagine:', error);
       toast.error(`Errore durante il caricamento dell'immagine: ${(error as Error).message}`);
+    } finally {
+      setUploadingImage(false);
     }
   };
 
   const removeImage = async (index: number) => {
-    const imagePath = homeImages[index];
+    const imageToRemove = homeImages[index];
     
-    // Create a new array without this image
-    const newImages = [...homeImages];
-    newImages.splice(index, 1);
-    
-    // Update settings
-    updateSiteSettings({ homeImages: newImages });
-    
-    // Reset preview if this was the image being previewed
-    if (previewImage === loadedImages[imagePath]) {
-      setPreviewImage(null);
-    }
-    
-    // Delete the image from both local storage and server
-    if (imagePath.startsWith('/upload/')) {
-      try {
-        await deleteImageEverywhere(imagePath);
-        toast.success("Immagine rimossa dal server");
-      } catch (error) {
-        console.error('Error deleting image:', error);
+    try {
+      // Elimina l'immagine dal server
+      const result = await imageService.deleteImage(
+        imageToRemove.id,
+        IMAGE_CATEGORIES.HERO
+      );
+      
+      if (result.success) {
+        // Rimuovi l'immagine dall'elenco locale
+        const updatedImages = [...homeImages];
+        updatedImages.splice(index, 1);
+        setHomeImages(updatedImages);
+        
+        // Aggiorna i settings
+        updateSiteSettings({
+          homeImages: updatedImages.map(img => img.path)
+        });
+        
+        // Resetta l'anteprima se necessario
+        if (previewImage === imageToRemove.path) {
+          setPreviewImage(null);
+        }
+        
+        toast.success("Immagine rimossa");
+      } else {
+        toast.error("Errore nella rimozione dell'immagine: " + result.message);
       }
+    } catch (error) {
+      console.error('Errore nella rimozione dell\'immagine:', error);
+      toast.error("Errore nella rimozione dell'immagine");
     }
-    
-    toast.success("Immagine rimossa");
   };
 
-  const moveImage = (index: number, direction: 'up' | 'down') => {
+  const moveImage = async (index: number, direction: 'up' | 'down') => {
     if (
       (direction === 'up' && index === 0) || 
       (direction === 'down' && index === homeImages.length - 1)
@@ -120,21 +132,22 @@ export const HomeImagesSection = () => {
     const newImages = [...homeImages];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     
-    // Swap the images
+    // Scambia le immagini
     [newImages[index], newImages[targetIndex]] = [newImages[targetIndex], newImages[index]];
     
-    updateSiteSettings({ homeImages: newImages });
+    // Aggiorna lo stato locale
+    setHomeImages(newImages);
+    
+    // Aggiorna i settings
+    updateSiteSettings({
+      homeImages: newImages.map(img => img.path)
+    });
+    
     toast.success(`Immagine spostata ${direction === 'up' ? 'su' : 'giù'}`);
   };
 
-  const handlePreviewClick = (imagePath: string) => {
-    const imageData = loadedImages[imagePath] || imagePath;
-    setPreviewImage(imageData);
-  };
-
-  // Get image data for display
-  const getImageData = (path: string): string => {
-    return loadedImages[path] || path;
+  const handlePreviewClick = (image: ImageMetadata) => {
+    setPreviewImage(image.path);
   };
 
   const ImagePreviewContent = () => (
@@ -172,7 +185,7 @@ export const HomeImagesSection = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {isImageLoading && (
+        {uploadingImage && (
           <div className="mb-4">
             <div className="flex items-center mb-2">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -184,40 +197,42 @@ export const HomeImagesSection = () => {
         
         <ScrollArea className="h-[400px] pr-4">
           <div className="grid grid-cols-1 gap-4">
-            {homeImages.length === 0 ? (
+            {loadingImages ? (
+              <div className="text-center p-6">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                <p className="text-muted-foreground mt-2">Caricamento immagini...</p>
+              </div>
+            ) : homeImages.length === 0 ? (
               <div className="text-center p-6 border rounded-md bg-muted/20">
                 <ImageIcon className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">Nessuna immagine caricata</p>
               </div>
             ) : (
-              homeImages.map((imagePath, index) => (
+              homeImages.map((image, index) => (
                 <div 
-                  key={index} 
+                  key={image.id} 
                   className="flex items-center gap-3 border rounded-md p-2 bg-card"
                 >
                   <div 
                     className="w-24 h-16 bg-muted rounded-sm overflow-hidden cursor-pointer relative"
-                    onClick={() => handlePreviewClick(imagePath)}
+                    onClick={() => handlePreviewClick(image)}
                   >
-                    {loadingStates[imagePath] ? (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      </div>
-                    ) : (
-                      <img 
-                        src={getImageData(imagePath)} 
-                        alt={`Immagine ${index + 1}`} 
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          console.error(`Failed to load image: ${imagePath}`);
-                          (e.target as HTMLImageElement).src = "/placeholder.svg";
-                        }}
-                      />
-                    )}
+                    <img 
+                      src={image.path} 
+                      alt={`Immagine ${index + 1}`} 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error(`Failed to load image: ${image.path}`);
+                        (e.target as HTMLImageElement).src = "/placeholder.svg";
+                      }}
+                    />
                   </div>
                   <div className="flex-grow">
                     <p className="text-sm font-medium truncate">
                       Immagine {index + 1}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {image.originalName}
                     </p>
                   </div>
                   <div className="flex gap-1">
@@ -259,9 +274,9 @@ export const HomeImagesSection = () => {
             variant="outline"
             onClick={() => document.getElementById('home-images-upload')?.click()}
             className="flex items-center"
-            disabled={isImageLoading}
+            disabled={uploadingImage}
           >
-            {isImageLoading ? (
+            {uploadingImage ? (
               <>
                 <Loader2 className="h-4 w-4 mr-1 animate-spin" /> Caricamento...
               </>
@@ -277,7 +292,7 @@ export const HomeImagesSection = () => {
             accept="image/*"
             className="hidden"
             onChange={handleImageUpload}
-            disabled={isImageLoading}
+            disabled={uploadingImage}
           />
           
           {isMobile ? (
