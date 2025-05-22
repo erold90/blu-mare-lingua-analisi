@@ -10,16 +10,16 @@ interface SummaryLayoutProps {
 
 const SummaryLayout: React.FC<SummaryLayoutProps> = ({ children, footer }) => {
   return (
-    <Card className="max-w-4xl mx-auto border-0 shadow-lg">
-      <CardHeader className="pb-4">
+    <Card className="max-w-4xl mx-auto border shadow-lg bg-gradient-to-b from-white to-secondary/10">
+      <CardHeader className="pb-4 bg-white">
         <CardTitle className="text-2xl font-serif text-primary">Riepilogo prenotazione</CardTitle>
         <CardDescription className="text-base">Verifica i dettagli del tuo preventivo</CardDescription>
         <Separator className="mt-4" />
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 pt-6">
         {children}
       </CardContent>
-      <CardFooter className="flex flex-col md:flex-row gap-4 justify-between pt-4 pb-6 border-t">
+      <CardFooter className="flex flex-col md:flex-row gap-4 justify-between pt-6 pb-6 border-t bg-white">
         {footer}
       </CardFooter>
     </Card>

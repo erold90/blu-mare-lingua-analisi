@@ -26,15 +26,15 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
   } = useDateSelection(form);
   
   return (
-    <Card className="max-w-4xl mx-auto">
+    <Card className="max-w-4xl mx-auto shadow-lg border">
       <CardHeader className="pb-3">
-        <CardTitle className="text-2xl">Selezione date</CardTitle>
+        <CardTitle className="text-2xl font-serif text-primary">Selezione date</CardTitle>
         <CardDescription>Indica le date di check-in e check-out del tuo soggiorno</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         {/* Information alert with more spacing */}
-        <Alert className="bg-muted/50 py-3">
-          <InfoIcon className="h-5 w-5 mr-2" />
+        <Alert className="bg-muted/50 py-3 border border-primary/20">
+          <InfoIcon className="h-5 w-5 mr-2 text-primary" />
           <AlertDescription className="text-sm">
             Check-in/out disponibili solo sabato, domenica e lunedì. Soggiorno minimo di 5 notti, massimo 28 notti.
           </AlertDescription>
@@ -42,7 +42,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
         
         <div className="grid md:grid-cols-12 gap-6">
           {/* Calendar - larger */}
-          <div className="md:col-span-8 flex justify-center">
+          <div className="md:col-span-7 flex justify-center">
             <Calendar
               initialFocus
               mode="range"
@@ -57,40 +57,19 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
           </div>
 
           {/* Stay summary */}
-          <div className="md:col-span-4">
+          <div className="md:col-span-5">
             {dateRange?.from && dateRange?.to ? (
-              <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="pt-6 pb-4">
-                  <h3 className="text-lg font-semibold mb-3">Riepilogo del soggiorno</h3>
-                  <StaySummary 
-                    dateRange={dateRange} 
-                    numberOfNights={numberOfNights} 
-                  />
-                  
-                  {numberOfNights > 0 && (
-                    <div className="mt-4 p-4 bg-white rounded-lg border shadow-sm">
-                      <h4 className="font-medium text-sm mb-2">Informazioni importanti:</h4>
-                      <ul className="text-sm space-y-1 text-muted-foreground">
-                        <li>• Check-in: dalle 15:00 alle 19:00</li>
-                        <li>• Check-out: entro le 10:00</li>
-                        {numberOfNights < 5 && (
-                          <li className="text-destructive font-medium">• Il soggiorno minimo è di 5 notti</li>
-                        )}
-                        {numberOfNights > 28 && (
-                          <li className="text-destructive font-medium">• Il soggiorno massimo è di 28 notti</li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
+              <StaySummary 
+                dateRange={dateRange} 
+                numberOfNights={numberOfNights} 
+              />
+            ) : (
+              <Card className="h-full flex items-center justify-center border shadow-sm bg-secondary/20">
+                <CardContent className="text-center p-6">
+                  <p className="font-medium text-primary text-lg mb-2">Seleziona le date</p>
+                  <p className="text-sm text-muted-foreground">Scegli prima la data di arrivo, poi quella di partenza</p>
                 </CardContent>
               </Card>
-            ) : (
-              <div className="flex h-full items-center justify-center p-6 text-center">
-                <div className="text-muted-foreground">
-                  <p className="font-medium text-lg mb-2">Seleziona le date</p>
-                  <p className="text-sm">Scegli prima la data di arrivo, poi quella di partenza</p>
-                </div>
-              </div>
             )}
           </div>
         </div>

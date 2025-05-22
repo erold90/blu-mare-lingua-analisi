@@ -26,54 +26,59 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
   form
 }) => {
   return (
-    <>
-      <div className="grid md:grid-cols-2 gap-5">
-        {/* Sezione sinistra: Informazioni soggiorno */}
-        <div className="space-y-5">
-          <Card>
-            <CardContent className="pt-5 pb-5">
-              <h3 className="text-lg font-semibold mb-3">Date del soggiorno</h3>
-              <DateDurationInfo 
-                checkIn={formValues.checkIn}
-                checkOut={formValues.checkOut}
-                nights={priceInfo.nights}
-              />
-            </CardContent>
-          </Card>
+    <div className="space-y-6">
+      {/* Desktop layout: two columns */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          {/* Date info section */}
+          <div>
+            <h3 className="font-serif text-lg font-semibold mb-3 text-primary">Date del soggiorno</h3>
+            <DateDurationInfo 
+              checkIn={formValues.checkIn}
+              checkOut={formValues.checkOut}
+              nights={priceInfo.nights}
+            />
+          </div>
           
-          <Card>
-            <CardContent className="pt-5 pb-5">
-              <h3 className="text-lg font-semibold mb-3">Ospiti</h3>
-              <GuestInfo formValues={formValues} />
-            </CardContent>
-          </Card>
+          {/* Guest info section */}
+          <div>
+            <h3 className="font-serif text-lg font-semibold mb-3 text-primary">Informazioni ospiti</h3>
+            <GuestInfo formValues={formValues} />
+          </div>
         </div>
         
-        {/* Sezione destra: Appartamenti e prezzi */}
-        <div className="space-y-5">
-          <Card>
-            <CardContent className="pt-5 pb-5">
-              <h3 className="text-lg font-semibold mb-3">Appartamenti selezionati</h3>
-              <ApartmentList
-                apartments={apartments}
-                selectedApartments={selectedApartments}
-                formValues={formValues}
-                priceInfo={priceInfo}
-              />
-            </CardContent>
-          </Card>
+        {/* Right column: Apartments and pricing */}
+        <div className="space-y-6">
+          {/* Apartments section */}
+          <div>
+            <h3 className="font-serif text-lg font-semibold mb-3 text-primary">Appartamenti selezionati</h3>
+            <Card className="overflow-hidden border bg-white">
+              <CardContent className="p-0">
+                <ApartmentList
+                  apartments={apartments}
+                  selectedApartments={selectedApartments}
+                  formValues={formValues}
+                  priceInfo={priceInfo}
+                />
+              </CardContent>
+            </Card>
+          </div>
           
-          <Card>
-            <CardContent className="pt-5 pb-5">
-              <PriceSummary 
-                priceInfo={priceInfo}
-                formValues={formValues}
-              />
-            </CardContent>
-          </Card>
+          {/* Price summary section */}
+          <div>
+            <h3 className="font-serif text-lg font-semibold mb-3 text-primary">Riepilogo prezzi</h3>
+            <Card className="overflow-hidden border bg-white shadow-sm">
+              <CardContent className="p-4">
+                <PriceSummary 
+                  priceInfo={priceInfo}
+                  formValues={formValues}
+                />
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
