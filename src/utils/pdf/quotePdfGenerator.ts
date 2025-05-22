@@ -1,6 +1,8 @@
 
 import { jsPDF } from "jspdf";
-import "jspdf-autotable"; // Questo registra autoTable con jsPDF
+// Import jspdf config first to ensure the plugin is loaded
+import "./jspdfConfig";
+import "jspdf-autotable"; // This registers autoTable with jsPDF
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types"; 
 import { Apartment } from "@/data/apartments";

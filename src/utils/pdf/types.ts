@@ -1,7 +1,8 @@
 
 import { jsPDF } from "jspdf";
 import type { PriceCalculation } from "@/utils/price/types";
-import "jspdf-autotable"; // Importo corretto per registrare il plugin
+// Make sure to import jspdf-autotable to register the plugin
+import "jspdf-autotable";
 
 // Type definition for the return value of autoTable
 export interface AutoTableResult {
@@ -26,7 +27,7 @@ export interface TableCell {
 }
 
 // Extend the jsPDF interface to include autoTable
-declare module 'jspdf' {
+declare global {
   interface jsPDF {
     autoTable: (options: any) => AutoTableResult;
     lastAutoTable?: AutoTableResult;

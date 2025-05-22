@@ -1,6 +1,8 @@
 
 import { jsPDF } from "jspdf";
-import "jspdf-autotable"; // Questo è cruciale per registrare il plugin
+// Import jspdf config first to ensure the plugin is loaded
+import "../jspdfConfig";
+import "jspdf-autotable"; // This registers autoTable with jsPDF
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
 import { Apartment } from "@/data/apartments";
@@ -122,10 +124,13 @@ export const generateCostsTableSection = (
   }]);
   
   // Add console.log for debugging
-  console.log("Prima di chiamare autoTable", !!doc.autoTable);
+  console.log("Before calling autoTable", typeof (doc as any).autoTable === 'function');
+  
+  // Cast doc to any to avoid type errors
+  const docWithAutoTable = doc as any;
   
   // Add the cost details table
-  doc.autoTable({
+  docWithAutoTable.autoTable({
     startY: currentY,
     head: headers,
     body: tableBody,
@@ -154,6 +159,6 @@ export const generateCostsTableSection = (
   });
   
   // Get the end position of the table
-  const tableEndY = (doc as any).lastAutoTable.finalY || currentY + 50;
+  const tableEndY = docWithAutoTable.lastAutoTable.finalY || currentY + 50;
   return tableEndY + 10; // Return the next Y position
 };
