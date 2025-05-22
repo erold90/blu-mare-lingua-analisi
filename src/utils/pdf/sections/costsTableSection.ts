@@ -35,8 +35,9 @@ export const generateCostsTableSection = (
   // Ensure jspdf-autotable is available
   console.log("Checking autoTable availability:", typeof (doc as any).autoTable === 'function');
   
-  let currentY = yPos + 5;
-  currentY = createSection(doc, "DETTAGLIO COSTI", currentY);
+  // Create section heading
+  let currentY = createSection(doc, "DETTAGLIO COSTI", yPos);
+  currentY += 5; // Add some spacing
   
   // Create table headers
   const headers = [["Descrizione", "Importo"]];
@@ -56,12 +57,46 @@ export const generateCostsTableSection = (
   let tableEndY: number;
   
   try {
-    // Try using the autoTable plugin
-    tableEndY = generateTable(doc, headers, tableBody, currentY);
+    // First attempt: try using autoTable directly on the document
+    if (typeof (doc as any).autoTable === 'function') {
+      (doc as any).autoTable({
+        startY: currentY,
+        head: headers,
+        body: tableBody,
+        theme: 'plain',
+        styles: {
+          fontSize: 10,
+          lineWidth: 0.1,
+        },
+        columnStyles: {
+          0: { cellWidth: 'auto' },
+          1: { cellWidth: 50, halign: 'right' },
+        },
+        headStyles: {
+          fillColor: [240, 240, 240],
+          textColor: [0, 0, 0],
+          fontStyle: 'bold',
+        },
+        margin: { left: 10, right: 10 },
+        didDrawCell: (data: any) => {
+          // Add alternating row colors
+          if (data.section === 'body' && data.row.index % 2 === 1) {
+            doc.setFillColor(248, 248, 248);
+            doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+          }
+        }
+      });
+      
+      // Get the end position of the table
+      tableEndY = (doc as any).lastAutoTable.finalY;
+    } else {
+      // Fallback to our helper function
+      tableEndY = generateTable(doc, headers, tableBody, currentY);
+    }
   } catch (error) {
     console.error("Error generating table with autoTable:", error);
     
-    // Fallback to manual table generation
+    // Last resort: use manual table generation
     console.log("Falling back to manual table generation");
     tableEndY = drawManualTable(doc, headers, tableBody, currentY);
   }

@@ -1,4 +1,3 @@
-
 import { jsPDF } from "jspdf";
 import { applyAutoTable } from "../jspdfConfig";
 import { TableCell } from "../types";
@@ -20,7 +19,44 @@ export const generateTable = (
   try {
     console.log("Attempting to generate table with autoTable");
     
-    // Use our helper function
+    // Try direct access first
+    if (typeof (doc as any).autoTable === 'function') {
+      console.log("Using direct autoTable access");
+      const result = (doc as any).autoTable({
+        startY,
+        head: headers,
+        body: tableBody,
+        theme: 'plain',
+        styles: {
+          fontSize: 10,
+          lineWidth: 0.1,
+        },
+        columnStyles: {
+          0: { cellWidth: 'auto' },
+          1: { cellWidth: 50, halign: 'right' },
+        },
+        headStyles: {
+          fillColor: [240, 240, 240],
+          textColor: [0, 0, 0],
+          fontStyle: 'bold',
+        },
+        margin: { left: 10, right: 10 },
+        didDrawCell: (data: any) => {
+          // Add alternating row colors
+          if (data.section === 'body' && data.row.index % 2 === 1) {
+            doc.setFillColor(248, 248, 248);
+            doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+          }
+        }
+      });
+      
+      if (result && typeof result === 'object' && 'finalY' in result) {
+        return result.finalY;
+      }
+    }
+    
+    // Otherwise use helper function
+    console.log("Using applyAutoTable helper");
     const result = applyAutoTable(doc, {
       startY,
       head: headers,
@@ -81,11 +117,14 @@ export const drawManualTable = (
   const startX = 10;
   let currentY = startY;
   
-  // Draw header row
+  // Draw header row background
   doc.setFillColor(240, 240, 240);
   doc.rect(startX, currentY, 190, 10, 'F');
+  
+  // Draw header text
   doc.setTextColor(0, 0, 0);
-  doc.setFont(undefined, 'bold');
+  doc.setFont("helvetica", 'bold');
+  doc.setFontSize(10);
   
   // Draw headers
   headers[0].forEach((header, index) => {
@@ -96,12 +135,15 @@ export const drawManualTable = (
   currentY += 10;
   
   // Draw data rows
-  doc.setFont(undefined, 'normal');
+  doc.setFont("helvetica", 'normal');
   tableBody.forEach((row, index) => {
+    // Draw row height to fit content (minimum 10)
+    const rowHeight = 10;
+    
     // Set alternating row background
     if (index % 2 === 1) {
       doc.setFillColor(248, 248, 248);
-      doc.rect(startX, currentY, 190, 10, 'F');
+      doc.rect(startX, currentY, 190, rowHeight, 'F');
     }
     
     const firstCell = row[0];
@@ -144,11 +186,16 @@ export const drawManualTable = (
     const valueWidth = doc.getTextWidth(value);
     doc.text(value, startX + 190 - 5 - valueWidth, currentY + 7);
     
-    currentY += 10;
+    currentY += rowHeight;
   });
+  
+  // Draw table borders
+  doc.setDrawColor(220, 220, 220);
+  doc.setLineWidth(0.3);
+  doc.rect(startX, startY, 190, currentY - startY);
   
   // Reset text color to default
   doc.setTextColor(0, 0, 0);
   
-  return currentY;
+  return currentY + 5; // Add a bit of padding at the end
 };
