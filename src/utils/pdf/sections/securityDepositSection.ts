@@ -19,21 +19,27 @@ export const generateSecurityDepositSection = (doc: jsPDF, selectedApts: Apartme
   // Add a light background for the deposit information
   doc.setFillColor(245, 245, 245);
   doc.setDrawColor(230, 230, 230);
-  doc.roundedRect(12, currentY, doc.internal.pageSize.getWidth() - 24, 20, 3, 3, 'FD');
+  doc.roundedRect(12, currentY, doc.internal.pageSize.getWidth() - 24, 30, 3, 3, 'FD');
   
-  // Format the text with style
+  // Add heading inside the box
+  currentY += 10;
+  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.text("Dettagli cauzione:", 20, currentY);
+  
+  // Add deposit amount
   currentY += 13;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   
-  const depositText = `€${depositPerApartment} per appartamento x ${selectedApts.length} = €${totalDeposit}`;
+  const depositText = `€${depositPerApartment} per appartamento x ${selectedApts.length} = €${totalDeposit} totali`;
   doc.text(depositText, 20, currentY);
   
+  // Add payment note in italic
   doc.setFont('helvetica', 'italic');
-  // Right-align the payment note
-  const paymentNote = "Da versare in contanti all'arrivo";
-  const paymentNoteWidth = doc.getTextWidth(paymentNote);
-  doc.text(paymentNote, doc.internal.pageSize.getWidth() - 20 - paymentNoteWidth, currentY);
+  currentY += 10;
+  const paymentNote = "La cauzione deve essere versata in contanti all'arrivo e sarà restituita alla partenza dopo il controllo dell'appartamento.";
+  doc.text(paymentNote, 20, currentY, { maxWidth: doc.internal.pageSize.getWidth() - 40 });
   
   // Reset font
   doc.setFont('helvetica', 'normal');

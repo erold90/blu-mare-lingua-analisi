@@ -27,5 +27,20 @@ export const generateStayInfoSection = (doc: jsPDF, formData: FormValues, priceC
   const guestComposition = `${formData.adults || 0} adulti, ${formData.children || 0} bambini`;
   currentY = createInfoRow(doc, "Composizione:", guestComposition, currentY);
   
+  // Add name if available
+  if (formData.name) {
+    currentY = createInfoRow(doc, "Nome:", formData.name, currentY);
+  }
+  
+  // Add email if available
+  if (formData.email) {
+    currentY = createInfoRow(doc, "Email:", formData.email, currentY);
+  }
+  
+  // Add phone if available
+  if (formData.phone) {
+    currentY = createInfoRow(doc, "Telefono:", formData.phone, currentY);
+  }
+  
   return currentY; // Return next Y position
 };

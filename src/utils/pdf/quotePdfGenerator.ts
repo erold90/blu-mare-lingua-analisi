@@ -39,38 +39,37 @@ export const generateQuotePdf = (
   yPos = generateStayInfoSection(doc, formData, priceCalculation, yPos);
   yPos = generateApartmentListSection(doc, selectedApts, yPos);
   
+  // Ensure we have enough space for the costs table - always start on a new page for better layout
+  doc.addPage();
+  yPos = 20; // Reset Y position on new page
+  
   // Debug before costs table section
-  console.log("Before generateCostsTableSection, autoTable availability:", 
-             typeof (doc as any).autoTable === 'function');
+  console.log("Before generating costs table, document position:", yPos);
+  console.log("AutoTable availability:", typeof (doc as any).autoTable === 'function');
   
-  // Fix: Ensure we have enough vertical space for the costs table
-  if (yPos > doc.internal.pageSize.getHeight() - 100) {
-    doc.addPage();
-    yPos = 20; // Reset Y position on new page
-  }
-  
+  // Generate the costs table section
   yPos = generateCostsTableSection(doc, selectedApts, priceCalculation, formData, yPos);
   
   // Make sure we have space for the totals section
-  if (yPos > doc.internal.pageSize.getHeight() - 80) {
+  if (yPos > doc.internal.pageSize.getHeight() - 100) {
     doc.addPage();
     yPos = 20;
   }
   
+  // Generate the totals section with final price
   yPos = generateTotalsSection(doc, priceCalculation, yPos);
   
-  // Ensure we have space for security deposit section
-  if (yPos > doc.internal.pageSize.getHeight() - 50) {
+  // Make sure we have space for the security deposit section
+  if (yPos > doc.internal.pageSize.getHeight() - 60) {
     doc.addPage();
     yPos = 20;
   }
   
-  // Fix: Security deposit section
+  // Generate the security deposit section
   yPos = generateSecurityDepositSection(doc, selectedApts, yPos);
   
   // Add terms and conditions at the bottom
-  // Only add a new page if we're close to the bottom
-  if (yPos > doc.internal.pageSize.getHeight() - 40) {
+  if (yPos > doc.internal.pageSize.getHeight() - 60) {
     doc.addPage();
     yPos = 20;
   }

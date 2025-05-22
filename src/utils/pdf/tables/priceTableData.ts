@@ -54,52 +54,41 @@ export const createExtrasRows = (
 ): (string | TableCell)[][] => {
   const rows = [];
   
+  // Always show extras section header if there are extras
   if (priceCalculation.extras > 0) {
     // Calculate linen cost
     let linenCost = 0;
     if (formData.linenOption === "extra") {
       const totalPeople = (formData.adults || 0) + (formData.children || 0);
       linenCost = totalPeople * 15;
-    }
-    
-    // Calculate pet cost
-    let petCost = 0;
-    if (formData.hasPets) {
-      if (selectedApts.length === 1) {
-        petCost = 50; // Single apartment with pets
-      } else if (formData.petsInApartment) {
-        // Count apartments with pets
-        const apartmentsWithPets = Object.values(formData.petsInApartment).filter(Boolean).length;
-        petCost = apartmentsWithPets * 50;
-      }
-    }
-    
-    // Add linen fee if applicable
-    if (linenCost > 0) {
+      
+      // Add linen fee
       const linenLabel = formData.linenOption === "deluxe" ? 
-        "Biancheria deluxe" : "Biancheria da letto e bagno";
+        "Biancheria deluxe" : "Biancheria extra";
       rows.push([linenLabel, `€${linenCost}`]);
     }
     
-    // Add pet fee if applicable
-    if (petCost > 0) {
-      if (selectedApts.length === 1) {
-        rows.push(["Supplemento animali", `€${petCost}`]);
-      } else {
-        const apartmentsWithPets = Object.entries(formData.petsInApartment || {})
-          .filter(([_, hasPet]) => hasPet);
-        
-        if (apartmentsWithPets.length === 1) {
-          const [aptId, _] = apartmentsWithPets[0];
-          const apartment = selectedApts.find(apt => apt.id === aptId);
-          if (apartment) {
-            rows.push([`Supplemento animali - ${apartment.name}`, `€${petCost}`]);
-          }
-        } else if (apartmentsWithPets.length > 1) {
-          rows.push([`Supplemento animali (${apartmentsWithPets.length} appartamenti)`, `€${petCost}`]);
-        }
-      }
+    // Calculate pet cost
+    if (formData.hasPets && formData.petsCount && formData.petsCount > 0) {
+      const petCost = formData.petsCount * 30;
+      rows.push([`Supplemento animali (${formData.petsCount})`, `€${petCost}`]);
     }
+  }
+  
+  // Add cleaning fee (shown as a separate line item)
+  if (priceCalculation.cleaningFee > 0) {
+    rows.push(["Pulizia finale", `€${priceCalculation.cleaningFee}`]);
+  }
+  
+  // Add tourist tax (always shown)
+  const touristTaxPerNight = 2; // Default value
+  const totalTouristTax = formData.adults ? (formData.adults * touristTaxPerNight * priceCalculation.nights) : 0;
+  
+  if (totalTouristTax > 0) {
+    rows.push([
+      `Tassa di soggiorno (${touristTaxPerNight}€ x ${formData.adults} persone x ${priceCalculation.nights} notti)`,
+      `€${totalTouristTax}`
+    ]);
   }
   
   return rows;
@@ -115,25 +104,27 @@ export const createIncludedServicesRows = (
 ): (string | TableCell)[][] => {
   const rows = [];
   
-  // Add cleaning fee
-  if (priceCalculation.cleaningFee > 0) {
-    rows.push([{
-      content: "Pulizie finali", 
-      styles: { textColor: [0, 128, 0] }
-    }, {
-      content: "incluse",
-      styles: { textColor: [0, 128, 0], halign: 'right' }
-    }]);
-  }
-  
-  // Add tourist tax (showing as included)
+  // Add included services note
   rows.push([{
-    content: "Tassa di soggiorno", 
+    content: "Servizi inclusi:", 
+    styles: { fontStyle: 'bold' }
+  }, ""]);
+  
+  // List all included services
+  rows.push([{
+    content: "- WiFi ad alta velocità", 
     styles: { textColor: [0, 128, 0] }
-  }, {
-    content: "inclusa",
-    styles: { textColor: [0, 128, 0], halign: 'right' }
-  }]);
+  }, ""]);
+  
+  rows.push([{
+    content: "- Posto auto riservato", 
+    styles: { textColor: [0, 128, 0] }
+  }, ""]);
+  
+  rows.push([{
+    content: "- Aria condizionata", 
+    styles: { textColor: [0, 128, 0] }
+  }, ""]);
   
   return rows;
 };

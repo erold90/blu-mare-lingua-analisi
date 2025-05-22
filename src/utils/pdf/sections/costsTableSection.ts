@@ -54,6 +54,9 @@ export const generateCostsTableSection = (
     ...includedServicesRows
   ];
   
+  // Log table data for debugging
+  console.log("Table data:", JSON.stringify(tableBody));
+  
   let tableEndY: number;
   
   try {
@@ -88,9 +91,10 @@ export const generateCostsTableSection = (
       });
       
       // Get the end position of the table
-      tableEndY = (doc as any).lastAutoTable.finalY;
+      tableEndY = (doc as any).lastAutoTable.finalY || (currentY + tableBody.length * 12);
     } else {
       // Fallback to our helper function
+      console.log("Using fallback table generation method");
       tableEndY = generateTable(doc, headers, tableBody, currentY);
     }
   } catch (error) {
