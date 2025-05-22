@@ -8,6 +8,9 @@ import { createWhatsAppMessage } from "@/utils/quoteCalculator";
 import { useState } from "react";
 
 export function useQuoteActions(form: UseFormReturn<FormValues>) {
+  // Add state for confirmation dialog
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
+  
   // Download quote as PDF
   const downloadQuote = () => {
     const formValues = form.getValues();
@@ -82,6 +85,8 @@ export function useQuoteActions(form: UseFormReturn<FormValues>) {
     downloadQuote,
     sendWhatsApp,
     onSubmitHandler,
-    handleSubmitWrapper
+    handleSubmitWrapper,
+    showConfirmationDialog,
+    setShowConfirmationDialog
   };
 }

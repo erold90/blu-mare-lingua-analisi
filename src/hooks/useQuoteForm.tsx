@@ -11,9 +11,6 @@ import { useChildEffects } from "./quote/useChildEffects";
 import { useState } from "react";
 
 export function useQuoteForm() {
-  // Dialog state for PDF confirmation
-  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
-  
   // Initialize form with default values
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -63,8 +60,8 @@ export function useQuoteForm() {
     sendWhatsApp, 
     onSubmitHandler, 
     handleSubmitWrapper,
-    showConfirmationDialog: actionConfirmationDialog,
-    setShowConfirmationDialog: setActionConfirmationDialog
+    showConfirmationDialog,
+    setShowConfirmationDialog
   } = useQuoteActions(form);
   
   // Setup effect hooks
@@ -78,12 +75,8 @@ export function useQuoteForm() {
     apartmentDialog,
     groupDialog,
     familyGroups,
-    // Usiamo lo stato dal hook useQuoteActions
-    showConfirmationDialog: actionConfirmationDialog || showConfirmationDialog,
-    setShowConfirmationDialog: (state: boolean) => {
-      setShowConfirmationDialog(state);
-      setActionConfirmationDialog(state);
-    },
+    showConfirmationDialog,
+    setShowConfirmationDialog,
     incrementAdults,
     decrementAdults,
     incrementChildren,
