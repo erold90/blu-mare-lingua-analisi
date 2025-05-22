@@ -39,6 +39,24 @@ export const HomeImageCarousel = () => {
   // Quando non ci sono immagini valide, mostriamo un placeholder
   const placeholderImage = "/placeholder.svg";
   
+  // Funzione per caricare l'immagine dal suo percorso
+  const getImageFromStorage = (imagePath: string): string => {
+    if (!imagePath) return placeholderImage;
+    
+    if (imagePath.startsWith('/images/')) {
+      // Recupera l'immagine dallo storage
+      try {
+        const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+        return imageStorage[imagePath] || imagePath;
+      } catch (error) {
+        console.error("Failed to get image from storage:", error);
+        return placeholderImage;
+      }
+    }
+    
+    return imagePath;
+  };
+  
   return (
     <div className="relative w-full py-10">
       <Carousel 
@@ -53,7 +71,7 @@ export const HomeImageCarousel = () => {
               <CarouselItem key={index}>
                 <div className="aspect-video overflow-hidden rounded-lg">
                   <img 
-                    src={image} 
+                    src={getImageFromStorage(image)} 
                     alt={`Villa MareBlu immagine ${index + 1}`} 
                     className="w-full h-full object-cover transition-all duration-300 hover:scale-105"
                     onError={(e) => {

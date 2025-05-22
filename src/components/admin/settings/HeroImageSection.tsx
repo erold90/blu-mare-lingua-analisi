@@ -22,8 +22,13 @@ export const HeroImageSection = () => {
     
     if (imagePath.startsWith('/images/')) {
       // Recupera l'immagine dallo storage
-      const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-      return imageStorage[imagePath] || imagePath;
+      try {
+        const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+        return imageStorage[imagePath] || '/placeholder.svg';
+      } catch (error) {
+        console.error("Failed to get image from storage:", error);
+        return '/placeholder.svg';
+      }
     }
     
     return imagePath;
