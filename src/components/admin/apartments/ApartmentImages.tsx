@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -9,8 +8,8 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 import { toast } from "sonner";
 import { Camera, X, Move, CheckCircle, ImageIcon, Loader2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { saveImage, getImage, deleteImage } from "@/utils/imageStorage";
-import { loadImageFromCloud, saveImageToCloud } from "@/utils/cloudImageSync";
+import { saveImage, getImage } from "@/utils/imageStorage";
+import { deleteImageEverywhere, syncImageToServer } from "@/utils/imageManager";
 
 interface ApartmentImagesProps {
   apartmentId: string;
@@ -179,8 +178,8 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
           }
         );
         
-        // Save to cloud for cross-device access
-        await saveImageToCloud(imagePath);
+        // Sync to server with automatic organization
+        await syncImageToServer(imagePath);
         
         newImagePaths.push(imagePath);
         
@@ -229,12 +228,14 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
       onCoverImageChange(apartmentId, coverImageIndex - 1);
     }
     
-    // Delete the image from storage if it's a stored image
+    // Delete the image from both local storage and server
     if (imageToRemove.startsWith('/upload/')) {
       try {
-        await deleteImage(imageToRemove);
+        await deleteImageEverywhere(imageToRemove);
+        toast.success("Immagine rimossa dal server");
       } catch (error) {
         console.error('Error deleting image:', error);
+        toast.error("Errore durante l'eliminazione dell'immagine dal server");
       }
     }
     

@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,8 @@ import { Plus, X, MoveUp, MoveDown, Image as ImageIcon, Loader2 } from "lucide-r
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { getImage, deleteImage } from "@/utils/imageStorage";
+import { getImage } from "@/utils/imageStorage";
+import { deleteImageEverywhere, syncImageToServer } from "@/utils/imageManager";
 
 export const HomeImagesSection = () => {
   const { siteSettings, updateSiteSettings, saveImageToStorage, isImageLoading, uploadProgress } = useSettings();
@@ -69,8 +69,12 @@ export const HomeImagesSection = () => {
     
     try {
       // Save the new image
-      await saveImageToStorage(file, 'home');
-      toast.success("Immagine aggiunta");
+      const imagePath = await saveImageToStorage(file, 'home');
+      
+      // Sync to server with automatic organization
+      await syncImageToServer(imagePath);
+      
+      toast.success("Immagine aggiunta e sincronizzata con il server");
     } catch (error) {
       console.error('Error uploading home image:', error);
       toast.error(`Errore durante il caricamento dell'immagine: ${(error as Error).message}`);
@@ -92,10 +96,11 @@ export const HomeImagesSection = () => {
       setPreviewImage(null);
     }
     
-    // Delete the image from storage if it's a stored image
+    // Delete the image from both local storage and server
     if (imagePath.startsWith('/upload/')) {
       try {
-        await deleteImage(imagePath);
+        await deleteImageEverywhere(imagePath);
+        toast.success("Immagine rimossa dal server");
       } catch (error) {
         console.error('Error deleting image:', error);
       }
