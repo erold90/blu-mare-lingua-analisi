@@ -31,7 +31,7 @@ export const generateCostsTableSection = (
   // Add apartment costs
   if (selectedApts.length === 1) {
     // For single apartment, show nights info
-    const aptPrice = priceCalculation.apartmentPrices?.[selectedApts[0].id] || 0;
+    const aptPrice = priceCalculation.basePrice || 0;
     tableBody.push([
       `${selectedApts[0].name} (${priceCalculation.nights} notti)`, 
       `€${aptPrice}`
@@ -42,6 +42,61 @@ export const generateCostsTableSection = (
       const aptPrice = priceCalculation.apartmentPrices?.[apt.id] || 0;
       tableBody.push([apt.name, `€${aptPrice}`]);
     });
+    
+    // Add a subtotal row for apartment base prices
+    tableBody.push([
+      "Subtotale appartamenti", 
+      `€${priceCalculation.basePrice}`
+    ]);
+  }
+  
+  // Add extras if applicable
+  if (priceCalculation.extras > 0) {
+    // Calculate linen cost
+    let linenCost = 0;
+    if (formData.linenOption === "extra") {
+      const totalPeople = (formData.adults || 0) + (formData.children || 0);
+      linenCost = totalPeople * 15;
+    }
+    
+    // Calculate pet cost
+    let petCost = 0;
+    if (formData.hasPets) {
+      if (selectedApts.length === 1) {
+        petCost = 50; // Single apartment with pets
+      } else if (formData.petsInApartment) {
+        // Count apartments with pets
+        const apartmentsWithPets = Object.values(formData.petsInApartment).filter(Boolean).length;
+        petCost = apartmentsWithPets * 50;
+      }
+    }
+    
+    // Add linen fee if applicable
+    if (linenCost > 0) {
+      const linenLabel = formData.linenOption === "deluxe" ? 
+        "Biancheria deluxe" : "Biancheria da letto e bagno";
+      tableBody.push([linenLabel, `€${linenCost}`]);
+    }
+    
+    // Add pet fee if applicable
+    if (petCost > 0) {
+      if (selectedApts.length === 1) {
+        tableBody.push(["Supplemento animali", `€${petCost}`]);
+      } else {
+        const apartmentsWithPets = Object.entries(formData.petsInApartment || {})
+          .filter(([_, hasPet]) => hasPet);
+        
+        if (apartmentsWithPets.length === 1) {
+          const [aptId, _] = apartmentsWithPets[0];
+          const apartment = selectedApts.find(apt => apt.id === aptId);
+          if (apartment) {
+            tableBody.push([`Supplemento animali - ${apartment.name}`, `€${petCost}`]);
+          }
+        } else if (apartmentsWithPets.length > 1) {
+          tableBody.push([`Supplemento animali (${apartmentsWithPets.length} appartamenti)`, `€${petCost}`]);
+        }
+      }
+    }
   }
   
   // Add cleaning fee
@@ -53,38 +108,6 @@ export const generateCostsTableSection = (
       content: "incluse",
       styles: { textColor: [0, 128, 0], halign: 'right' }
     }]);
-  }
-  
-  // Add linen fee if applicable
-  if (formData.linenOption === "extra" || formData.linenOption === "deluxe") {
-    const linenCost = priceCalculation.extras - (formData.hasPets ? 50 : 0);
-    if (linenCost > 0) {
-      const linenLabel = formData.linenOption === "deluxe" ? 
-        "Biancheria deluxe" : "Biancheria da letto e bagno";
-      tableBody.push([linenLabel, `€${linenCost}`]);
-    }
-  }
-  
-  // Add pet fee for apartments that have pets
-  if (formData.hasPets) {
-    if (selectedApts.length === 1) {
-      // Single apartment with pets
-      tableBody.push(["Supplemento animali", `€50`]);
-    } else if (formData.petsInApartment) {
-      // Multiple apartments - add pet fee only for those that have pets
-      const apartmentsWithPets = Object.entries(formData.petsInApartment)
-        .filter(([_, hasPet]) => hasPet);
-      
-      if (apartmentsWithPets.length === 1) {
-        const [aptId, _] = apartmentsWithPets[0];
-        const apartment = selectedApts.find(apt => apt.id === aptId);
-        if (apartment) {
-          tableBody.push([`Supplemento animali - ${apartment.name}`, `€50`]);
-        }
-      } else if (apartmentsWithPets.length > 1) {
-        tableBody.push([`Supplemento animali (${apartmentsWithPets.length} appartamenti)`, `€${apartmentsWithPets.length * 50}`]);
-      }
-    }
   }
   
   // Add tourist tax (showing as included)

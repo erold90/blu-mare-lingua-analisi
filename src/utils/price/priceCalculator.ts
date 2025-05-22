@@ -109,12 +109,21 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   
   console.log(`Total base price for all apartments: ${basePrice}€`);
   
-  // Calculate extras (linen, pets), cleaning fee and tourist tax
-  // IMPORTANT: cleaningFee and touristTax are calculated for display only
+  // Calculate extras (linen, pets)
+  const extraOptions = {
+    hasPets: formValues.hasPets || false,
+    petsCount: formValues.petsCount || 0,
+    linenOption: formValues.linenOption || "standard",
+    adults: formValues.adults || 0,
+    children: formValues.children || 0,
+    petsInApartment: formValues.petsInApartment || {}
+  };
+  
+  // Calculate extras separately
   const { extrasCost, cleaningFee, touristTax } = calculateExtras(formValues, selectedApartments, nights);
   console.log(`Extras: ${extrasCost}€, Cleaning: ${cleaningFee}€, Tax: ${touristTax}€`);
   
-  // Calculate subtotal (ONLY base price + extras, NOT cleaning fee or tourist tax)
+  // Calculate subtotal (base price + extras)
   const subtotal = basePrice + extrasCost;
   console.log(`Subtotal: ${subtotal}€`);
   

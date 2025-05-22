@@ -12,6 +12,8 @@ import { PriceCalculation } from "@/utils/price/types";
 export const generateTotalsSection = (doc: jsPDF, priceCalculation: PriceCalculation, yPos: number): number => {
   let currentY = yPos;
   
+  const basePrice = priceCalculation.basePrice;
+  const extras = priceCalculation.extras;
   const originalTotal = priceCalculation.totalBeforeDiscount;
   const discount = priceCalculation.discount;
   const finalTotal = priceCalculation.totalAfterDiscount;
@@ -21,18 +23,30 @@ export const generateTotalsSection = (doc: jsPDF, priceCalculation: PriceCalcula
   doc.setLineWidth(0.5);
   doc.line(doc.internal.pageSize.getWidth() - 80, currentY, doc.internal.pageSize.getWidth() - 10, currentY);
   
-  // Show original total
+  // Show base price
   currentY += 5;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
-  doc.text("Totale originale:", doc.internal.pageSize.getWidth() - 80, currentY);
+  doc.text("Prezzo base:", doc.internal.pageSize.getWidth() - 80, currentY);
+  doc.text(`€${basePrice}`, doc.internal.pageSize.getWidth() - 20, currentY, { align: "right" });
+  
+  // Show extras if applicable
+  if (extras > 0) {
+    currentY += 7;
+    doc.text("Extra:", doc.internal.pageSize.getWidth() - 80, currentY);
+    doc.text(`€${extras}`, doc.internal.pageSize.getWidth() - 20, currentY, { align: "right" });
+  }
+  
+  // Show subtotal
+  currentY += 7;
+  doc.text("Subtotale:", doc.internal.pageSize.getWidth() - 80, currentY);
   doc.text(`€${originalTotal}`, doc.internal.pageSize.getWidth() - 20, currentY, { align: "right" });
   
   // Show discount amount (only if there is a discount)
   if (discount > 0) {
     currentY += 7;
     doc.setTextColor(0, 128, 0); // Green color for discount
-    doc.text("Sconto applicato:", doc.internal.pageSize.getWidth() - 80, currentY);
+    doc.text("Sconto:", doc.internal.pageSize.getWidth() - 80, currentY);
     doc.text(`-€${discount}`, doc.internal.pageSize.getWidth() - 20, currentY, { align: "right" });
     doc.setTextColor(0, 0, 0); // Reset to black
   } else {

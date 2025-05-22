@@ -46,24 +46,48 @@ export const calculateMultiApartmentPricing = (
     const linenCost = formValues.linenOption === "extra" ? peopleCount * 15 : 0;
     
     // Calculate apartment subtotal with extras
-    const apartmentSubtotal = baseApartmentPrice + linenCost + petCost;
+    const apartmentSubtotal = baseApartmentPrice;
     
-    // Round down to nearest 50€ for this apartment
-    const discountedPrice = Math.floor(apartmentSubtotal / 50) * 50;
+    // Save the discounted price - don't apply rounding here
+    discountedApartmentPrices[apartment.id] = apartmentSubtotal;
+    sumOfDiscountedApartmentPrices += apartmentSubtotal;
     
-    // Save the discounted price
-    discountedApartmentPrices[apartment.id] = discountedPrice;
-    sumOfDiscountedApartmentPrices += discountedPrice;
-    
-    console.log(`Apartment ${apartment.id} subtotal: ${apartmentSubtotal}€, discounted: ${discountedPrice}€`);
+    console.log(`Apartment ${apartment.id} subtotal: ${apartmentSubtotal}€`);
   });
   
-  // The final price is the sum of individually discounted apartment prices
-  const totalAfterDiscount = sumOfDiscountedApartmentPrices;
-  const discount = totalBeforeDiscount - totalAfterDiscount;
+  // The total of the apartment prices without extras
+  const totalApartmentPrices = sumOfDiscountedApartmentPrices;
   
-  console.log(`Sum of discounted apartment prices: ${totalAfterDiscount}€`);
-  console.log(`Total discount: ${discount}€`);
+  // Calculate extras separately - don't include them in the apartment prices
+  let totalExtras = 0;
+  
+  // Calculate total pets cost
+  if (formValues.hasPets) {
+    if (selectedApartments.length === 1) {
+      totalExtras += 50; // Single apartment with pets
+    } else if (formValues.petsInApartment) {
+      // Count apartments with pets
+      const apartmentsWithPets = Object.values(formValues.petsInApartment).filter(Boolean).length;
+      totalExtras += apartmentsWithPets * 50;
+    }
+  }
+  
+  // Calculate total linen cost
+  if (formValues.linenOption === "extra") {
+    const totalPeople = formValues.adults + (formValues.children || 0);
+    totalExtras += totalPeople * 15;
+  }
+  
+  // Round the final total price to the nearest 50€ down
+  const totalBeforeRounding = totalApartmentPrices + totalExtras;
+  const totalAfterDiscount = Math.floor(totalBeforeRounding / 50) * 50;
+  const discount = totalBeforeRounding - totalAfterDiscount;
+  
+  console.log(`Base apartment prices: ${totalApartmentPrices}€`);
+  console.log(`Total extras: ${totalExtras}€`);
+  console.log(`Total before rounding: ${totalBeforeRounding}€`);
+  console.log(`Total after discount: ${totalAfterDiscount}€`);
+  console.log(`Discount: ${discount}€`);
   
   // Calculate deposit (30-35% of total, rounded to nearest 100€)
   const deposit = calculateOptimalDeposit(totalAfterDiscount);
