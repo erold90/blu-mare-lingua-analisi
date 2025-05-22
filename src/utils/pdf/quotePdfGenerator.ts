@@ -1,7 +1,6 @@
 
 import { jsPDF } from "jspdf";
-// Make sure this import is at the top, before using autoTable
-import "jspdf-autotable";
+import "jspdf-autotable"; // This registers autoTable with jsPDF
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types"; 
 import { Apartment } from "@/data/apartments";
