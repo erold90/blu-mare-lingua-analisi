@@ -8,7 +8,7 @@ import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/price/priceCalculator";
 import { v4 as uuidv4 } from "uuid";
 import { useActivityLog } from "@/hooks/useActivityLog";
-import { Download, Send, FileText, WhatsApp } from "lucide-react";
+import { Download, Send, FileText, MessageSquare } from "lucide-react";
 
 // Componenti separati per ogni sezione
 import DateDurationInfo from "./DateDurationInfo";
@@ -203,7 +203,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
             className="w-full md:w-auto"
             onClick={sendWhatsApp}
           >
-            <WhatsApp className="mr-2" />
+            <MessageSquare className="mr-2" />
             Invia preventivo via WhatsApp
           </Button>
         </div>

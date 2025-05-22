@@ -25,8 +25,8 @@ const SummaryStepWrapper: React.FC<SummaryStepProps> = ({
       apartments={apartments}
       prevStep={prevStep}
       // Questi metodi devono essere forniti dal parent
-      downloadQuote={() => {}}
-      sendWhatsApp={() => {}}
+      downloadQuote={() => console.log("Download PDF function should be provided by parent")}
+      sendWhatsApp={() => console.log("Send WhatsApp function should be provided by parent")}
     />
   );
 };
