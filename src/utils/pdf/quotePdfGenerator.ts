@@ -97,6 +97,25 @@ export const generateQuotePdf = (
     }
   }
   
+  // Add pet fee for apartments that have pets
+  if (formData.hasPets) {
+    if (formData.selectedApartments?.length === 1) {
+      // Single apartment with pets
+      tableBody.push(["Supplemento animali", `€50`]);
+    } else if (formData.petsInApartment) {
+      // Multiple apartments - add pet fee only for those that have pets
+      const apartmentsWithPets = Object.entries(formData.petsInApartment)
+        .filter(([_, hasPet]) => hasPet);
+      
+      apartmentsWithPets.forEach(([aptId, _]) => {
+        const apartment = selectedApts.find(apt => apt.id === aptId);
+        if (apartment) {
+          tableBody.push([`Supplemento animali - ${apartment.name}`, `€50`]);
+        }
+      });
+    }
+  }
+  
   // Add tourist tax (showing as included)
   tableBody.push(["Tassa di soggiorno", "inclusa"]);
   

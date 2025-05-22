@@ -133,7 +133,7 @@ export const createInfoRow = (doc: jsPDF, key: string, value: string, y: number)
   return y + 10;
 };
 
-// Add a header background for sections (new function)
+// Add header background for sections (required by sectionGenerators.ts)
 export const addHeaderBackground = (doc: jsPDF, y: number, height = 10) => {
   const pageWidth = doc.internal.pageSize.getWidth();
   doc.setFillColor(240, 240, 240); // Light gray
@@ -141,7 +141,7 @@ export const addHeaderBackground = (doc: jsPDF, y: number, height = 10) => {
   return y + height;
 };
 
-// Add section header with styled background (new function)
+// Add section header with styled background (required by sectionGenerators.ts)
 export const addSectionHeader = (doc: jsPDF, title: string, y: number) => {
   // Add section header background
   doc.setFillColor(240, 240, 240); // Light gray
@@ -156,7 +156,7 @@ export const addSectionHeader = (doc: jsPDF, title: string, y: number) => {
   return y + 10;
 };
 
-// Add info box with styled background (new function)
+// Add info box with styled background (required by sectionGenerators.ts)
 export const addInfoBox = (doc: jsPDF, x: number, y: number, width: number, height: number, fillColor = [248, 250, 252]) => {
   // Create box with light background
   doc.setFillColor(fillColor[0], fillColor[1], fillColor[2]);
