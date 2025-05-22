@@ -1,3 +1,4 @@
+
 import { jsPDF } from "jspdf";
 // Import both the helper function and jspdf-autotable directly
 import { applyAutoTable } from "../jspdfConfig";
@@ -196,15 +197,53 @@ export const generateCostsTableSection = (
         doc.rect(startX, currentTableY, 190, 10, 'F');
       }
       
-      // Draw text
-      const label = Array.isArray(row[0]) ? row[0].content : row[0];
-      const value = Array.isArray(row[1]) ? row[1].content : row[1];
+      // Fix the type issue - properly check if row items are objects or strings
+      // These are the lines with the errors:
+      const firstCell = row[0];
+      const secondCell = row[1];
       
-      doc.text(label.toString(), startX + 5, currentTableY + 7);
-      doc.text(value.toString(), startX + 145, currentTableY + 7);
+      // Type-safe way to access content
+      const label = typeof firstCell === 'object' && firstCell !== null ? 
+        (firstCell as TableCell).content : String(firstCell);
+      
+      const value = typeof secondCell === 'object' && secondCell !== null ? 
+        (secondCell as TableCell).content : String(secondCell);
+      
+      // Set text color for styled cells
+      if (typeof firstCell === 'object' && firstCell !== null && 
+          (firstCell as TableCell).styles?.textColor) {
+        const color = (firstCell as TableCell).styles?.textColor;
+        if (Array.isArray(color) && color.length >= 3) {
+          doc.setTextColor(color[0], color[1], color[2]);
+        }
+      } else {
+        // Reset to default text color
+        doc.setTextColor(0, 0, 0);
+      }
+      
+      doc.text(label, startX + 5, currentTableY + 7);
+      
+      // Set text color for second cell
+      if (typeof secondCell === 'object' && secondCell !== null && 
+          (secondCell as TableCell).styles?.textColor) {
+        const color = (secondCell as TableCell).styles?.textColor;
+        if (Array.isArray(color) && color.length >= 3) {
+          doc.setTextColor(color[0], color[1], color[2]);
+        }
+      } else {
+        // Reset to default text color
+        doc.setTextColor(0, 0, 0);
+      }
+      
+      // Right align the value
+      const valueWidth = doc.getTextWidth(value);
+      doc.text(value, startX + 190 - 5 - valueWidth, currentTableY + 7);
       
       currentTableY += 10;
     });
+    
+    // Reset text color to default
+    doc.setTextColor(0, 0, 0);
     
     tableEndY = currentTableY;
   }
