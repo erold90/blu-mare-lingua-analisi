@@ -59,6 +59,30 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
               const cloudData = loadImageFromCloud(path);
               if (cloudData) {
                 imageData[path] = cloudData;
+                
+                // Save to IndexedDB for future use
+                try {
+                  const imageObj = {
+                    path,
+                    data: cloudData,
+                    category: 'home', // Default category for apartment images
+                    fileName: path.split('_').slice(2).join('_'),
+                    createdAt: parseInt(path.split('_')[1]) || Date.now(),
+                    id: path.split('_')[1] || Date.now().toString()
+                  };
+                  
+                  const db = await openIndexedDB();
+                  const tx = db.transaction(['images'], 'readwrite');
+                  const store = tx.objectStore('images');
+                  store.put(imageObj);
+                  
+                  tx.oncomplete = () => {
+                    db.close();
+                    console.log(`Image ${path} saved to IndexedDB from cloud`);
+                  };
+                } catch (err) {
+                  console.error('Error saving cloud image to IndexedDB:', err);
+                }
               }
             }
           } catch (error) {
@@ -80,6 +104,30 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
     
     loadAllImages();
   }, [images]);
+  
+  // Opens the IndexedDB database
+  const openIndexedDB = (): Promise<IDBDatabase> => {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('villaMarePluImages', 1);
+      
+      request.onerror = () => {
+        reject(request.error);
+      };
+      
+      request.onsuccess = () => {
+        resolve(request.result);
+      };
+      
+      request.onupgradeneeded = (event) => {
+        const db = request.result;
+        if (!db.objectStoreNames.contains('images')) {
+          const store = db.createObjectStore('images', { keyPath: 'path' });
+          store.createIndex('category', 'category', { unique: false });
+          store.createIndex('createdAt', 'createdAt', { unique: false });
+        }
+      };
+    });
+  };
 
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;

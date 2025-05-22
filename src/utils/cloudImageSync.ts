@@ -46,7 +46,19 @@ export const saveImageToCloud = async (path: string): Promise<boolean> => {
       console.error("Error storing image in localStorage (probably size limit):", error);
       // Clean up older images if we hit storage limits
       cleanupOldCloudImages();
-      return false;
+      try {
+        // Try again after cleanup
+        localStorage.setItem(`${CLOUD_SYNC_PREFIX}${path}`, JSON.stringify({
+          path: image.path,
+          data: image.data,
+          category: image.category,
+          timestamp: Date.now()
+        }));
+        return true;
+      } catch (retryError) {
+        console.error("Still could not save to localStorage after cleanup:", retryError);
+        return false;
+      }
     }
   } catch (error) {
     console.error("Error syncing image to cloud:", error);
@@ -147,15 +159,6 @@ const getLocalStorageSize = (): number => {
  */
 export const syncAllImages = async (): Promise<void> => {
   try {
-    // This would be enhanced in a production environment to:
-    // 1. Check which images need syncing
-    // 2. Upload only changed/new images
-    // 3. Download images available in cloud but not locally
-    
-    // For now, we'll implement a simplified version that
-    // ensures critical images (hero, favicon, social) are 
-    // available across devices via localStorage
-    
     console.log("Starting cloud image synchronization");
     
     // Check localStorage available space
@@ -164,7 +167,75 @@ export const syncAllImages = async (): Promise<void> => {
       cleanupOldCloudImages();
     }
     
+    // To better support cross-device functionality, we'll sync all
+    // images from IndexedDB to cloud storage (localStorage)
+    // This function is called when the app starts
+    
+    // 1. Get all critical images (home, hero, social, favicon)
+    const categories = ['home', 'hero', 'social', 'favicon'];
+    let syncCount = 0;
+    
+    // For each category, get images from IndexedDB and sync to cloud
+    for (const category of categories) {
+      try {
+        // Get images from IndexedDB with that category
+        const db = await openIndexedDB();
+        const transaction = db.transaction(['images'], 'readonly');
+        const store = transaction.objectStore('images');
+        const categoryIndex = store.index('category');
+        const request = categoryIndex.getAllKeys(category);
+        
+        request.onsuccess = async () => {
+          const imagePaths = request.result as string[];
+          
+          // Sync each image to cloud
+          for (const path of imagePaths) {
+            if (typeof path === 'string' && path.startsWith('/upload/')) {
+              const synced = await saveImageToCloud(path);
+              if (synced) syncCount++;
+            }
+          }
+          
+          if (syncCount > 0) {
+            console.log(`Synced ${syncCount} images to cloud storage`);
+          }
+        };
+        
+        transaction.oncomplete = () => {
+          db.close();
+        };
+      } catch (error) {
+        console.error(`Error syncing ${category} images:`, error);
+      }
+    }
   } catch (error) {
     console.error("Error syncing images with cloud:", error);
   }
 };
+
+/**
+ * Opens the IndexedDB database
+ */
+const openIndexedDB = (): Promise<IDBDatabase> => {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('villaMarePluImages', 1);
+    
+    request.onerror = () => {
+      reject(request.error);
+    };
+    
+    request.onsuccess = () => {
+      resolve(request.result);
+    };
+    
+    request.onupgradeneeded = (event) => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains('images')) {
+        const store = db.createObjectStore('images', { keyPath: 'path' });
+        store.createIndex('category', 'category', { unique: false });
+        store.createIndex('createdAt', 'createdAt', { unique: false });
+      }
+    };
+  });
+};
+

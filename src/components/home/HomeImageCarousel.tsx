@@ -12,7 +12,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { ImageIcon, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getImage } from "@/utils/imageStorage";
-import { loadImageFromCloud } from "@/utils/cloudImageSync";
+import { loadImageFromCloud, syncAllImages } from "@/utils/cloudImageSync";
 
 export const HomeImageCarousel = () => {
   const { siteSettings } = useSettings();
@@ -38,6 +38,11 @@ export const HomeImageCarousel = () => {
       api.off("select", onSelect);
     };
   }, [api]);
+  
+  // Sync images with cloud storage on component mount
+  useEffect(() => {
+    syncAllImages();
+  }, []);
   
   // Load all images from storage (IndexedDB or cloud)
   useEffect(() => {
