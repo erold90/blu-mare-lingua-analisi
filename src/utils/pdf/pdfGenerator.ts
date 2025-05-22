@@ -1,5 +1,6 @@
 
 import { jsPDF } from "jspdf";
+// Ensure autotable is imported correctly
 import "jspdf-autotable";
 import { format } from "date-fns";
 import { FormValues } from "@/utils/quoteFormSchema";
