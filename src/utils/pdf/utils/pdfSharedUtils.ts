@@ -1,4 +1,3 @@
-
 import { jsPDF } from "jspdf";
 import { TableCell } from "../types";
 
@@ -20,7 +19,8 @@ export const formatText = (
   // Save current state
   const currentFontSize = doc.getFontSize();
   const currentTextColor = doc.getTextColor();
-  const currentFontStyle = doc.getFont();
+  // Fix: Store font style as a string instead of Font object
+  const currentFontStyle = doc.getFont().fontStyle;
   
   // Apply new styles
   if (options?.fontSize) {
@@ -41,7 +41,7 @@ export const formatText = (
     reset: () => {
       doc.setFontSize(currentFontSize);
       doc.setTextColor(currentTextColor);
-      doc.setFont(currentFontStyle);
+      doc.setFont("helvetica", currentFontStyle as "normal" | "bold" | "italic");
     }
   };
 };
@@ -242,4 +242,3 @@ export const drawSeparatorLine = (
   
   return y + 5; // Return next Y position with some padding
 };
-
