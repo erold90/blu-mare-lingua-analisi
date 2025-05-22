@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,7 @@ import {
 } from "@/components/ui/card";
 import { Bed, Home, ArrowRight, ArrowLeft, Sun, ThermometerSun } from "lucide-react";
 import { apartments as defaultApartments, Apartment } from "@/data/apartments";
+import { imageService } from "@/utils/imageService";
 
 const ApartmentGallery = ({ images }: { images: string[] }) => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
@@ -151,18 +151,71 @@ const ApartmentsPage = () => {
 
   // Load apartments and their images from localStorage
   useEffect(() => {
+    // ... keep existing code (loadData function)
+    
+    const checkApartmentImages = async () => {
+      const result: { [key: string]: string[] } = {};
+      
+      // Controlla le immagini per ogni appartamento
+      for (const apt of apartments) {
+        const normalizedId = imageService.normalizeApartmentId(apt.id);
+        const validImages: string[] = [];
+        
+        // Controlla entrambi i formati di percorso
+        for (let i = 1; i <= 16; i++) {
+          const normalizedPath = `/images/apartments/${normalizedId}/image${i}.jpg`;
+          const originalPath = `/images/apartments/${apt.id}/image${i}.jpg`;
+          
+          try {
+            // Controlla prima il percorso normalizzato
+            if (await imageService.checkImageExists(normalizedPath)) {
+              validImages.push(normalizedPath);
+              continue;
+            }
+            
+            // Se non trovata con percorso normalizzato, prova con quello originale
+            if (await imageService.checkImageExists(originalPath)) {
+              validImages.push(originalPath);
+            }
+          } catch (error) {
+            console.error(`Errore nel controllare l'immagine ${i} per ${apt.id}:`, error);
+          }
+        }
+        
+        if (validImages.length > 0) {
+          result[apt.id] = validImages;
+          console.log(`Trovate ${validImages.length} immagini per ${apt.id}:`, validImages);
+        }
+      }
+      
+      // Aggiorna lo stato solo se abbiamo trovato nuove immagini
+      if (Object.keys(result).length > 0) {
+        setApartmentImages(prevState => ({...prevState, ...result}));
+        
+        // Salva in localStorage
+        const existingImagesStr = localStorage.getItem("apartmentImages");
+        const existingImages = existingImagesStr ? JSON.parse(existingImagesStr) : {};
+        const updatedImages = {...existingImages, ...result};
+        localStorage.setItem("apartmentImages", JSON.stringify(updatedImages));
+        
+        // Notifica altri componenti del cambiamento
+        window.dispatchEvent(new CustomEvent("apartmentImagesUpdated"));
+      }
+    };
+    
+    // Carica dati da localStorage
     const loadData = () => {
-      console.log("Loading apartments and images data from localStorage");
+      console.log("Caricamento appartamenti e immagini da localStorage");
       
       // Load apartments
       const savedApartments = localStorage.getItem("apartments");
       if (savedApartments) {
         try {
           const parsedApartments = JSON.parse(savedApartments);
-          console.log("Loaded apartments:", parsedApartments);
+          console.log("Appartamenti caricati:", parsedApartments);
           setApartments(parsedApartments);
         } catch (error) {
-          console.error("Failed to parse saved apartments:", error);
+          console.error("Errore nel parsing degli appartamenti salvati:", error);
         }
       }
       
@@ -171,12 +224,15 @@ const ApartmentsPage = () => {
       if (savedImages) {
         try {
           const parsedImages = JSON.parse(savedImages);
-          console.log("Loaded apartment images:", parsedImages);
+          console.log("Immagini appartamenti caricate:", parsedImages);
           setApartmentImages(parsedImages);
         } catch (error) {
-          console.error("Failed to parse saved apartment images:", error);
+          console.error("Errore nel parsing delle immagini degli appartamenti:", error);
         }
       }
+      
+      // Cerca immagini degli appartamenti sul server
+      checkApartmentImages();
     };
     
     loadData();
@@ -200,7 +256,7 @@ const ApartmentsPage = () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("apartmentImagesUpdated", handleCustomEvent);
     };
-  }, []);
+  }, [apartments]);
   
   // Prepare apartment data with gallery images
   const apartmentData = apartments.map(apt => {

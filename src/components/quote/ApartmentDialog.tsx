@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -50,9 +49,19 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
         // nella cartella pubblica
         const checkForPublicImages = async () => {
           console.log(`Cercando immagini pubbliche per ${apartment.id}...`);
-          const potentialImagePaths = Array.from({ length: 5 }, (_, i) => 
-            `/images/apartments/${apartment.id}/image${i+1}.jpg`
-          );
+          
+          // Utilizziamo il normalizeApartmentId per assicurarci che il formato sia corretto
+          const normalizedId = imageService.normalizeApartmentId(apartment.id);
+          
+          // Controlliamo entrambi i percorsi (originale e normalizzato)
+          const potentialImagePaths = [
+            ...Array.from({ length: 16 }, (_, i) => 
+              `/images/apartments/${normalizedId}/image${i+1}.jpg`
+            ),
+            ...Array.from({ length: 16 }, (_, i) => 
+              `/images/apartments/${apartment.id}/image${i+1}.jpg`
+            )
+          ];
           
           const validImages: string[] = [];
           
@@ -62,6 +71,21 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
               if (exists) {
                 validImages.push(path);
                 console.log(`Trovata immagine pubblica: ${path}`);
+                
+                // Evitiamo duplicati
+                const baseName = path.split('/').pop();
+                if (baseName) {
+                  const otherPathsWithSameBaseName = potentialImagePaths.filter(p => 
+                    p !== path && p.split('/').pop() === baseName
+                  );
+                  
+                  for (const otherPath of otherPathsWithSameBaseName) {
+                    const index = potentialImagePaths.indexOf(otherPath);
+                    if (index > -1) {
+                      potentialImagePaths.splice(index, 1);
+                    }
+                  }
+                }
               }
             } catch (error) {
               console.error(`Errore nel controllare l'immagine ${path}:`, error);
@@ -72,6 +96,13 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
             console.log(`Trovate ${validImages.length} immagini pubbliche per ${apartment.id}`);
             setGalleryImages(validImages);
             return;
+          }
+          
+          // Debug se non abbiamo trovato immagini
+          if (validImages.length === 0) {
+            console.warn(`Nessuna immagine pubblica trovata per ${apartment.id}, debug in corso...`);
+            await imageService.debugImage(`/images/apartments/${normalizedId}/image1.jpg`);
+            await imageService.debugImage(`/images/apartments/${apartment.id}/image1.jpg`);
           }
           
           // Fallback to apartment's default image

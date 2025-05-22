@@ -2,10 +2,10 @@
 import { toast } from "sonner";
 
 class ImageService {
-  // Simple method to check if an image exists at a given path
+  // Verifica se un'immagine esiste a un determinato percorso
   async checkImageExists(path: string): Promise<boolean> {
     try {
-      console.log("Checking if image exists:", path);
+      console.log("Verifico esistenza immagine:", path);
       
       // Aggiungo timestamp per evitare problemi di cache
       const timestamp = new Date().getTime();
@@ -20,24 +20,24 @@ class ImageService {
         }
       });
       
-      console.log(`Image check response for ${path}:`, response.status, response.ok);
+      console.log(`Risultato verifica per ${path}:`, response.status, response.ok);
       return response.ok;
     } catch (error) {
-      console.error('Error checking image:', error);
+      console.error('Errore nella verifica immagine:', error);
       return false;
     }
   }
   
   // Helper per il debugging dei problemi con le immagini
   async debugImage(path: string): Promise<void> {
-    console.log(`Starting image debug for ${path}`);
+    console.log(`Avvio debug immagine per ${path}`);
     
     // Aggiungo timestamp per evitare problemi di cache
     const timestamp = new Date().getTime();
     const urlWithTimestamp = `${path}?t=${timestamp}`;
     
     try {
-      console.log("Trying to access image with URL:", urlWithTimestamp);
+      console.log("Tentativo di accesso all'immagine con URL:", urlWithTimestamp);
       
       // Prima provo con HEAD request
       const headResponse = await fetch(urlWithTimestamp, { 
@@ -49,7 +49,7 @@ class ImageService {
         }
       });
       
-      console.log(`HEAD response for ${path}:`, {
+      console.log(`Risposta HEAD per ${path}:`, {
         status: headResponse.status,
         statusText: headResponse.statusText,
         ok: headResponse.ok,
@@ -65,7 +65,7 @@ class ImageService {
         }
       });
       
-      console.log(`GET response for ${path}:`, {
+      console.log(`Risposta GET per ${path}:`, {
         status: getResponse.status,
         statusText: getResponse.statusText,
         ok: getResponse.ok,
@@ -78,7 +78,7 @@ class ImageService {
         
         // Verifichiamo anche se possiamo creare un blob
         const blob = await getResponse.blob();
-        console.log(`Successfully created blob from ${path}:`, {
+        console.log(`Blob creato da ${path}:`, {
           size: blob.size,
           type: blob.type
         });
@@ -94,7 +94,7 @@ class ImageService {
       this.loadImageDirectly(urlWithTimestamp, path);
       
     } catch (error) {
-      console.error("Image debug error:", error);
+      console.error("Errore debug immagine:", error);
     }
   }
   
@@ -102,8 +102,8 @@ class ImageService {
   private loadImageDirectly(src: string, originalPath: string): void {
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.onload = () => console.log(`Successfully loaded image: ${originalPath} (${img.width}x${img.height})`);
-    img.onerror = (err) => console.error(`Failed to load image as Image object: ${originalPath}`, err);
+    img.onload = () => console.log(`Immagine caricata con successo: ${originalPath} (${img.width}x${img.height})`);
+    img.onerror = (err) => console.error(`Errore nel caricare l'immagine: ${originalPath}`, err);
     img.src = src;
   }
 
@@ -118,15 +118,21 @@ class ImageService {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
-        console.log(`Force reload successful: ${path}`);
+        console.log(`Ricaricamento forzato immagine: ${path} completato`);
         resolve(true);
       };
       img.onerror = () => {
-        console.error(`Force reload failed: ${path}`);
+        console.error(`Ricaricamento forzato immagine: ${path} fallito`);
         resolve(false);
       };
       img.src = this.getImageUrl(path);
     });
+  }
+  
+  // Nuovo metodo per convertire il nome dell'appartamento in formato corretto per i file
+  normalizeApartmentId(id: string): string {
+    // Rimuove eventuali spazi e converte in lowercase
+    return id.toLowerCase().replace(/\s+/g, '-');
   }
 }
 
