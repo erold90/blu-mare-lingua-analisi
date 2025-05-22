@@ -22,25 +22,29 @@ export const drawManualTable = (
     doc.rect(x, y, width, height);
     
     let content = '';
-    let styles: TableCell['styles'] = {};
+    let styles = {
+      fontSize: 9,
+      fontStyle: 'normal' as 'normal' | 'bold' | 'italic',
+      textColor: [0, 0, 0] as number[]
+    };
     
     if (typeof text === 'string') {
       content = text;
     } else {
       content = text.content;
-      styles = text.styles || {};
+      if (text.styles) {
+        // Safely access style properties with default values
+        if (text.styles.fontSize !== undefined) styles.fontSize = text.styles.fontSize;
+        if (text.styles.fontStyle !== undefined) styles.fontStyle = text.styles.fontStyle;
+        if (text.styles.textColor !== undefined) styles.textColor = text.styles.textColor;
+      }
     }
     
-    // Safely access style properties with default values
-    const fontSize = styles?.fontSize || 9; // Reduced font size
-    const fontStyle = (styles?.fontStyle || 'normal') as 'bold' | 'italic' | 'normal';
-    const textColor = styles?.textColor || [0, 0, 0];
-    
-    doc.setFontSize(fontSize);
-    doc.setFont('helvetica', fontStyle);
+    doc.setFontSize(styles.fontSize);
+    doc.setFont('helvetica', styles.fontStyle);
     
     // Use the text color if provided, or default to black
-    doc.setTextColor(textColor[0] || 0, textColor[1] || 0, textColor[2] || 0);
+    doc.setTextColor(styles.textColor[0] || 0, styles.textColor[1] || 0, styles.textColor[2] || 0);
     
     const textX = x + cellPadding;
     const textY = y + cellPadding + (height - 2 * cellPadding) / 2 + 1; // Vertically center

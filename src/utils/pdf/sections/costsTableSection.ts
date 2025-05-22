@@ -37,8 +37,8 @@ export const generateCostsTableSection = (
   
   // Create table headers with better styling
   const headers: (string | TableCell)[][] = [
-    [{ content: "Descrizione", styles: { fontStyle: 'bold' as 'bold', fillColor: [230, 236, 242] } }, 
-     { content: "Importo", styles: { fontStyle: 'bold' as 'bold', fillColor: [230, 236, 242], halign: 'right' } }]
+    [{ content: "Descrizione", styles: { fontStyle: 'bold', fillColor: [230, 236, 242] } }, 
+     { content: "Importo", styles: { fontStyle: 'bold', fillColor: [230, 236, 242], halign: 'right' } }]
   ];
   
   // Build the table data with more details
@@ -46,14 +46,15 @@ export const generateCostsTableSection = (
   const extrasRows = createExtrasRows(priceCalculation, formData, selectedApts);
   
   // Only include essential services, reducing the size
-  const essentialServices = [
-    [{ content: "SERVIZI INCLUSI", styles: { fontStyle: 'bold' as 'bold', textColor: [0, 100, 50], fontSize: 10 } }, ""],
+  const essentialServices: (string | TableCell)[][] = [
+    [{ content: "SERVIZI INCLUSI", styles: { fontStyle: 'bold', textColor: [0, 100, 50], fontSize: 10 } }, 
+     { content: "", styles: {} }],
     [{ content: "• WiFi, parcheggio, aria condizionata, consumi", styles: { textColor: [0, 120, 0] } }, 
      { content: "Inclusi", styles: { textColor: [0, 120, 0], halign: 'right' } }]
   ];
   
   // Combine all rows - but more compact
-  const tableBody = [
+  const tableBody: (string | TableCell)[][] = [
     ...apartmentRows,
     ...extrasRows,
     ...essentialServices

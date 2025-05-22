@@ -1,3 +1,4 @@
+
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
 import { Apartment } from "@/data/apartments";
@@ -11,13 +12,16 @@ export const createApartmentRows = (
   selectedApts: Apartment[],
   priceCalculation: PriceCalculation
 ): (string | TableCell)[][] => {
-  const rows = [];
+  const rows: (string | TableCell)[][] = [];
   
   // Add section header for apartments with elegant styling
   rows.push([{
     content: "APPARTAMENTI",
     styles: { fontStyle: 'bold', textColor: [0, 50, 100], fontSize: 10 }
-  }, ""]);
+  }, {
+    content: "",
+    styles: {}
+  }]);
   
   if (selectedApts.length === 1) {
     // For single apartment, show detailed pricing
@@ -28,7 +32,10 @@ export const createApartmentRows = (
     rows.push([{
       content: `${apt.name} (${apt.bedrooms} camere, ${apt.capacity} ospiti max)`,
       styles: { fontStyle: 'bold' }
-    }, ""]);
+    }, {
+      content: "",
+      styles: {}
+    }]);
     
     rows.push([
       `  • Soggiorno: ${priceCalculation.nights} notti a € ${pricePerNight} per notte`, 
@@ -38,10 +45,13 @@ export const createApartmentRows = (
       }
     ]);
     
-    // Add apartment features - without bathrooms which doesn't exist
+    // Add apartment features
     rows.push([
       `  • ${apt.size} m² • ${apt.beds} posti letto`, 
-      ""
+      {
+        content: "",
+        styles: {}
+      }
     ]);
     
   } else {
@@ -53,7 +63,10 @@ export const createApartmentRows = (
       rows.push([{
         content: `${apt.name} (${apt.bedrooms} camere, ${apt.capacity} ospiti max)`,
         styles: { fontStyle: 'bold' }
-      }, ""]);
+      }, {
+        content: "",
+        styles: {}
+      }]);
       
       rows.push([
         `  • Soggiorno: ${priceCalculation.nights} notti a € ${pricePerNight} per notte`, 
@@ -63,15 +76,24 @@ export const createApartmentRows = (
         }
       ]);
       
-      // Add apartment features - without bathrooms which doesn't exist
+      // Add apartment features
       rows.push([
         `  • ${apt.size} m² • ${apt.beds} posti letto`, 
-        ""
+        {
+          content: "",
+          styles: {}
+        }
       ]);
       
       // Add separator between apartments (except after the last one)
       if (index < selectedApts.length - 1) {
-        rows.push(["", ""]);
+        rows.push([{
+          content: "",
+          styles: {}
+        }, {
+          content: "",
+          styles: {}
+        }]);
       }
     });
     
@@ -96,13 +118,16 @@ export const createExtrasRows = (
   formData: FormValues,
   selectedApts: Apartment[]
 ): (string | TableCell)[][] => {
-  const rows = [];
+  const rows: (string | TableCell)[][] = [];
   
   // Add section header for extras with elegant styling
   rows.push([{
     content: "EXTRA E SERVIZI",
     styles: { fontStyle: 'bold', textColor: [0, 50, 100], fontSize: 10 }
-  }, ""]);
+  }, {
+    content: "",
+    styles: {}
+  }]);
   
   // Calculate linen cost with more details
   if (formData.linenOption) {
@@ -211,13 +236,16 @@ export const createExtrasRows = (
 export const createIncludedServicesRows = (
   priceCalculation: PriceCalculation
 ): (string | TableCell)[][] => {
-  const rows = [];
+  const rows: (string | TableCell)[][] = [];
   
   // Add included services header with elegant styling
   rows.push([{
     content: "SERVIZI INCLUSI",
     styles: { fontStyle: 'bold', textColor: [0, 100, 50], fontSize: 10 }
-  }, ""]);
+  }, {
+    content: "",
+    styles: {}
+  }]);
   
   // List all included services with green color
   rows.push([{
