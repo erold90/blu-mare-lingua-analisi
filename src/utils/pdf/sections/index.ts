@@ -16,3 +16,7 @@ export { generateCostsTableSection } from './costsTableSection';
 export { generateTotalsSection } from './totalsSection';
 export { generateSecurityDepositSection } from './securityDepositSection';
 export { generateTermsSection } from './termsSection';
+
+// Table utilities (newly added)
+export * from '../tables/tableUtils';
+export * from '../tables/priceTableData';
