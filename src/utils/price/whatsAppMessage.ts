@@ -47,44 +47,117 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     message += `*Ospiti:*\n`;
     message += `Adulti: ${formValues.adults}\n`;
     message += `Bambini: ${formValues.children || 0}\n`;
-    message += `Totale: ${(formValues.adults || 0) + (formValues.children || 0)}\n\n`;
+    
+    // Add child details if any
+    if (formValues.children && formValues.children > 0 && formValues.childrenDetails && formValues.childrenDetails.length > 0) {
+      message += `\n*Dettagli bambini:*\n`;
+      formValues.childrenDetails.forEach((child, index) => {
+        message += `Bambino ${index + 1}: `;
+        if (child.isUnder12) message += "Sotto i 12 anni, ";
+        if (child.sleepsWithParents) message += "Dorme con i genitori, ";
+        if (child.sleepsInCrib) message += "Necessita di culla";
+        message += "\n";
+      });
+    }
+    
+    message += `Totale ospiti: ${(formValues.adults || 0) + (formValues.children || 0)}\n\n`;
+    
+    // Group details if it's a group booking
+    if (formValues.isGroupBooking && formValues.familyGroups && formValues.familyGroups.length > 0) {
+      message += `*Dettagli gruppo:*\n`;
+      message += `Tipo gruppo: ${formValues.groupType === 'families' ? 'Famiglie' : 'Coppie'}\n`;
+      
+      formValues.familyGroups.forEach((group, index) => {
+        message += `Gruppo ${index + 1}: ${group.adults} adulti, ${group.children || 0} bambini\n`;
+        
+        // Dettagli bambini del gruppo
+        if (group.children && group.children > 0 && group.childrenDetails && group.childrenDetails.length > 0) {
+          group.childrenDetails.forEach((child, childIndex) => {
+            message += `  - Bambino ${childIndex + 1}: `;
+            if (child.isUnder12) message += "Sotto i 12 anni, ";
+            if (child.sleepsWithParents) message += "Dorme con i genitori, ";
+            if (child.sleepsInCrib) message += "Necessita di culla";
+            message += "\n";
+          });
+        }
+      });
+      message += "\n";
+    }
     
     // Apartments
     message += `*Appartamenti:*\n`;
     selectedApartments.forEach(apartment => {
       const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
       message += `- ${apartment.name}: ${apartmentPrice}€\n`;
+      
+      // Se ci sono persone assegnate a questo appartamento, includiamo il dettaglio
+      if (formValues.personsPerApartment && formValues.personsPerApartment[apartment.id]) {
+        message += `  Persone: ${formValues.personsPerApartment[apartment.id]}\n`;
+      }
+      
+      // Se ci sono animali in questo appartamento, lo indichiamo
+      if (formValues.petsInApartment && formValues.petsInApartment[apartment.id]) {
+        message += `  Con animali domestici\n`;
+      }
     });
+    message += `\n`;
+    
+    // Services
+    message += `*Servizi richiesti:*\n`;
+    message += `Biancheria: ${
+      formValues.linenOption === "standard" ? "Standard inclusa" : 
+      formValues.linenOption === "extra" ? "Supplemento extra" : 
+      formValues.linenOption === "deluxe" ? "Deluxe" : "Non specificata"
+    }\n`;
+    
+    if (formValues.hasPets) {
+      message += `Animali domestici: Sì (${formValues.petsCount || 1})\n`;
+      if (formValues.petSize) {
+        message += `Taglia animale: ${
+          formValues.petSize === "small" ? "Piccola" :
+          formValues.petSize === "medium" ? "Media" : "Grande"
+        }\n`;
+      }
+    }
+    
+    // Verifico se ci sono bambini che richiedono culle
+    const totalCribs = formValues.childrenDetails?.filter(child => child.sleepsInCrib)?.length || 0;
+    if (totalCribs > 0) {
+      message += `Culle richieste: ${totalCribs}\n`;
+    }
+    
+    if (formValues.additionalServices && formValues.additionalServices.length > 0) {
+      message += `Servizi aggiuntivi: ${formValues.additionalServices.join(", ")}\n`;
+    }
     message += `\n`;
     
     // Cost summary
     message += `*Riepilogo costi:*\n`;
     message += `Costo appartamenti: ${priceInfo.basePrice}€\n`;
-    message += `Pulizia finale: ${priceInfo.cleaningFee}€ (inclusa)\n`;
     
     if (priceInfo.extras > 0) {
       message += `Servizi extra: ${priceInfo.extras}€\n`;
     }
     
-    message += `Subtotale: ${priceInfo.subtotal}€\n`;
-    message += `Tassa di soggiorno: ${priceInfo.touristTax}€\n`;
+    message += `Pulizia finale: Inclusa\n`;
+    message += `Subtotale: ${priceInfo.totalBeforeDiscount}€\n`;
     
     if (priceInfo.discount > 0) {
-      message += `Totale con sconto: ${priceInfo.totalAfterDiscount}€\n`;
-      message += `Risparmio: ${priceInfo.discount}€\n`;
-    } else {
-      message += `Totale: ${priceInfo.totalAfterDiscount}€\n`;
+      message += `Sconto: -${priceInfo.discount}€\n`;
     }
     
-    message += `\n*Totale da pagare: ${priceInfo.totalAfterDiscount}€*\n`;
-    message += `Caparra (30%): ${priceInfo.deposit}€\n\n`;
+    message += `Tassa di soggiorno: Inclusa\n\n`;
+    
+    message += `*Totale finale: ${priceInfo.totalAfterDiscount}€*\n`;
+    message += `Caparra (30%): ${priceInfo.deposit}€\n`;
+    message += `Saldo all'arrivo: ${priceInfo.totalAfterDiscount - priceInfo.deposit}€\n\n`;
     
     // Additional notes
     if (formValues.notes) {
       message += `*Note:*\n${formValues.notes}\n\n`;
     }
     
-    message += `Grazie per la richiesta! Ti contatteremo al più presto per confermare la disponibilità.`;
+    message += `Grazie per la richiesta! Ti contatterò al più presto per confermare la disponibilità.`;
     
     return message;
   } catch (error) {

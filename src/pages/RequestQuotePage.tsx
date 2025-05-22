@@ -6,8 +6,7 @@ import GuestInfoStep from "@/components/quote/GuestInfoStep";
 import DateSelectionStep from "@/components/quote/DateSelectionStep";
 import ApartmentSelectionStep from "@/components/quote/ApartmentSelectionStep";
 import ServicesStep from "@/components/quote/ServicesStep";
-import SummaryStep from "@/components/quote/SummaryStep";
-import ContactStep from "@/components/quote/ContactStep";
+import SummaryStep from "@/components/quote/summary/SummaryStep";
 import GroupDialog from "@/components/quote/GroupDialog";
 import ApartmentDialog from "@/components/quote/ApartmentDialog";
 import ProgressBar from "@/components/quote/ProgressBar";
@@ -128,24 +127,13 @@ const RequestQuotePage = () => {
               />
             )}
             
-            {/* STEP 5: Riepilogo e calcolo finale */}
+            {/* STEP 5: Riepilogo finale con azioni */}
             {step === 5 && (
               <SummaryStep 
                 form={form}
                 apartments={apartments}
                 prevStep={prevStep}
-                nextStep={nextStep}
-              />
-            )}
-            
-            {/* STEP 6: Finalizzazione preventivo */}
-            {step === 6 && (
-              <ContactStep 
-                form={form}
-                apartments={apartments}
-                prevStep={prevStep}
-                onSubmit={handleSubmitWrapper}
-                downloadQuote={() => setShowConfirmationDialog(true)}
+                downloadQuote={downloadQuote}
                 sendWhatsApp={sendWhatsApp}
               />
             )}

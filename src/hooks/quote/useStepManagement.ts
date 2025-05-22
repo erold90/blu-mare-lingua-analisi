@@ -5,7 +5,7 @@ import { FormValues } from "@/utils/quoteFormSchema";
 
 export function useStepManagement(form: UseFormReturn<FormValues>) {
   const [step, setStep] = useState(1);
-  const totalSteps = 6;
+  const totalSteps = 5; // Ridotto da 6 a 5 step
   
   // Step navigation
   const nextStep = () => {

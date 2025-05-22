@@ -21,7 +21,6 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ step, totalSteps }) => {
         <span>Appartamento</span>
         <span>Extra</span>
         <span>Riepilogo</span>
-        <span>Finalizza</span>
       </div>
     </div>
   );

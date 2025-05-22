@@ -62,7 +62,9 @@ export function useQuoteForm() {
     downloadQuote, 
     sendWhatsApp, 
     onSubmitHandler, 
-    handleSubmitWrapper 
+    handleSubmitWrapper,
+    showConfirmationDialog: actionConfirmationDialog,
+    setShowConfirmationDialog: setActionConfirmationDialog
   } = useQuoteActions(form);
   
   // Setup effect hooks
@@ -76,8 +78,12 @@ export function useQuoteForm() {
     apartmentDialog,
     groupDialog,
     familyGroups,
-    showConfirmationDialog,
-    setShowConfirmationDialog,
+    // Usiamo lo stato dal hook useQuoteActions
+    showConfirmationDialog: actionConfirmationDialog || showConfirmationDialog,
+    setShowConfirmationDialog: (state: boolean) => {
+      setShowConfirmationDialog(state);
+      setActionConfirmationDialog(state);
+    },
     incrementAdults,
     decrementAdults,
     incrementChildren,
