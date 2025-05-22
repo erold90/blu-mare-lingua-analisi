@@ -1,4 +1,3 @@
-
 // Import first to ensure the plugin is loaded and registered
 import "jspdf-autotable";
 // Then import our config
@@ -18,7 +17,7 @@ import { generateSecurityDepositSection } from "./sections/securityDepositSectio
 import { generateTermsSection } from "./sections/termsSection";
 import { verifyAutoTable } from "./jspdfConfig";
 
-// Generate a minimalist quote PDF based on the provided example
+// Generate an elegant and professional quote PDF
 export const generateQuotePdf = (
   formData: FormValues, 
   selectedApts: Apartment[], 
@@ -36,29 +35,31 @@ export const generateQuotePdf = (
   
   // Generate the document sections
   let yPos = generateQuoteHeader(doc);
+  
+  // Add the stay info section with a professional layout
   yPos = generateStayInfoSection(doc, formData, priceCalculation, yPos);
   
-  // Adjust position for apartment list
-  if (yPos > doc.internal.pageSize.getHeight() - 150) {
+  // Add the apartment list section - keep it on the same page if possible
+  if (yPos > doc.internal.pageSize.getHeight() - 80) {
     doc.addPage();
     yPos = 20; // Reset Y position on new page
   }
   
   yPos = generateApartmentListSection(doc, selectedApts, yPos);
   
-  // Always start the costs table on a new page for better layout
-  doc.addPage();
-  yPos = 20; // Reset Y position on new page
+  // Generate costs section - position it right after apartment list with proper spacing
+  if (yPos > doc.internal.pageSize.getHeight() - 180) {
+    doc.addPage();
+    yPos = 20; // Reset Y position on new page
+  } else {
+    yPos += 10; // Add spacing between sections
+  }
   
-  // Debug before costs table section
-  console.log("Before generating costs table, document position:", yPos);
-  console.log("AutoTable availability:", typeof (doc as any).autoTable === 'function');
-  
-  // Generate the costs table section
+  // Generate the costs table with detailed breakdown
   yPos = generateCostsTableSection(doc, selectedApts, priceCalculation, formData, yPos);
   
-  // Make sure we have space for the totals section
-  if (yPos > doc.internal.pageSize.getHeight() - 120) {
+  // Position the totals section properly
+  if (yPos > doc.internal.pageSize.getHeight() - 130) {
     doc.addPage();
     yPos = 20;
   }
@@ -66,13 +67,12 @@ export const generateQuotePdf = (
   // Generate the totals section with final price
   yPos = generateTotalsSection(doc, priceCalculation, yPos);
   
-  // Make sure we have space for the security deposit section
+  // Add security deposit section
   if (yPos > doc.internal.pageSize.getHeight() - 80) {
     doc.addPage();
     yPos = 20;
   }
   
-  // Generate the security deposit section
   yPos = generateSecurityDepositSection(doc, selectedApts, yPos);
   
   // Add terms and conditions at the bottom

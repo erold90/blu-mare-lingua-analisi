@@ -5,7 +5,7 @@ import { createSection } from "../formatUtils";
 import { formatText, drawSeparatorLine } from "../utils/pdfSharedUtils";
 
 /**
- * Generate the security deposit section
+ * Generate the security deposit section with improved layout
  */
 export const generateSecurityDepositSection = (doc: jsPDF, selectedApts: Apartment[], yPos: number): number => {
   // Create section header with background
@@ -17,37 +17,42 @@ export const generateSecurityDepositSection = (doc: jsPDF, selectedApts: Apartme
   const totalDeposit = depositPerApartment * selectedApts.length;
   
   // Add a light background for the deposit information
-  doc.setFillColor(245, 245, 245);
-  doc.setDrawColor(230, 230, 230);
-  doc.roundedRect(12, currentY, doc.internal.pageSize.getWidth() - 24, 30, 3, 3, 'FD');
+  doc.setFillColor(245, 248, 252);
+  doc.setDrawColor(220, 230, 240);
+  doc.roundedRect(12, currentY, doc.internal.pageSize.getWidth() - 24, 40, 3, 3, 'FD');
   
   // Add heading inside the box
   currentY += 10;
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
+  doc.setTextColor(0, 50, 100);
   doc.text("Dettagli cauzione:", 20, currentY);
+  doc.setTextColor(0, 0, 0);
   
-  // Add deposit amount
+  // Add deposit amount with detailed explanation
   currentY += 13;
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   
-  const depositText = `€${depositPerApartment} per appartamento x ${selectedApts.length} = €${totalDeposit} totali`;
+  const depositText = `€ ${depositPerApartment} per appartamento × ${selectedApts.length} ${selectedApts.length > 1 ? 'appartamenti' : 'appartamento'} = € ${totalDeposit} totali`;
   doc.text(depositText, 20, currentY);
   
-  // Add payment note in italic
+  // Add payment note with more details
   doc.setFont('helvetica', 'italic');
-  currentY += 10;
-  const paymentNote = "La cauzione deve essere versata in contanti all'arrivo e sarà restituita alla partenza dopo il controllo dell'appartamento.";
-  doc.text(paymentNote, 20, currentY, { maxWidth: doc.internal.pageSize.getWidth() - 40 });
+  currentY += 12;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const paymentNote = "La cauzione deve essere versata in contanti o con carta di credito all'arrivo e sarà restituita alla partenza dopo il controllo dell'appartamento, a condizione che non vi siano danni o mancanze.";
+  doc.setFontSize(9);
+  doc.text(paymentNote, 20, currentY, { maxWidth: pageWidth - 40, align: 'left' });
   
   // Reset font
   doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
   
   // Add separator
-  currentY += 15;
+  currentY += 20;
   currentY = drawSeparatorLine(doc, currentY, {
-    color: [220, 220, 220],
+    color: [220, 230, 240],
     marginLeft: 12,
     marginRight: 12
   });

@@ -6,12 +6,29 @@ import { formatItalianDate, addHeader } from "../formatUtils";
  * Generate the header section of the quote PDF with quote number and date
  */
 export const generateQuoteHeader = (doc: jsPDF): number => {
-  // Add quote number and date
+  // Add quote number and date with more professional styling
   const today = new Date();
-  const quoteNumber = `${today.getFullYear()}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
+  const currentYear = today.getFullYear();
+  const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
+  
+  // Format the quote number with year-month-sequential 
+  const quoteNumber = `${currentYear}-${currentMonth}-${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`;
+  
+  // Add quote identification
+  doc.setFillColor(245, 248, 252);
+  doc.roundedRect(10, 40, doc.internal.pageSize.getWidth() - 20, 15, 2, 2, 'F');
+  
   doc.setFontSize(10);
-  doc.text(`Preventivo n. ${quoteNumber}`, 10, 45);
-  doc.text(`Data: ${formatItalianDate(today)}`, doc.internal.pageSize.getWidth() - 60, 45);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Preventivo n. ${quoteNumber}`, 15, 48);
+  
+  // Add date on the right
+  const formattedDate = formatItalianDate(today);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`Data: ${formattedDate}`, doc.internal.pageSize.getWidth() - 60, 48);
+  
+  // Reset font
+  doc.setFont('helvetica', 'normal');
   
   return 60; // Return next Y position
 };

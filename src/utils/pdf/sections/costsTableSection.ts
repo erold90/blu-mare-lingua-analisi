@@ -1,6 +1,5 @@
 
 import { jsPDF } from "jspdf";
-// Import both the helper function and jspdf-autotable directly
 import "jspdf-autotable";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
@@ -16,12 +15,6 @@ import {
 
 /**
  * Generate the cost details table section of the quote
- * @param doc - PDF document
- * @param selectedApts - Selected apartments
- * @param priceCalculation - Price calculation object
- * @param formData - Form data from the quote form
- * @param yPos - Current Y position
- * @returns Next Y position
  */
 export const generateCostsTableSection = (
   doc: jsPDF, 
@@ -30,27 +23,22 @@ export const generateCostsTableSection = (
   formData: FormValues,
   yPos: number
 ): number => {
-  // Make sure we start at a good position, never too low on the page
-  if (yPos > doc.internal.pageSize.getHeight() - 200) {
-    doc.addPage();
-    yPos = 20;
-  }
-  
-  // Ensure jspdf-autotable is available
-  console.log("Checking autoTable availability:", typeof (doc as any).autoTable === 'function');
-  
   // Create section heading with improved visibility
-  let currentY = createSection(doc, "DETTAGLIO COSTI", yPos);
+  const sectionTitle = "DETTAGLIO COSTI";
+  let currentY = createSection(doc, sectionTitle, yPos);
+  currentY += 8; // Add more spacing for better readability
   
-  // Add light background to the entire costs section
+  // Create an elegant cost table with better styling
+  // Set background for better readability
   const pageWidth = doc.internal.pageSize.getWidth();
-  doc.setFillColor(250, 250, 250);
-  doc.rect(10, currentY, pageWidth - 20, 160, 'F');
-  
-  currentY += 10; // Add more spacing for better readability
+  doc.setFillColor(245, 247, 250);
+  doc.rect(10, currentY - 3, pageWidth - 20, 150, 'F');
   
   // Create table headers with better styling
-  const headers = [["Descrizione", "Importo"]];
+  const headers = [
+    [{ content: "Descrizione", styles: { fontStyle: 'bold', fillColor: [230, 236, 242] } }, 
+     { content: "Importo", styles: { fontStyle: 'bold', fillColor: [230, 236, 242], halign: 'right' } }]
+  ];
   
   // Build the table data with more details
   const apartmentRows = createApartmentRows(selectedApts, priceCalculation);
@@ -64,43 +52,39 @@ export const generateCostsTableSection = (
     ...includedServicesRows
   ];
   
-  // Log table data for debugging
-  console.log("Table data:", JSON.stringify(tableBody));
-  
   let tableEndY: number;
   
   try {
-    // First attempt: try using autoTable directly on the document
+    // Try using autoTable directly on the document
     if (typeof (doc as any).autoTable === 'function') {
       console.log("Using direct autoTable");
       const result = (doc as any).autoTable({
         startY: currentY,
         head: headers,
         body: tableBody,
-        theme: 'plain',
+        theme: 'grid',
         styles: {
-          fontSize: 10,
+          fontSize: 9,
           lineWidth: 0.1,
-          cellPadding: 5, // Increased padding for better readability
+          cellPadding: { top: 4, right: 5, bottom: 4, left: 5 },
+          lineColor: [220, 220, 220]
         },
         columnStyles: {
           0: { cellWidth: 'auto' },
-          1: { cellWidth: 50, halign: 'right' },
+          1: { cellWidth: 40, halign: 'right' },
         },
         headStyles: {
-          fillColor: [240, 240, 240],
-          textColor: [0, 0, 0],
+          fillColor: [230, 236, 242],
+          textColor: [0, 30, 80],
           fontStyle: 'bold',
-          lineWidth: 0.5,
+          lineWidth: 0.3,
         },
-        margin: { left: 15, right: 15 }, // Wider margins
-        didDrawCell: (data: any) => {
-          // Add alternating row colors for better readability
-          if (data.section === 'body' && data.row.index % 2 === 1) {
-            doc.setFillColor(248, 248, 248);
-            doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
-          }
-        }
+        margin: { left: 15, right: 15 },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252]
+        },
+        tableLineColor: [200, 200, 200],
+        tableLineWidth: 0.1,
       });
       
       // Get the end position of the table
@@ -118,5 +102,5 @@ export const generateCostsTableSection = (
     tableEndY = drawManualTable(doc, headers, tableBody, currentY);
   }
   
-  return tableEndY + 15; // Return the next Y position with more padding
+  return tableEndY + 10; // Return the next Y position with padding
 };

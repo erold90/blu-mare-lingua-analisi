@@ -20,15 +20,13 @@ import { verifyAutoTable } from "./jspdfConfig";
 
 /**
  * Main function to create and download the quote PDF
- * @param formData - Form data from the quote form
- * @param apartments - List of all apartments
- * @returns Filename of the generated PDF
+ * Creates a professional, elegant PDF quote for the customer
  */
 export const downloadPDF = (formData: FormValues, apartments: Apartment[]): string => {
   try {
-    console.log("Starting PDF generation");
+    console.log("Starting professional PDF quote generation");
     
-    // Quick test - verify autoTable availability
+    // Verify autoTable availability
     const testDoc = new jsPDF();
     console.log("autoTable available:", verifyAutoTable(testDoc));
     
@@ -45,12 +43,12 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[]): stri
       throw new Error("Nessun appartamento selezionato");
     }
     
-    // Calculate the total price - use memoized version if available
+    // Calculate the total price
     console.time("Price calculation");
     const priceCalculation = calculateTotalPrice(formData, apartments);
     console.timeEnd("Price calculation");
     
-    // Generate the PDF using the minimalist template
+    // Generate the PDF using the elegant template
     console.time("PDF generation");
     const doc = generateQuotePdf(formData, selectedApts, priceCalculation);
     
@@ -63,9 +61,18 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[]): stri
     addBasicFooter(doc);
     console.timeEnd("PDF generation");
     
-    // Generate a meaningful filename
+    // Generate a meaningful filename with date and customer name if available
     const today = new Date();
-    const fileName = `Preventivo_Villa_Mareblu_${format(today, "yyyyMMdd")}.pdf`;
+    let fileName = `Preventivo_Villa_Mareblu_${format(today, "yyyyMMdd")}`;
+    
+    // Add customer name to filename if available
+    if (formData.name) {
+      // Clean up name for the filename (remove spaces and special characters)
+      const cleanName = formData.name.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 20);
+      fileName += `_${cleanName}`;
+    }
+    
+    fileName += ".pdf";
     
     // Save the PDF
     doc.save(fileName);

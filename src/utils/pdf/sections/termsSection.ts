@@ -3,40 +3,73 @@ import { jsPDF } from "jspdf";
 import { createSection } from "../formatUtils";
 
 /**
- * Generate the terms and conditions section
+ * Generate the terms and conditions section of the quote
  */
 export const generateTermsSection = (doc: jsPDF, yPos: number): number => {
-  // Add section title
+  // Create section heading with background
   let currentY = createSection(doc, "TERMINI E CONDIZIONI", yPos);
-  currentY += 5;
+  currentY += 10;
   
-  // Add terms content
+  // Set font for terms
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   
-  const termsContent = [
-    "1. La prenotazione è confermata al ricevimento della caparra.",
-    "2. Il saldo deve essere effettuato all'arrivo in contanti o con carta di credito.",
-    "3. Il check-in è previsto dalle 15:00 alle 19:00. Il check-out entro le 10:00.",
-    "4. In caso di cancellazione entro 30 giorni dall'arrivo, la caparra verrà rimborsata al 50%.",
-    "5. Gli animali domestici sono ammessi solo se dichiarati al momento della prenotazione.",
-    "6. È vietato fumare all'interno degli appartamenti.",
-    "7. La pulizia finale è inclusa, ma la cucina deve essere lasciata pulita dagli ospiti."
-  ];
+  // Add terms content with better formatting
+  const baseX = 15;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const contentWidth = pageWidth - 30;
   
-  termsContent.forEach(term => {
-    doc.text(term, 15, currentY, { maxWidth: doc.internal.pageSize.getWidth() - 30 });
-    currentY += 6;
-  });
+  // Add light background for terms
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(230, 235, 240);
+  doc.roundedRect(baseX - 5, currentY - 5, contentWidth + 10, 100, 3, 3, 'FD');
   
-  // Add a note about validity
+  // Add individual terms with proper spacing
+  doc.setFont('helvetica', 'bold');
+  doc.text("1. Prenotazione e pagamento", baseX, currentY);
+  doc.setFont('helvetica', 'normal');
   currentY += 10;
+  doc.text(
+    "La prenotazione è considerata confermata solo dopo il versamento della caparra confirmatoria del 30% dell'importo totale. " +
+    "Il saldo dovrà essere versato all'arrivo in contanti o con carta di credito.",
+    baseX, currentY, { maxWidth: contentWidth }
+  );
+  
+  currentY += 15;
+  doc.setFont('helvetica', 'bold');
+  doc.text("2. Cancellazione", baseX, currentY);
+  doc.setFont('helvetica', 'normal');
+  currentY += 10;
+  doc.text(
+    "In caso di cancellazione fino a 30 giorni prima dell'arrivo, la caparra verrà restituita al 100%. " +
+    "Per cancellazioni tra 30 e 15 giorni prima dell'arrivo, verrà trattenuto il 50% della caparra. " +
+    "Per cancellazioni a meno di 15 giorni dall'arrivo, l'intera caparra verrà trattenuta.",
+    baseX, currentY, { maxWidth: contentWidth }
+  );
+  
+  currentY += 20;
+  doc.setFont('helvetica', 'bold');
+  doc.text("3. Check-in e Check-out", baseX, currentY);
+  doc.setFont('helvetica', 'normal');
+  currentY += 10;
+  doc.text(
+    "Il check-in è previsto dalle ore 15:00 alle 19:00. Il check-out deve essere effettuato entro le ore 10:00. " +
+    "Orari diversi devono essere concordati in anticipo.",
+    baseX, currentY, { maxWidth: contentWidth }
+  );
+  
+  // Add note about full terms
+  currentY += 20;
   doc.setFont('helvetica', 'italic');
-  const validityNote = "Questo preventivo ha una validità di 7 giorni dalla data di emissione.";
-  doc.text(validityNote, 15, currentY);
+  doc.text(
+    "Questo preventivo è valido per 7 giorni dalla data di emissione. Il regolamento completo della struttura " + 
+    "sarà disponibile all'arrivo o su richiesta.",
+    baseX, currentY, { maxWidth: contentWidth }
+  );
   
   // Reset font
   doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
   
-  return currentY;
+  return currentY + 15;
 };

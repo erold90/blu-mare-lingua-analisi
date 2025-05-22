@@ -12,7 +12,7 @@ interface TotalSectionOptions {
 }
 
 /**
- * Generate the totals section of the quote
+ * Generate the totals section of the quote with an elegant design
  */
 export const generateTotalsSection = (doc: jsPDF, priceCalculation: PriceCalculation, yPos: number): number => {
   // Add section heading with background
@@ -22,51 +22,76 @@ export const generateTotalsSection = (doc: jsPDF, priceCalculation: PriceCalcula
   // Configure formatting for the totals section
   const baseX = 15;
   const pageWidth = doc.internal.pageSize.getWidth();
-  const midPoint = pageWidth / 2;
   
-  // Create a highlight box for the totals area
-  doc.setFillColor(245, 250, 255);
-  doc.setDrawColor(230, 240, 250);
-  doc.roundedRect(baseX - 5, currentY - 5, pageWidth - (baseX * 2) + 10, 90, 3, 3, 'FD');
+  // Create an elegant highlight box for the totals area
+  doc.setFillColor(245, 248, 252);
+  doc.setDrawColor(220, 230, 240);
+  doc.roundedRect(baseX - 5, currentY - 5, pageWidth - (baseX * 2) + 10, 95, 3, 3, 'FD');
   
   // Add subtotal row
-  currentY = addTotalRow(doc, "Totale appartamenti:", `€ ${priceCalculation.basePrice}`, currentY, {
-    valueX: 120
+  currentY = addTotalRow(doc, "Prezzo base:", `€ ${priceCalculation.basePrice}`, currentY, {
+    valueX: 140
   });
   
   // Add extras cost if applicable
   if (priceCalculation.extras > 0) {
     currentY = addTotalRow(doc, "Extra e servizi:", `€ ${priceCalculation.extras}`, currentY, {
-      valueX: 120
+      valueX: 140
     });
   }
   
   // Add cleaning fee if applicable
   if (priceCalculation.cleaningFee > 0) {
     currentY = addTotalRow(doc, "Pulizia finale:", `€ ${priceCalculation.cleaningFee}`, currentY, {
-      valueX: 120
+      valueX: 140
     });
   }
   
   // Add tourist tax if applicable
   if (priceCalculation.touristTax > 0) {
     currentY = addTotalRow(doc, "Tassa di soggiorno:", `€ ${priceCalculation.touristTax}`, currentY, {
-      valueX: 120
+      valueX: 140
     });
   }
   
-  // Add separator line before the total
-  currentY += 5;
-  doc.setDrawColor(190, 200, 220);
+  // Calculate subtotal
+  const subtotal = priceCalculation.basePrice + priceCalculation.extras + 
+                  priceCalculation.cleaningFee + priceCalculation.touristTax;
+                  
+  // Add subtotal with line
+  currentY += 4;
+  doc.setDrawColor(200, 210, 220);
   doc.setLineWidth(0.5);
   doc.line(baseX, currentY, pageWidth - baseX, currentY);
-  currentY += 10;
+  currentY += 8;
   
-  // Add grand total with highlight
+  currentY = addTotalRow(doc, "Subtotale:", `€ ${subtotal}`, currentY, {
+    fontSize: 10,
+    keyStyle: 'bold',
+    valueStyle: 'bold',
+    valueX: 140
+  });
+  
+  // Add discount if applicable
+  if (priceCalculation.discount > 0) {
+    currentY = addTotalRow(doc, "Sconto:", `- € ${priceCalculation.discount}`, currentY, {
+      valueX: 140,
+      valueStyle: 'italic'
+    });
+  }
+  
+  // Add separator line before the final total
+  currentY += 4;
+  doc.setDrawColor(180, 190, 210);
+  doc.setLineWidth(0.7);
+  doc.line(baseX, currentY, pageWidth - baseX, currentY);
+  currentY += 8;
+  
+  // Add final total with highlight
   doc.setFillColor(235, 245, 255);
   doc.roundedRect(baseX - 2, currentY - 5, pageWidth - (baseX * 2) + 4, 25, 2, 2, 'F');
   
-  // Format the total price - Fix: use totalAfterDiscount instead of total
+  // Format the total price
   const formattedTotal = priceCalculation.totalAfterDiscount.toLocaleString('it-IT', {
     style: 'currency',
     currency: 'EUR',
@@ -79,23 +104,20 @@ export const generateTotalsSection = (doc: jsPDF, priceCalculation: PriceCalcula
     fontSize: 12,
     keyStyle: 'bold',
     valueStyle: 'bold',
-    valueX: 120
+    valueX: 140
   });
   
-  // Add a note about reservation
+  // Add details about payments
   currentY += 30;
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'italic');
-  const reservationNote = "Per confermare la prenotazione è richiesto un acconto del 30% del totale.";
-  doc.text(reservationNote, baseX, currentY);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  const depositAmount = Math.round(priceCalculation.totalAfterDiscount * 0.30);
+  doc.text(`Caparra da versare: € ${depositAmount}`, baseX, currentY);
   
-  // Add payment details
   currentY += 8;
-  const paymentNote = "Il saldo dovrà essere versato all'arrivo in contanti o con carta di credito.";
-  doc.text(paymentNote, baseX, currentY);
-  
-  // Reset font
+  const balanceAmount = priceCalculation.totalAfterDiscount - depositAmount;
   doc.setFont('helvetica', 'normal');
+  doc.text(`Saldo all'arrivo: € ${balanceAmount}`, baseX, currentY);
   
   return currentY + 15; // Return next Y position with some padding
 };
@@ -115,7 +137,7 @@ const addTotalRow = (
     fontSize = 10,
     keyStyle = 'normal',
     valueStyle = 'normal',
-    valueX = 120
+    valueX = 140
   } = options;
   
   const baseX = 15;
