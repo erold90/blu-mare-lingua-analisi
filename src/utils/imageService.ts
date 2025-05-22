@@ -212,6 +212,10 @@ class ImageService {
     Promise.all(cachePromises)
       .then(() => console.log("Pulizia cache completata"))
       .catch(error => console.error("Errore nella pulizia cache:", error));
+      
+    // Prova anche a forzare la pulizia via localStorage
+    const cacheKey = 'image-cache-timestamp';
+    localStorage.setItem(cacheKey, now.toString());
   }
 
   // NUOVO: Verifica tutti i percorsi possibili per un'immagine di appartamento
@@ -280,6 +284,7 @@ class ImageService {
       const imagePath = await this.findApartmentImage(apartmentId, i);
       if (imagePath) {
         validImages.push(imagePath);
+        await this.forceReloadImage(imagePath); // Precarica l'immagine
       } else {
         // Se non troviamo 3 immagini consecutive, assumiamo che non ce ne siano altre
         if (i > 3 && 
@@ -293,6 +298,9 @@ class ImageService {
     
     if (validImages.length > 0) {
       console.log(`✅ Trovate ${validImages.length} immagini per appartamento ${apartmentId}`);
+      
+      // Salva i risultati in localStorage per uso futuro
+      this.cacheApartmentImages(apartmentId, validImages);
     } else {
       console.warn(`⚠️ Nessuna immagine trovata per appartamento ${apartmentId}`);
       
@@ -303,6 +311,24 @@ class ImageService {
     }
     
     return validImages;
+  }
+  
+  // NUOVO: Salva i risultati delle immagini nella cache
+  cacheApartmentImages(apartmentId: string, images: string[]): void {
+    try {
+      const storedImagesStr = localStorage.getItem("apartmentImages");
+      const storedImages = storedImagesStr ? JSON.parse(storedImagesStr) : {};
+      
+      storedImages[apartmentId] = images;
+      localStorage.setItem("apartmentImages", JSON.stringify(storedImages));
+      
+      console.log(`Cache aggiornata per ${apartmentId} con ${images.length} immagini`);
+      
+      // Notifica altri componenti del cambiamento
+      window.dispatchEvent(new CustomEvent("apartmentImagesUpdated"));
+    } catch (error) {
+      console.error("Errore nel salvare le immagini in cache:", error);
+    }
   }
 }
 

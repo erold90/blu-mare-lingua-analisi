@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ const ApartmentGallery = ({ images }: { images: string[] }) => {
     <div className="relative w-full h-64 md:h-80 overflow-hidden rounded-md mt-4">
       <div className="absolute inset-0">
         <img 
-          src={images[currentIndex] || "/placeholder.svg"} 
+          src={imageService.getImageUrl(images[currentIndex]) || "/placeholder.svg"} 
           alt={`Immagine ${currentIndex + 1}`} 
           className="w-full h-full object-cover transition-opacity duration-300"
           onError={(e) => {
@@ -148,6 +149,7 @@ const ApartmentModal = ({ apartment }: { apartment: Apartment & { gallery?: stri
 const ApartmentsPage = () => {
   const [apartments, setApartments] = useState<Apartment[]>(defaultApartments);
   const [apartmentImages, setApartmentImages] = useState<{ [key: string]: string[] }>({});
+  const [loading, setLoading] = useState(true);
 
   // Load apartments and their images from localStorage
   useEffect(() => {
@@ -155,36 +157,19 @@ const ApartmentsPage = () => {
     
     const checkApartmentImages = async () => {
       const result: { [key: string]: string[] } = {};
+      setLoading(true);
       
-      // Controlla le immagini per ogni appartamento
+      // Prima pulisci la cache delle immagini
+      imageService.clearImageCache();
+      
+      // Utilizzare il nuovo metodo scanApartmentImages per ogni appartamento
       for (const apt of apartments) {
-        const normalizedId = imageService.normalizeApartmentId(apt.id);
-        const validImages: string[] = [];
+        console.log(`Scansione immagini per appartamento ${apt.id}...`);
+        const images = await imageService.scanApartmentImages(apt.id);
         
-        // Controlla entrambi i formati di percorso
-        for (let i = 1; i <= 16; i++) {
-          const normalizedPath = `/images/apartments/${normalizedId}/image${i}.jpg`;
-          const originalPath = `/images/apartments/${apt.id}/image${i}.jpg`;
-          
-          try {
-            // Controlla prima il percorso normalizzato
-            if (await imageService.checkImageExists(normalizedPath)) {
-              validImages.push(normalizedPath);
-              continue;
-            }
-            
-            // Se non trovata con percorso normalizzato, prova con quello originale
-            if (await imageService.checkImageExists(originalPath)) {
-              validImages.push(originalPath);
-            }
-          } catch (error) {
-            console.error(`Errore nel controllare l'immagine ${i} per ${apt.id}:`, error);
-          }
-        }
-        
-        if (validImages.length > 0) {
-          result[apt.id] = validImages;
-          console.log(`Trovate ${validImages.length} immagini per ${apt.id}:`, validImages);
+        if (images && images.length > 0) {
+          result[apt.id] = images;
+          console.log(`Trovate ${images.length} immagini per ${apt.id}`);
         }
       }
       
@@ -201,6 +186,8 @@ const ApartmentsPage = () => {
         // Notifica altri componenti del cambiamento
         window.dispatchEvent(new CustomEvent("apartmentImagesUpdated"));
       }
+      
+      setLoading(false);
     };
     
     // Carica dati da localStorage
@@ -252,9 +239,19 @@ const ApartmentsPage = () => {
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("apartmentImagesUpdated", handleCustomEvent);
     
+    // Aggiungi handler per la pressione del tasto F5
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "F5" || (e.ctrlKey && e.key === "r")) {
+        checkApartmentImages();
+      }
+    };
+    
+    window.addEventListener("keydown", handleKeyDown);
+    
     return () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("apartmentImagesUpdated", handleCustomEvent);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [apartments]);
   
@@ -304,60 +301,78 @@ const ApartmentsPage = () => {
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-        {apartmentData.map((apartment) => (
-          <Card key={apartment.id} className="overflow-hidden h-full flex flex-col">
-            <div className="aspect-[4/3] relative">
-              <img 
-                src={apartment.images[0]} 
-                alt={apartment.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  console.error(`Failed to load apartment image: ${apartment.images[0]}`);
-                  e.currentTarget.src = "/placeholder.svg";
-                }}
-              />
-            </div>
-            <CardHeader>
-              <CardTitle>{apartment.name}</CardTitle>
-              <CardDescription>Piano {apartment.floor}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow">
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                  <Home className="h-5 w-5 text-primary" />
-                  <span>{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Bed className="h-5 w-5 text-primary" />
-                  <span>{apartment.beds} {apartment.beds === 1 ? 'posto letto' : 'posti letto'}</span>
-                </div>
+      {loading ? (
+        <div className="text-center py-8">
+          <p className="text-lg text-muted-foreground">Caricamento appartamenti in corso...</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          {apartmentData.map((apartment) => (
+            <Card key={apartment.id} className="overflow-hidden h-full flex flex-col">
+              <div className="aspect-[4/3] relative">
+                <img 
+                  src={imageService.getImageUrl(apartment.images[0])} 
+                  alt={apartment.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error(`Failed to load apartment image: ${apartment.images[0]}`);
+                    e.currentTarget.src = "/placeholder.svg";
+                  }}
+                />
               </div>
-              
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                  <Sun className="h-4 w-4 text-primary" />
-                  <span className="text-sm">
-                    {apartment.hasVeranda ? 'Ampia Veranda' : apartment.hasTerrace ? 'Terrazza Vista Mare' : ''}
-                  </span>
+              <CardHeader>
+                <CardTitle>{apartment.name}</CardTitle>
+                <CardDescription>Piano {apartment.floor}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow">
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Home className="h-5 w-5 text-primary" />
+                    <span>{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Bed className="h-5 w-5 text-primary" />
+                    <span>{apartment.beds} {apartment.beds === 1 ? 'posto letto' : 'posti letto'}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <ThermometerSun className="h-4 w-4 text-primary" />
-                  <span className="text-sm">
-                    {apartment.hasAirConditioning ? 'Climatizzatore' : 'Non Climatizzato'}
-                  </span>
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Sun className="h-4 w-4 text-primary" />
+                    <span className="text-sm">
+                      {apartment.hasVeranda ? 'Ampia Veranda' : apartment.hasTerrace ? 'Terrazza Vista Mare' : ''}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ThermometerSun className="h-4 w-4 text-primary" />
+                    <span className="text-sm">
+                      {apartment.hasAirConditioning ? 'Climatizzatore' : 'Non Climatizzato'}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              
-              <p className="text-muted-foreground line-clamp-3">
-                {apartment.description}
-              </p>
-            </CardContent>
-            <CardFooter>
-              <ApartmentModal apartment={apartment} />
-            </CardFooter>
-          </Card>
-        ))}
+                
+                <p className="text-muted-foreground line-clamp-3">
+                  {apartment.description}
+                </p>
+              </CardContent>
+              <CardFooter>
+                <ApartmentModal apartment={apartment} />
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
+      
+      <div className="mt-8 text-center">
+        <Button 
+          variant="outline"
+          onClick={() => {
+            imageService.clearImageCache();
+            window.location.reload();
+          }}
+        >
+          Aggiorna visualizzazione immagini
+        </Button>
       </div>
     </div>
   );
