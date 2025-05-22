@@ -32,11 +32,6 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     // Create message
     let message = `*Richiesta Preventivo* 📝\n\n`;
     
-    // Guest info
-    message += `*Cliente:* ${formValues.name || "Cliente"}\n`;
-    message += `*Email:* ${formValues.email || "Non specificata"}\n`;
-    message += `*Telefono:* ${formValues.phone || "Non specificato"}\n\n`;
-    
     // Stay details
     message += `*Date soggiorno:*\n`;
     message += `Check-in: ${formattedCheckIn}\n`;
@@ -150,14 +145,12 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     
     message += `*Totale finale: ${priceInfo.totalAfterDiscount}€*\n`;
     message += `Caparra (30%): ${priceInfo.deposit}€\n`;
-    message += `Saldo all'arrivo: ${priceInfo.totalAfterDiscount - priceInfo.deposit}€\n\n`;
+    message += `Saldo all'arrivo: ${priceInfo.totalAfterDiscount - priceInfo.deposit}€\n`;
     
     // Additional notes
     if (formValues.notes) {
-      message += `*Note:*\n${formValues.notes}\n\n`;
+      message += `\n*Note:*\n${formValues.notes}\n`;
     }
-    
-    message += `Grazie per la richiesta! Ti contatterò al più presto per confermare la disponibilità.`;
     
     return message;
   } catch (error) {
@@ -165,3 +158,4 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     return null;
   }
 };
+
