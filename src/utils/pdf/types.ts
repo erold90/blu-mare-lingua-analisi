@@ -27,7 +27,7 @@ export interface TableCell {
 }
 
 // Extend the jsPDF interface to include autoTable
-declare global {
+declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => AutoTableResult;
     lastAutoTable?: AutoTableResult;

@@ -1,8 +1,9 @@
 
 import { jsPDF } from "jspdf";
-// Import jspdf config first to ensure the plugin is loaded
-import "../jspdfConfig";
-import "jspdf-autotable"; // This registers autoTable with jsPDF
+// Import the autoTable helper
+import { applyAutoTable } from "../jspdfConfig";
+// Import autotable directly to ensure it's registered
+import "jspdf-autotable";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
 import { Apartment } from "@/data/apartments";
@@ -126,11 +127,8 @@ export const generateCostsTableSection = (
   // Add console.log for debugging
   console.log("Before calling autoTable", typeof (doc as any).autoTable === 'function');
   
-  // Cast doc to any to avoid type errors
-  const docWithAutoTable = doc as any;
-  
-  // Add the cost details table
-  docWithAutoTable.autoTable({
+  // Use our helper function instead of direct call
+  const result = applyAutoTable(doc, {
     startY: currentY,
     head: headers,
     body: tableBody,
@@ -158,7 +156,12 @@ export const generateCostsTableSection = (
     }
   });
   
-  // Get the end position of the table
-  const tableEndY = docWithAutoTable.lastAutoTable.finalY || currentY + 50;
+  console.log("After autoTable call, result:", result);
+  
+  // Get the end position of the table, safely handling if result is undefined
+  const tableEndY = result && typeof result === 'object' && 'finalY' in result 
+    ? result.finalY 
+    : currentY + 50;
+  
   return tableEndY + 10; // Return the next Y position
 };
