@@ -16,7 +16,7 @@ interface SummaryStepProps {
   form: UseFormReturn<FormValues>;
   apartments: Apartment[];
   prevStep: () => void;
-  downloadQuote: (name?: string) => void;
+  downloadQuote: () => void;
   sendWhatsApp: () => void;
 }
 
@@ -57,29 +57,12 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
     localStorage.setItem('currentQuoteLogId', quoteLogId);
   }, [addQuoteLog, formValues]);
   
-  const handleDownloadPdf = () => {
-    // Prima di scaricare, assicuriamoci che i dati di contatto siano presenti
-    if (!formValues.name) {
-      // Se il nome non è presente, mostriamo un form per inserirlo
-      const name = window.prompt("Inserisci il tuo nome per personalizzare il preventivo:", "");
-      if (name) {
-        form.setValue("name", name);
-        downloadQuote(name);
-      } else {
-        downloadQuote();
-      }
-    } else {
-      downloadQuote(formValues.name);
-    }
-  };
-  
   // Render the footer actions separately for the SummaryLayout
   const footerActions = (
     <QuoteActions 
       prevStep={prevStep} 
       downloadQuote={downloadQuote}
       sendWhatsApp={sendWhatsApp}
-      handleDownloadPdf={handleDownloadPdf}
     />
   );
   

@@ -8,10 +8,8 @@ import { createWhatsAppMessage } from "@/utils/quoteCalculator";
 import { useState } from "react";
 
 export function useQuoteActions(form: UseFormReturn<FormValues>) {
-  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
-  
   // Download quote as PDF
-  const downloadQuote = (name?: string) => {
+  const downloadQuote = () => {
     const formValues = form.getValues();
     
     try {
@@ -27,9 +25,9 @@ export function useQuoteActions(form: UseFormReturn<FormValues>) {
       }
       
       // Pass form values and apartments to downloadPDF
-      const filename = downloadPDF(formValues, apartments, name);
+      const filename = downloadPDF(formValues, apartments);
       if (filename) {
-        toast.success(`Preventivo per ${name || "cliente"} scaricato con successo!`);
+        toast.success(`Preventivo scaricato con successo!`);
       }
     } catch (error) {
       console.error("Errore durante la generazione del PDF:", error);
@@ -84,8 +82,6 @@ export function useQuoteActions(form: UseFormReturn<FormValues>) {
     downloadQuote,
     sendWhatsApp,
     onSubmitHandler,
-    handleSubmitWrapper,
-    showConfirmationDialog,
-    setShowConfirmationDialog
+    handleSubmitWrapper
   };
 }

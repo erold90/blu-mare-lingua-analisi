@@ -8,7 +8,6 @@ import DateDurationInfo from "./DateDurationInfo";
 import GuestInfo from "./GuestInfo";
 import PriceSummary from "./PriceSummary";
 import ApartmentList from "./ApartmentList";
-import ContactForm from "./ContactForm";
 import { UseFormReturn } from "react-hook-form";
 
 interface SummaryContentProps {
@@ -74,13 +73,6 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
           </Card>
         </div>
       </div>
-      
-      {/* Form per email e telefono */}
-      <Card>
-        <CardContent className="pt-5 pb-5">
-          <ContactForm formValues={formValues} form={form} />
-        </CardContent>
-      </Card>
     </>
   );
 };

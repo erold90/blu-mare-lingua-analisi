@@ -10,7 +10,6 @@ import SummaryStep from "@/components/quote/summary/SummaryStep";
 import GroupDialog from "@/components/quote/GroupDialog";
 import ApartmentDialog from "@/components/quote/ApartmentDialog";
 import ProgressBar from "@/components/quote/ProgressBar";
-import QuoteConfirmationDialog from "@/components/quote/QuoteConfirmationDialog";
 import { Form } from "@/components/ui/form";
 
 // Utils and Data
@@ -27,8 +26,6 @@ const RequestQuotePage = () => {
     apartmentDialog,
     groupDialog,
     familyGroups,
-    showConfirmationDialog,
-    setShowConfirmationDialog,
     incrementAdults,
     decrementAdults,
     incrementChildren,
@@ -51,18 +48,6 @@ const RequestQuotePage = () => {
   // Adapter function to ensure type compatibility
   const handleFamilyGroupsChange = (groups: FamilyGroup[]) => {
     setFamilyGroups(groups as any);
-  };
-  
-  // Handle PDF download with name
-  const handleDownloadWithName = (name?: string) => {
-    downloadQuote(name);
-    setShowConfirmationDialog(false);
-  };
-  
-  // Handle PDF download without name
-  const handleDownloadWithoutName = () => {
-    downloadQuote();
-    setShowConfirmationDialog(false);
   };
   
   return (
@@ -161,14 +146,6 @@ const RequestQuotePage = () => {
             closeGroupDialog();
             form.setValue("isGroupBooking", false);
           }}
-        />
-        
-        {/* Dialog per la conferma del download del preventivo */}
-        <QuoteConfirmationDialog
-          open={showConfirmationDialog}
-          onOpenChange={setShowConfirmationDialog}
-          onConfirm={handleDownloadWithName}
-          onSkip={handleDownloadWithoutName}
         />
       </div>
     </div>

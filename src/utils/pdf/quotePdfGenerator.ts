@@ -6,7 +6,6 @@ import { PriceCalculation } from "@/utils/price/types";
 import { Apartment } from "@/data/apartments";
 import { addHeader } from "./formatUtils";
 import { generateQuoteHeader } from "./sections/quoteHeaderSection";
-import { generateClientInfoSection } from "./sections/clientInfoSection";
 import { generateStayInfoSection } from "./sections/stayInfoSection";
 import { generateApartmentListSection } from "./sections/apartmentListSection";
 import { generateCostsTableSection } from "./sections/costsTableSection";
@@ -18,8 +17,7 @@ import { generateTermsSection } from "./sections/termsSection";
 export const generateQuotePdf = (
   formData: FormValues, 
   selectedApts: Apartment[], 
-  priceCalculation: PriceCalculation,
-  clientName?: string
+  priceCalculation: PriceCalculation
 ): jsPDF => {
   // Create a new PDF document
   const doc = new jsPDF();
@@ -30,7 +28,6 @@ export const generateQuotePdf = (
   
   // Generate the document sections
   let yPos = generateQuoteHeader(doc);
-  yPos = generateClientInfoSection(doc, clientName, formData, yPos);
   yPos = generateStayInfoSection(doc, formData, priceCalculation, yPos);
   yPos = generateApartmentListSection(doc, selectedApts, yPos);
   yPos = generateCostsTableSection(doc, selectedApts, priceCalculation, formData, yPos);

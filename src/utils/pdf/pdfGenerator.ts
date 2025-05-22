@@ -17,10 +17,9 @@ import { generateQuotePdf } from "./quotePdfGenerator";
  * Main function to create and download the quote PDF
  * @param formData - Form data from the quote form
  * @param apartments - List of all apartments
- * @param clientName - Optional client name
  * @returns Filename of the generated PDF
  */
-export const downloadPDF = (formData: FormValues, apartments: Apartment[], clientName?: string): string => {
+export const downloadPDF = (formData: FormValues, apartments: Apartment[]): string => {
   try {
     // Validate input data
     if (!formData.checkIn || !formData.checkOut) {
@@ -42,7 +41,7 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     
     // Generate the PDF using the minimalist template
     console.time("PDF generation");
-    const doc = generateQuotePdf(formData, selectedApts, priceCalculation, clientName);
+    const doc = generateQuotePdf(formData, selectedApts, priceCalculation);
     
     // Add page numbers if multiple pages
     if (doc.getNumberOfPages() > 1) {
@@ -54,11 +53,8 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[], clien
     console.timeEnd("PDF generation");
     
     // Generate a meaningful filename
-    const safeName = (clientName || formData.name || "Cliente")
-      .replace(/[^a-zA-Z0-9]/g, '_')
-      .substring(0, 30);
     const today = new Date();
-    const fileName = `Preventivo_${safeName}_${format(today, "yyyyMMdd")}.pdf`;
+    const fileName = `Preventivo_Villa_Mareblu_${format(today, "yyyyMMdd")}.pdf`;
     
     // Save the PDF
     doc.save(fileName);

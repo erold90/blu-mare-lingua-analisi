@@ -5,14 +5,13 @@ import { FileText, MessageSquare } from "lucide-react";
 
 interface QuoteActionsProps {
   prevStep: () => void;
-  downloadQuote: (name?: string) => void;
+  downloadQuote: () => void;
   sendWhatsApp: () => void;
-  handleDownloadPdf: () => void;
 }
 
 const QuoteActions: React.FC<QuoteActionsProps> = ({
   prevStep,
-  handleDownloadPdf,
+  downloadQuote,
   sendWhatsApp
 }) => {
   return (
@@ -24,7 +23,7 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
         <Button
           type="button"
           className="w-full md:w-auto"
-          onClick={handleDownloadPdf}
+          onClick={downloadQuote}
           variant="secondary"
         >
           <FileText className="mr-2" />
