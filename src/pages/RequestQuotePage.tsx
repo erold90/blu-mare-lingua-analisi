@@ -51,17 +51,17 @@ const RequestQuotePage = () => {
   };
   
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="container px-4 py-8 md:py-10">
-        <div className="text-center mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">Richiedi un Preventivo</h1>
-          <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+    <div className="bg-gradient-to-b from-white to-secondary/30 min-h-screen">
+      <div className="container px-4 py-12 md:py-16">
+        <div className="text-center mb-10">
+          <h1 className="text-3xl md:text-4xl font-serif font-bold mb-3 text-primary">Richiedi un Preventivo</h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Compila il form per ricevere un preventivo personalizzato per il tuo soggiorno.
           </p>
         </div>
         
-        {/* Progress bar - more compact */}
-        <div className="max-w-3xl mx-auto mb-6">
+        {/* Progress bar */}
+        <div className="max-w-3xl mx-auto mb-8">
           <ProgressBar step={step} totalSteps={totalSteps} />
         </div>
         

@@ -10,12 +10,12 @@ interface ServiceCardProps {
 }
 
 const ServiceCard = ({ icon, title, description }: ServiceCardProps) => (
-  <Card className="shadow-sm">
-    <CardContent className="p-6 text-center">
-      <div className="mx-auto mb-4 p-3 bg-primary/10 rounded-full w-14 h-14 flex items-center justify-center">
+  <Card className="shadow-md border-0 transition-all duration-300 hover:shadow-lg hover:translate-y-[-5px]">
+    <CardContent className="p-8 text-center">
+      <div className="mx-auto mb-5 p-4 bg-primary/10 rounded-full w-16 h-16 flex items-center justify-center">
         {icon}
       </div>
-      <h3 className="text-xl font-medium mb-2">{title}</h3>
+      <h3 className="text-xl font-serif font-medium mb-3 text-primary">{title}</h3>
       <p className="text-muted-foreground">{description}</p>
     </CardContent>
   </Card>
@@ -46,17 +46,22 @@ export const ServicesSection = () => {
   ];
 
   return (
-    <div className="container px-4 py-12">
-      <h2 className="text-2xl md:text-3xl font-semibold text-center mb-8">I Nostri Servizi</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-        {services.map((service, index) => (
-          <ServiceCard 
-            key={index} 
-            icon={service.icon} 
-            title={service.title} 
-            description={service.description} 
-          />
-        ))}
+    <div className="bg-secondary/50 py-16 md:py-24">
+      <div className="container px-4">
+        <h2 className="text-3xl md:text-4xl font-serif font-semibold text-center mb-4 text-primary">I Nostri Servizi</h2>
+        <div className="flex justify-center mb-10">
+          <div className="w-24 h-1 bg-primary/30"></div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+          {services.map((service, index) => (
+            <ServiceCard 
+              key={index} 
+              icon={service.icon} 
+              title={service.title} 
+              description={service.description} 
+            />
+          ))}
+        </div>
       </div>
     </div>
   );

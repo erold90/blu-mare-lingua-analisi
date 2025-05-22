@@ -34,19 +34,19 @@ export function AppSidebar() {
   return (
     <Sidebar variant="floating">
       <SidebarHeader className="border-b">
-        <Link to="/" className={`flex items-center gap-2 px-4 py-2 ${isMobile ? "justify-center" : ""}`} onClick={handleLinkClick}>
-          <span className={`text-xl font-semibold text-black ${isMobile ? "text-center" : ""}`}>Villa MareBlu</span>
+        <Link to="/" className={`flex items-center gap-2 px-4 py-3 ${isMobile ? "justify-center" : ""}`} onClick={handleLinkClick}>
+          <span className={`font-serif text-xl font-semibold text-sidebar-primary ${isMobile ? "text-center" : ""}`}>Villa MareBlu</span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className="font-serif">Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link to="/" onClick={handleLinkClick} className="flex items-center">
-                    <Home className="shrink-0" />
+                    <Home className="shrink-0 text-sidebar-primary" />
                     <span className="ml-2">Home</span>
                   </Link>
                 </SidebarMenuButton>
@@ -54,7 +54,7 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link to="/appartamenti" onClick={handleLinkClick} className="flex items-center">
-                    <Building className="shrink-0" />
+                    <Building className="shrink-0 text-sidebar-primary" />
                     <span className="ml-2">Appartamenti</span>
                   </Link>
                 </SidebarMenuButton>
@@ -62,7 +62,7 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link to="/preventivo" onClick={handleLinkClick} className="flex items-center">
-                    <Calculator className="shrink-0" />
+                    <Calculator className="shrink-0 text-sidebar-primary" />
                     <span className="ml-2">Preventivo</span>
                   </Link>
                 </SidebarMenuButton>
@@ -70,7 +70,7 @@ export function AppSidebar() {
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
                   <Link to="/contatti" onClick={handleLinkClick} className="flex items-center">
-                    <Mail className="shrink-0" />
+                    <Mail className="shrink-0 text-sidebar-primary" />
                     <span className="ml-2">Contatti</span>
                   </Link>
                 </SidebarMenuButton>
@@ -84,7 +84,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link to="/area-riservata" onClick={handleLinkClick} className="flex items-center">
-                <User className="shrink-0" />
+                <User className="shrink-0 text-sidebar-primary" />
                 <span className="ml-2">Area Riservata</span>
               </Link>
             </SidebarMenuButton>
@@ -93,7 +93,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link to="/privacy-policy" onClick={handleLinkClick} className="flex items-center">
-                <Shield className="shrink-0" />
+                <Shield className="shrink-0 text-sidebar-primary" />
                 <span className="ml-2">Privacy Policy</span>
               </Link>
             </SidebarMenuButton>
@@ -101,7 +101,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Link to="/cookie-policy" onClick={handleLinkClick} className="flex items-center">
-                <Cookie className="shrink-0" />
+                <Cookie className="shrink-0 text-sidebar-primary" />
                 <span className="ml-2">Cookie Policy</span>
               </Link>
             </SidebarMenuButton>
