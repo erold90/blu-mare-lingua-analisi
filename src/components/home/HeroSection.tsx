@@ -14,7 +14,6 @@ export const HeroSection = () => {
   const { siteSettings } = useSettings();
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
-  const [imageExists, setImageExists] = useState(false);
   
   // Hero image path - directly from the public folder
   const heroImagePath = '/images/hero/hero.jpg';
@@ -25,12 +24,15 @@ export const HeroSection = () => {
   // Get image position from settings, default to center
   const imagePosition = siteSettings.heroImagePosition || "center";
   
+  // Use State to store the actual image URL with cache busting 
+  const [imageUrl, setImageUrl] = useState("");
+  
   // Check if image exists on component mount
   useEffect(() => {
     const checkHeroImage = async () => {
+      setIsLoading(true);
+      
       try {
-        setIsLoading(true);
-        
         // Debug image loading
         await imageService.debugImage(heroImagePath);
         
@@ -38,17 +40,19 @@ export const HeroSection = () => {
         const exists = await imageService.checkImageExists(heroImagePath);
         console.log(`Hero image exists check: ${exists}`);
         
-        setImageExists(exists);
-        setImageError(!exists);
-        setIsLoading(false);
-        
-        if (!exists) {
+        if (exists) {
+          // Get a URL with cache busting
+          setImageUrl(imageService.getImageUrl(heroImagePath));
+          setImageError(false);
+        } else {
           console.error("Hero image not found at path:", heroImagePath);
-          toast.error("Immagine hero non trovata. Verifica che sia stata caricata correttamente.");
+          toast.error("Immagine hero non trovata. Verifica che sia stata caricata correttamente nella cartella /public/images/hero/");
+          setImageError(true);
         }
       } catch (error) {
         console.error("Error checking hero image:", error);
         setImageError(true);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -63,18 +67,28 @@ export const HeroSection = () => {
           <Skeleton className="absolute inset-0" />
         ) : (
           <>
-            <div 
-              className="absolute inset-0 bg-cover bg-no-repeat transition-transform duration-700 hover:scale-105"
-              style={{
-                backgroundImage: `url('${imageError ? fallbackImage : heroImagePath}')`,
-                backgroundPosition: imagePosition
-              }}
-            />
-            
-            {imageError && (
-              <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-md">
-                Usando immagine di fallback
-              </div>
+            {/* Use an actual image element for better error detection */}
+            {!imageError ? (
+              <div 
+                className="absolute inset-0 bg-cover bg-no-repeat transition-transform duration-700 hover:scale-105"
+                style={{
+                  backgroundImage: `url('${imageUrl}')`,
+                  backgroundPosition: imagePosition
+                }}
+              />
+            ) : (
+              <>
+                <div 
+                  className="absolute inset-0 bg-cover bg-no-repeat transition-transform duration-700 hover:scale-105"
+                  style={{
+                    backgroundImage: `url('${fallbackImage}')`,
+                    backgroundPosition: imagePosition
+                  }}
+                />
+                <div className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-md">
+                  Usando immagine di fallback
+                </div>
+              </>
             )}
           </>
         )}
@@ -93,6 +107,16 @@ export const HeroSection = () => {
           </div>
         </div>
       </div>
+      
+      {/* Add image loading instructions for admins */}
+      {imageError && (
+        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mt-2">
+          <p className="font-bold">Errore di caricamento immagine hero</p>
+          <p>Verificare che l'immagine hero sia stata caricata nella cartella corretta:</p>
+          <pre className="bg-red-100 p-2 mt-2 rounded">/public/images/hero/hero.jpg</pre>
+          <p className="mt-2">Dopo aver caricato l'immagine, aggiornare la pagina.</p>
+        </div>
+      )}
     </div>
   );
 };
