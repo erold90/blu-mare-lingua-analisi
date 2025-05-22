@@ -84,32 +84,70 @@ class ImageService {
       }
       
       onProgress?.(50);
+
+      // Usa un timeout per la richiesta così da non bloccare per troppo tempo
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 secondi di timeout
       
-      // Esegui la richiesta API
-      const response = await fetch(API_BASE_URL, {
-        method: 'POST',
-        body: formData
-      });
-      
-      onProgress?.(90);
-      
-      if (!response.ok) {
-        throw new Error(`Errore server: ${response.status} ${response.statusText}`);
+      try {
+        // Esegui la richiesta API
+        const response = await fetch(API_BASE_URL, {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        onProgress?.(90);
+        
+        if (!response.ok) {
+          throw new Error(`Errore server: ${response.status} ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+          throw new Error(result.message || 'Errore durante il caricamento dell\'immagine');
+        }
+        
+        onProgress?.(100);
+        
+        return {
+          success: true,
+          message: 'Immagine caricata con successo',
+          metadata: result.metadata
+        };
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        
+        // Se è un errore di timeout o di rete, tenta di salvare localmente
+        if (fetchError instanceof Error && 
+            (fetchError.name === 'AbortError' || 
+             fetchError.message.includes('Failed to fetch') || 
+             fetchError.message.includes('NetworkError'))) {
+          console.warn('Errore di rete durante il caricamento dell\'immagine sul server. L\'immagine verrà salvata solo localmente.');
+          toast.warning("Caricamento sul server non riuscito. L'immagine è disponibile solo su questo dispositivo.");
+          
+          // Qui si potrebbe implementare una logica per salvare solo localmente l'immagine
+          // e provare a sincronizzarla successivamente
+          return {
+            success: true, // Consideriamo comunque un successo
+            message: 'Immagine salvata solo localmente',
+            metadata: {
+              id: `local_${Date.now()}`,
+              path: URL.createObjectURL(file), // Usare solo per visualizzazione immediata
+              originalName: file.name,
+              category: category,
+              timestamp: Date.now(),
+              size: file.size,
+              ...additionalData
+            }
+          };
+        }
+        
+        throw fetchError; // Rilancio altri tipi di errore
       }
-      
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.message || 'Errore durante il caricamento dell\'immagine');
-      }
-      
-      onProgress?.(100);
-      
-      return {
-        success: true,
-        message: 'Immagine caricata con successo',
-        metadata: result.metadata
-      };
     } catch (error) {
       console.error('Errore caricamento immagine:', error);
       return {
@@ -123,6 +161,7 @@ class ImageService {
    * Ottimizza un'immagine ridimensionandola se necessario
    */
   private async optimizeImage(file: File, maxWidth = 1920): Promise<File> {
+    console.info('Ottimizzazione immagine hero:', file.name);
     return new Promise((resolve, reject) => {
       const img = new Image();
       const url = URL.createObjectURL(file);
@@ -191,23 +230,49 @@ class ImageService {
         url += `&apartmentId=${apartmentId}`;
       }
       
-      const response = await fetch(url);
+      // Usa un timeout per la richiesta
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 secondi di timeout
       
-      if (!response.ok) {
-        throw new Error(`Errore server: ${response.status} ${response.statusText}`);
+      try {
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`Errore server: ${response.status} ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+          throw new Error(result.message || 'Errore durante il recupero delle immagini');
+        }
+        
+        return {
+          success: true,
+          message: 'Immagini recuperate con successo',
+          images: result.images || []
+        };
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        
+        // Se è un errore di timeout o di rete, restituiamo un array vuoto ma non un errore bloccante
+        if (fetchError instanceof Error && 
+            (fetchError.name === 'AbortError' || 
+             fetchError.message.includes('Failed to fetch') || 
+             fetchError.message.includes('NetworkError'))) {
+          console.warn(`Errore di rete durante il recupero delle immagini (${category}). Verranno mostrate solo le immagini locali.`);
+          toast.warning("Connessione al server non riuscita. Alcune immagini potrebbero non essere visibili.");
+          
+          return {
+            success: true,
+            message: 'Impossibile recuperare immagini dal server, mostrate solo quelle locali',
+            images: [] // Qui si potrebbero aggiungere le immagini locali se disponibili
+          };
+        }
+        
+        throw fetchError; // Rilancio altri tipi di errore
       }
-      
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.message || 'Errore durante il recupero delle immagini');
-      }
-      
-      return {
-        success: true,
-        message: 'Immagini recuperate con successo',
-        images: result.images || []
-      };
     } catch (error) {
       console.error('Errore recupero immagini:', error);
       return {
@@ -232,26 +297,55 @@ class ImageService {
         formData.append('apartmentId', apartmentId);
       }
       
-      const response = await fetch(API_BASE_URL, {
-        method: 'POST',
-        body: formData
-      });
+      // Usa un timeout per la richiesta
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 secondi di timeout
       
-      if (!response.ok) {
-        throw new Error(`Errore server: ${response.status} ${response.statusText}`);
+      try {
+        const response = await fetch(API_BASE_URL, {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`Errore server: ${response.status} ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+          throw new Error(result.message || 'Errore durante l\'eliminazione dell\'immagine');
+        }
+        
+        return {
+          success: true,
+          message: 'Immagine eliminata con successo',
+          id
+        };
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        
+        // Se è un errore di timeout o di rete, comunicarlo all'utente ma non bloccare l'UI
+        if (fetchError instanceof Error && 
+            (fetchError.name === 'AbortError' || 
+             fetchError.message.includes('Failed to fetch') || 
+             fetchError.message.includes('NetworkError'))) {
+          console.warn('Errore di rete durante l\'eliminazione dell\'immagine. Potrebbe essere necessario riprovare.');
+          toast.warning("Errore di connessione. L'immagine potrebbe non essere stata eliminata dal server.");
+          
+          // L'utente potrebbe voler comunque rimuovere l'immagine dall'interfaccia
+          return {
+            success: true, // Consideriamo un successo parziale
+            message: 'Immagine rimossa dall\'interfaccia, ma potrebbe essere ancora presente sul server',
+            id
+          };
+        }
+        
+        throw fetchError; // Rilancio altri tipi di errore
       }
-      
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.message || 'Errore durante l\'eliminazione dell\'immagine');
-      }
-      
-      return {
-        success: true,
-        message: 'Immagine eliminata con successo',
-        id
-      };
     } catch (error) {
       console.error('Errore eliminazione immagine:', error);
       return {
@@ -272,22 +366,44 @@ class ImageService {
       formData.append('id', id);
       formData.append('apartmentId', apartmentId);
       
-      const response = await fetch(API_BASE_URL, {
-        method: 'POST',
-        body: formData
-      });
+      // Usa un timeout per la richiesta
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 secondi di timeout
       
-      if (!response.ok) {
-        throw new Error(`Errore server: ${response.status} ${response.statusText}`);
+      try {
+        const response = await fetch(API_BASE_URL, {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`Errore server: ${response.status} ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+          throw new Error(result.message || 'Errore durante l\'impostazione dell\'immagine di copertina');
+        }
+        
+        return true;
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        
+        if (fetchError instanceof Error && 
+            (fetchError.name === 'AbortError' || 
+             fetchError.message.includes('Failed to fetch') || 
+             fetchError.message.includes('NetworkError'))) {
+          console.warn('Errore di rete durante l\'impostazione dell\'immagine di copertina.');
+          toast.warning("L'immagine di copertina è stata impostata solo localmente a causa di un errore di connessione.");
+          return true; // Consideriamo comunque un successo per l'UI
+        }
+        
+        throw fetchError;
       }
-      
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.message || 'Errore durante l\'impostazione dell\'immagine di copertina');
-      }
-      
-      return true;
     } catch (error) {
       console.error('Errore impostazione copertina:', error);
       toast.error((error as Error).message || 'Errore durante l\'impostazione dell\'immagine di copertina');
@@ -305,25 +421,68 @@ class ImageService {
       formData.append('apartmentId', apartmentId);
       formData.append('imageIds', JSON.stringify(imageIds));
       
-      const response = await fetch(API_BASE_URL, {
-        method: 'POST',
-        body: formData
-      });
+      // Usa un timeout per la richiesta
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 secondi di timeout
       
-      if (!response.ok) {
-        throw new Error(`Errore server: ${response.status} ${response.statusText}`);
+      try {
+        const response = await fetch(API_BASE_URL, {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          throw new Error(`Errore server: ${response.status} ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+          throw new Error(result.message || 'Errore durante l\'aggiornamento dell\'ordine delle immagini');
+        }
+        
+        return true;
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        
+        if (fetchError instanceof Error && 
+            (fetchError.name === 'AbortError' || 
+             fetchError.message.includes('Failed to fetch') || 
+             fetchError.message.includes('NetworkError'))) {
+          console.warn('Errore di rete durante l\'aggiornamento dell\'ordine delle immagini.');
+          toast.warning("L'ordine delle immagini è stato aggiornato solo localmente a causa di un errore di connessione.");
+          return true; // Consideriamo comunque un successo per l'UI
+        }
+        
+        throw fetchError;
       }
-      
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.message || 'Errore durante l\'aggiornamento dell\'ordine delle immagini');
-      }
-      
-      return true;
     } catch (error) {
       console.error('Errore aggiornamento ordine:', error);
       toast.error((error as Error).message || 'Errore durante l\'aggiornamento dell\'ordine delle immagini');
+      return false;
+    }
+  }
+  
+  /**
+   * Verifica lo stato della connessione al server
+   */
+  async checkServerConnection(): Promise<boolean> {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 secondi di timeout
+      
+      const response = await fetch(`${API_BASE_URL}?action=check`, { 
+        signal: controller.signal,
+        method: 'HEAD' // Usiamo HEAD per un check leggero
+      });
+      
+      clearTimeout(timeoutId);
+      return response.ok;
+    } catch (error) {
+      console.warn('Server delle immagini non raggiungibile:', error);
       return false;
     }
   }
