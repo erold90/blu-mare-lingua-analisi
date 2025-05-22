@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { jsPDF } from "jspdf";
@@ -111,26 +110,27 @@ export const createSection = (doc: jsPDF, title: string, y: number) => {
 };
 
 // Create a table row with a key-value pair
-export const createInfoRow = (doc: jsPDF, key: string, value: string, y: number) => {
+export const createInfoRow = (doc: jsPDF, label: string, value: string, yPos: number): number => {
   doc.setFontSize(10);
   
   // Add a subtle table row
   doc.setFillColor(250, 250, 250);
-  doc.rect(10, y, doc.internal.pageSize.getWidth() - 20, 10, 'F');
+  doc.rect(10, yPos, doc.internal.pageSize.getWidth() - 20, 10, 'F');
   
   // Draw separator lines
   doc.setDrawColor(240, 240, 240);
   doc.setLineWidth(0.5);
-  doc.line(10, y + 10, doc.internal.pageSize.getWidth() - 10, y + 10);
+  doc.line(10, yPos + 10, doc.internal.pageSize.getWidth() - 10, yPos + 10);
   
   // Add key in normal font
   doc.setFont('helvetica', 'normal');
-  doc.text(key, 12, y + 7);
+  doc.text(label, 12, yPos + 7);
   
   // Add value in normal font
-  doc.text(value, doc.internal.pageSize.getWidth() / 3, y + 7);
+  doc.text(value, doc.internal.pageSize.getWidth() / 3, yPos + 7);
   
-  return y + 10;
+  // Return the next Y position
+  return yPos + 8;
 };
 
 // Add header background for sections (required by sectionGenerators.ts)

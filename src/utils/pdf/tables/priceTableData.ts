@@ -39,9 +39,9 @@ export const createApartmentRows = (
       }
     ]);
     
-    // Add apartment features
+    // Add apartment features - removed bathrooms property which doesn't exist
     rows.push([
-      `  • ${apt.size} m² • ${apt.beds} posti letto • ${apt.bathrooms} bagni`, 
+      `  • ${apt.size} m² • ${apt.beds} posti letto`, 
       ""
     ]);
     
@@ -64,9 +64,9 @@ export const createApartmentRows = (
         }
       ]);
       
-      // Add apartment features
+      // Add apartment features - removed bathrooms property which doesn't exist
       rows.push([
-        `  • ${apt.size} m² • ${apt.beds} posti letto • ${apt.bathrooms} bagni`, 
+        `  • ${apt.size} m² • ${apt.beds} posti letto`, 
         ""
       ]);
       

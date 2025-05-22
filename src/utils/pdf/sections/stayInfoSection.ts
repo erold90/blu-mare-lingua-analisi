@@ -19,6 +19,10 @@ export const generateStayInfoSection = (doc: jsPDF, formData: FormValues, priceC
   // Add some padding
   currentY += 10;
   
+  // Configure label position
+  const labelX = 25; // X position for labels
+  doc.setFont('helvetica', 'bold');
+  
   // Check if dates are available
   if (formData.checkIn && formData.checkOut) {
     const checkInDate = new Date(formData.checkIn);
@@ -30,8 +34,16 @@ export const generateStayInfoSection = (doc: jsPDF, formData: FormValues, priceC
     const checkOutFormatted = formatItalianDate(checkOutDate);
     
     // Improved layout with clear date information
-    currentY = createInfoRow(doc, "Periodo:", `Dal ${checkInFormatted} al ${checkOutFormatted}`, currentY, 25);
-    currentY = createInfoRow(doc, "Durata:", `${nights} notti`, currentY, 25);
+    doc.text("Periodo:", labelX, currentY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Dal ${checkInFormatted} al ${checkOutFormatted}`, labelX + 60, currentY);
+    currentY += 8;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text("Durata:", labelX, currentY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${nights} notti`, labelX + 60, currentY);
+    currentY += 8;
   }
   
   // Add guest composition with more details
@@ -39,28 +51,51 @@ export const generateStayInfoSection = (doc: jsPDF, formData: FormValues, priceC
   const children = formData.children || 0;
   const totalGuests = adults + children;
   
-  currentY = createInfoRow(doc, "Ospiti:", `${totalGuests} totali (${adults} adulti, ${children} bambini)`, currentY, 25);
+  doc.setFont('helvetica', 'bold');
+  doc.text("Ospiti:", labelX, currentY);
+  doc.setFont('helvetica', 'normal');
+  doc.text(`${totalGuests} totali (${adults} adulti, ${children} bambini)`, labelX + 60, currentY);
+  currentY += 8;
   
   // Add name if available with better formatting
   if (formData.name) {
-    currentY = createInfoRow(doc, "Nome:", formData.name, currentY, 25);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Nome:", labelX, currentY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formData.name, labelX + 60, currentY);
+    currentY += 8;
   }
   
   // Add email if available
   if (formData.email) {
-    currentY = createInfoRow(doc, "Email:", formData.email, currentY, 25);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Email:", labelX, currentY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formData.email, labelX + 60, currentY);
+    currentY += 8;
   }
   
   // Add phone if available
   if (formData.phone) {
-    currentY = createInfoRow(doc, "Telefono:", formData.phone, currentY, 25);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Telefono:", labelX, currentY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formData.phone, labelX + 60, currentY);
+    currentY += 8;
   }
   
   // Add a note about the guest
   if (formData.notes) {
     currentY += 5;
-    currentY = createInfoRow(doc, "Note:", formData.notes, currentY, 25);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Note:", labelX, currentY);
+    doc.setFont('helvetica', 'normal');
+    doc.text(formData.notes, labelX + 60, currentY);
+    currentY += 8;
   }
+  
+  // Reset font
+  doc.setFont('helvetica', 'normal');
   
   return currentY + 10; // Return next Y position with padding
 };

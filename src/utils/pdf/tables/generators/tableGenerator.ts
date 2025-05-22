@@ -3,17 +3,13 @@ import { applyAutoTable } from "../../jspdfConfig";
 import { TableCell } from "../../types";
 
 /**
- * Generate a table with the provided headers and data using jspdf-autotable
- * @param doc - PDF document
- * @param headers - Table headers
- * @param tableBody - Table data
- * @param startY - Starting Y position for the table
- * @returns The Y position after the table
+ * Generate a table using direct jsPDF methods
+ * Compatible with both string arrays and TableCell objects
  */
 export const generateTable = (
-  doc: jsPDF,
-  headers: string[][],
-  tableBody: (string | TableCell)[][],
+  doc: jsPDF, 
+  headers: (string | TableCell)[][], 
+  body: (string | TableCell)[][], 
   startY: number
 ): number => {
   try {
@@ -25,7 +21,7 @@ export const generateTable = (
       const result = (doc as any).autoTable({
         startY,
         head: headers,
-        body: tableBody,
+        body: body,
         theme: 'plain',
         styles: {
           fontSize: 10,
@@ -60,7 +56,7 @@ export const generateTable = (
     const result = applyAutoTable(doc, {
       startY,
       head: headers,
-      body: tableBody,
+      body: body,
       theme: 'plain',
       styles: {
         fontSize: 10,
@@ -92,10 +88,10 @@ export const generateTable = (
       return result.finalY;
     }
     
-    return startY + tableBody.length * 10 + 10; // Fallback position
+    return startY + (body.length * 10); // Fallback position
   } catch (error) {
     console.error("Error generating table:", error);
     // Return a default position in case of error
-    return startY + tableBody.length * 10 + 10;
+    return startY + (body.length * 10);
   }
 };
