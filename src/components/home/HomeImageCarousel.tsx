@@ -32,7 +32,12 @@ export const HomeImageCarousel = () => {
     };
   }, [api]);
 
-  const hasImages = siteSettings.homeImages && siteSettings.homeImages.length > 0;
+  // Verifica se ci sono immagini valide
+  const validImages = siteSettings.homeImages?.filter(img => img && img !== '') || [];
+  const hasImages = validImages.length > 0;
+  
+  // Quando non ci sono immagini valide, mostriamo un placeholder
+  const placeholderImage = "/placeholder.svg";
   
   return (
     <div className="relative w-full py-10">
@@ -44,13 +49,17 @@ export const HomeImageCarousel = () => {
       >
         <CarouselContent>
           {hasImages ? (
-            siteSettings.homeImages.map((image, index) => (
+            validImages.map((image, index) => (
               <CarouselItem key={index}>
                 <div className="aspect-video overflow-hidden rounded-lg">
                   <img 
                     src={image} 
                     alt={`Villa MareBlu immagine ${index + 1}`} 
                     className="w-full h-full object-cover transition-all duration-300 hover:scale-105"
+                    onError={(e) => {
+                      console.error(`Failed to load image: ${image}`);
+                      (e.target as HTMLImageElement).src = placeholderImage;
+                    }}
                   />
                 </div>
               </CarouselItem>
@@ -68,9 +77,9 @@ export const HomeImageCarousel = () => {
       </Carousel>
       
       {/* Slide indicators */}
-      {hasImages && siteSettings.homeImages.length > 1 && (
+      {hasImages && validImages.length > 1 && (
         <div className="flex justify-center gap-1 mt-4">
-          {siteSettings.homeImages.map((_, index) => (
+          {validImages.map((_, index) => (
             <button
               key={index}
               className={`w-2 h-2 rounded-full transition-all ${

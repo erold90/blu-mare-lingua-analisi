@@ -17,6 +17,19 @@ export const HomeImagesSection = () => {
   
   // Assicurati che homeImages esista
   const homeImages = siteSettings.homeImages || [];
+  
+  // Funzione per caricare l'immagine dal suo percorso
+  const getImageFromStorage = (imagePath: string): string => {
+    if (!imagePath) return '/placeholder.svg';
+    
+    if (imagePath.startsWith('/images/')) {
+      // Recupera l'immagine dallo storage
+      const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+      return imageStorage[imagePath] || imagePath;
+    }
+    
+    return imagePath;
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -78,6 +91,11 @@ export const HomeImagesSection = () => {
     toast.success(`Immagine spostata ${direction === 'up' ? 'su' : 'giù'}`);
   };
 
+  const handlePreviewClick = (imagePath: string) => {
+    const imageUrl = getImageFromStorage(imagePath);
+    setPreviewImage(imageUrl);
+  };
+
   const ImagePreviewContent = () => (
     <div className="p-4">
       {previewImage ? (
@@ -128,12 +146,16 @@ export const HomeImagesSection = () => {
                 >
                   <div 
                     className="w-24 h-16 bg-muted rounded-sm overflow-hidden cursor-pointer"
-                    onClick={() => setPreviewImage(imagePath)}
+                    onClick={() => handlePreviewClick(imagePath)}
                   >
                     <img 
-                      src={imagePath} 
+                      src={getImageFromStorage(imagePath)} 
                       alt={`Immagine ${index + 1}`} 
-                      className="w-full h-full object-cover" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error(`Failed to load image: ${imagePath}`);
+                        (e.target as HTMLImageElement).src = "/placeholder.svg";
+                      }}
                     />
                   </div>
                   <div className="flex-grow">

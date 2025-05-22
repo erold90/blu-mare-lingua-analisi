@@ -16,6 +16,21 @@ export const HeroImageSection = () => {
     setImagePreviewPosition(siteSettings.heroImagePosition || "center");
   }, [siteSettings.heroImagePosition]);
 
+  // Funzione per caricare l'immagine dal suo percorso
+  const getImageFromStorage = (imagePath: string): string => {
+    if (!imagePath) return '/placeholder.svg';
+    
+    if (imagePath.startsWith('/images/')) {
+      // Recupera l'immagine dallo storage
+      const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+      return imageStorage[imagePath] || imagePath;
+    }
+    
+    return imagePath;
+  };
+  
+  const currentHeroImage = siteSettings.heroImage ? getImageFromStorage(siteSettings.heroImage) : '/placeholder.svg';
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     
@@ -60,9 +75,9 @@ export const HeroImageSection = () => {
       <CardContent>
         <div className="grid grid-cols-1 gap-6">
           <div>
-            {isValidImage(siteSettings.heroImage) ? (
+            {isValidImage(currentHeroImage) ? (
               <ImagePositioner
-                imageUrl={siteSettings.heroImage}
+                imageUrl={currentHeroImage}
                 currentPosition={imagePreviewPosition}
                 onPositionChange={handlePositionChange}
               />

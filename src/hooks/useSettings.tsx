@@ -35,7 +35,7 @@ interface SettingsContextType {
 const defaultSiteSettings: SiteSettings = {
   heroImage: "/placeholder.svg",
   heroImagePosition: "center",
-  homeImages: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
+  homeImages: [],
   blockedDates: [],
   blockedDateRanges: [],
   siteName: "Villa MareBlu",
@@ -50,6 +50,24 @@ const defaultAdminSettings: AdminSettings = {
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+
+// Helper to convert blob URL to base64
+const blobToBase64 = async (blobUrl: string): Promise<string> => {
+  try {
+    const response = await fetch(blobUrl);
+    const blob = await response.blob();
+    
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error("Error converting blob to base64:", error);
+    return "";
+  }
+}
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(() => {
@@ -77,7 +95,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
     return defaultAdminSettings;
   });
-  
+
   // Function to generate a unique filename
   const generateUniqueFilename = (file: File, category: string): string => {
     const timestamp = new Date().getTime();
@@ -93,20 +111,18 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Create a unique filename
     const filename = generateUniqueFilename(file, storageCategory);
     
-    // In a real app with direct file system access, we would save the file to the filesystem
-    // However, in a browser environment we can't directly write to the file system
-    // This would typically be handled by a server-side upload endpoint
-    // For this simulation, we'll still use object URLs but with a different path convention
-    
     // Create a blob URL for the file
     const objectURL = URL.createObjectURL(file);
+    
+    // Convert blob URL to base64 to store in localStorage
+    const base64Data = await blobToBase64(objectURL);
     
     // Save the filepath in a format that represents our intention
     const imagePath = `/images/${storageCategory}/${filename}`;
     
-    // Store the mapping between the path and the objectURL (simulating our file system)
+    // Store the mapping between the path and the base64 data in localStorage
     const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
-    imageStorage[imagePath] = objectURL;
+    imageStorage[imagePath] = base64Data;
     localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
     
     return imagePath;
@@ -118,15 +134,108 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     
     const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
     
-    // If we have a blob URL stored for this path, revoke it
-    if (imageStorage[imagePath] && imageStorage[imagePath].startsWith('blob:')) {
-      URL.revokeObjectURL(imageStorage[imagePath]);
-    }
-    
     // Remove from our storage mapping
     delete imageStorage[imagePath];
     localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
   };
+  
+  // On first load, process any blob URLs in the settings and convert them to base64 if needed
+  useEffect(() => {
+    const processImages = async () => {
+      let updated = false;
+      const newSettings = { ...siteSettings };
+      
+      // Process hero image
+      if (newSettings.heroImage && newSettings.heroImage.startsWith('blob:')) {
+        try {
+          const base64Data = await blobToBase64(newSettings.heroImage);
+          const storageKey = `/images/hero/hero_${Date.now()}.jpg`;
+          
+          const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+          imageStorage[storageKey] = base64Data;
+          localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
+          
+          newSettings.heroImage = storageKey;
+          updated = true;
+        } catch (error) {
+          console.error("Failed to convert hero image:", error);
+          newSettings.heroImage = "/placeholder.svg";
+        }
+      }
+      
+      // Process home images
+      if (newSettings.homeImages && newSettings.homeImages.length > 0) {
+        const newHomeImages = [...newSettings.homeImages];
+        let homeImagesUpdated = false;
+        
+        for (let i = 0; i < newHomeImages.length; i++) {
+          if (newHomeImages[i] && newHomeImages[i].startsWith('blob:')) {
+            try {
+              const base64Data = await blobToBase64(newHomeImages[i]);
+              const storageKey = `/images/home/home_${Date.now()}_${i}.jpg`;
+              
+              const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+              imageStorage[storageKey] = base64Data;
+              localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
+              
+              newHomeImages[i] = storageKey;
+              homeImagesUpdated = true;
+            } catch (error) {
+              console.error(`Failed to convert home image at index ${i}:`, error);
+              newHomeImages[i] = "";
+            }
+          }
+        }
+        
+        if (homeImagesUpdated) {
+          newSettings.homeImages = newHomeImages.filter(img => img && img !== '');
+          updated = true;
+        }
+      }
+      
+      // Process social image
+      if (newSettings.socialImage && newSettings.socialImage.startsWith('blob:')) {
+        try {
+          const base64Data = await blobToBase64(newSettings.socialImage);
+          const storageKey = `/images/social/social_${Date.now()}.jpg`;
+          
+          const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+          imageStorage[storageKey] = base64Data;
+          localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
+          
+          newSettings.socialImage = storageKey;
+          updated = true;
+        } catch (error) {
+          console.error("Failed to convert social image:", error);
+          newSettings.socialImage = "/placeholder.svg";
+        }
+      }
+      
+      // Process favicon
+      if (newSettings.favicon && newSettings.favicon.startsWith('blob:')) {
+        try {
+          const base64Data = await blobToBase64(newSettings.favicon);
+          const storageKey = `/images/favicon/favicon_${Date.now()}.png`;
+          
+          const imageStorage = JSON.parse(localStorage.getItem('imageStorage') || '{}');
+          imageStorage[storageKey] = base64Data;
+          localStorage.setItem('imageStorage', JSON.stringify(imageStorage));
+          
+          newSettings.favicon = storageKey;
+          updated = true;
+        } catch (error) {
+          console.error("Failed to convert favicon:", error);
+          newSettings.favicon = "/favicon.ico";
+        }
+      }
+      
+      if (updated) {
+        setSiteSettings(newSettings);
+      }
+    };
+    
+    processImages();
+  }, []);
   
   // Save settings to localStorage whenever they change
   useEffect(() => {
