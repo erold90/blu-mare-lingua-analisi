@@ -1,12 +1,15 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 export interface SiteSettings {
   heroImage: string;
-  heroImagePosition: string; // Added to store image position
-  homeImages: string[]; // Array per le immagini della home page
-  blockedDates: string[]; // ISO date strings
-  blockedDateRanges: { start: string; end: string }[]; // ISO date strings
+  heroImagePosition: string;
+  homeImages: string[];
+  blockedDates: string[];
+  blockedDateRanges: { start: string; end: string }[];
+  siteName: string;
+  siteDescription: string;
+  socialImage: string;
+  favicon: string;
 }
 
 export interface AdminSettings {
@@ -28,10 +31,14 @@ interface SettingsContextType {
 
 const defaultSiteSettings: SiteSettings = {
   heroImage: "/placeholder.svg",
-  heroImagePosition: "center", // Default position is center
-  homeImages: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"], // Default placeholder images
+  heroImagePosition: "center",
+  homeImages: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
   blockedDates: [],
-  blockedDateRanges: []
+  blockedDateRanges: [],
+  siteName: "Villa MareBlu",
+  siteDescription: "Villa MareBlu - Appartamenti vacanze sul mare",
+  socialImage: "/placeholder.svg",
+  favicon: "/favicon.ico"
 };
 
 const defaultAdminSettings: AdminSettings = {
@@ -77,6 +84,56 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     localStorage.setItem("adminSettings", JSON.stringify(adminSettings));
   }, [adminSettings]);
+  
+  // Make sure the document title and metadata are updated when settings change
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      // Update document title
+      document.title = siteSettings.siteName;
+      
+      // Update meta tags
+      const metaTags = {
+        'description': siteSettings.siteDescription,
+        'og:title': siteSettings.siteName,
+        'og:description': siteSettings.siteDescription,
+        'twitter:title': siteSettings.siteName,
+        'twitter:description': siteSettings.siteDescription,
+      };
+      
+      Object.entries(metaTags).forEach(([name, content]) => {
+        const selector = name.startsWith('og:') 
+          ? `meta[property="${name}"]` 
+          : `meta[name="${name}"]`;
+          
+        const element = document.querySelector(selector);
+        if (element) {
+          element.setAttribute('content', content);
+        }
+      });
+      
+      // Update social image if not placeholder
+      if (siteSettings.socialImage && !siteSettings.socialImage.includes('placeholder')) {
+        const ogImage = document.querySelector('meta[property="og:image"]');
+        const twitterImage = document.querySelector('meta[name="twitter:image"]');
+        
+        if (ogImage) ogImage.setAttribute('content', siteSettings.socialImage);
+        if (twitterImage) twitterImage.setAttribute('content', siteSettings.socialImage);
+      }
+      
+      // Update favicon if changed
+      if (siteSettings.favicon && siteSettings.favicon !== '/favicon.ico') {
+        const faviconLink = document.querySelector('link[rel="icon"]');
+        if (faviconLink) {
+          faviconLink.setAttribute('href', siteSettings.favicon);
+        } else {
+          const newLink = document.createElement('link');
+          newLink.rel = 'icon';
+          newLink.href = siteSettings.favicon;
+          document.head.appendChild(newLink);
+        }
+      }
+    }
+  }, [siteSettings.siteName, siteSettings.siteDescription, siteSettings.socialImage, siteSettings.favicon]);
   
   const updateSiteSettings = (settings: Partial<SiteSettings>) => {
     setSiteSettings(prev => {
