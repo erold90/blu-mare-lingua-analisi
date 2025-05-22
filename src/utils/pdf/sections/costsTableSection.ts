@@ -1,9 +1,9 @@
-
 import { jsPDF } from "jspdf";
-// Import the autoTable helper
+// Import both the helper function and jspdf-autotable directly
 import { applyAutoTable } from "../jspdfConfig";
-// Import autotable directly to ensure it's registered
+// Direct import to ensure the plugin is registered
 import "jspdf-autotable";
+
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
 import { Apartment } from "@/data/apartments";
@@ -26,6 +26,9 @@ export const generateCostsTableSection = (
   formData: FormValues,
   yPos: number
 ): number => {
+  // Ensure jspdf-autotable is available
+  console.log("Checking autoTable availability:", typeof (doc as any).autoTable === 'function');
+  
   let currentY = yPos + 5;
   currentY = createSection(doc, "DETTAGLIO COSTI", currentY);
   
@@ -124,44 +127,87 @@ export const generateCostsTableSection = (
     styles: { textColor: [0, 128, 0], halign: 'right' }
   }]);
   
-  // Add console.log for debugging
-  console.log("Before calling autoTable", typeof (doc as any).autoTable === 'function');
+  // Debug before calling autoTable
+  console.log("Before calling autoTable, function type:", typeof (doc as any).autoTable);
   
-  // Use our helper function instead of direct call
-  const result = applyAutoTable(doc, {
-    startY: currentY,
-    head: headers,
-    body: tableBody,
-    theme: 'plain',
-    styles: {
-      fontSize: 10,
-      lineWidth: 0.1,
-    },
-    columnStyles: {
-      0: { cellWidth: 'auto' },
-      1: { cellWidth: 50, halign: 'right' },
-    },
-    headStyles: {
-      fillColor: [240, 240, 240],
-      textColor: [0, 0, 0],
-      fontStyle: 'bold',
-    },
-    margin: { left: 10, right: 10 },
-    didDrawCell: (data) => {
-      // Add alternating row colors
-      if (data.section === 'body' && data.row.index % 2 === 1) {
-        doc.setFillColor(248, 248, 248);
-        doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+  let tableEndY = currentY + 50; // Default fallback position
+  
+  try {
+    // Use our helper function instead of direct call
+    const result = applyAutoTable(doc, {
+      startY: currentY,
+      head: headers,
+      body: tableBody,
+      theme: 'plain',
+      styles: {
+        fontSize: 10,
+        lineWidth: 0.1,
+      },
+      columnStyles: {
+        0: { cellWidth: 'auto' },
+        1: { cellWidth: 50, halign: 'right' },
+      },
+      headStyles: {
+        fillColor: [240, 240, 240],
+        textColor: [0, 0, 0],
+        fontStyle: 'bold',
+      },
+      margin: { left: 10, right: 10 },
+      didDrawCell: (data) => {
+        // Add alternating row colors
+        if (data.section === 'body' && data.row.index % 2 === 1) {
+          doc.setFillColor(248, 248, 248);
+          doc.rect(data.cell.x, data.cell.y, data.cell.width, data.cell.height, 'F');
+        }
       }
+    });
+    
+    console.log("autoTable result:", result);
+    
+    // Get the end position of the table from the result
+    if (result && typeof result === 'object' && 'finalY' in result) {
+      tableEndY = result.finalY;
     }
-  });
-  
-  console.log("After autoTable call, result:", result);
-  
-  // Get the end position of the table, safely handling if result is undefined
-  const tableEndY = result && typeof result === 'object' && 'finalY' in result 
-    ? result.finalY 
-    : currentY + 50;
+  } catch (error) {
+    console.error("Error generating table:", error);
+    
+    // Fallback to manual table generation
+    console.log("Falling back to manual table generation");
+    
+    const startX = 10;
+    let currentTableY = currentY;
+    
+    // Draw header row
+    doc.setFillColor(240, 240, 240);
+    doc.rect(startX, currentTableY, 190, 10, 'F');
+    doc.setTextColor(0, 0, 0);
+    doc.setFont(undefined, 'bold');
+    doc.text("Descrizione", startX + 5, currentTableY + 7);
+    doc.text("Importo", startX + 145, currentTableY + 7);
+    
+    currentTableY += 10;
+    
+    // Draw data rows
+    doc.setFont(undefined, 'normal');
+    tableBody.forEach((row, index) => {
+      // Set alternating row background
+      if (index % 2 === 1) {
+        doc.setFillColor(248, 248, 248);
+        doc.rect(startX, currentTableY, 190, 10, 'F');
+      }
+      
+      // Draw text
+      const label = Array.isArray(row[0]) ? row[0].content : row[0];
+      const value = Array.isArray(row[1]) ? row[1].content : row[1];
+      
+      doc.text(label.toString(), startX + 5, currentTableY + 7);
+      doc.text(value.toString(), startX + 145, currentTableY + 7);
+      
+      currentTableY += 10;
+    });
+    
+    tableEndY = currentTableY;
+  }
   
   return tableEndY + 10; // Return the next Y position
 };

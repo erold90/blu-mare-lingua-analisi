@@ -27,6 +27,7 @@ export interface TableCell {
 }
 
 // Extend the jsPDF interface to include autoTable
+// This should help with TypeScript but doesn't affect runtime behavior
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: any) => AutoTableResult;

@@ -1,8 +1,10 @@
 
-import { jsPDF } from "jspdf";
-// Import jspdf config first to ensure the plugin is loaded
+// Import first to ensure the plugin is loaded and registered
+import "jspdf-autotable";
+// Then import our config
 import "./jspdfConfig";
-import "jspdf-autotable"; // Make sure this import is always before any use of autoTable
+
+import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
@@ -14,6 +16,7 @@ import {
   addBasicFooter
 } from "./formatUtils";
 import { generateQuotePdf } from "./quotePdfGenerator";
+import { verifyAutoTable } from "./jspdfConfig";
 
 /**
  * Main function to create and download the quote PDF
@@ -23,6 +26,12 @@ import { generateQuotePdf } from "./quotePdfGenerator";
  */
 export const downloadPDF = (formData: FormValues, apartments: Apartment[]): string => {
   try {
+    console.log("Starting PDF generation");
+    
+    // Quick test - verify autoTable availability
+    const testDoc = new jsPDF();
+    console.log("autoTable available:", verifyAutoTable(testDoc));
+    
     // Validate input data
     if (!formData.checkIn || !formData.checkOut) {
       throw new Error("Date di arrivo/partenza non specificate");
@@ -68,3 +77,6 @@ export const downloadPDF = (formData: FormValues, apartments: Apartment[]): stri
     throw error;
   }
 };
+
+// Re-export for backward compatibility
+export { downloadPDF as default };

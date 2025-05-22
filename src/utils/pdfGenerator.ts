@@ -1,6 +1,6 @@
 
-// Import jspdf config first to ensure the plugin is loaded
-import "./pdf/jspdfConfig";
+// Import first to ensure the plugin is loaded
+import "jspdf-autotable";
 
 // Re-export the main PDF generator functions from the refactored modules
 import { downloadPDF } from "./pdf/pdfGenerator";
