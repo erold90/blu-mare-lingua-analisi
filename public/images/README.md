@@ -21,30 +21,23 @@ public/
           └── [image1.jpg, ...]     # Images used for social media
 ```
 
-## Image Guidelines
+## IMPORTANT: Image File Placement
 
 1. **Hero Image**:
-   - File should be named `hero.jpg`
+   - The file MUST be named exactly `hero.jpg`
+   - It MUST be placed directly in the `/public/images/hero/` directory
+   - The full path should be `/public/images/hero/hero.jpg`
    - Recommended resolution: 1920x1080px
-   - File format: JPG
-   - Path: `/images/hero/hero.jpg`
 
-2. **Gallery Images**:
-   - Name format: Any descriptive name (e.g., `beach.jpg`, `pool.jpg`)
-   - Recommended resolution: 1200x800px
-   - File formats: JPG, PNG
-   - Path: `/images/gallery/[filename]`
+2. **Image Refresh**:
+   - After uploading new images, you may need to refresh the browser
+   - If the image still doesn't appear, try clearing your browser cache
 
-3. **Apartment Images**:
-   - Create a folder with the apartment ID (e.g., `apartment1`)
-   - Images should follow naming pattern: `image1.jpg`, `image2.jpg`, etc.
-   - The first image (`image1.jpg`) will be used as cover image
-   - Recommended resolution: 1200x800px
-   - File formats: JPG, PNG
-   - Path: `/images/apartments/[apartmentId]/[filename]`
+## Troubleshooting
 
-4. **Social Media Images**:
-   - Name format: Any descriptive name (e.g., `facebook.jpg`, `instagram.jpg`)
-   - Recommended resolution: 1200x630px
-   - File formats: JPG, PNG
-   - Path: `/images/social/[filename]`
+If images don't appear after uploading:
+1. Verify the image is in the correct location with the exact name required
+2. Confirm the image format is JPG (for hero image)
+3. Check browser console for any error messages
+4. Try clearing your browser cache and reloading
+```

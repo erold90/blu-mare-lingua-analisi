@@ -5,12 +5,14 @@ import { ImagePositioner } from "./ImagePositioner";
 import { useSettings } from "@/hooks/useSettings";
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, AlertCircle } from "lucide-react";
+import { imageService } from "@/utils/imageService";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const HeroImageSection = () => {
   const { siteSettings, updateSiteSettings } = useSettings();
   const [imagePreviewPosition, setImagePreviewPosition] = useState(siteSettings.heroImagePosition || "center");
-  const [imageExists, setImageExists] = useState(true);
+  const [imageExists, setImageExists] = useState(false);
   const [isCheckingImage, setIsCheckingImage] = useState(true);
   
   useEffect(() => {
@@ -25,11 +27,13 @@ export const HeroImageSection = () => {
     const checkImage = async () => {
       setIsCheckingImage(true);
       try {
-        const response = await fetch(heroImagePath, { 
-          method: 'HEAD',
-          cache: 'no-cache' // Prevent caching so we always get the latest status
-        });
-        setImageExists(response.ok);
+        // Debug image
+        await imageService.debugImage(heroImagePath);
+        
+        // Check if exists
+        const exists = await imageService.checkImageExists(heroImagePath);
+        console.log(`Admin panel - hero image exists check: ${exists}`);
+        setImageExists(exists);
       } catch (error) {
         setImageExists(false);
         console.error("Error checking hero image:", error);
@@ -61,7 +65,7 @@ export const HeroImageSection = () => {
           ) : imageExists ? (
             <div>
               <ImagePositioner
-                imageUrl={heroImagePath}
+                imageUrl={`${heroImagePath}?t=${Date.now()}`}
                 currentPosition={imagePreviewPosition}
                 onPositionChange={handlePositionChange}
               />
@@ -70,12 +74,27 @@ export const HeroImageSection = () => {
               </p>
             </div>
           ) : (
-            <div className="text-center p-6 border rounded-md">
-              <ImageIcon className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-              <p className="font-medium mb-2">Immagine hero non trovata</p>
-              <p className="text-muted-foreground">
-                Caricare manualmente un file chiamato "hero.jpg" nella cartella /public/images/hero/
-              </p>
+            <div className="space-y-4">
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Immagine hero non trovata nella posizione corretta.
+                </AlertDescription>
+              </Alert>
+              
+              <div className="text-center p-6 border rounded-md">
+                <ImageIcon className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                <p className="font-medium mb-2">Immagine hero non trovata</p>
+                <div className="text-muted-foreground text-sm space-y-2">
+                  <p className="font-semibold">Istruzioni:</p>
+                  <ol className="list-decimal list-inside text-left">
+                    <li>Caricare manualmente un file chiamato <code className="bg-gray-100 px-1 py-0.5 rounded">hero.jpg</code></li>
+                    <li>Posizionarlo nella cartella <code className="bg-gray-100 px-1 py-0.5 rounded">/public/images/hero/</code></li>
+                    <li>Assicurarsi che l'immagine sia in formato JPG</li>
+                    <li>Aggiornare la pagina dopo il caricamento</li>
+                  </ol>
+                </div>
+              </div>
             </div>
           )}
         </div>
