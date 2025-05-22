@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Apartment } from "@/data/apartments";
 import { Bed, BedDouble, MapPin, Sun, ThermometerSun, ArrowLeft, ArrowRight } from "lucide-react";
+import { imageService } from "@/utils/imageService";
 
 interface ApartmentDialogProps {
   apartmentId: string | null;
@@ -39,13 +40,46 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
           const aptImages = allApartmentImages[apartment.id] || [];
           
           if (aptImages.length > 0) {
+            console.log(`Immagini per appartamento ${apartment.id} dal localStorage:`, aptImages);
             setGalleryImages(aptImages);
             return;
           }
         }
         
-        // Fallback to apartment's default image
-        setGalleryImages(apartment.images);
+        // Se non abbiamo trovato immagini nel localStorage, prova a verificare se ci sono immagini
+        // nella cartella pubblica
+        const checkForPublicImages = async () => {
+          console.log(`Cercando immagini pubbliche per ${apartment.id}...`);
+          const potentialImagePaths = Array.from({ length: 5 }, (_, i) => 
+            `/images/apartments/${apartment.id}/image${i+1}.jpg`
+          );
+          
+          const validImages: string[] = [];
+          
+          for (const path of potentialImagePaths) {
+            try {
+              const exists = await imageService.checkImageExists(path);
+              if (exists) {
+                validImages.push(path);
+                console.log(`Trovata immagine pubblica: ${path}`);
+              }
+            } catch (error) {
+              console.error(`Errore nel controllare l'immagine ${path}:`, error);
+            }
+          }
+          
+          if (validImages.length > 0) {
+            console.log(`Trovate ${validImages.length} immagini pubbliche per ${apartment.id}`);
+            setGalleryImages(validImages);
+            return;
+          }
+          
+          // Fallback to apartment's default image
+          console.log(`Nessuna immagine trovata, uso immagini di default per ${apartment.id}`, apartment.images);
+          setGalleryImages(apartment.images);
+        };
+        
+        checkForPublicImages();
       } catch (error) {
         console.error("Error loading apartment images:", error);
         setGalleryImages(apartment.images);
@@ -72,6 +106,12 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
     return null;
   }
 
+  // Determina l'URL dell'immagine corrente, aggiungendo un timestamp per evitare problemi di cache
+  const currentImage = galleryImages[currentImageIndex] || apartment.images[0];
+  const imageUrl = currentImage.startsWith('/images/apartments/')
+    ? imageService.getImageUrl(currentImage)
+    : currentImage;
+
   return (
     <Dialog open={!!apartmentId} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
@@ -85,9 +125,13 @@ const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
         <div className="space-y-4">
           <div className="aspect-video bg-muted rounded-md overflow-hidden relative">
             <img 
-              src={galleryImages[currentImageIndex] || apartment.images[0]} 
+              src={imageUrl} 
               alt={apartment.name} 
               className="w-full h-full object-cover"
+              onError={(e) => {
+                console.error(`Errore nel caricare l'immagine ${currentImage}`);
+                e.currentTarget.src = "/placeholder.svg";
+              }}
             />
             
             {galleryImages.length > 1 && (

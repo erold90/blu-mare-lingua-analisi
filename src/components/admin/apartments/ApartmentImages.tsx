@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { imageService } from "@/utils/imageService";
 
 interface ApartmentImagesProps {
   apartmentId: string;
@@ -29,7 +30,7 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
       setIsLoading(true);
       console.log(`Cercando immagini per l'appartamento: ${apartmentId}`);
       
-      // Genera percorsi per le prime 5 immagini
+      // Percorsi assoluti per le prime 5 immagini
       const potentialImagePaths = Array.from({ length: 5 }, (_, i) => 
         `/images/apartments/${apartmentId}/image${i+1}.jpg`
       );
@@ -39,33 +40,36 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
       // Array per tenere traccia delle immagini caricate con successo
       const validImages: string[] = [];
       
-      // Funzione per verificare se un'immagine esiste
-      const checkImage = (path: string): Promise<string | null> => {
-        return new Promise((resolve) => {
-          const img = new Image();
-          img.onload = () => {
-            console.log(`Immagine caricata con successo: ${path}`);
-            resolve(path);
-          };
-          img.onerror = () => {
-            console.warn(`Impossibile caricare l'immagine: ${path}`);
-            resolve(null);
-          };
-          img.src = path;
-        });
-      };
+      // Controlla ogni immagine
+      for (const path of potentialImagePaths) {
+        try {
+          console.log(`Verificando immagine: ${path}`);
+          
+          // Questo utilizza il servizio migliorato per verificare se l'immagine esiste
+          const exists = await imageService.checkImageExists(path);
+          
+          if (exists) {
+            console.log(`✅ Immagine trovata: ${path}`);
+            validImages.push(path);
+            
+            // Debug aggiuntivo - forza il caricamento dell'immagine
+            await imageService.forceReloadImage(path);
+          } else {
+            console.log(`❌ Immagine non trovata: ${path}`);
+          }
+        } catch (error) {
+          console.error(`Errore nel controllare l'immagine ${path}:`, error);
+        }
+      }
       
-      // Verifica tutte le potenziali immagini
-      const results = await Promise.all(potentialImagePaths.map(checkImage));
+      // Se non abbiamo trovato immagini, prova a fare il debug della prima immagine
+      if (validImages.length === 0 && potentialImagePaths.length > 0) {
+        console.warn(`Nessuna immagine trovata per ${apartmentId}, avvio del debug...`);
+        await imageService.debugImage(potentialImagePaths[0]);
+      } else {
+        console.log(`Trovate ${validImages.length} immagini valide per ${apartmentId}`);
+      }
       
-      // Filtra solo le immagini caricate con successo
-      results.forEach(result => {
-        if (result) validImages.push(result);
-      });
-      
-      console.log(`Immagini valide trovate: ${validImages.length}`, validImages);
-      
-      // Aggiorna lo stato con le immagini trovate
       setLoadedImages(validImages);
       
       // Aggiorna il componente padre se abbiamo trovato immagini valide
@@ -99,11 +103,66 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
     return `${loadedImages.length} immagini trovate`;
   };
   
+  // Funzione per forzare il ricaricamento delle immagini
+  const handleRefreshImages = async () => {
+    setIsLoading(true);
+    toast.info("Ricerca immagini in corso...");
+    
+    // Percorsi assoluti per le prime 8 immagini (aumentato da 5)
+    const potentialImagePaths = Array.from({ length: 8 }, (_, i) => 
+      `/images/apartments/${apartmentId}/image${i+1}.jpg`
+    );
+    
+    // Array per tenere traccia delle immagini caricate con successo
+    const validImages: string[] = [];
+    
+    // Controlla ogni immagine forzando il bypass della cache
+    for (const path of potentialImagePaths) {
+      try {
+        // Aggiunta di un timestamp per evitare la cache
+        const exists = await imageService.checkImageExists(path);
+        
+        if (exists) {
+          console.log(`✅ Immagine trovata (refresh): ${path}`);
+          validImages.push(path);
+        } else {
+          console.log(`❌ Immagine non trovata (refresh): ${path}`);
+        }
+      } catch (error) {
+        console.error(`Errore nel controllare l'immagine ${path}:`, error);
+      }
+    }
+    
+    setLoadedImages(validImages);
+      
+    // Aggiorna il componente padre se abbiamo trovato immagini valide
+    if (validImages.length > 0 && onImagesChange) {
+      onImagesChange(apartmentId, validImages);
+    }
+    
+    setIsLoading(false);
+    
+    if (validImages.length > 0) {
+      toast.success(`Trovate ${validImages.length} immagini`);
+    } else {
+      toast.error("Nessuna immagine trovata");
+    }
+  };
+  
   return (
     <div className="mt-4">
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-medium">Immagini</h3>
-        <span className="text-xs text-muted-foreground">{getInfoMessage()}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">{getInfoMessage()}</span>
+          <button 
+            onClick={handleRefreshImages} 
+            className="text-xs text-primary hover:underline"
+            disabled={isLoading}
+          >
+            Aggiorna
+          </button>
+        </div>
       </div>
       
       {loadedImages.length > 0 ? (
@@ -118,7 +177,7 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
             >
               <div className="aspect-square relative">
                 <img 
-                  src={path} 
+                  src={imageService.getImageUrl(path)}
                   alt={`Appartamento immagine ${index+1}`}
                   className="absolute inset-0 w-full h-full object-cover"
                   onError={(e) => {
@@ -144,11 +203,19 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
           </p>
         </div>
       )}
-      <p className="text-sm text-muted-foreground mt-4">
-        Per gestire le immagini dell'appartamento, caricare manualmente i file nella cartella /public/images/apartments/{apartmentId}/
-        <br />
-        <span className="text-xs">Nota: Controlla che il nome dell'appartamento ({apartmentId}) corrisponda esattamente al nome della cartella.</span>
-      </p>
+      <div className="mt-4 space-y-2">
+        <p className="text-sm text-muted-foreground">
+          Per gestire le immagini dell'appartamento, caricare manualmente i file nella cartella /public/images/apartments/{apartmentId}/
+        </p>
+        <div className="bg-muted p-2 rounded text-xs font-mono">
+          <strong>Percorsi corretti delle immagini:</strong>
+          <ul className="mt-1 space-y-0.5">
+            <li>/public/images/apartments/{apartmentId}/image1.jpg (copertina)</li>
+            <li>/public/images/apartments/{apartmentId}/image2.jpg</li>
+            <li>/public/images/apartments/{apartmentId}/image3.jpg</li>
+          </ul>
+        </div>
+      </div>
     </div>
   );
 };
