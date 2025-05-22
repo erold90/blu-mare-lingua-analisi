@@ -8,6 +8,12 @@ import {
   pruneOldImages,
   ImageCategory 
 } from "@/utils/imageStorage";
+import {
+  saveImageToCloud,
+  loadImageFromCloud,
+  isImageInCloud,
+  syncAllImages
+} from "@/utils/cloudImageSync";
 
 export interface SiteSettings {
   heroImage: string;
@@ -96,17 +102,28 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [isImageLoading, setIsImageLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Load images on startup
+  // Load images on startup and sync with cloud storage
   useEffect(() => {
     const loadImages = async () => {
+      console.log("SettingsProvider: Loading images and syncing with cloud");
+      
       // Prune old images first (keep storage manageable)
       await pruneOldImages(200);
       
+      // Sync with cloud storage to ensure cross-device compatibility
+      await syncAllImages();
+      
       // Process hero image
       if (siteSettings.heroImage && siteSettings.heroImage.startsWith('/upload/')) {
-        const heroImage = await getImage(siteSettings.heroImage);
-        if (!heroImage) {
-          console.warn("Hero image not found in storage, resetting to default");
+        // Try from IndexedDB first
+        let heroImage = await getImage(siteSettings.heroImage);
+        
+        // If not found locally but exists in cloud, use cloud version
+        if (!heroImage && isImageInCloud(siteSettings.heroImage)) {
+          console.log("Hero image found in cloud storage");
+          // The image path is valid, don't reset it
+        } else if (!heroImage) {
+          console.warn("Hero image not found in any storage, resetting to default");
           setSiteSettings(prev => ({ ...prev, heroImage: "/placeholder.svg" }));
         }
       }
@@ -116,33 +133,53 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const validHomeImages = await Promise.all(
           siteSettings.homeImages.map(async (path) => {
             if (!path.startsWith('/upload/')) return path;
+            
+            // Try from IndexedDB first
             const img = await getImage(path);
+            
+            // If not found locally but exists in cloud, use cloud version
+            if (!img && isImageInCloud(path)) {
+              return path; // Keep the path, the image can be loaded from cloud
+            }
+            
             return img ? path : null;
           })
         );
         
-        // Filter out any null values (images not found)
+        // Filter out any null values (images not found anywhere)
         const filteredHomeImages = validHomeImages.filter(Boolean) as string[];
         if (filteredHomeImages.length !== siteSettings.homeImages.length) {
-          console.warn("Some home images were not found in storage, updating list");
+          console.warn("Some home images were not found in any storage, updating list");
           setSiteSettings(prev => ({ ...prev, homeImages: filteredHomeImages }));
         }
       }
       
       // Process social image
       if (siteSettings.socialImage && siteSettings.socialImage.startsWith('/upload/')) {
-        const socialImage = await getImage(siteSettings.socialImage);
-        if (!socialImage) {
-          console.warn("Social image not found in storage, resetting to default");
+        // Try from IndexedDB first
+        let socialImage = await getImage(siteSettings.socialImage);
+        
+        // If not found locally but exists in cloud, use cloud version
+        if (!socialImage && isImageInCloud(siteSettings.socialImage)) {
+          console.log("Social image found in cloud storage");
+          // The image path is valid, don't reset it
+        } else if (!socialImage) {
+          console.warn("Social image not found in any storage, resetting to default");
           setSiteSettings(prev => ({ ...prev, socialImage: "/placeholder.svg" }));
         }
       }
       
       // Process favicon
       if (siteSettings.favicon && siteSettings.favicon.startsWith('/upload/')) {
-        const favicon = await getImage(siteSettings.favicon);
-        if (!favicon) {
-          console.warn("Favicon not found in storage, resetting to default");
+        // Try from IndexedDB first
+        let favicon = await getImage(siteSettings.favicon);
+        
+        // If not found locally but exists in cloud, use cloud version
+        if (!favicon && isImageInCloud(siteSettings.favicon)) {
+          console.log("Favicon found in cloud storage");
+          // The image path is valid, don't reset it
+        } else if (!favicon) {
+          console.warn("Favicon not found in any storage, resetting to default");
           setSiteSettings(prev => ({ ...prev, favicon: "/favicon.ico" }));
         }
       }
@@ -220,7 +257,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   }, [siteSettings.siteName, siteSettings.siteDescription, siteSettings.socialImage, siteSettings.favicon]);
   
-  // Function for saving images to storage
+  // Function for saving images to storage with cloud sync
   const saveImageToStorage = async (file: File, category: 'hero' | 'home' | 'social' | 'favicon'): Promise<string> => {
     try {
       setIsImageLoading(true);
@@ -245,6 +282,9 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           homeImages: [...siteSettings.homeImages, imagePath]
         });
       }
+      
+      // Sync image to cloud storage for cross-device access
+      await saveImageToCloud(imagePath);
       
       return imagePath;
     } catch (error) {

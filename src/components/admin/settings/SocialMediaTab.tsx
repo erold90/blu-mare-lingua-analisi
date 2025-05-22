@@ -6,20 +6,37 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useSettings } from "@/hooks/useSettings";
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 export const SocialMediaTab = () => {
-  const { siteSettings, updateSiteSettings, saveImageToStorage } = useSettings();
+  const { siteSettings, updateSiteSettings, saveImageToStorage, uploadProgress } = useSettings();
   
   const [formData, setFormData] = React.useState({
     siteName: siteSettings.siteName || "Villa MareBlu",
     siteDescription: siteSettings.siteDescription || "Villa MareBlu - Appartamenti vacanze sul mare",
+  });
+  const [isUploading, setIsUploading] = React.useState<{[key: string]: boolean}>({
+    socialImage: false,
+    favicon: false
+  });
+  
+  // Load images state
+  const [imagesLoaded, setImagesLoaded] = React.useState<{[key: string]: boolean}>({
+    socialImage: false,
+    favicon: false
   });
 
   React.useEffect(() => {
     setFormData({
       siteName: siteSettings.siteName || "Villa MareBlu",
       siteDescription: siteSettings.siteDescription || "Villa MareBlu - Appartamenti vacanze sul mare",
+    });
+    
+    // Reset images loaded state when settings change
+    setImagesLoaded({
+      socialImage: false,
+      favicon: false
     });
   }, [siteSettings]);
 
@@ -45,6 +62,9 @@ export const SocialMediaTab = () => {
     const file = e.target.files[0];
     
     try {
+      // Set uploading state for this specific field
+      setIsUploading(prev => ({...prev, [field]: true}));
+      
       // Map the field name to the correct category expected by saveImageToStorage
       const category = field === 'socialImage' ? 'social' : 'favicon';
       
@@ -57,7 +77,19 @@ export const SocialMediaTab = () => {
     } catch (error) {
       console.error(`Error uploading ${field}:`, error);
       toast.error(`Errore durante il caricamento dell'immagine: ${(error as Error).message}`);
+    } finally {
+      // Clear uploading state
+      setIsUploading(prev => ({...prev, [field]: false}));
     }
+  };
+
+  const handleImageLoad = (field: 'socialImage' | 'favicon') => {
+    setImagesLoaded(prev => ({...prev, [field]: true}));
+  };
+
+  const handleImageError = (field: 'socialImage' | 'favicon') => {
+    console.error(`Failed to load ${field} image`);
+    setImagesLoaded(prev => ({...prev, [field]: false}));
   };
 
   return (
@@ -101,13 +133,26 @@ export const SocialMediaTab = () => {
           <div className="space-y-2 pt-4">
             <Label>Immagine Social</Label>
             <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-20 h-20 rounded-md border overflow-hidden bg-muted">
-                {siteSettings.socialImage && !siteSettings.socialImage.includes("placeholder") ? (
-                  <img 
-                    src={siteSettings.socialImage} 
-                    alt="Social preview" 
-                    className="w-full h-full object-cover" 
-                  />
+              <div className="flex-shrink-0 w-20 h-20 rounded-md border overflow-hidden bg-muted relative">
+                {isUploading.socialImage ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 text-muted-foreground/50 animate-spin" />
+                  </div>
+                ) : siteSettings.socialImage && !siteSettings.socialImage.includes("placeholder") ? (
+                  <>
+                    {!imagesLoaded.socialImage && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Loader2 className="w-8 h-8 text-muted-foreground/50 animate-spin" />
+                      </div>
+                    )}
+                    <img 
+                      src={siteSettings.socialImage} 
+                      alt="Social preview" 
+                      className={`w-full h-full object-cover transition-opacity duration-300 ${imagesLoaded.socialImage ? 'opacity-100' : 'opacity-0'}`}
+                      onLoad={() => handleImageLoad('socialImage')}
+                      onError={() => handleImageError('socialImage')}
+                    />
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <ImageIcon className="w-8 h-8 text-muted-foreground/50" />
@@ -119,8 +164,15 @@ export const SocialMediaTab = () => {
                   variant="outline"
                   onClick={() => document.getElementById("social-image-upload")?.click()}
                   className="w-full"
+                  disabled={isUploading.socialImage}
                 >
-                  Carica immagine
+                  {isUploading.socialImage ? (
+                    <span className="flex items-center">
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Caricamento...
+                    </span>
+                  ) : (
+                    "Carica immagine"
+                  )}
                 </Button>
                 <Input
                   id="social-image-upload"
@@ -128,24 +180,41 @@ export const SocialMediaTab = () => {
                   accept="image/*"
                   className="hidden"
                   onChange={handleImageUpload('socialImage')}
+                  disabled={isUploading.socialImage}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Immagine mostrata quando condividi su WhatsApp e altri social media (1200×630px consigliata)
                 </p>
               </div>
             </div>
+            {isUploading.socialImage && (
+              <Progress value={uploadProgress} className="h-1 mt-1" />
+            )}
           </div>
           
           <div className="space-y-2 pt-4">
             <Label>Favicon</Label>
             <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 w-10 h-10 rounded-md border overflow-hidden bg-muted">
-                {siteSettings.favicon && !siteSettings.favicon.includes("favicon.ico") ? (
-                  <img 
-                    src={siteSettings.favicon} 
-                    alt="Favicon" 
-                    className="w-full h-full object-cover" 
-                  />
+              <div className="flex-shrink-0 w-10 h-10 rounded-md border overflow-hidden bg-muted relative">
+                {isUploading.favicon ? (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Loader2 className="w-4 h-4 text-muted-foreground/50 animate-spin" />
+                  </div>
+                ) : siteSettings.favicon && !siteSettings.favicon.includes("favicon.ico") ? (
+                  <>
+                    {!imagesLoaded.favicon && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Loader2 className="w-4 h-4 text-muted-foreground/50 animate-spin" />
+                      </div>
+                    )}
+                    <img 
+                      src={siteSettings.favicon} 
+                      alt="Favicon" 
+                      className={`w-full h-full object-cover transition-opacity duration-300 ${imagesLoaded.favicon ? 'opacity-100' : 'opacity-0'}`}
+                      onLoad={() => handleImageLoad('favicon')}
+                      onError={() => handleImageError('favicon')}
+                    />
+                  </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <ImageIcon className="w-4 h-4 text-muted-foreground/50" />
@@ -157,8 +226,15 @@ export const SocialMediaTab = () => {
                   variant="outline"
                   onClick={() => document.getElementById("favicon-upload")?.click()}
                   className="w-full"
+                  disabled={isUploading.favicon}
                 >
-                  Carica favicon
+                  {isUploading.favicon ? (
+                    <span className="flex items-center">
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Caricamento...
+                    </span>
+                  ) : (
+                    "Carica favicon"
+                  )}
                 </Button>
                 <Input
                   id="favicon-upload"
@@ -166,12 +242,16 @@ export const SocialMediaTab = () => {
                   accept="image/png,image/jpeg"
                   className="hidden"
                   onChange={handleImageUpload('favicon')}
+                  disabled={isUploading.favicon}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   L'icona che appare nella scheda del browser (32×32px o 64×64px, formato PNG consigliato)
                 </p>
               </div>
             </div>
+            {isUploading.favicon && (
+              <Progress value={uploadProgress} className="h-1 mt-1" />
+            )}
           </div>
           
           <div className="pt-4">

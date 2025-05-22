@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Camera, X, Move, CheckCircle, ImageIcon, Loader2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { saveImage, getImage, deleteImage } from "@/utils/imageStorage";
+import { loadImageFromCloud, saveImageToCloud } from "@/utils/cloudImageSync";
 
 interface ApartmentImagesProps {
   apartmentId: string;
@@ -48,9 +49,17 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
       for (const path of images) {
         if (path.startsWith('/upload/')) {
           try {
+            // Try local storage first
             const storedImage = await getImage(path);
+            
             if (storedImage && storedImage.data) {
               imageData[path] = storedImage.data;
+            } else {
+              // Try cloud storage as fallback
+              const cloudData = loadImageFromCloud(path);
+              if (cloudData) {
+                imageData[path] = cloudData;
+              }
             }
           } catch (error) {
             console.error(`Error loading image ${path}:`, error);
@@ -117,6 +126,9 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
             setUploadProgress(Math.min(overallProgress, 99));
           }
         );
+        
+        // Save to cloud for cross-device access
+        await saveImageToCloud(imagePath);
         
         newImagePaths.push(imagePath);
         
@@ -249,9 +261,19 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
                               src={getImageData(imagePath)} 
                               alt={`Apartment ${index+1}`}
                               className="absolute inset-0 w-full h-full object-cover"
+                              onLoad={() => {
+                                setLoadingStates(prev => ({
+                                  ...prev,
+                                  [imagePath]: false
+                                }));
+                              }}
                               onError={(e) => {
                                 console.error(`Failed to load image: ${imagePath}`);
                                 e.currentTarget.src = "/placeholder.svg";
+                                setLoadingStates(prev => ({
+                                  ...prev,
+                                  [imagePath]: false
+                                }));
                               }}
                             />
                           )}

@@ -9,9 +9,10 @@ import {
 } from "@/components/ui/carousel";
 import { useSettings } from "@/hooks/useSettings";
 import Autoplay from "embla-carousel-autoplay";
-import { ImageIcon } from "lucide-react";
+import { ImageIcon, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getImage } from "@/utils/imageStorage";
+import { loadImageFromCloud } from "@/utils/cloudImageSync";
 
 export const HomeImageCarousel = () => {
   const { siteSettings } = useSettings();
@@ -19,7 +20,7 @@ export const HomeImageCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loadedImages, setLoadedImages] = useState<{ [key: string]: string }>({});
   const [imagesLoaded, setImagesLoaded] = useState<boolean[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loadingStatus, setLoadingStatus] = useState<{ [key: string]: 'loading' | 'loaded' | 'error' }>({});
   
   // Autoreplay plugin - will pause on hover/interaction
   const autoplayPlugin = Autoplay({ delay: 5000, stopOnInteraction: true });
@@ -38,21 +39,25 @@ export const HomeImageCarousel = () => {
     };
   }, [api]);
   
-  // Load all images from IndexedDB
+  // Load all images from storage (IndexedDB or cloud)
   useEffect(() => {
     const loadImages = async () => {
-      setIsLoading(true);
-      
       // Get valid image paths from settings
       const validPaths = siteSettings.homeImages?.filter(img => img && img !== '') || [];
       
       if (validPaths.length === 0) {
-        setIsLoading(false);
         return;
       }
       
       // Initialize loading state array
       setImagesLoaded(new Array(validPaths.length).fill(false));
+      
+      // Set all images to loading status
+      const initialLoadingStatus: { [key: string]: 'loading' | 'loaded' | 'error' } = {};
+      validPaths.forEach(path => {
+        initialLoadingStatus[path] = 'loading';
+      });
+      setLoadingStatus(initialLoadingStatus);
       
       // Load each image from storage
       const loadedImageData: { [key: string]: string } = {};
@@ -61,9 +66,12 @@ export const HomeImageCarousel = () => {
         validPaths.map(async (path, index) => {
           if (path.startsWith('/upload/')) {
             try {
+              // Try to load from IndexedDB first
               const storedImage = await getImage(path);
+              
               if (storedImage && storedImage.data) {
                 loadedImageData[path] = storedImage.data;
+                setLoadingStatus(prev => ({...prev, [path]: 'loaded'}));
                 
                 // Update loading state for this image
                 setImagesLoaded(prev => {
@@ -71,13 +79,33 @@ export const HomeImageCarousel = () => {
                   newState[index] = true;
                   return newState;
                 });
+              } else {
+                // Try from cloud storage as fallback
+                const cloudData = loadImageFromCloud(path);
+                
+                if (cloudData) {
+                  loadedImageData[path] = cloudData;
+                  setLoadingStatus(prev => ({...prev, [path]: 'loaded'}));
+                  
+                  // Update loading state for this image
+                  setImagesLoaded(prev => {
+                    const newState = [...prev];
+                    newState[index] = true;
+                    return newState;
+                  });
+                } else {
+                  console.error(`Image not found in any storage: ${path}`);
+                  setLoadingStatus(prev => ({...prev, [path]: 'error'}));
+                }
               }
             } catch (error) {
               console.error(`Error loading image ${path}:`, error);
+              setLoadingStatus(prev => ({...prev, [path]: 'error'}));
             }
           } else {
             // External URL
             loadedImageData[path] = path;
+            setLoadingStatus(prev => ({...prev, [path]: 'loaded'}));
             
             // Update loading state for this image
             setImagesLoaded(prev => {
@@ -90,7 +118,6 @@ export const HomeImageCarousel = () => {
       );
       
       setLoadedImages(loadedImageData);
-      setIsLoading(false);
     };
     
     loadImages();
@@ -122,6 +149,8 @@ export const HomeImageCarousel = () => {
       updated[index] = false;
       return updated;
     });
+    
+    setLoadingStatus(prev => ({...prev, [validImages[index]]: 'error'}));
   };
 
   return (
@@ -133,36 +162,7 @@ export const HomeImageCarousel = () => {
         className="w-full max-w-5xl mx-auto"
       >
         <CarouselContent>
-          {isLoading ? (
-            // Loading skeleton
-            <CarouselItem>
-              <div className="aspect-video rounded-lg overflow-hidden">
-                <Skeleton className="w-full h-full" />
-              </div>
-            </CarouselItem>
-          ) : hasImages ? (
-            // Display actual images
-            validImages.map((imagePath, index) => (
-              <CarouselItem key={index}>
-                <div className="aspect-video overflow-hidden rounded-lg bg-muted relative">
-                  {!imagesLoaded[index] && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <ImageIcon className="h-12 w-12 text-muted-foreground/40" />
-                    </div>
-                  )}
-                  <img 
-                    src={getImageData(imagePath)} 
-                    alt={`Villa MareBlu immagine ${index + 1}`} 
-                    className={`w-full h-full object-cover transition-all duration-300 hover:scale-105 ${
-                      imagesLoaded[index] ? 'opacity-100' : 'opacity-0'
-                    }`}
-                    onLoad={() => handleImageLoad(index)}
-                    onError={() => handleImageError(index)}
-                  />
-                </div>
-              </CarouselItem>
-            ))
-          ) : (
+          {!hasImages ? (
             // No images available
             <CarouselItem>
               <div className="aspect-video overflow-hidden rounded-lg bg-muted flex items-center justify-center">
@@ -172,6 +172,40 @@ export const HomeImageCarousel = () => {
                 </div>
               </div>
             </CarouselItem>
+          ) : (
+            // Display actual images
+            validImages.map((imagePath, index) => (
+              <CarouselItem key={index}>
+                <div className="aspect-video overflow-hidden rounded-lg bg-muted relative">
+                  {loadingStatus[imagePath] === 'loading' && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Loader2 className="h-12 w-12 text-muted-foreground/40 animate-spin" />
+                    </div>
+                  )}
+                  
+                  {loadingStatus[imagePath] === 'error' && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <ImageIcon className="h-12 w-12 text-muted-foreground/40" />
+                        <p className="text-muted-foreground text-sm">Impossibile caricare l'immagine</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {loadingStatus[imagePath] !== 'error' && (
+                    <img 
+                      src={getImageData(imagePath)} 
+                      alt={`Villa MareBlu immagine ${index + 1}`} 
+                      className={`w-full h-full object-cover transition-all duration-300 hover:scale-105 ${
+                        imagesLoaded[index] ? 'opacity-100' : 'opacity-0'
+                      }`}
+                      onLoad={() => handleImageLoad(index)}
+                      onError={() => handleImageError(index)}
+                    />
+                  )}
+                </div>
+              </CarouselItem>
+            ))
           )}
         </CarouselContent>
         <CarouselPrevious className="left-2" />

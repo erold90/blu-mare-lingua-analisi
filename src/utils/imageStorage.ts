@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { loadImageFromCloud, saveImageToCloud } from "./cloudImageSync";
 
 // Define types for our image storage
 export interface StoredImage {
@@ -13,7 +14,7 @@ export interface StoredImage {
 export type ImageCategory = 'hero' | 'home' | 'social' | 'favicon';
 
 // IndexedDB configuration
-const DB_NAME = 'villaMareBluImages';
+const DB_NAME = 'villaMarePluImages';
 const STORE_NAME = 'images';
 const DB_VERSION = 1;
 
@@ -183,6 +184,16 @@ export const saveImage = async (
       
       request.onsuccess = () => {
         console.log(`Immagine ${category} salvata con successo:`, path);
+        
+        // Also save to cloud storage for cross-device access
+        saveImageToCloud(path).then(success => {
+          if (success) {
+            console.log(`Immagine ${category} sincronizzata col cloud`);
+          } else {
+            console.warn(`Immagine ${category} non sincronizzata col cloud`);
+          }
+        });
+        
         onProgress?.(100);
         resolve(path);
       };
@@ -198,7 +209,7 @@ export const saveImage = async (
 };
 
 /**
- * Retrieves an image from IndexedDB by its path
+ * Retrieves an image from IndexedDB or cloud storage
  */
 export const getImage = async (path: string): Promise<StoredImage | null> => {
   if (!path.startsWith('/upload/')) {
@@ -207,6 +218,7 @@ export const getImage = async (path: string): Promise<StoredImage | null> => {
   }
   
   try {
+    // First try to get from IndexedDB
     const db = await openDatabase();
     
     return new Promise((resolve, reject) => {
@@ -219,7 +231,36 @@ export const getImage = async (path: string): Promise<StoredImage | null> => {
       };
       
       request.onsuccess = () => {
-        resolve(request.result || null);
+        const imageData = request.result;
+        
+        if (imageData) {
+          resolve(imageData);
+        } else {
+          // If not found in IndexedDB, try to get from cloud storage
+          const cloudData = loadImageFromCloud(path);
+          
+          if (cloudData) {
+            // Create a temporary StoredImage object from cloud data
+            const tempImage: StoredImage = {
+              id: path.split('_')[1] || Date.now().toString(),
+              path,
+              data: cloudData,
+              category: path.split('_')[0].replace('/upload/', '') as ImageCategory,
+              fileName: path.split('_').slice(2).join('_'),
+              createdAt: parseInt(path.split('_')[1]) || Date.now()
+            };
+            
+            // Save to IndexedDB for future use
+            const saveTransaction = db.transaction([STORE_NAME], 'readwrite');
+            const saveStore = saveTransaction.objectStore(STORE_NAME);
+            saveStore.put(tempImage);
+            
+            console.log("Image loaded from cloud and saved to IndexedDB:", path);
+            resolve(tempImage);
+          } else {
+            resolve(null);
+          }
+        }
       };
       
       transaction.oncomplete = () => {
@@ -228,6 +269,24 @@ export const getImage = async (path: string): Promise<StoredImage | null> => {
     });
   } catch (error) {
     console.error('Error retrieving image:', error);
+    
+    // As a last resort, try to get from cloud storage
+    const cloudData = loadImageFromCloud(path);
+    
+    if (cloudData) {
+      // Create a temporary StoredImage object from cloud data
+      const tempImage: StoredImage = {
+        id: path.split('_')[1] || Date.now().toString(),
+        path,
+        data: cloudData,
+        category: path.split('_')[0].replace('/upload/', '') as ImageCategory,
+        fileName: path.split('_').slice(2).join('_'),
+        createdAt: parseInt(path.split('_')[1]) || Date.now()
+      };
+      
+      return tempImage;
+    }
+    
     return null;
   }
 };
@@ -267,7 +326,7 @@ export const getImagesByCategory = async (category: ImageCategory): Promise<Stor
 };
 
 /**
- * Deletes an image from IndexedDB by its path
+ * Deletes an image from IndexedDB
  */
 export const deleteImage = async (path: string): Promise<boolean> => {
   if (!path.startsWith('/upload/')) {
