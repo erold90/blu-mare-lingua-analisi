@@ -25,7 +25,7 @@ export interface TableCell {
   };
 }
 
-// Extended methods we need for our custom jsPDF functionality
+// Central declaration for jsPDF with autoTable
 declare module 'jspdf' {
   interface jsPDF {
     autoTable: (options: UserOptions) => AutoTableResult;
