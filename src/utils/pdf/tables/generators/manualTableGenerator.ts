@@ -25,7 +25,8 @@ export const drawManualTable = (
     let styles = {
       fontSize: 9,
       fontStyle: 'normal' as 'normal' | 'bold' | 'italic',
-      textColor: [0, 0, 0] as number[]
+      textColor: [0, 0, 0] as number[],
+      halign: 'left' as 'left' | 'center' | 'right'
     };
     
     if (typeof text === 'string') {
@@ -37,6 +38,7 @@ export const drawManualTable = (
         if (text.styles.fontSize !== undefined) styles.fontSize = text.styles.fontSize;
         if (text.styles.fontStyle !== undefined) styles.fontStyle = text.styles.fontStyle;
         if (text.styles.textColor !== undefined) styles.textColor = text.styles.textColor;
+        if (text.styles.halign !== undefined) styles.halign = text.styles.halign;
       }
     }
     
@@ -46,7 +48,14 @@ export const drawManualTable = (
     // Use the text color if provided, or default to black
     doc.setTextColor(styles.textColor[0] || 0, styles.textColor[1] || 0, styles.textColor[2] || 0);
     
-    const textX = x + cellPadding;
+    // Handle text alignment
+    let textX = x + cellPadding;
+    if (styles.halign === 'right') {
+      textX = x + width - cellPadding - doc.getTextWidth(content);
+    } else if (styles.halign === 'center') {
+      textX = x + (width - doc.getTextWidth(content)) / 2;
+    }
+    
     const textY = y + cellPadding + (height - 2 * cellPadding) / 2 + 1; // Vertically center
     doc.text(content, textX, textY);
     
