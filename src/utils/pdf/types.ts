@@ -1,7 +1,7 @@
 
 import { jsPDF } from "jspdf";
 import type { PriceCalculation } from "@/utils/price/types";
-import { UserOptions } from "jspdf-autotable";
+import type { UserOptions } from "jspdf-autotable";
 
 // Type definition for the return value of autoTable
 export interface AutoTableResult {
