@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { useSupabaseCleaningManagement, CleaningTask as SupabaseCleaningTask } from './useSupabaseCleaningManagement';
 import { useReservations } from './useReservations';
@@ -26,19 +25,19 @@ export interface CleaningTask {
 // Transform Supabase task to old format
 const transformSupabaseTask = (task: SupabaseCleaningTask): CleaningTask => ({
   id: task.id,
-  apartmentId: task.apartmentId,
+  apartmentId: task.apartment_id,
   apartmentName: '', // Will be populated by apartment lookup
-  date: task.taskDate,
+  date: task.task_date,
   status: task.status === "in_progress" ? "inProgress" : 
           task.status === "pending" ? "pending" :
           task.status === "completed" ? "completed" : "cancelled",
-  type: task.taskType === 'checkout' ? 'checkout' : 
-        task.taskType === 'maintenance' ? 'maintenance' : 
-        task.taskType === 'deep_clean' ? 'deep' : 'checkout',
+  type: task.task_type === 'checkout' ? 'checkout' : 
+        task.task_type === 'maintenance' ? 'maintenance' : 
+        task.task_type === 'deep_clean' ? 'deep' : 'checkout',
   priority: task.priority as "low" | "medium" | "high" | "urgent",
   notes: task.notes,
   assignedTo: task.assignee,
-  deviceId: task.deviceId
+  deviceId: task.device_id
 });
 
 // Transform old task to Supabase format
