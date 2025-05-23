@@ -20,6 +20,7 @@ export const SiteImageManager: React.FC = () => {
   const loadImages = async () => {
     setLoading(true);
     try {
+      console.log('Loading site images...');
       const [hero, homeGallery, social, favicon] = await Promise.all([
         imageService.getImagesByCategory('hero'),
         imageService.getImagesByCategory('home_gallery'),
@@ -27,6 +28,7 @@ export const SiteImageManager: React.FC = () => {
         imageService.getImagesByCategory('favicon')
       ]);
 
+      console.log('Site images loaded:', { hero, homeGallery, social, favicon });
       setHeroImages(hero);
       setHomeGalleryImages(homeGallery);
       setSocialImages(social);
@@ -43,32 +45,43 @@ export const SiteImageManager: React.FC = () => {
     loadImages();
   }, []);
 
-  const handleUploadSuccess = () => {
-    loadImages();
+  const handleUploadSuccess = async () => {
+    console.log('Upload successful, reloading images...');
+    await loadImages();
+    toast.success('Immagini caricate con successo');
   };
 
   const handleDeleteImage = async (image: ImageRecord) => {
     if (window.confirm('Sei sicuro di voler eliminare questa immagine?')) {
+      console.log('Deleting image:', image.id);
       const success = await imageService.deleteImage(image.id, image.file_path);
       if (success) {
-        loadImages();
+        await loadImages();
       }
     }
   };
 
   const handleSetPrimary = async (image: ImageRecord) => {
     try {
-      // Set all images of this category to not primary
+      console.log('Setting primary image:', image.id, 'category:', image.category);
+      
+      // First set this image as primary
       await imageService.updateImage(image.id, { is_cover: true });
       
-      // Update other images of the same category to not be primary
+      // Then update other images of the same category to not be primary
       const currentImages = getCurrentImages(image.category);
       const updatePromises = currentImages
-        .filter(img => img.id !== image.id)
-        .map(img => imageService.updateImage(img.id, { is_cover: false }));
+        .filter(img => img.id !== image.id && img.is_cover)
+        .map(img => {
+          console.log('Removing primary status from:', img.id);
+          return imageService.updateImage(img.id, { is_cover: false });
+        });
       
       await Promise.all(updatePromises);
-      loadImages();
+      
+      console.log('Primary image updated successfully');
+      toast.success('Immagine principale impostata');
+      await loadImages();
     } catch (error) {
       console.error('Error setting primary image:', error);
       toast.error('Errore nell\'impostare l\'immagine principale');
@@ -129,6 +142,10 @@ export const SiteImageManager: React.FC = () => {
                   src={imageService.getImageUrl(image.file_path)}
                   alt={image.alt_text || image.file_name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error('Error loading image:', image.file_path);
+                    e.currentTarget.src = "/placeholder.svg";
+                  }}
                 />
                 {image.is_cover && (
                   <Badge className="absolute top-2 left-2">

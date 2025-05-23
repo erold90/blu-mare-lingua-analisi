@@ -23,6 +23,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   maxFiles = 10,
   className = ""
 }) => {
+  console.log('ImageUpload rendered with:', { category, apartmentId, maxFiles });
+
   const {
     filesWithAltText,
     uploading,
@@ -68,7 +70,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
               ))}
             </div>
             <div className="flex justify-end mt-4">
-              <Button onClick={handleUpload} disabled={uploading}>
+              <Button 
+                onClick={handleUpload} 
+                disabled={uploading}
+                className="min-w-[120px]"
+              >
                 {uploading ? 'Caricamento...' : `Carica ${filesWithAltText.length} immagini`}
               </Button>
             </div>

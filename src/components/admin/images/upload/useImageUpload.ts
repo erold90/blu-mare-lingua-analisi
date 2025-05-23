@@ -82,6 +82,7 @@ export const useImageUpload = ({
     }
 
     console.log("Starting upload process for", filesWithAltText.length, "files");
+    console.log("Upload params:", { category, apartmentId });
     setUploading(true);
     setUploadErrors([]);
     
@@ -104,13 +105,17 @@ export const useImageUpload = ({
             await new Promise(resolve => setTimeout(resolve, 100));
           }
           
-          const result = await imageService.uploadImage({
+          const uploadData = {
             category,
-            apartment_id: apartmentId,
             file: fileData.file,
             alt_text: fileData.altText || '',
-            display_order: displayOrder
-          });
+            display_order: displayOrder,
+            ...(apartmentId && { apartment_id: apartmentId })
+          };
+          
+          console.log('Upload data:', uploadData);
+          
+          const result = await imageService.uploadImage(uploadData);
           
           if (result) {
             console.log(`Upload successful for ${fileData.file.name}:`, result);
@@ -121,7 +126,7 @@ export const useImageUpload = ({
           }
         } catch (error) {
           console.error(`Error uploading ${fileData.file.name}:`, error);
-          errors.push(`Errore caricamento: ${fileData.file.name}`);
+          errors.push(`Errore caricamento: ${fileData.file.name} - ${error.message || 'Unknown error'}`);
         }
       }
       
@@ -140,10 +145,21 @@ export const useImageUpload = ({
           URL.revokeObjectURL(fileData.preview);
         });
         setFilesWithAltText([]);
-        onUploadSuccess?.();
+        
+        // Call the success callback
+        if (onUploadSuccess) {
+          console.log('Calling onUploadSuccess callback');
+          onUploadSuccess();
+        }
       } else if (successCount > 0) {
         toast.warning(`${successCount}/${filesWithAltText.length} immagini caricate`);
         setUploadErrors(errors);
+        
+        // Call the success callback even for partial success
+        if (onUploadSuccess) {
+          console.log('Calling onUploadSuccess callback (partial success)');
+          onUploadSuccess();
+        }
       } else {
         toast.error("Nessuna immagine è stata caricata");
         setUploadErrors(errors);
@@ -151,7 +167,7 @@ export const useImageUpload = ({
     } catch (error) {
       console.error('Upload error:', error);
       toast.error("Errore nel caricamento delle immagini");
-      setUploadErrors(["Errore generale nel sistema di caricamento"]);
+      setUploadErrors([`Errore generale nel sistema di caricamento: ${error.message || 'Unknown error'}`]);
     } finally {
       setUploading(false);
     }
