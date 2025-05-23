@@ -62,14 +62,14 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     multiple: maxFiles > 1
   });
 
-  const removeFile = (index: number) => {
-    setFilesWithAltText(prev => prev.filter((_, i) => i !== index));
+  const removeFile = (fileIndex: number) => {
+    setFilesWithAltText(prev => prev.filter((_, i) => i !== fileIndex));
   };
 
-  const handleAltTextChange = (index: number, value: string) => {
+  const handleAltTextChange = (fileIndex: number, value: string) => {
     setFilesWithAltText(prev => 
       prev.map((item, i) => 
-        i === index ? { ...item, altText: value } : item
+        i === fileIndex ? { ...item, altText: value } : item
       )
     );
   };
@@ -85,13 +85,14 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     try {
       const { imageService } = await import('@/services/imageService');
       
-      const uploadPromises = filesWithAltText.map((fileData, index) => {
+      const uploadPromises = filesWithAltText.map((fileData, arrayIndex) => {
+        const displayOrder = Number(arrayIndex); // Assicuriamoci che sia un numero
         return imageService.uploadImage({
           category,
           apartment_id: apartmentId,
           file: fileData.file,
           alt_text: fileData.altText || '',
-          display_order: index
+          display_order: displayOrder
         });
       });
 
@@ -148,8 +149,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           <CardContent className="pt-6">
             <h3 className="font-medium mb-4">Immagini selezionate ({filesWithAltText.length})</h3>
             <div className="space-y-4">
-              {filesWithAltText.map((fileData, index) => (
-                <div key={index} className="flex items-start gap-4 p-3 border rounded-lg">
+              {filesWithAltText.map((fileData, fileIndex) => (
+                <div key={`file-${fileIndex}`} className="flex items-start gap-4 p-3 border rounded-lg">
                   <div className="flex-shrink-0">
                     <ImageIcon className="h-12 w-12 text-muted-foreground" />
                   </div>
@@ -159,13 +160,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                       {(fileData.file.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                     <div className="mt-2">
-                      <Label htmlFor={`alt-${index}`} className="text-xs">
+                      <Label htmlFor={`alt-text-${fileIndex}`} className="text-xs">
                         Testo alternativo (opzionale)
                       </Label>
                       <Input
-                        id={`alt-${index}`}
+                        id={`alt-text-${fileIndex}`}
                         value={fileData.altText}
-                        onChange={(e) => handleAltTextChange(index, e.target.value)}
+                        onChange={(e) => handleAltTextChange(fileIndex, e.target.value)}
                         placeholder="Descrizione dell'immagine..."
                         className="mt-1"
                         size="sm"
@@ -175,7 +176,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => removeFile(index)}
+                    onClick={() => removeFile(fileIndex)}
                     className="flex-shrink-0"
                   >
                     <X className="h-4 w-4" />
