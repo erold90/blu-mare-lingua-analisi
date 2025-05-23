@@ -72,6 +72,9 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
     <QuoteActions 
       prevStep={prevStep} 
       sendWhatsApp={sendWhatsApp}
+      formValues={formValues}
+      apartments={apartments}
+      priceInfo={priceInfo}
     />
   );
   
