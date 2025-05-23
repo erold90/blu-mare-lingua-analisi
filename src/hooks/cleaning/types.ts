@@ -2,10 +2,10 @@
 export interface CleaningTask {
   id: string;
   apartmentId: string;
-  apartmentName: string; // Added apartmentName property
-  checkoutDate?: string; // Data di check-out
-  checkinDate?: string; // Data di check-in
-  date: string; // Data dell'attività
+  apartmentName: string;
+  checkoutDate?: string;
+  checkinDate?: string;
+  date: string;
   status: "pending" | "inProgress" | "completed" | "cancelled";
   type?: "checkout" | "checkin" | "maintenance" | "deep";
   priority?: "low" | "medium" | "high";
