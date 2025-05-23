@@ -1,3 +1,4 @@
+
 /**
  * API Client per la comunicazione con il server
  */
@@ -424,7 +425,7 @@ function removeItemFromPersistentStorage(storageKey: string, itemId: string): vo
 }
 
 // Implementiamo un endpoint /ping per verificare la connessione al server
-export const pingApi = {
+const pingApi = {
   check: async () => {
     return fetchApi('/ping');
   },
@@ -438,7 +439,7 @@ export const pingApi = {
 /**
  * API per le prenotazioni
  */
-export const reservationsApi = {
+const reservationsApi = {
   getAll: async () => {
     return fetchApi('/reservations');
   },
@@ -463,7 +464,7 @@ export const reservationsApi = {
 /**
  * API per le attività di pulizia con supporto migliorato per batch
  */
-export const cleaningApi = {
+const cleaningApi = {
   getAll: async () => {
     return fetchApi('/cleaning');
   },
@@ -493,7 +494,7 @@ export const cleaningApi = {
 /**
  * API per gli appartamenti
  */
-export const apartmentsApi = {
+const apartmentsApi = {
   getAll: async () => {
     return fetchApi('/apartments');
   },
@@ -510,7 +511,7 @@ export const apartmentsApi = {
 /**
  * API per i prezzi
  */
-export const pricesApi = {
+const pricesApi = {
   getByYear: async (year: number) => {
     return fetchApi(`/prices/${year}`);
   },
@@ -523,7 +524,7 @@ export const pricesApi = {
 /**
  * API generica per la sincronizzazione
  */
-export const syncApi = {
+const syncApi = {
   syncAll: async () => {
     return fetchApi('/sync', 'POST');
   },
@@ -536,7 +537,7 @@ export const syncApi = {
 /**
  * API per la sincronizzazione forzata e verifica connessione
  */
-export const systemApi = {
+const systemApi = {
   /**
    * Verifica e forza la sincronizzazione dei dati con il database
    */
@@ -648,7 +649,7 @@ try {
   console.error('Errore nel leggere lo stato della modalità offline:', e);
 }
 
-// Esporta tutte le API esistenti
+// Esporta tutte le API una sola volta
 export {
   pingApi,
   reservationsApi,
