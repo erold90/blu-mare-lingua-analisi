@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect } from "react";
 import { WeeklyPrice, SeasonalPricing, PricesContextType } from "./types";
 import { updateWeeklyPrice, resetAllPrices, initializePricesFor2025 } from "./priceOperations";
@@ -19,20 +18,8 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [availableYears, setAvailableYears] = useState<number[]>(DEFAULT_YEARS);
 
-  // Load prices from localStorage on mount
-  useEffect(() => {
-    console.log("PricesProvider: Loading prices from localStorage");
-    loadPrices();
-  }, []);
-
-  // Update weekly prices when selected year changes
-  useEffect(() => {
-    console.log(`PricesProvider: Selected year changed to ${selectedYear}`);
-    updateWeeklyPricesForYear(selectedYear);
-  }, [selectedYear, seasonalPricing]);
-
   // Load prices from localStorage
-  const loadPrices = () => {
+  const loadPrices = async () => {
     try {
       setIsLoading(true);
       const savedPrices = localStorage.getItem(STORAGE_KEY);
@@ -61,21 +48,33 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         } else {
           // Initialize with sample data if no pricing exists
           console.log("PricesProvider: No pricing data found, initializing with sample data");
-          initializePrices();
+          await initializePrices();
         }
       } else {
         // Initialize with sample data if no storage exists
         console.log("PricesProvider: No storage found, initializing with sample data");
-        initializePrices();
+        await initializePrices();
       }
     } catch (error) {
       console.error("Error loading prices:", error);
       toast.error("Errore nel caricamento dei prezzi");
-      initializePrices(); // Fallback to initialization
+      await initializePrices(); // Fallback to initialization
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Load prices from localStorage on mount
+  useEffect(() => {
+    console.log("PricesProvider: Loading prices from localStorage");
+    loadPrices();
+  }, []);
+
+  // Update weekly prices when selected year changes
+  useEffect(() => {
+    console.log(`PricesProvider: Selected year changed to ${selectedYear}`);
+    updateWeeklyPricesForYear(selectedYear);
+  }, [selectedYear, seasonalPricing]);
 
   // Initialize prices with predefined values
   const initializePrices = async () => {
@@ -193,7 +192,8 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     availableYears,
     selectedYear,
     setSelectedYear,
-    resetPrices
+    resetPrices,
+    loadPrices
   };
 
   return <PricesContext.Provider value={value}>{children}</PricesContext.Provider>;

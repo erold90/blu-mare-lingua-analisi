@@ -35,6 +35,10 @@ export const useSupabasePrices = (): PricesContextType => {
     }
   }, []);
 
+  const loadPrices = useCallback(async () => {
+    await loadPricesForYear(selectedYear);
+  }, [selectedYear, loadPricesForYear]);
+
   const updatePrice = useCallback(async (apartmentId: string, weekStart: Date, price: number) => {
     try {
       // Convert Date to string for database storage
@@ -66,7 +70,7 @@ export const useSupabasePrices = (): PricesContextType => {
     return price ? price.price : 0;
   }, [prices]);
 
-  const resetPrices = useCallback(() => {
+  const resetPrices = useCallback(async () => {
     setPrices([]);
     toast.info("Prezzi resettati");
   }, []);
@@ -84,6 +88,7 @@ export const useSupabasePrices = (): PricesContextType => {
     availableYears,
     selectedYear,
     setSelectedYear,
-    resetPrices
+    resetPrices,
+    loadPrices
   };
 };

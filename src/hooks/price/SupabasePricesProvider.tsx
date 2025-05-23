@@ -1,14 +1,18 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
 import { supabaseService } from "@/services/supabaseService";
 import { refreshPricesCache } from "@/utils/price/weeklyPrice";
 import { WeeklyPrice, SeasonalPricing, PricesContextType } from './types';
+import { getWeeksForYear } from './priceUtils';
 
 const SupabasePricesContext = createContext<PricesContextType | undefined>(undefined);
 
 export const SupabasePricesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [prices, setPrices] = useState<WeeklyPrice[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedYear, setSelectedYear] = useState<number>(2025);
+  const [availableYears] = useState<number[]>([2025, 2026, 2027]);
 
   const loadPrices = useCallback(async () => {
     setIsLoading(true);
@@ -91,6 +95,11 @@ export const SupabasePricesProvider: React.FC<{ children: React.ReactNode }> = (
     return price ? price.price : 0;
   }, [prices]);
 
+  const resetPrices = useCallback(async () => {
+    setPrices([]);
+    toast.info("Prezzi resettati");
+  }, []);
+
   useEffect(() => {
     loadPrices();
   }, [loadPrices]);
@@ -101,6 +110,11 @@ export const SupabasePricesProvider: React.FC<{ children: React.ReactNode }> = (
       isLoading,
       updatePrice,
       getPriceForWeek,
+      getWeeksForYear,
+      availableYears,
+      selectedYear,
+      setSelectedYear,
+      resetPrices,
       loadPrices
     }}>
       {children}
