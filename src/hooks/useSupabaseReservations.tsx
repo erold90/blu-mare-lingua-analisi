@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { apartments } from "@/data/apartments";
@@ -103,7 +104,7 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
   // Force a refresh of data from database
   const refreshData = useCallback(async () => {
     await loadReservations();
-    toast.success("Dati sincronizzati correttamente");
+    // Removed success toast notification
   }, [loadReservations]);
   
   // Load reservations on mount

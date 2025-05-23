@@ -1,56 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
+// This component is now empty and won't show any notifications
 const DatabaseStatusChecker: React.FC = () => {
-  const [status, setStatus] = useState<'loading' | 'connected' | 'error'>('loading');
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const checkDatabaseStatus = async () => {
-      try {
-        // Perform a simple query to check the database connection
-        await supabase.from('apartments').select('id').limit(1);
-        setStatus('connected');
-        setError(null);
-      } catch (e: any) {
-        setStatus('error');
-        setError(e.message);
-      }
-    };
-
-    checkDatabaseStatus();
-  }, []);
-
-  return (
-    <div>
-      {status === 'loading' && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Database Status</AlertTitle>
-          <AlertDescription>Checking database connection...</AlertDescription>
-        </Alert>
-      )}
-
-      {status === 'connected' && (
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Database Status</AlertTitle>
-          <AlertDescription>Database connected and operational</AlertDescription>
-        </Alert>
-      )}
-
-      {status === 'error' && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Database Status</AlertTitle>
-          <AlertDescription>Database error: {error}</AlertDescription>
-        </Alert>
-      )}
-    </div>
-  );
+  // Removed all database status checking and notifications
+  return null;
 };
 
 export default DatabaseStatusChecker;

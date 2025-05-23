@@ -46,7 +46,7 @@ const AdminReservations = () => {
     setRefreshing(true);
     try {
       await refreshData();
-      toast.success("Dati aggiornati con successo");
+      // Removed success toast notification
     } catch (error) {
       console.error("Error in manual refresh:", error);
       toast.error("Errore durante l'aggiornamento dei dati");
