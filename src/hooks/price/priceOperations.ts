@@ -1,177 +1,78 @@
 
-import { Dispatch, SetStateAction } from "react";
-import { WeeklyPrice, SeasonalPricing } from "./types";
-import { apartments } from "@/data/apartments";
-import { discoveryStorage, DISCOVERY_STORAGE_KEYS } from "@/services/discoveryStorage";
+import { format } from 'date-fns';
+import { toast } from "sonner";
+import { supabaseService } from "@/services/supabaseService";
+import { WeeklyPrice } from './types';
+import { get2025PriceData } from './priceUtils';
 
-/**
- * Updates a specific weekly price for an apartment
- */
-export const updateWeeklyPrice = (
+export const initializePricesFor2025 = async (): Promise<WeeklyPrice[]> => {
+  console.log("Initializing prices for 2025 with correct data from table");
+  
+  const priceData = get2025PriceData();
+  const pricesToInsert = [];
+  
+  for (const period of priceData) {
+    for (const [apartmentId, price] of Object.entries(period.prices)) {
+      pricesToInsert.push({
+        apartment_id: apartmentId,
+        year: 2025,
+        week_start: period.date,
+        price: price
+      });
+    }
+  }
+
+  try {
+    await supabaseService.prices.updateBatch(pricesToInsert);
+    console.log(`Initialized ${pricesToInsert.length} prices for 2025`);
+    toast.success("Prezzi 2025 inizializzati con successo");
+    
+    return pricesToInsert.map(p => ({
+      apartmentId: p.apartment_id,
+      weekStart: p.week_start,
+      price: p.price
+    }));
+  } catch (error) {
+    console.error("Error initializing 2025 prices:", error);
+    toast.error("Errore nell'inizializzazione dei prezzi 2025");
+    return [];
+  }
+};
+
+export const updatePriceInDatabase = async (
   apartmentId: string, 
   weekStart: string, 
   price: number, 
-  seasonalPricing: SeasonalPricing[], 
-  setSeasonalPricing: Dispatch<SetStateAction<SeasonalPricing[]>>,
-  setWeeklyPrices: Dispatch<SetStateAction<WeeklyPrice[]>>
-) => {
-  console.log(`Updating price for ${apartmentId} on ${weekStart} to ${price}€`);
-  
-  const currentYear = new Date(weekStart).getFullYear();
-  
-  // Create a copy of the current pricing to work with
-  let updatedPricing = [...seasonalPricing];
-  
-  // Find or create the year pricing
-  let yearIndex = updatedPricing.findIndex(season => season.year === currentYear);
-  
-  if (yearIndex === -1) {
-    // Year not found, create new year entry
-    console.log(`Creating new pricing for year ${currentYear}`);
-    const newYearPricing = {
-      year: currentYear,
-      prices: []
+  year: number
+): Promise<void> => {
+  try {
+    const priceData = {
+      apartment_id: apartmentId,
+      year: year,
+      week_start: weekStart,
+      price: price
     };
     
-    // Add the new year pricing to the updated pricing
-    updatedPricing = [...updatedPricing, newYearPricing];
-    yearIndex = updatedPricing.length - 1;
+    await supabaseService.prices.upsert(priceData);
+    console.log(`Updated price for ${apartmentId} on ${weekStart}: €${price}`);
+  } catch (error) {
+    console.error("Error updating price:", error);
+    toast.error("Errore nell'aggiornare il prezzo");
+    throw error;
   }
-  
-  // Format date strings for comparison
-  const weekStartDate = new Date(weekStart);
-  const weekStartDateStr = weekStartDate.toISOString().split('T')[0];
-  
-  // Update the specific price
-  const priceIndex = updatedPricing[yearIndex].prices.findIndex(p => {
-    const priceDate = new Date(p.weekStart).toISOString().split('T')[0];
-    return p.apartmentId === apartmentId && priceDate === weekStartDateStr;
-  });
-  
-  if (priceIndex !== -1) {
-    // Price exists, update it
-    updatedPricing[yearIndex].prices[priceIndex].price = price;
-    console.log(`Updated existing price: ${apartmentId}, ${weekStart}, ${price}€`);
-  } else {
-    // Add new price entry if not found
-    const weekEndDate = new Date(weekStartDate);
-    weekEndDate.setDate(weekEndDate.getDate() + 6); // End is 6 days later
+};
+
+export const loadPricesFromDatabase = async (year: number): Promise<WeeklyPrice[]> => {
+  try {
+    const data = await supabaseService.prices.getByYear(year);
     
-    updatedPricing[yearIndex].prices.push({
-      apartmentId,
-      weekStart: weekStartDate.toISOString(),
-      weekEnd: weekEndDate.toISOString(), // This is now allowed by the updated type
-      price
-    });
-    console.log(`Added new price: ${apartmentId}, ${weekStart}, ${price}€`);
+    return data.map(price => ({
+      apartmentId: price.apartment_id,
+      weekStart: price.week_start,
+      price: Number(price.price)
+    }));
+  } catch (error) {
+    console.error(`Failed to load prices for year ${year}:`, error);
+    throw error;
   }
-  
-  // Save to state
-  setSeasonalPricing(updatedPricing);
-  
-  // Save to discovery storage immediately
-  discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.SEASONAL_PRICING, updatedPricing);
-  
-  // Also update weekly prices if they're for the current year
-  const currentYearPrices = updatedPricing[yearIndex].prices;
-  setWeeklyPrices(currentYearPrices);
-  
-  console.log(`Weekly prices updated, now has ${currentYearPrices.length} entries`);
-};
-
-/**
- * Reset all price data (debug only)
- */
-export const resetAllPrices = () => {
-  console.log("Resetting all prices data");
-  discoveryStorage.removeItem(DISCOVERY_STORAGE_KEYS.SEASONAL_PRICING);
-};
-
-/**
- * Force initialization of prices with predefined values
- */
-export const forceInitializePrices = (
-  setSeasonalPricing: Dispatch<SetStateAction<SeasonalPricing[]>>
-) => {
-  console.log("Forcing price initialization with predefined values");
-  discoveryStorage.removeItem(DISCOVERY_STORAGE_KEYS.SEASONAL_PRICING);
-  
-  // Create predefined pricing data for 2025 season based on the provided table
-  const prices2025: WeeklyPrice[] = [];
-  
-  // Define price tiers for each apartment and period
-  const pricingData = [
-    // June
-    { start: "2025-06-07", end: "2025-06-13", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
-    { start: "2025-06-14", end: "2025-06-20", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
-    { start: "2025-06-21", end: "2025-06-27", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
-    { start: "2025-06-28", end: "2025-07-04", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
-    
-    // July
-    { start: "2025-07-05", end: "2025-07-11", prices: { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 } },
-    { start: "2025-07-12", end: "2025-07-18", prices: { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 } },
-    { start: "2025-07-19", end: "2025-07-25", prices: { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 } },
-    { start: "2025-07-26", end: "2025-08-01", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 665, "appartamento-4": 700 } },
-    
-    // August
-    { start: "2025-08-02", end: "2025-08-08", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 665, "appartamento-4": 700 } },
-    { start: "2025-08-09", end: "2025-08-15", prices: { "appartamento-1": 1150, "appartamento-2": 1250, "appartamento-3": 1075, "appartamento-4": 1100 } },
-    { start: "2025-08-16", end: "2025-08-22", prices: { "appartamento-1": 1150, "appartamento-2": 1250, "appartamento-3": 1075, "appartamento-4": 1100 } },
-    { start: "2025-08-23", end: "2025-08-29", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 675, "appartamento-4": 700 } },
-    { start: "2025-08-30", end: "2025-09-05", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 675, "appartamento-4": 700 } },
-    
-    // September
-    { start: "2025-09-06", end: "2025-09-12", prices: { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 } },
-    { start: "2025-09-13", end: "2025-09-19", prices: { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 } },
-    { start: "2025-09-20", end: "2025-09-26", prices: { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 } },
-  ];
-
-  // Create price entries for each apartment and time period
-  pricingData.forEach(period => {
-    // For each apartment ID
-    Object.entries(period.prices).forEach(([aptId, price]) => {
-      const startDate = new Date(period.start);
-      const endDate = new Date(period.end);
-      
-      prices2025.push({
-        apartmentId: aptId,
-        weekStart: startDate.toISOString(),
-        weekEnd: endDate.toISOString(),
-        price: price
-      });
-    });
-  });
-  
-  console.log(`Created ${prices2025.length} custom prices for 2025`);
-  
-  // Log detailed examples of the created prices
-  const firstThreePricesPerApartment = {};
-  apartments.forEach(apt => {
-    const aptPrices = prices2025.filter(p => p.apartmentId === apt.id).slice(0, 3);
-    firstThreePricesPerApartment[apt.id] = aptPrices.map(p => 
-      `${new Date(p.weekStart).toLocaleDateString()}: ${p.price}€`
-    );
-  });
-  console.log("Sample prices by apartment:", firstThreePricesPerApartment);
-  
-  // Update state with new prices
-  const initialPricing = [{ year: 2025, prices: prices2025 }];
-  setSeasonalPricing(initialPricing);
-  
-  // Save to discovery storage immediately
-  discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.SEASONAL_PRICING, initialPricing);
-  console.log("2025 seasonal prices saved to discovery storage with values:", initialPricing[0].prices.length);
-  
-  return prices2025;
-};
-
-/**
- * Initialize year pricing - no longer used directly, keep for compatibility
- */
-export const initializeYearPricing = (
-  seasonalPricing: SeasonalPricing[], 
-  setSeasonalPricing: Dispatch<SetStateAction<SeasonalPricing[]>>
-) => {
-  // This function is replaced by forceInitializePrices
-  return forceInitializePrices(setSeasonalPricing);
 };

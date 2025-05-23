@@ -1,91 +1,49 @@
 
-import { WeeklyPrice } from "./types";
-import { format } from "date-fns";
+import { startOfWeek, addWeeks, format } from 'date-fns';
 
-// Get weekly price for a specific apartment and date
-export const getWeeklyPriceForDate = (
-  apartmentId: string, 
-  date: Date, 
-  prices: WeeklyPrice[]
-): number => {
-  console.log(`Looking up price for apartment ${apartmentId} on ${format(date, 'yyyy-MM-dd')}`);
-  
-  if (!prices || prices.length === 0) {
-    console.log("No prices available");
-    return 0;
-  }
-  
-  // Format the date for comparison (YYYY-MM-DD)
-  const searchDate = new Date(date);
-  searchDate.setHours(0, 0, 0, 0);
-  const searchDateStr = searchDate.toISOString().split('T')[0];
-  
-  // Find matching price
-  const price = prices.find((p) => {
-    const priceDate = new Date(p.weekStart);
-    priceDate.setHours(0, 0, 0, 0);
-    const priceDateStr = priceDate.toISOString().split('T')[0];
-    
-    return p.apartmentId === apartmentId && priceDateStr === searchDateStr;
-  });
-  
-  if (price) {
-    console.log(`Found price for ${apartmentId} on ${searchDateStr}: ${price.price}€`);
-    return price.price;
-  } else {
-    console.log(`No price found for ${apartmentId} on ${searchDateStr}`);
-    return 0;
-  }
-};
-
-// Calculate weeks between dates
 export const getWeeksForYear = (year: number): { start: Date; end: Date }[] => {
   const weeks: { start: Date; end: Date }[] = [];
+  const startOfYear = new Date(year, 0, 1);
+  let currentWeek = startOfWeek(startOfYear, { weekStartsOn: 1 });
   
-  // Start from first Saturday of June
-  const firstDay = new Date(year, 5, 1); // June 1st
-  const dayOfWeek = firstDay.getDay();
-  const daysUntilSaturday = dayOfWeek === 6 ? 0 : 6 - dayOfWeek;
-  
-  const firstSaturday = new Date(firstDay);
-  firstSaturday.setDate(firstSaturday.getDate() + daysUntilSaturday);
-  
-  // End at last week of September
-  const lastDay = new Date(year, 9, 0); // Last day of September
-  
-  let currentWeekStart = new Date(firstSaturday);
-  
-  while (currentWeekStart <= lastDay) {
-    const weekEnd = new Date(currentWeekStart);
-    weekEnd.setDate(weekEnd.getDate() + 6); // End date is 6 days after start
+  while (currentWeek.getFullYear() <= year) {
+    const weekEnd = new Date(currentWeek);
+    weekEnd.setDate(weekEnd.getDate() + 6);
     
     weeks.push({
-      start: new Date(currentWeekStart),
-      end: new Date(weekEnd)
+      start: new Date(currentWeek),
+      end: weekEnd
     });
     
-    // Move to next week
-    currentWeekStart = new Date(currentWeekStart);
-    currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+    currentWeek = addWeeks(currentWeek, 1);
+    
+    if (currentWeek.getFullYear() > year && weeks.length >= 52) {
+      break;
+    }
   }
   
   return weeks;
 };
 
-// Format date to Italian style
-export const formatDate = (date: Date): string => {
-  return format(date, 'dd/MM/yyyy');
+export const get2025PriceData = () => {
+  return [
+    { date: "2025-06-02", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
+    { date: "2025-06-09", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
+    { date: "2025-06-16", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
+    { date: "2025-06-23", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
+    { date: "2025-06-30", prices: { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 } },
+    { date: "2025-07-07", prices: { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 } },
+    { date: "2025-07-14", prices: { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 } },
+    { date: "2025-07-21", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 665, "appartamento-4": 700 } },
+    { date: "2025-07-28", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 665, "appartamento-4": 700 } },
+    { date: "2025-08-04", prices: { "appartamento-1": 1150, "appartamento-2": 1250, "appartamento-3": 1075, "appartamento-4": 1100 } },
+    { date: "2025-08-11", prices: { "appartamento-1": 1150, "appartamento-2": 1250, "appartamento-3": 1075, "appartamento-4": 1100 } },
+    { date: "2025-08-18", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 675, "appartamento-4": 700 } },
+    { date: "2025-08-25", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 675, "appartamento-4": 700 } },
+    { date: "2025-09-01", prices: { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 } },
+    { date: "2025-09-08", prices: { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 } },
+    { date: "2025-09-15", prices: { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 } },
+    { date: "2025-09-22", prices: { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 } },
+    { date: "2025-09-29", prices: { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 } },
+  ];
 };
-
-// Calculate number of nights between two dates
-export const calculateNights = (checkIn: Date, checkOut: Date): number => {
-  const diffTime = Math.abs(checkOut.getTime() - checkIn.getTime());
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-};
-
-// Check if a date falls within high season (June-September)
-export const isHighSeason = (date: Date): boolean => {
-  const month = date.getMonth();
-  return month >= 5 && month <= 8; // June (5) to September (8)
-};
-
