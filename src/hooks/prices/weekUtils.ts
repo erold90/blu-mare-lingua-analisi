@@ -1,37 +1,54 @@
 
-import { format } from 'date-fns';
+import { addWeeks, format, startOfWeek } from "date-fns";
+import { it } from "date-fns/locale";
 
 export interface WeekInfo {
   start: Date;
   end: Date;
   startStr: string;
-  label: string;
 }
 
 /**
- * Generate the season weeks for a specific year
- * @param year The year to generate weeks for
- * @returns Array of week information
+ * Get all weeks for a given season year
+ * @param year The year to get weeks for (defaults to 2025)
+ * @returns Array of week objects with start and end dates
  */
 export const getSeasonWeeks = (year: number = 2025): WeekInfo[] => {
   const weeks: WeekInfo[] = [];
-  const seasonStart = new Date(year, 5, 2); // June 2nd
-  let currentWeek = new Date(seasonStart);
   
-  while (currentWeek <= new Date(year, 8, 29)) { // until September 29th
-    const weekEnd = new Date(currentWeek);
+  // Define season start date (first Monday of June)
+  const seasonStartDate = new Date(year, 5, 1); // June 1st
+  const dayOfWeek = seasonStartDate.getDay();
+  const daysUntilMonday = dayOfWeek === 1 ? 0 : (dayOfWeek === 0 ? 1 : 8 - dayOfWeek);
+  
+  // Adjust to first Monday
+  seasonStartDate.setDate(seasonStartDate.getDate() + daysUntilMonday);
+  
+  // Generate weeks until end of September
+  let currentWeekStart = new Date(seasonStartDate);
+  const seasonEndDate = new Date(year, 9, 7); // October 7th (to include the last week of September)
+  
+  while (currentWeekStart < seasonEndDate) {
+    const weekEnd = new Date(currentWeekStart);
     weekEnd.setDate(weekEnd.getDate() + 6);
     
     weeks.push({
-      start: new Date(currentWeek),
-      end: weekEnd,
-      startStr: format(currentWeek, 'yyyy-MM-dd'),
-      label: format(currentWeek, 'dd/MM')
+      start: new Date(currentWeekStart),
+      end: new Date(weekEnd),
+      startStr: format(currentWeekStart, 'yyyy-MM-dd')
     });
     
-    currentWeek.setDate(currentWeek.getDate() + 7);
+    currentWeekStart = addWeeks(currentWeekStart, 1);
   }
   
-  console.log(`Generated season weeks: ${weeks.length} weeks`);
   return weeks;
+};
+
+/**
+ * Format a week range as a string
+ * @param week Week object with start and end dates
+ * @returns Formatted string like "12 - 18 Giu"
+ */
+export const formatWeekRange = (week: WeekInfo): string => {
+  return `${format(week.start, "d", { locale: it })} - ${format(week.end, "d MMM", { locale: it })}`;
 };

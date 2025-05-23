@@ -1,19 +1,16 @@
 
-import * as React from "react";
-import { format } from "date-fns";
-import { it } from "date-fns/locale";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 interface PriceDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (price: number) => void;
   apartmentName: string;
-  weekStart: Date;
-  weekEnd: Date;
+  weekLabel: string;
   currentPrice: number;
 }
 
@@ -22,56 +19,56 @@ const PriceDialog: React.FC<PriceDialogProps> = ({
   onClose,
   onSave,
   apartmentName,
-  weekStart,
-  weekEnd,
-  currentPrice,
+  weekLabel,
+  currentPrice
 }) => {
-  const [price, setPrice] = React.useState<number>(currentPrice);
+  const [price, setPrice] = useState(currentPrice.toString());
   
-  // Reset price when modal opens with new data
-  React.useEffect(() => {
-    if (isOpen) {
-      setPrice(currentPrice);
-    }
-  }, [isOpen, currentPrice]);
-  
-  const handleSave = () => {
-    onSave(price);
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPrice(e.target.value);
   };
   
-  const weekFormatted = `${format(weekStart, "d", { locale: it })} - ${format(weekEnd, "d MMM yyyy", { locale: it })}`;
+  const handleSave = () => {
+    const numericPrice = parseInt(price);
+    if (!isNaN(numericPrice) && numericPrice >= 0) {
+      onSave(numericPrice);
+    }
+  };
   
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[400px]">
+    <Dialog open={isOpen} onOpenChange={value => !value && onClose()}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Modifica Prezzo</DialogTitle>
+          <DialogTitle>Modifica prezzo</DialogTitle>
           <DialogDescription>
-            {apartmentName} - {weekFormatted}
+            {apartmentName} - {weekLabel}
           </DialogDescription>
         </DialogHeader>
         
         <div className="py-4">
           <div className="flex items-center gap-4">
-            <Label htmlFor="price" className="min-w-[80px]">Prezzo:</Label>
-            <div className="flex items-center flex-1">
-              <Input
-                id="price"
-                type="number"
-                min="0"
-                value={price}
-                onChange={(e) => setPrice(parseInt(e.target.value) || 0)}
-                className="max-w-[120px]"
-                autoFocus
-              />
-              <span className="ml-2">€</span>
-            </div>
+            <Label htmlFor="price" className="w-24">
+              Prezzo (€)
+            </Label>
+            <Input
+              id="price"
+              value={price}
+              onChange={handlePriceChange}
+              type="number"
+              min="0"
+              className="flex-1"
+              autoFocus
+            />
           </div>
         </div>
         
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Annulla</Button>
-          <Button onClick={handleSave}>Salva</Button>
+          <Button variant="outline" onClick={onClose}>
+            Annulla
+          </Button>
+          <Button onClick={handleSave}>
+            Salva
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
