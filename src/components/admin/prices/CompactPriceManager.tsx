@@ -25,6 +25,14 @@ const CompactPriceManager: React.FC = () => {
   const isMobile = useIsMobile();
   const weeks = getSeasonWeeks();
 
+  // Debug: log dello stato
+  console.log("CompactPriceManager render:", {
+    pricesCount: prices.length,
+    isLoading,
+    weeksCount: weeks.length,
+    isMobile
+  });
+
   const getPriceLevel = (price: number) => {
     if (price >= 1000) return { level: 'peak', color: 'bg-red-500', label: 'Peak' };
     if (price >= 700) return { level: 'high', color: 'bg-orange-500', label: 'High' };
@@ -58,6 +66,10 @@ const CompactPriceManager: React.FC = () => {
           </h2>
           <p className="text-muted-foreground mt-1">
             Modifica veloce dei prezzi settimanali - Stagione giugno-settembre
+          </p>
+          {/* Debug info */}
+          <p className="text-xs text-muted-foreground mt-1">
+            Debug: {prices.length} prezzi caricati, {weeks.length} settimane
           </p>
         </div>
         
@@ -191,6 +203,9 @@ const CompactPriceManager: React.FC = () => {
                       {weeks.map((week, idx) => {
                         const price = getPrice(apartment.id, week.startStr);
                         const priceLevel = getPriceLevel(price);
+                        
+                        // Debug log per ogni cella
+                        console.log(`Price for ${apartment.id} on ${week.startStr}: ${price}`);
                         
                         return (
                           <td key={idx} className="py-1 px-1 text-center">
