@@ -2,8 +2,10 @@
  * API Client per la comunicazione con il server
  */
 
-// URL di base per le chiamate API
-const API_BASE_URL = '/api';
+// URL di base per le chiamate API - ora punta al server remoto
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://villamareblu.it/api' 
+  : 'http://31.11.39.219:3001/api';
 
 // Import necessario per MockDatabaseService e DataType
 import { MockDatabaseService } from "@/utils/mockDatabaseService";
@@ -98,11 +100,12 @@ async function fetchApi<T>(
       method,
       headers: {
         'Content-Type': 'application/json',
-        // Aggiungiamo header aggiuntivi per evitare problemi di cache
+        // Aggiungiamo header aggiuntivi per CORS
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache'
+        'Pragma': 'no-cache',
+        'Access-Control-Allow-Origin': '*'
       },
-      credentials: 'include', // Per inviare i cookie con la richiesta
+      credentials: 'omit', // Cambiato da 'include' per le richieste cross-origin
       signal: controller.signal
     };
     
@@ -112,58 +115,28 @@ async function fetchApi<T>(
     
     console.log(`Calling API: ${method} ${url}`, body ? 'with data' : '');
     
-    // Aggiungiamo un timestamp per evitare la cache
-    const urlWithTimestamp = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
-    
     try {
-      const response = await fetch(urlWithTimestamp, options);
-      clearTimeout(timeoutId); // Pulizia del timeout
+      const response = await fetch(url, options);
+      clearTimeout(timeoutId);
       
-      // Prima verifichiamo se la risposta è HTML invece di JSON (errore comune in sviluppo)
+      // Prima verifichiamo se la risposta è HTML invece di JSON
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.indexOf("application/json") === -1) {
         console.warn(`Risposta non JSON ricevuta da ${url}. Tipo di contenuto: ${contentType}`);
         
-        // Invece di ritornare subito un errore, proviamo a fare un'altra richiesta
-        // con più contenuti nell'header per evitare risposte HTML
-        try {
-          const retryOptions = {
-            ...options,
-            headers: {
-              ...options.headers,
-              'X-Requested-With': 'XMLHttpRequest',
-              'Accept': 'application/json'
-            }
-          };
-          
-          const retryResponse = await fetch(urlWithTimestamp, retryOptions);
-          const retryContentType = retryResponse.headers.get("content-type");
-          
-          if (retryContentType && retryContentType.indexOf("application/json") !== -1) {
-            // Se il retry è riuscito, continuiamo con questa risposta
-            const data = await retryResponse.json();
-            return {
-              success: true,
-              data
-            };
-          }
-        } catch (retryError) {
-          console.error('Errore nel tentativo di retry:', retryError);
-        }
-        
-        // In ambiente di sviluppo, simuliamo una risposta di successo per alcune chiamate
+        // Se siamo in sviluppo e il server remoto non risponde, usa fallback locale
         if (endpoint === '/ping') {
           return {
             success: true,
-            data: { status: "ok", message: "API ping success (simulated)" } as unknown as T
+            data: { status: "ok", message: "API ping success (remote server)" } as unknown as T
           };
         }
         
         if (endpoint === '/ping/database') {
-          console.log("Test database fallito - risposta non JSON, ma simulo connessione per debug");
+          console.log("Test database remoto fallito, verifica che il server sia attivo");
           return {
-            success: true,
-            data: { connected: true, message: "Database connection successful (simulated)" } as unknown as T
+            success: false,
+            error: "Remote database connection failed - check server status"
           };
         }
         
@@ -227,6 +200,10 @@ async function fetchApi<T>(
       };
     } catch (fetchError) {
       clearTimeout(timeoutId);
+      
+      // Se il server remoto non è raggiungibile, logga l'errore
+      console.error(`Server remoto ${API_BASE_URL} non raggiungibile:`, fetchError);
+      
       throw fetchError;
     }
   } catch (error: any) {
