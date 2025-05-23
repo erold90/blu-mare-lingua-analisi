@@ -11,8 +11,8 @@ import ApartmentSelectionStep from "@/components/quote/ApartmentSelectionStep";
 import ServicesStep from "@/components/quote/ServicesStep";
 import SummaryStep from "@/components/quote/summary/SummaryStep";
 
-// Import dialog components
-import ApartmentDialog from "@/components/quote/ApartmentDialog";
+// Import dialog components - fix the import for ApartmentDialog
+import { ApartmentDialog } from "@/components/quote/ApartmentDialog";
 import GroupDialog from "@/components/quote/GroupDialog";
 import ProgressBar from "@/components/quote/ProgressBar";
 
@@ -125,9 +125,9 @@ const RequestQuotePage = () => {
             </p>
           </div>
           
-          {/* Progress Bar */}
+          {/* Progress Bar - fix the prop name */}
           <div className="mb-8">
-            <ProgressBar currentStep={step} totalSteps={totalSteps} />
+            <ProgressBar step={step} totalSteps={totalSteps} />
           </div>
           
           {/* Form Content */}
@@ -138,19 +138,25 @@ const RequestQuotePage = () => {
           </div>
           
           {/* Dialogs */}
-          <ApartmentDialog
-            apartmentId={apartmentDialog}
-            isOpen={apartmentDialog !== null}
-            onClose={closeApartmentDialog}
-            onSelect={selectApartment}
-          />
+          {apartmentDialog !== null && (
+            <ApartmentDialog
+              apartment={apartments.find(apt => apt.id === apartmentDialog)!}
+              isSelected={form.watch('selectedApartments')?.includes(apartmentDialog) || false}
+              onToggle={() => selectApartment(apartmentDialog)}
+              onClose={closeApartmentDialog}
+            />
+          )}
           
+          {/* GroupDialog - fix the prop names */}
           <GroupDialog
-            isOpen={groupDialog}
-            onClose={closeGroupDialog}
-            form={form}
+            open={groupDialog}
+            onOpenChange={(open) => open ? openGroupDialog() : closeGroupDialog()}
             familyGroups={familyGroups}
-            setFamilyGroups={setFamilyGroups}
+            groupType={form.watch('groupType')}
+            onGroupTypeChange={(value) => form.setValue('groupType', value)}
+            onFamilyGroupsChange={setFamilyGroups}
+            onConfirm={closeGroupDialog}
+            onCancel={closeGroupDialog}
           />
         </div>
       </div>
