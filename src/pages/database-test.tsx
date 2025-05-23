@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { AdminLayout } from "@/components/admin/AdminLayout";
+import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import DatabaseStatusChecker from "@/components/admin/database/DatabaseStatusChecker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
