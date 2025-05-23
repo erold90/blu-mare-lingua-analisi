@@ -3,19 +3,10 @@
  * API configuration and constants
  */
 
-// URL di base per le chiamate API - ora punta al server remoto con fallback
+// Configurazione per l'integrazione Supabase
 export const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://villamareblu.it/api' 
-  : 'http://localhost:3001/api'; // Modificato per usare il tunnel SSH locale
-
-// Configurazione del database
-export const DATABASE_CONFIG = {
-  host: process.env.NODE_ENV === 'production' ? '31.11.39.219' : 'localhost', // Usa localhost quando in sviluppo (tunnel SSH)
-  user: 'Sql1864200',
-  password: '@Ginevra33', // Aggiungiamo la password corretta dal phpMyAdmin
-  database: 'Sql1864200_1',
-  port: 3306
-};
+  : 'http://localhost:3001/api';
 
 // Flag per tenere traccia dei tentativi falliti di connessione API
 export let apiConnectionFailed = false;
