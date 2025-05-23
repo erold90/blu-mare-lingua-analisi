@@ -1,11 +1,11 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageCategory } from '@/services/imageService';
 
@@ -20,6 +20,7 @@ interface ImageUploadProps {
 interface FileWithAltText {
   file: File;
   altText: string;
+  preview: string;
 }
 
 export const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -47,7 +48,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 
     const newFilesWithAltText = validFiles.map(file => ({
       file,
-      altText: ''
+      altText: '',
+      preview: URL.createObjectURL(file)
     }));
 
     setFilesWithAltText(prev => [...prev, ...newFilesWithAltText].slice(0, maxFiles));
@@ -62,8 +64,23 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     multiple: maxFiles > 1
   });
 
+  // Cleanup object URLs when component unmounts or files change
+  useEffect(() => {
+    return () => {
+      filesWithAltText.forEach(fileData => {
+        URL.revokeObjectURL(fileData.preview);
+      });
+    };
+  }, [filesWithAltText]);
+
   const removeFile = (fileIndex: number) => {
-    setFilesWithAltText(prev => prev.filter((_, i) => i !== fileIndex));
+    setFilesWithAltText(prev => {
+      const fileToRemove = prev[fileIndex];
+      if (fileToRemove) {
+        URL.revokeObjectURL(fileToRemove.preview);
+      }
+      return prev.filter((_, i) => i !== fileIndex);
+    });
   };
 
   const handleAltTextChange = (fileIndex: number, value: string) => {
@@ -101,6 +118,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       
       if (successCount === filesWithAltText.length) {
         toast.success(`${successCount} immagini caricate con successo`);
+        // Cleanup object URLs before clearing
+        filesWithAltText.forEach(fileData => {
+          URL.revokeObjectURL(fileData.preview);
+        });
         setFilesWithAltText([]);
         onUploadSuccess?.();
       } else {
@@ -152,7 +173,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
               {filesWithAltText.map((fileData, fileIndex) => (
                 <div key={`file-${fileIndex}`} className="flex items-start gap-4 p-3 border rounded-lg">
                   <div className="flex-shrink-0">
-                    <ImageIcon className="h-12 w-12 text-muted-foreground" />
+                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted">
+                      <img
+                        src={fileData.preview}
+                        alt={`Preview ${fileIndex + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{fileData.file.name}</p>
