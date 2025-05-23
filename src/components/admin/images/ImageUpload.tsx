@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { Upload, X, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { ImageCategory } from '@/services/imageService';
+import { imageService, ImageCategory } from '@/services/imageService';
 
 interface ImageUploadProps {
   category: ImageCategory;
@@ -107,8 +108,6 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     setUploadErrors([]);
     
     try {
-      const { imageService } = await import('@/services/imageService');
-      
       console.log("Image service loaded, starting uploads...");
       
       // Upload files sequentially to avoid conflicts with simultaneous uploads
