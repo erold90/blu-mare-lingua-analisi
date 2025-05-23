@@ -35,19 +35,22 @@ export const useSupabasePrices = (): PricesContextType => {
     }
   }, []);
 
-  const updatePrice = useCallback(async (apartmentId: string, weekStart: string, price: number) => {
+  const updatePrice = useCallback(async (apartmentId: string, weekStart: Date, price: number) => {
     try {
-      await updatePriceInDatabase(apartmentId, weekStart, price, selectedYear);
+      // Convert Date to string for database storage
+      const weekStartStr = format(weekStart, 'yyyy-MM-dd');
+      
+      await updatePriceInDatabase(apartmentId, weekStartStr, price, selectedYear);
       
       // Update local state
       setPrices(prev => {
-        const existing = prev.findIndex(p => p.apartmentId === apartmentId && p.weekStart === weekStart);
+        const existing = prev.findIndex(p => p.apartmentId === apartmentId && p.weekStart === weekStartStr);
         if (existing >= 0) {
           const updated = [...prev];
-          updated[existing] = { apartmentId, weekStart, price };
+          updated[existing] = { apartmentId, weekStart: weekStartStr, price };
           return updated;
         } else {
-          return [...prev, { apartmentId, weekStart, price }];
+          return [...prev, { apartmentId, weekStart: weekStartStr, price }];
         }
       });
       

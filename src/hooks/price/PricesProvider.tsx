@@ -156,9 +156,12 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   };
 
-  // Update price for specific week and apartment
-  const updatePrice = async (apartmentId: string, weekStartStr: string, price: number) => {
+  // Update price for specific week and apartment - now accepts Date object
+  const updatePrice = async (apartmentId: string, weekStart: Date, price: number) => {
     try {
+      // Convert Date to string for storage
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+      
       await updateWeeklyPrice(apartmentId, weekStartStr, price, 2025);
       
       // Update local state

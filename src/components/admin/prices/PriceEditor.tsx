@@ -17,7 +17,9 @@ const PriceEditor: React.FC<PriceEditorProps> = ({ year, weeks, isMobile }) => {
   const { getPriceForWeek, updatePrice } = useSupabasePrices();
   
   const handlePriceChange = (apartmentId: string, weekStart: string, newPrice: number) => {
-    updatePrice(apartmentId, weekStart, newPrice);
+    // Convert the string weekStart to Date object
+    const weekStartDate = new Date(weekStart);
+    updatePrice(apartmentId, weekStartDate, newPrice);
   };
   
   return isMobile ? (
