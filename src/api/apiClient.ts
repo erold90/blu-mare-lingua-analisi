@@ -1,4 +1,3 @@
-
 /**
  * API Client per la comunicazione con il server
  */
@@ -53,9 +52,10 @@ async function fetchApi<T>(
       
       // In ambiente di sviluppo, simuliamo una risposta di successo per alcune chiamate
       if (method === 'GET' && endpoint === '/ping') {
+        // Fix: Usiamo casting esplicito per forzare il tipo
         return {
           success: true,
-          data: { status: "ok", message: "API ping success (simulated)" }
+          data: { status: "ok", message: "API ping success (simulated)" } as unknown as T
         };
       }
       
@@ -63,14 +63,14 @@ async function fetchApi<T>(
       if (endpoint.includes('/reservations') && method === 'GET') {
         return {
           success: true,
-          data: [] as any // Array vuoto per le prenotazioni
+          data: [] as unknown as T // Array vuoto per le prenotazioni
         };
       }
       
       if (endpoint.includes('/cleaning') && method === 'GET') {
         return {
           success: true,
-          data: [] as any // Array vuoto per le attività di pulizia
+          data: [] as unknown as T // Array vuoto per le attività di pulizia
         };
       }
       
