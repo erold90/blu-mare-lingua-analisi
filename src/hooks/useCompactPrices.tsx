@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { toast } from "sonner";
@@ -22,7 +21,7 @@ export const useCompactPrices = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [editingCell, setEditingCell] = useState<{ apartmentId: string; weekStart: string } | null>(null);
 
-  // Genera le settimane della stagione 2025
+  // Generate the season weeks for 2025
   const getSeasonWeeks = useCallback((): WeekInfo[] => {
     const weeks: WeekInfo[] = [];
     const seasonStart = new Date(2025, 5, 2); // 2 giugno 2025
@@ -46,7 +45,7 @@ export const useCompactPrices = () => {
     return weeks;
   }, []);
 
-  // Inizializza prezzi di default per il 2025
+  // Initialize default prices for 2025
   const initializeDefaultPrices = useCallback(async () => {
     console.log("🔄 Starting default prices initialization for 2025...");
     
@@ -58,16 +57,16 @@ export const useCompactPrices = () => {
     
     for (const week of weeks) {
       for (const apartmentId of apartmentIds) {
-        // Prezzi di esempio basati sulla settimana
+        // Example prices based on the week
         let basePrice = 400;
         const weekDate = new Date(week.start);
         const month = weekDate.getMonth();
         
-        // Luglio e Agosto più cari
+        // July and August are more expensive
         if (month === 6 || month === 7) {
           basePrice = 800;
         }
-        // Giugno e Settembre prezzi medi
+        // June and September are medium price
         else if (month === 5 || month === 8) {
           basePrice = 600;
         }
@@ -87,71 +86,76 @@ export const useCompactPrices = () => {
     try {
       const result = await supabaseService.prices.updateBatch(defaultPrices);
       console.log("✅ Successfully initialized prices:", result?.length || defaultPrices.length);
-      toast.success(`Prezzi inizializzati: ${defaultPrices.length} entries`);
-      return true;
+      
+      // Always save to localStorage as a backup
+      const transformedPrices = defaultPrices.map(p => ({
+        apartmentId: p.apartment_id,
+        weekStart: p.week_start,
+        price: p.price
+      }));
+      
+      // Set the state with transformed prices
+      setPrices(transformedPrices);
+      
+      // Save to localStorage for redundancy
+      const seasonalData = [{
+        year: 2025,
+        prices: transformedPrices
+      }];
+      localStorage.setItem("seasonalPricing", JSON.stringify(seasonalData));
+      
+      toast.success(`Prezzi inizializzati: ${transformedPrices.length} entries`);
+      return transformedPrices;
     } catch (error) {
       console.error("❌ Error initializing default prices:", error);
-      toast.error("Errore nell'inizializzazione dei prezzi");
-      return false;
+      
+      // Create a fallback set of prices to show in the UI
+      const fallbackPrices = defaultPrices.map(p => ({
+        apartmentId: p.apartment_id,
+        weekStart: p.week_start,
+        price: p.price
+      }));
+      
+      // Set the local state with fallback prices
+      setPrices(fallbackPrices);
+      
+      // Store fallback in localStorage
+      const seasonalData = [{
+        year: 2025,
+        prices: fallbackPrices
+      }];
+      localStorage.setItem("seasonalPricing", JSON.stringify(seasonalData));
+      
+      toast.error("Errore nel database - prezzi salvati localmente");
+      return fallbackPrices;
     }
   }, [getSeasonWeeks]);
 
-  // Carica i prezzi dal database
+  // Load prices from database or initialize defaults
   const loadPrices = useCallback(async () => {
     try {
       setIsLoading(true);
       console.log("🔍 Loading prices from database for year 2025...");
       
-      const data = await supabaseService.prices.getByYear(2025);
+      // First, try to load from Supabase
+      let data;
+      try {
+        data = await supabaseService.prices.getByYear(2025);
+      } catch (dbError) {
+        console.error("❌ Database error:", dbError);
+        data = [];
+      }
+      
       console.log("📊 Raw price data from database:", {
         count: data?.length || 0,
         sampleData: data?.slice(0, 2) || []
       });
       
+      // If no data in Supabase, initialize defaults
       if (!data || data.length === 0) {
         console.log("📭 No prices found, initializing default prices...");
-        const initSuccess = await initializeDefaultPrices();
-        
-        if (initSuccess) {
-          console.log("🔄 Reloading prices after initialization...");
-          const newData = await supabaseService.prices.getByYear(2025);
-          console.log("📊 Reloaded data:", {
-            count: newData?.length || 0,
-            sampleData: newData?.slice(0, 2) || []
-          });
-          
-          if (newData && newData.length > 0) {
-            const transformedPrices: PriceData[] = newData.map(price => ({
-              apartmentId: price.apartment_id,
-              weekStart: price.week_start,
-              price: Number(price.price)
-            }));
-            console.log("✅ Setting transformed prices:", {
-              count: transformedPrices.length,
-              sample: transformedPrices.slice(0, 2)
-            });
-            setPrices(transformedPrices);
-            
-            // Salva anche in localStorage per la compatibilità
-            const seasonalData = [{
-              year: 2025,
-              prices: transformedPrices.map(p => ({
-                apartmentId: p.apartmentId,
-                weekStart: p.weekStart,
-                price: p.price
-              }))
-            }];
-            localStorage.setItem("seasonalPricing", JSON.stringify(seasonalData));
-            console.log("💾 Saved to localStorage");
-          } else {
-            console.log("❌ Still no data after initialization");
-            setPrices([]);
-          }
-        } else {
-          console.log("❌ Initialization failed");
-          setPrices([]);
-        }
-        return;
+        const initializedPrices = await initializeDefaultPrices();
+        return; // initializeDefaultPrices already sets the prices state
       }
       
       const transformedPrices: PriceData[] = data.map(price => ({
@@ -166,53 +170,75 @@ export const useCompactPrices = () => {
       });
       setPrices(transformedPrices);
       
-      // Salva anche in localStorage per la compatibilità
+      // Also save to localStorage for compatibility
       const seasonalData = [{
         year: 2025,
-        prices: transformedPrices.map(p => ({
-          apartmentId: p.apartmentId,
-          weekStart: p.weekStart,
-          price: p.price
-        }))
+        prices: transformedPrices
       }];
       localStorage.setItem("seasonalPricing", JSON.stringify(seasonalData));
       console.log("💾 Updated localStorage with existing prices");
       
     } catch (error) {
       console.error('❌ Error loading prices:', error);
-      toast.error('Errore nel caricamento dei prezzi');
-      setPrices([]);
+      
+      // Try loading from localStorage as fallback
+      try {
+        const localPrices = localStorage.getItem("seasonalPricing");
+        if (localPrices) {
+          const parsed = JSON.parse(localPrices);
+          const year2025 = parsed.find((y: any) => y.year === 2025);
+          if (year2025 && year2025.prices) {
+            console.log("🔄 Loading prices from localStorage instead:", year2025.prices.length);
+            setPrices(year2025.prices);
+            toast.info("Prezzi caricati dal backup locale");
+            return;
+          }
+        }
+      } catch (localErr) {
+        console.error("Failed to load from localStorage:", localErr);
+      }
+      
+      // If even localStorage fails, initialize new defaults
+      console.log("🔄 Nothing found anywhere, initializing default prices...");
+      await initializeDefaultPrices();
+      
     } finally {
       setIsLoading(false);
       console.log("🏁 Price loading process completed");
     }
   }, [initializeDefaultPrices]);
 
-  // Ottieni prezzo per appartamento e settimana
+  // Get price for apartment and week
   const getPrice = useCallback((apartmentId: string, weekStart: string): number => {
     const price = prices.find(p => p.apartmentId === apartmentId && p.weekStart === weekStart);
     const result = price ? price.price : 0;
     
-    if (result === 0) {
+    if (result === 0 && prices.length > 0) {
       console.log(`⚠️ No price found for apartment ${apartmentId}, week ${weekStart}. Available prices:`, prices.length);
     }
     
     return result;
   }, [prices]);
 
-  // Aggiorna prezzo
+  // Update price
   const updatePrice = useCallback(async (apartmentId: string, weekStart: string, newPrice: number) => {
     try {
       console.log(`💰 Updating price for ${apartmentId} on ${weekStart} to ${newPrice}`);
       
-      await supabaseService.prices.upsert({
-        apartment_id: apartmentId,
-        year: 2025,
-        week_start: weekStart,
-        price: newPrice
-      });
+      try {
+        // Try to update in Supabase
+        await supabaseService.prices.upsert({
+          apartment_id: apartmentId,
+          year: 2025,
+          week_start: weekStart,
+          price: newPrice
+        });
+      } catch (dbError) {
+        console.warn("Failed to update price in database:", dbError);
+        toast.error("Errore nel database - prezzo salvato localmente");
+      }
       
-      // Aggiorna stato locale
+      // Always update local state
       setPrices(prev => {
         const existing = prev.findIndex(p => p.apartmentId === apartmentId && p.weekStart === weekStart);
         if (existing >= 0) {
@@ -226,7 +252,7 @@ export const useCompactPrices = () => {
         }
       });
       
-      // Aggiorna localStorage
+      // Update localStorage regardless of DB success
       const savedPrices = localStorage.getItem("seasonalPricing");
       if (savedPrices) {
         const allPrices = JSON.parse(savedPrices);
@@ -241,6 +267,7 @@ export const useCompactPrices = () => {
             yearData.prices.push({ apartmentId, weekStart, price: newPrice });
           }
           localStorage.setItem("seasonalPricing", JSON.stringify(allPrices));
+          console.log("💾 Updated localStorage with new price");
         }
       }
       
@@ -251,13 +278,13 @@ export const useCompactPrices = () => {
     }
   }, []);
 
-  // Inizializza al mount
+  // Initialize on mount
   useEffect(() => {
     console.log("🚀 useCompactPrices: mounting, starting price loading...");
     loadPrices();
   }, [loadPrices]);
 
-  // Debug: log quando i prezzi cambiano
+  // Debug: log when prices change
   useEffect(() => {
     console.log("📈 Prices state updated:", {
       count: prices.length,
