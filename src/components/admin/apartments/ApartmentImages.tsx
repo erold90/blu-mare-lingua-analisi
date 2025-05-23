@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { ImageIcon } from "lucide-react";
 import { toast } from "sonner";
-import { imageService } from "@/utils/image";
+import { imageService, ImageRecord } from "@/services/imageService";
 
 interface ApartmentImagesProps {
   apartmentId: string;
@@ -21,70 +21,55 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
   onImagesChange,
   onCoverImageChange
 }) => {
-  const [loadedImages, setLoadedImages] = useState<string[]>([]);
+  const [loadedImages, setLoadedImages] = useState<ImageRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Funzione per caricare e verificare le immagini
-    const checkAndLoadImages = async () => {
+    // Carica solo le immagini da Supabase
+    const loadSupabaseImages = async () => {
       setIsLoading(true);
-      console.log(`Cercando immagini per l'appartamento: ${apartmentId}`);
+      console.log(`Caricando immagini Supabase per l'appartamento: ${apartmentId}`);
       
       try {
-        // Prima cerchiamo nella cache (ora con async)
-        const cachedImages = await imageService.getApartmentImagesFromCache(apartmentId);
-        if (cachedImages && cachedImages.length > 0) {
-          console.log(`Trovate ${cachedImages.length} immagini in cache per ${apartmentId}`);
-          setLoadedImages(cachedImages);
-          
-          // Verifichiamo che le immagini esistano ancora
-          const stillValid = await Promise.all(
-            cachedImages.map(path => imageService.checkImageExists(path))
-          );
-          
-          // Se tutte sono valide, usiamo quelle
-          if (stillValid.every(Boolean)) {
-            console.log("Tutte le immagini cached sono ancora valide");
-            setLoadedImages(cachedImages);
-            onImagesChange(apartmentId, cachedImages);
-            setIsLoading(false);
-            return;
-          } else {
-            console.log("Alcune immagini cached non sono più valide, effettuo nuova scansione");
-          }
+        // Ottieni solo le immagini da Supabase
+        const supabaseImages = await imageService.getImagesByCategory('apartment', apartmentId);
+        console.log(`Trovate ${supabaseImages.length} immagini Supabase per ${apartmentId}`);
+        
+        setLoadedImages(supabaseImages);
+        
+        // Converti in URLs per compatibilità con il componente padre
+        const imageUrls = supabaseImages.map(img => imageService.getImageUrl(img.file_path));
+        
+        // Aggiorna il componente padre con le nuove immagini
+        if (onImagesChange) {
+          onImagesChange(apartmentId, imageUrls);
         }
         
-        // Scansione completa delle immagini
-        const validImages = await imageService.scanApartmentImages(apartmentId);
-        
-        console.log(`Trovate ${validImages.length} immagini valide per ${apartmentId}`);
-        
-        // Salva nella cache per future richieste
-        if (validImages.length > 0) {
-          imageService.cacheApartmentImages(apartmentId, validImages);
-        }
-        
-        setLoadedImages(validImages);
-        
-        // Aggiorna il componente padre se abbiamo trovato immagini valide
-        if (validImages.length > 0 && onImagesChange) {
-          onImagesChange(apartmentId, validImages);
+        // Imposta automaticamente la prima immagine come cover se non ce n'è una
+        if (supabaseImages.length > 0 && !supabaseImages.some(img => img.is_cover) && onCoverImageChange) {
+          onCoverImageChange(apartmentId, 0);
         }
       } catch (error) {
-        console.error(`Errore nel caricamento delle immagini per ${apartmentId}:`, error);
+        console.error(`Errore nel caricamento delle immagini Supabase per ${apartmentId}:`, error);
         setLoadedImages([]);
       } finally {
         setIsLoading(false);
       }
     };
     
-    checkAndLoadImages();
-  }, [apartmentId, onImagesChange]);
+    loadSupabaseImages();
+  }, [apartmentId, onImagesChange, onCoverImageChange]);
   
-  const handleSelectCover = (index: number) => {
-    if (onCoverImageChange) {
-      onCoverImageChange(apartmentId, index);
-      toast.success("Immagine di copertina impostata");
+  const handleSelectCover = async (index: number) => {
+    if (loadedImages[index]) {
+      const success = await imageService.setCoverImage(apartmentId, loadedImages[index].id);
+      if (success && onCoverImageChange) {
+        onCoverImageChange(apartmentId, index);
+        toast.success("Immagine di copertina impostata");
+        // Ricarica le immagini per aggiornare lo stato di cover
+        const supabaseImages = await imageService.getImagesByCategory('apartment', apartmentId);
+        setLoadedImages(supabaseImages);
+      }
     }
   };
   
@@ -107,26 +92,18 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
     toast.info("Ricerca immagini in corso...");
     
     try {
-      // Pulisci la cache
-      imageService.clearImageCache();
+      const supabaseImages = await imageService.getImagesByCategory('apartment', apartmentId);
+      setLoadedImages(supabaseImages);
       
-      // Ricarica le immagini da Supabase
-      const validImages = await imageService.scanApartmentImages(apartmentId);
+      // Converti in URLs per compatibilità con il componente padre
+      const imageUrls = supabaseImages.map(img => imageService.getImageUrl(img.file_path));
       
-      setLoadedImages(validImages);
-      
-      // Salva nella cache per future richieste
-      if (validImages.length > 0) {
-        imageService.cacheApartmentImages(apartmentId, validImages);
-      }
-        
-      // Aggiorna il componente padre se abbiamo trovato immagini valide
-      if (validImages.length > 0 && onImagesChange) {
-        onImagesChange(apartmentId, validImages);
+      if (onImagesChange) {
+        onImagesChange(apartmentId, imageUrls);
       }
       
-      if (validImages.length > 0) {
-        toast.success(`Trovate ${validImages.length} immagini`);
+      if (supabaseImages.length > 0) {
+        toast.success(`Trovate ${supabaseImages.length} immagini`);
       } else {
         toast.error("Nessuna immagine trovata");
       }
@@ -156,26 +133,26 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
       
       {loadedImages.length > 0 ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {loadedImages.map((path, index) => (
+          {loadedImages.map((image, index) => (
             <div
-              key={index}
+              key={image.id}
               className={`relative rounded-md overflow-hidden border cursor-pointer ${
-                coverImageIndex === index ? 'ring-2 ring-primary' : ''
+                image.is_cover ? 'ring-2 ring-primary' : ''
               }`}
               onClick={() => handleSelectCover(index)}
             >
               <div className="aspect-square relative">
                 <img 
-                  src={imageService.getImageUrl(path)}
-                  alt={`Appartamento immagine ${index+1}`}
+                  src={imageService.getImageUrl(image.file_path)}
+                  alt={image.alt_text || `Appartamento immagine ${index+1}`}
                   className="absolute inset-0 w-full h-full object-cover"
                   onError={(e) => {
-                    console.error(`Errore nel rendering dell'immagine: ${path}`);
+                    console.error(`Errore nel rendering dell'immagine: ${image.file_path}`);
                     e.currentTarget.src = "/placeholder.svg";
                   }}
                 />
               </div>
-              {coverImageIndex === index && (
+              {image.is_cover && (
                 <Badge className="absolute bottom-1 left-1">Cover</Badge>
               )}
             </div>
@@ -185,7 +162,7 @@ export const ApartmentImages: React.FC<ApartmentImagesProps> = ({
         <div className="text-center py-6 border border-dashed rounded-lg">
           <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground opacity-50" />
           <p className="text-sm text-muted-foreground mt-2">
-            Le immagini vengono ora gestite tramite Supabase. Usa l'area amministrativa per caricare le immagini.
+            Nessuna immagine caricata. Usa l'area amministrativa per caricare le immagini.
           </p>
         </div>
       )}
