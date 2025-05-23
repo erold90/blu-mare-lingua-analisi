@@ -25,19 +25,19 @@ export interface CleaningTask {
 // Transform Supabase task to old format
 const transformSupabaseTask = (task: SupabaseCleaningTask): CleaningTask => ({
   id: task.id,
-  apartmentId: task.apartment_id,
+  apartmentId: task.apartmentId,
   apartmentName: '', // Will be populated by apartment lookup
-  date: task.task_date,
-  status: task.status === "in_progress" ? "inProgress" : 
+  date: task.taskDate,
+  status: task.status === "inProgress" ? "inProgress" : 
           task.status === "pending" ? "pending" :
           task.status === "completed" ? "completed" : "cancelled",
-  type: task.task_type === 'checkout' ? 'checkout' : 
-        task.task_type === 'maintenance' ? 'maintenance' : 
-        task.task_type === 'deep_clean' ? 'deep' : 'checkout',
+  type: task.taskType === 'checkout' ? 'checkout' : 
+        task.taskType === 'maintenance' ? 'maintenance' : 
+        task.taskType === 'deep_clean' ? 'deep' : 'checkout',
   priority: task.priority as "low" | "medium" | "high" | "urgent",
   notes: task.notes,
   assignedTo: task.assignee,
-  deviceId: task.device_id
+  deviceId: task.deviceId
 });
 
 // Transform old task to Supabase format
@@ -47,7 +47,7 @@ const transformToSupabaseTask = (task: Omit<CleaningTask, "id">): Omit<SupabaseC
   taskType: task.type === 'checkout' ? 'checkout' : 
            task.type === 'maintenance' ? 'maintenance' : 
            task.type === 'deep' ? 'deep_clean' : 'checkout',
-  status: task.status === "inProgress" ? "in_progress" : 
+  status: task.status === "inProgress" ? "inProgress" : 
           task.status === "pending" ? "pending" :
           task.status === "completed" ? "completed" : "cancelled",
   priority: task.priority || 'medium',
@@ -87,7 +87,7 @@ export const useCleaningManagementAdapter = () => {
     const existingTask = supabaseTasks.find(t => t.id === id);
     if (existingTask) {
       const supabaseStatus: SupabaseCleaningTask["status"] = 
-        status === "inProgress" ? "in_progress" : 
+        status === "inProgress" ? "inProgress" : 
         status === "pending" ? "pending" :
         status === "completed" ? "completed" : "cancelled";
       
