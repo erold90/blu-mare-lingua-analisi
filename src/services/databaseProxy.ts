@@ -1,4 +1,3 @@
-
 /**
  * Database Proxy Service
  * Servizio che fa da proxy tra l'applicazione e il database MySQL o localStorage
@@ -7,6 +6,7 @@
 import { DataType, externalStorage } from "./externalStorage";
 import { mysqlStorage } from "./mysqlStorage";
 import { toast } from "sonner";
+import { MockDatabaseService } from "@/utils/mockDatabaseService";
 
 class DatabaseProxy {
   private useMySQL: boolean = false;
@@ -28,6 +28,13 @@ class DatabaseProxy {
     this.isInitializing = true;
     
     try {
+      // Se la modalità mock è attiva, non tentare di connettersi a MySQL
+      if (MockDatabaseService.isActive()) {
+        console.log("Modalità database simulato attiva, MySQL non verrà utilizzato");
+        this.useMySQL = false;
+        return false;
+      }
+      
       this.useMySQL = await mysqlStorage.initialize();
       console.log("MySQL connection status:", this.useMySQL ? "connected" : "not available");
       return this.useMySQL;
@@ -59,6 +66,12 @@ class DatabaseProxy {
     await this.ensureInitialized();
     
     try {
+      // Se la modalità mock è attiva, usa il database simulato
+      if (MockDatabaseService.isActive()) {
+        console.log(`Usando database simulato per caricare i dati di tipo ${type}`);
+        return MockDatabaseService.loadData<T>(type);
+      }
+      
       // IMPORTANTE: Tentiamo sempre di riconnetterci al database prima di caricare i dati
       // Questo permette di recuperare una connessione persa
       if (!this.useMySQL) {
@@ -99,6 +112,17 @@ class DatabaseProxy {
   public async saveData<T>(type: DataType, data: T): Promise<boolean> {
     // Assicuriamoci che l'inizializzazione sia completata
     await this.ensureInitialized();
+    
+    // Se la modalità mock è attiva, usa il database simulato
+    if (MockDatabaseService.isActive()) {
+      console.log(`Usando database simulato per salvare i dati di tipo ${type}`);
+      const mockResult = await MockDatabaseService.saveData(type, data);
+      
+      // Salva anche in localStorage come backup
+      await externalStorage.saveData(type, data);
+      
+      return mockResult;
+    }
     
     let mysqlSaved = false;
     
@@ -174,6 +198,16 @@ class DatabaseProxy {
       await this.ensureInitialized();
       
       console.log(`Tentativo di sincronizzazione dei dati di tipo ${type}`);
+      
+      // Se la modalità mock è attiva, usa il database simulato
+      if (MockDatabaseService.isActive()) {
+        console.log(`Usando database simulato per sincronizzare i dati di tipo ${type}`);
+        await MockDatabaseService.synchronize(type);
+        toast.dismiss();
+        toast.success(`Sincronizzazione di ${this.getDataTypeLabel(type)} completata con successo`);
+        this.syncInProgress = false;
+        return;
+      }
       
       // Riconnessione al database se necessario
       if (!this.useMySQL) {
@@ -287,6 +321,21 @@ class DatabaseProxy {
     toast.loading("Sincronizzazione di tutti i dati in corso...");
     
     try {
+      // Se la modalità mock è attiva, usa il database simulato
+      if (MockDatabaseService.isActive()) {
+        console.log("Usando database simulato per sincronizzare tutti i dati");
+        
+        // Sincronizza tutti i tipi di dati
+        await MockDatabaseService.synchronize(DataType.RESERVATIONS);
+        await MockDatabaseService.synchronize(DataType.CLEANING_TASKS);
+        await MockDatabaseService.synchronize(DataType.APARTMENTS);
+        await MockDatabaseService.synchronize(DataType.PRICES);
+        
+        toast.dismiss();
+        toast.success("Sincronizzazione di tutti i dati completata con successo");
+        return;
+      }
+      
       // Riconnetti al database
       if (!this.useMySQL) {
         this.useMySQL = await this.checkMySQLAvailability();
@@ -342,6 +391,13 @@ class DatabaseProxy {
    * Forza un test completo della connessione al database
    */
   public async testDatabaseConnection(): Promise<boolean> {
+    // Se la modalità mock è attiva, restituisci sempre true
+    if (MockDatabaseService.isActive()) {
+      console.log("Modalità database simulato attiva, connessione sempre disponibile");
+      const mockResponse = await MockDatabaseService.testConnection();
+      return mockResponse.success;
+    }
+    
     // Reset dello stato
     this.useMySQL = false;
     

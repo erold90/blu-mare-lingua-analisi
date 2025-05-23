@@ -21,6 +21,68 @@ async function fetchApi<T>(
   body?: any,
   timeout: number = 15000 // timeout aumentato a 15 secondi
 ): Promise<ApiResponse<T>> {
+  // Se la modalità mock è attiva e l'endpoint è rilevante, usa il database simulato
+  if (MockDatabaseService.isActive()) {
+    if (endpoint === '/ping' || endpoint === '/ping/database') {
+      console.log(`Usando database simulato per ${endpoint}`);
+      const response = await MockDatabaseService.testConnection();
+      return response as unknown as ApiResponse<T>;
+    }
+    
+    // Per gli endpoint di dati, usa il database simulato appropriato
+    if (endpoint.includes('/reservations') && method === 'GET') {
+      console.log('Usando database simulato per le prenotazioni');
+      const data = await MockDatabaseService.loadData(DataType.RESERVATIONS);
+      return {
+        success: true,
+        data: data as unknown as T
+      };
+    }
+    
+    if (endpoint.includes('/cleaning') && method === 'GET') {
+      console.log('Usando database simulato per le attività di pulizia');
+      const data = await MockDatabaseService.loadData(DataType.CLEANING_TASKS);
+      return {
+        success: true,
+        data: data as unknown as T
+      };
+    }
+    
+    if (endpoint.includes('/apartments') && method === 'GET') {
+      console.log('Usando database simulato per gli appartamenti');
+      const data = await MockDatabaseService.loadData(DataType.APARTMENTS);
+      return {
+        success: true,
+        data: data as unknown as T
+      };
+    }
+    
+    if (endpoint.includes('/sync') && method === 'POST') {
+      console.log('Simulazione sincronizzazione per', endpoint);
+      // Estrai il tipo di dati dall'endpoint
+      let dataType;
+      if (endpoint.includes('reservations')) dataType = DataType.RESERVATIONS;
+      else if (endpoint.includes('cleaning')) dataType = DataType.CLEANING_TASKS;
+      else if (endpoint.includes('apartments')) dataType = DataType.APARTMENTS;
+      else if (endpoint.includes('prices')) dataType = DataType.PRICES;
+      
+      if (dataType) {
+        await MockDatabaseService.synchronize(dataType);
+      } else {
+        // Sincronizza tutto
+        await MockDatabaseService.synchronize(DataType.RESERVATIONS);
+        await MockDatabaseService.synchronize(DataType.CLEANING_TASKS);
+        await MockDatabaseService.synchronize(DataType.APARTMENTS);
+        await MockDatabaseService.synchronize(DataType.PRICES);
+      }
+      
+      return {
+        success: true,
+        data: { message: "Sincronizzazione simulata completata" } as unknown as T
+      };
+    }
+  }
+  
   try {
     const url = `${API_BASE_URL}${endpoint}`;
     
@@ -451,3 +513,8 @@ export const systemApi = {
     }
   }
 };
+
+/**
+ * Import necessario per DataType
+ */
+import { DataType } from "@/services/externalStorage";

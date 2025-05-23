@@ -10,6 +10,7 @@ import { DataType } from "@/services/externalStorage";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
+import MockDatabaseToggle from "@/components/admin/database/MockDatabaseToggle";
 
 const DatabaseTestPage = () => {
   const [testResults, setTestResults] = React.useState<string[]>([]);
@@ -120,6 +121,9 @@ const DatabaseTestPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Strumento di verifica dello stato */}
           <DatabaseStatusChecker />
+          
+          {/* Modalità test database simulato */}
+          <MockDatabaseToggle />
           
           {/* Test interattivi */}
           <Card>
