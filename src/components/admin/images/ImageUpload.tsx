@@ -86,7 +86,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           apartment_id: apartmentId,
           file,
           alt_text: altTexts[`file-${index}`] || '',
-          display_order: index
+          display_order: index // index is already a number, no conversion needed
         })
       );
 
