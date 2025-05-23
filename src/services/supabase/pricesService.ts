@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { ServiceResponse } from "./types";
 
 export const pricesService = {
   getByYear: async (year: number) => {
@@ -18,14 +19,14 @@ export const pricesService = {
       
       if (error) {
         console.error("Error fetching prices:", error);
-        throw error;
+        return []; // Return empty array instead of throwing error
       }
       
       console.log(`Fetched ${data?.length || 0} prices from database`);
       return data || [];
     } catch (fetchError) {
       console.error("Exception during price fetch:", fetchError);
-      throw fetchError;
+      return []; // Return empty array instead of throwing error
     }
   },
 
@@ -90,10 +91,11 @@ export const pricesService = {
         }];
         localStorage.setItem("seasonalPricing", JSON.stringify(seasonalData));
         console.log("Fallback: Saved prices to localStorage instead");
+        return [];
       } catch (localStorageError) {
         console.error("Even localStorage fallback failed:", localStorageError);
       }
-      throw batchError;
+      return [];
     }
   },
 

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { toast } from "sonner";
 import { supabaseService } from "@/services/supabaseService";
 import { PriceData } from './types';
@@ -9,7 +9,7 @@ import { getSeasonWeeks } from './weekUtils';
  * Hook for managing price persistence to/from Supabase and localStorage
  */
 export const usePricePersistence = () => {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   /**
    * Initialize default prices for a year
@@ -153,18 +153,16 @@ export const usePricePersistence = () => {
       let data;
       try {
         data = await supabaseService.prices.getByYear(year);
+        console.log("Data from database:", data);
       } catch (dbError) {
         console.error("❌ Database error:", dbError);
         data = [];
       }
       
-      console.log(`📊 Raw price data from database: {count: ${data?.length || 0}}`);
-      
       // If no data in Supabase, initialize defaults
       if (!data || data.length === 0) {
         console.log("📭 No prices found, initializing default prices...");
-        const initializedPrices = await initializeDefaultPrices(year);
-        return initializedPrices;
+        return await initializeDefaultPrices(year);
       }
       
       const transformedPrices: PriceData[] = data.map(price => ({
@@ -194,7 +192,6 @@ export const usePricePersistence = () => {
       return await initializeDefaultPrices(year);
     } finally {
       setIsLoading(false);
-      console.log("🏁 Price loading process completed");
     }
   };
 

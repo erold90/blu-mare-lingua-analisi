@@ -35,22 +35,21 @@ export const useCompactPrices = () => {
   // Load prices on mount
   const loadPricesData = useCallback(async () => {
     console.log("🚀 useCompactPrices: mounting, starting price loading...");
-    const loadedPrices = await loadPrices();
-    setPrices(loadedPrices);
+    try {
+      const loadedPrices = await loadPrices();
+      console.log("✅ Prices loaded successfully:", loadedPrices.length);
+      setPrices(loadedPrices);
+    } catch (error) {
+      console.error("❌ Error in loadPricesData:", error);
+      // Set some default prices to prevent infinite loading
+      setPrices([]);
+    }
   }, [loadPrices]);
 
   // Initialize on mount
   useEffect(() => {
     loadPricesData();
   }, [loadPricesData]);
-
-  // Debug: log when prices change
-  useEffect(() => {
-    console.log("📈 Prices state updated:", {
-      count: prices.length,
-      sample: prices.slice(0, 3)
-    });
-  }, [prices]);
 
   return {
     prices,

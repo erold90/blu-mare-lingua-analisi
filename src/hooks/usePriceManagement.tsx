@@ -75,9 +75,10 @@ export const PriceManagementProvider: React.FC<{ children: React.ReactNode }> = 
       console.log("Loading prices from database...");
       const data = await supabaseService.prices.getByYear(2025);
       
-      if (data.length === 0) {
+      if (!data || data.length === 0) {
         console.log("No prices found, initializing...");
         await initializePrices();
+        setIsLoading(false);
         return;
       }
       
@@ -100,6 +101,30 @@ export const PriceManagementProvider: React.FC<{ children: React.ReactNode }> = 
     } catch (error) {
       console.error('Failed to load prices:', error);
       toast.error('Errore nel caricamento dei prezzi');
+      
+      // Try to load from localStorage as fallback
+      try {
+        const savedPrices = localStorage.getItem("seasonalPricing");
+        if (savedPrices) {
+          const allPrices = JSON.parse(savedPrices);
+          const yearData = allPrices.find((season: any) => season.year === 2025);
+          if (yearData && yearData.prices && yearData.prices.length > 0) {
+            console.log(`Loaded ${yearData.prices.length} prices from localStorage`);
+            setPrices(yearData.prices);
+            toast.info("Prezzi caricati dal backup locale");
+          } else {
+            // Initialize if no localStorage data
+            await initializePrices();
+          }
+        } else {
+          // Initialize if no localStorage data
+          await initializePrices();
+        }
+      } catch (localStorageError) {
+        console.error("Error loading from localStorage:", localStorageError);
+        // Initialize anyway as last resort
+        await initializePrices();
+      }
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +149,7 @@ export const PriceManagementProvider: React.FC<{ children: React.ReactNode }> = 
 
     try {
       console.log("Inserting prices into database...");
-      await supabaseService.prices.updateBatch(pricesToInsert);
+      const result = await supabaseService.prices.updateBatch(pricesToInsert);
       
       const transformedPrices: WeeklyPrice[] = pricesToInsert.map(p => ({
         apartmentId: p.apartment_id,
@@ -146,10 +171,31 @@ export const PriceManagementProvider: React.FC<{ children: React.ReactNode }> = 
     } catch (error) {
       console.error("Error initializing prices:", error);
       toast.error("Errore nell'inizializzazione dei prezzi");
+      
+      // Set prices anyway from the default data
+      const transformedPrices: WeeklyPrice[] = pricesToInsert.map(p => ({
+        apartmentId: p.apartment_id,
+        weekStart: p.week_start,
+        price: p.price
+      }));
+      
+      setPrices(transformedPrices);
+      
+      // Save to localStorage as fallback
+      try {
+        const seasonalData = [{
+          year: 2025,
+          prices: transformedPrices
+        }];
+        localStorage.setItem("seasonalPricing", JSON.stringify(seasonalData));
+        console.log("Saved default prices to localStorage");
+      } catch (localStorageError) {
+        console.error("Error saving to localStorage:", localStorageError);
+      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [defaultPrices]);
 
   const updatePrice = useCallback(async (apartmentId: string, weekStart: string, price: number) => {
     try {
@@ -193,6 +239,40 @@ export const PriceManagementProvider: React.FC<{ children: React.ReactNode }> = 
     } catch (error) {
       console.error("Error updating price:", error);
       toast.error("Errore nell'aggiornamento del prezzo");
+      
+      // Update local state anyway
+      setPrices(prev => {
+        const existing = prev.findIndex(p => p.apartmentId === apartmentId && p.weekStart === weekStart);
+        if (existing >= 0) {
+          const updated = [...prev];
+          updated[existing] = { apartmentId, weekStart, price };
+          return updated;
+        } else {
+          return [...prev, { apartmentId, weekStart, price }];
+        }
+      });
+      
+      // Try to update localStorage
+      try {
+        const savedPrices = localStorage.getItem("seasonalPricing");
+        if (savedPrices) {
+          const allPrices = JSON.parse(savedPrices);
+          const yearData = allPrices.find((season: any) => season.year === 2025);
+          if (yearData) {
+            const existingIndex = yearData.prices.findIndex(
+              (p: WeeklyPrice) => p.apartmentId === apartmentId && p.weekStart === weekStart
+            );
+            if (existingIndex >= 0) {
+              yearData.prices[existingIndex].price = price;
+            } else {
+              yearData.prices.push({ apartmentId, weekStart, price });
+            }
+            localStorage.setItem("seasonalPricing", JSON.stringify(allPrices));
+          }
+        }
+      } catch (localStorageError) {
+        console.error("Error updating localStorage:", localStorageError);
+      }
     }
   }, []);
 
