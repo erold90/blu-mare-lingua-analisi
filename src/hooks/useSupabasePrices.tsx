@@ -75,8 +75,17 @@ export const SupabasePricesProvider: React.FC<{ children: React.ReactNode }> = (
   const initializePricesFor2025 = useCallback(async () => {
     console.log("Initializing prices for 2025 with provided data");
     
-    // Definisce i prezzi della tabella fornita dall'utente
+    // Definisce i prezzi della tabella fornita dall'utente, compresi i mesi di gennaio
     const priceData = [
+      // Dicembre 2024 - Gennaio 2025
+      { date: "2024-12-30", prices: { "appartamento-1": 0, "appartamento-2": 0, "appartamento-3": 0, "appartamento-4": 0 } },
+      
+      // Gennaio 2025
+      { date: "2025-01-06", prices: { "appartamento-1": 0, "appartamento-2": 0, "appartamento-3": 0, "appartamento-4": 0 } },
+      { date: "2025-01-13", prices: { "appartamento-1": 0, "appartamento-2": 0, "appartamento-3": 0, "appartamento-4": 0 } },
+      { date: "2025-01-20", prices: { "appartamento-1": 0, "appartamento-2": 0, "appartamento-3": 0, "appartamento-4": 0 } },
+      { date: "2025-01-27", prices: { "appartamento-1": 0, "appartamento-2": 0, "appartamento-3": 0, "appartamento-4": 0 } },
+      
       // Giugno
       { date: "2025-06-07", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
       { date: "2025-06-14", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
@@ -108,7 +117,7 @@ export const SupabasePricesProvider: React.FC<{ children: React.ReactNode }> = (
       for (const [apartmentId, price] of Object.entries(period.prices)) {
         pricesToInsert.push({
           apartment_id: apartmentId,
-          year: 2025,
+          year: period.date.startsWith("2024") ? 2024 : 2025,
           week_start: period.date,
           price: price
         });

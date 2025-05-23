@@ -20,7 +20,23 @@ const AdminPrices = () => {
   } = useSupabasePrices();
   
   const isMobile = useIsMobile();
-  const weeks = getWeeksForYear(selectedYear);
+  
+  // Filtra solo le settimane da giugno a settembre per la visualizzazione principale
+  // e per gennaio solo se è l'anno corrente
+  const filterWeeks = (weeks: { start: Date; end: Date }[]) => {
+    return weeks.filter(week => {
+      const month = week.start.getMonth();
+      
+      // Mostra settimane di gennaio
+      if (month === 0) return true;
+      
+      // Mostra settimane da giugno a settembre
+      return month >= 5 && month <= 8;
+    });
+  };
+  
+  const allWeeks = getWeeksForYear(selectedYear);
+  const weeks = filterWeeks(allWeeks);
 
   return (
     <div className="space-y-4">
