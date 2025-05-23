@@ -1,6 +1,6 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Form } from "@/components/ui/form";
 import { useQuoteForm } from "@/hooks/useQuoteForm";
 import { apartments } from "@/data/apartments";
 
@@ -159,9 +159,11 @@ const RequestQuotePage = () => {
             
             {/* Form Content */}
             <div className="bg-white rounded-lg shadow-md p-8">
-              <form onSubmit={form.handleSubmit(handleSubmitWrapper)}>
-                {renderStepContent()}
-              </form>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleSubmitWrapper)}>
+                  {renderStepContent()}
+                </form>
+              </Form>
             </div>
             
             {/* Dialogs */}
