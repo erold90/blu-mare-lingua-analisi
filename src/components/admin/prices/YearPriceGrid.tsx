@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { Pencil, Copy, AlertCircle } from "lucide-react";
@@ -13,6 +13,7 @@ import { apartments } from "@/data/apartments";
 import { WeekInfo } from "@/hooks/prices/weekUtils";
 import PriceDialog from "./PriceDialog";
 import PriceCopyDialog from "./PriceCopyDialog";
+import { useCompactPrices } from "@/hooks/prices/useCompactPrices";
 
 interface YearPriceGridProps {
   year: number;
@@ -37,8 +38,15 @@ const YearPriceGrid: React.FC<YearPriceGridProps> = ({
   
   const [showCopyDialog, setShowCopyDialog] = useState(false);
   const [selectedApartment, setSelectedApartment] = useState(apartments[0].id);
+  const { loadPricesForYear } = useCompactPrices();
 
   const weeks = getSeasonWeeks(year);
+  
+  // Load prices when year changes
+  useEffect(() => {
+    console.log(`🔄 YearPriceGrid: Year changed to ${year}, loading prices...`);
+    loadPricesForYear(year);
+  }, [year, loadPricesForYear]);
   
   // Check if this is a future year with no prices
   const isFutureYear = year > 2025;
@@ -155,7 +163,8 @@ const YearPriceGrid: React.FC<YearPriceGridProps> = ({
                           let priceClass = "";
                           
                           // Color-coding based on price levels
-                          if (price >= 1000) priceClass = "bg-red-50 text-red-800 border-red-200";
+                          if (price === 0) priceClass = "bg-gray-50 text-gray-800 border-gray-200";
+                          else if (price >= 1000) priceClass = "bg-red-50 text-red-800 border-red-200";
                           else if (price >= 700) priceClass = "bg-orange-50 text-orange-800 border-orange-200";
                           else if (price >= 500) priceClass = "bg-yellow-50 text-yellow-800 border-yellow-200";
                           else priceClass = "bg-green-50 text-green-800 border-green-200";
@@ -169,7 +178,9 @@ const YearPriceGrid: React.FC<YearPriceGridProps> = ({
                                 <div className="text-sm font-medium">
                                   {format(week.start, 'd', { locale: it })} - {format(week.end, 'd MMM', { locale: it })}
                                 </div>
-                                <div className="font-bold">{price}€</div>
+                                <div className="font-bold">
+                                  {price === 0 ? "Non impostato" : `${price}€`}
+                                </div>
                               </div>
                               <Button
                                 size="sm"

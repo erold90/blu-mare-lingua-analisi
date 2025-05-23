@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { toast } from "sonner";
 import { supabaseService } from "@/services/supabaseService";
@@ -22,8 +23,8 @@ export const usePricePersistence = () => {
     const weeks = getSeasonWeeks(year);
     const defaultPrices = [];
     
-    // Correct prices from the user's table
-    const correctPrices = {
+    // Correct prices from the user's table for 2025
+    const correctPrices2025 = {
       "2025-06-02": { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 },
       "2025-06-09": { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 },
       "2025-06-16": { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 },
@@ -48,29 +49,45 @@ export const usePricePersistence = () => {
     
     for (const week of weeks) {
       const weekStr = week.startStr;
-      const weekPrices = correctPrices[weekStr as keyof typeof correctPrices];
       
-      if (weekPrices) {
-        for (const apartmentId of apartmentIds) {
-          const price = weekPrices[apartmentId as keyof typeof weekPrices];
-          if (price) {
-            defaultPrices.push({
-              apartment_id: apartmentId,
-              year,
-              week_start: weekStr,
-              price: price
-            });
+      // Create date string in the correct format for the year
+      const yearWeekStr = weekStr.replace('2025', year.toString());
+      
+      if (year === 2025) {
+        // Use correct prices for 2025
+        const weekPrices = correctPrices2025[weekStr as keyof typeof correctPrices2025];
+        if (weekPrices) {
+          for (const apartmentId of apartmentIds) {
+            const price = weekPrices[apartmentId as keyof typeof weekPrices];
+            if (price) {
+              defaultPrices.push({
+                apartment_id: apartmentId,
+                year,
+                week_start: yearWeekStr,
+                price: price
+              });
+            }
           }
+        }
+      } else {
+        // For years 2026-2030, set prices to 0
+        for (const apartmentId of apartmentIds) {
+          defaultPrices.push({
+            apartment_id: apartmentId,
+            year,
+            week_start: yearWeekStr,
+            price: 0
+          });
         }
       }
     }
     
-    console.log(`💾 Attempting to save ${defaultPrices.length} default prices to database`);
+    console.log(`💾 Attempting to save ${defaultPrices.length} default prices to database for year ${year}`);
     console.log("First few prices:", defaultPrices.slice(0, 3));
     
     try {
       const result = await supabaseService.prices.updateBatch(defaultPrices);
-      console.log(`✅ Successfully initialized prices: ${result?.length || defaultPrices.length}`);
+      console.log(`✅ Successfully initialized prices for ${year}: ${result?.length || defaultPrices.length}`);
       
       // Transform prices for state and localStorage
       const transformedPrices = defaultPrices.map(p => ({
@@ -82,7 +99,7 @@ export const usePricePersistence = () => {
       // Save to localStorage for redundancy
       saveToLocalStorage(year, transformedPrices);
       
-      toast.success(`Prezzi inizializzati correttamente: ${transformedPrices.length} entries`);
+      toast.success(`Prezzi inizializzati correttamente per ${year}: ${transformedPrices.length} entries`);
       return transformedPrices;
     } catch (error) {
       console.error("❌ Error initializing default prices:", error);
@@ -99,6 +116,28 @@ export const usePricePersistence = () => {
       
       toast.error("Errore nel database - prezzi salvati localmente");
       return fallbackPrices;
+    }
+  };
+
+  /**
+   * Initialize all years from 2025 to 2030
+   */
+  const initializeAllYears = async (): Promise<void> => {
+    console.log("🚀 Initializing prices for all years 2025-2030...");
+    setIsLoading(true);
+    
+    try {
+      for (let year = 2025; year <= 2030; year++) {
+        console.log(`Initializing year ${year}...`);
+        await initializeDefaultPrices(year);
+      }
+      
+      toast.success("Prezzi inizializzati per tutti gli anni 2025-2030");
+    } catch (error) {
+      console.error("Error initializing all years:", error);
+      toast.error("Errore nell'inizializzazione dei prezzi per tutti gli anni");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -211,7 +250,7 @@ export const usePricePersistence = () => {
   };
 
   /**
-   * Update a single price
+   * Update a single price in both database and localStorage
    * @param apartmentId The apartment ID
    * @param weekStart The week start date
    * @param newPrice The new price
@@ -224,22 +263,19 @@ export const usePricePersistence = () => {
     year: number = 2025
   ): Promise<boolean> => {
     try {
-      console.log(`💰 Updating price for ${apartmentId} on ${weekStart} to ${newPrice}`);
+      console.log(`💰 Updating price for ${apartmentId} on ${weekStart} to ${newPrice} in year ${year}`);
       
-      try {
-        // Try to update in Supabase
-        await supabaseService.prices.upsert({
-          apartment_id: apartmentId,
-          year,
-          week_start: weekStart,
-          price: newPrice
-        });
-      } catch (dbError) {
-        console.warn("Failed to update price in database:", dbError);
-        toast.error("Errore nel database - prezzo salvato localmente");
-      }
+      // Always update in Supabase first
+      await supabaseService.prices.upsert({
+        apartment_id: apartmentId,
+        year,
+        week_start: weekStart,
+        price: newPrice
+      });
       
-      // Update localStorage regardless of DB success
+      console.log("✅ Successfully updated price in database");
+      
+      // Update localStorage for the specific year
       const localPrices = loadFromLocalStorage(year);
       const updatedPrices = [...localPrices];
       
@@ -257,7 +293,7 @@ export const usePricePersistence = () => {
       
       saveToLocalStorage(year, updatedPrices);
       
-      toast.success("Prezzo aggiornato");
+      toast.success("Prezzo aggiornato e sincronizzato");
       return true;
     } catch (error) {
       console.error("❌ Error updating price:", error);
@@ -271,48 +307,6 @@ export const usePricePersistence = () => {
     loadPrices,
     updatePrice,
     initializeDefaultPrices,
+    initializeAllYears,
   };
 };
-
-function saveToLocalStorage(year: number, prices: PriceData[]) {
-  try {
-    const savedPrices = localStorage.getItem("seasonalPricing");
-    let allPrices = [];
-    
-    if (savedPrices) {
-      allPrices = JSON.parse(savedPrices);
-      const yearIndex = allPrices.findIndex((y: any) => y.year === year);
-      
-      if (yearIndex >= 0) {
-        allPrices[yearIndex].prices = prices;
-      } else {
-        allPrices.push({ year, prices });
-      }
-    } else {
-      allPrices = [{ year, prices }];
-    }
-    
-    localStorage.setItem("seasonalPricing", JSON.stringify(allPrices));
-    console.log(`💾 Updated localStorage with ${prices.length} prices for year ${year}`);
-  } catch (error) {
-    console.error("Failed to save prices to localStorage:", error);
-  }
-}
-
-function loadFromLocalStorage(year: number): PriceData[] {
-  try {
-    const savedPrices = localStorage.getItem("seasonalPricing");
-    if (savedPrices) {
-      const parsed = JSON.parse(savedPrices);
-      const yearData = parsed.find((y: any) => y.year === year);
-      if (yearData && yearData.prices) {
-        console.log(`🔄 Loading ${yearData.prices.length} prices from localStorage for year ${year}`);
-        return yearData.prices;
-      }
-    }
-    return [];
-  } catch (error) {
-    console.error("Failed to load from localStorage:", error);
-    return [];
-  }
-}

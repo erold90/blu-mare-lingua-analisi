@@ -75,7 +75,7 @@ const CompactPriceManager: React.FC = () => {
       />
       
       {needsInitialization && (
-        <Alert variant="warning">
+        <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Prezzi non inizializzati</AlertTitle>
           <AlertDescription className="flex items-center justify-between">
