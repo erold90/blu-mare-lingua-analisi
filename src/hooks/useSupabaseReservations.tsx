@@ -1,4 +1,5 @@
 
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { apartments } from "@/data/apartments";
@@ -91,8 +92,15 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
         deviceId: res.device_id || undefined
       }));
       
-      setReservations(transformedReservations);
-      console.log(`Loaded ${transformedReservations.length} reservations from Supabase`);
+      // Sort reservations by start date (arrival date) - most recent first
+      const sortedReservations = transformedReservations.sort((a, b) => {
+        const dateA = new Date(a.startDate).getTime();
+        const dateB = new Date(b.startDate).getTime();
+        return dateB - dateA; // Sort descending (most recent first)
+      });
+      
+      setReservations(sortedReservations);
+      console.log(`Loaded ${sortedReservations.length} reservations from Supabase, sorted by arrival date`);
     } catch (error) {
       console.error("Failed to load reservations:", error);
       toast.error("Errore nel caricamento delle prenotazioni");
@@ -229,3 +237,4 @@ export const useSupabaseReservations = () => {
   
   return context;
 };
+

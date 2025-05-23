@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const reservationsService = {
@@ -6,7 +5,7 @@ export const reservationsService = {
     const { data, error } = await supabase
       .from('reservations')
       .select('*')
-      .order('start_date', { ascending: false });
+      .order('start_date', { ascending: false }); // Order by arrival date, most recent first
     
     if (error) throw error;
     return data;
