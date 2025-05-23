@@ -5,6 +5,10 @@
 // URL di base per le chiamate API
 const API_BASE_URL = '/api';
 
+// Import necessario per MockDatabaseService e DataType
+import { MockDatabaseService } from "@/utils/mockDatabaseService";
+import { DataType } from "@/services/externalStorage";
+
 // Tipi per le risposte API
 interface ApiResponse<T = any> {
   success: boolean;
@@ -513,8 +517,3 @@ export const systemApi = {
     }
   }
 };
-
-/**
- * Import necessario per DataType
- */
-import { DataType } from "@/services/externalStorage";

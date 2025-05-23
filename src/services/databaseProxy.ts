@@ -59,7 +59,6 @@ class DatabaseProxy {
   
   /**
    * Carica dati dal database - PRIORITÀ AL DATABASE REMOTO
-   * Questa funzione ora dà priorità al caricamento dei dati dal MySQL prima di ricorrere al localStorage
    */
   public async loadData<T>(type: DataType): Promise<T | null> {
     // Assicuriamoci che l'inizializzazione sia completata
@@ -107,7 +106,6 @@ class DatabaseProxy {
   
   /**
    * Salva dati nel database - SALVATAGGIO GARANTITO
-   * Questa funzione ora tenta di salvare sia su MySQL che su localStorage, dando priorità al MySQL
    */
   public async saveData<T>(type: DataType, data: T): Promise<boolean> {
     // Assicuriamoci che l'inizializzazione sia completata

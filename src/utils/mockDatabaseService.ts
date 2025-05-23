@@ -111,7 +111,7 @@ export class MockDatabaseService {
   /**
    * Simula un test di connessione al database
    */
-  static testConnection(): Promise<{success: boolean, data?: any}> {
+  static testConnection(): Promise<{success: boolean, data?: any, error?: string}> {
     return new Promise(resolve => {
       setTimeout(() => {
         if (MockDatabaseService.isActive()) {
