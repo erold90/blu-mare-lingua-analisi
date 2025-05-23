@@ -1,13 +1,24 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 
-console.log("🚀 RequestQuotePage: Component file loaded - SIMPLIFIED VERSION");
+console.log("🚀 RequestQuotePage: Component file loaded - ENHANCED DEBUG VERSION");
 
 const RequestQuotePage = () => {
-  console.log("🚀 RequestQuotePage: Component rendering started - SIMPLE");
+  console.log("🚀 RequestQuotePage: Component rendering started - ENHANCED DEBUG");
+  
+  useEffect(() => {
+    console.log("✅ RequestQuotePage: useEffect executed - Component mounted successfully!");
+    console.log("📍 Current URL:", window.location.href);
+    console.log("📍 Current pathname:", window.location.pathname);
+    
+    return () => {
+      console.log("👋 RequestQuotePage: Component unmounted");
+    };
+  }, []);
   
   return (
     <div className="min-h-screen bg-gray-50 py-12">
+      {console.log("🎨 RequestQuotePage: JSX rendering")}
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
@@ -27,6 +38,10 @@ const RequestQuotePage = () => {
               </p>
               <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
                 ✅ Componente RequestQuotePage renderizzato con successo
+              </div>
+              <div className="mt-4 text-sm text-gray-500">
+                <p>URL corrente: {window.location.pathname}</p>
+                <p>Timestamp: {new Date().toLocaleTimeString()}</p>
               </div>
             </div>
           </div>

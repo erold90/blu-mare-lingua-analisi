@@ -21,6 +21,8 @@ import { ActivityLogProvider } from "./hooks/useActivityLog";
 import { AuthProvider } from "./contexts/AuthContext";
 import ApiTestPage from './pages/api-test';
 
+console.log("🚀 App.tsx: Loading main App component");
+
 // Create a new QueryClient instance
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,8 +40,15 @@ const PageViewTracker = () => {
   
   // Track the current page visit
   useEffect(() => {
+    console.log("🗺️ Current pathname:", location.pathname);
+    console.log("🗺️ Full location object:", location);
+    
+    if (location.pathname === '/preventivo') {
+      console.log("✅ PREVENTIVO ROUTE DETECTED - Should render RequestQuotePage");
+    }
+    
     if (location.pathname) {
-      console.log("Navigating to:", location.pathname);
+      console.log("🔄 Navigating to:", location.pathname);
       addSiteVisit(location.pathname);
     }
   }, [location.pathname, addSiteVisit]);
@@ -53,6 +62,8 @@ const PageViewTracker = () => {
 };
 
 function App() {
+  console.log("🚀 App: Rendering main App component");
+  
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -65,14 +76,30 @@ function App() {
                 <Route element={<AppLayout />}>
                   <Route path="/" element={<Index />} />
                   <Route path="/appartamenti" element={<ApartmentsPage />} />
-                  <Route path="/preventivo" element={<RequestQuotePage />} />
+                  <Route 
+                    path="/preventivo" 
+                    element={
+                      <>
+                        {console.log("🎯 RENDERING PREVENTIVO ROUTE")}
+                        <RequestQuotePage />
+                      </>
+                    } 
+                  />
                   <Route path="/area-riservata/*" element={<ReservedAreaPage />} />
                   <Route path="/contatti" element={<ContactsPage />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                   <Route path="/cookie-policy" element={<CookiePolicyPage />} />
                   <Route path="/api-test" element={<ApiTestPage />} />
                 </Route>
-                <Route path="*" element={<NotFound />} />
+                <Route 
+                  path="*" 
+                  element={
+                    <>
+                      {console.log("🚨 404 ROUTE TRIGGERED for unknown path")}
+                      <NotFound />
+                    </>
+                  } 
+                />
               </Routes>
               <PageViewTracker />
             </ActivityLogProvider>
