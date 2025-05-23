@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -85,12 +84,12 @@ const ApartmentGallery = ({ images }: { images: string[] }) => {
   }, [currentIndex, images]);
 
   return (
-    <div className="relative w-full h-64 md:h-80 overflow-hidden rounded-md mt-4">
+    <div className="relative w-full h-96 md:h-[500px] lg:h-[600px] overflow-hidden rounded-lg mt-4">
       <div className="absolute inset-0">
         <ProgressiveImage 
           src={images[currentIndex] || "/placeholder.svg"} 
           alt={`Immagine ${currentIndex + 1}`} 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain bg-gray-50"
         />
       </div>
       
@@ -139,7 +138,7 @@ const ApartmentModal = ({ apartment }: { apartment: Apartment & { gallery?: stri
           <ChevronRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto bg-white/95 backdrop-blur-md border-0 shadow-2xl">
+      <DialogContent className="sm:max-w-5xl max-h-[95vh] overflow-y-auto bg-white/95 backdrop-blur-md border-0 shadow-2xl">
         <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-transparent to-white/10" />
         
         <DialogHeader className="relative z-10">
