@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 
 // Components
 import GuestInfoStep from "@/components/quote/GuestInfoStep";
@@ -22,7 +22,13 @@ console.log("🚀 RequestQuotePage: Component file loaded");
 const RequestQuotePage = () => {
   console.log("🚀 RequestQuotePage: Component rendering started");
   
+  useEffect(() => {
+    console.log("RequestQuotePage mounted");
+    return () => console.log("RequestQuotePage unmounted");
+  }, []);
+  
   try {
+    console.log("🔍 Initializing useQuoteForm hook");
     const {
       form,
       step,

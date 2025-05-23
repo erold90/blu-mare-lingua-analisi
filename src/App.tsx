@@ -42,12 +42,12 @@ const PageViewTracker = () => {
       console.log("Navigating to:", location.pathname);
       addSiteVisit(location.pathname);
     }
-  }, [location.pathname]);
+  }, [location.pathname, addSiteVisit]);
   
   // Clear old data periodically
   useEffect(() => {
     clearOldData();
-  }, []);
+  }, [clearOldData]);
   
   return null;
 };
