@@ -80,12 +80,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       const { imageService } = await import('@/services/imageService');
       
       const uploadPromises = selectedFiles.map((file, index) => {
-        const fileIndex = index.toString();
         return imageService.uploadImage({
           category,
           apartment_id: apartmentId,
           file,
-          alt_text: altTexts[`file-${fileIndex}`] || '',
+          alt_text: altTexts[`file-${index}`] || '',
           display_order: index
         });
       });
