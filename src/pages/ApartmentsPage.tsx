@@ -494,7 +494,7 @@ const ApartmentsPage = () => {
           </div>
           
           <p className="text-xl md:text-2xl text-muted-foreground max-w-4xl mx-auto leading-relaxed font-light">
-            Scopri i nostri <span className="font-medium text-primary">appartamenti di lusso</span>, 
+            Scopri i nostri <span className="font-medium text-primary">appartamenti</span>, 
             tutti con vista sul mare e accesso privato. Ogni appartamento è completamente attrezzato 
             per garantirti un <span className="font-medium text-primary">soggiorno perfetto</span>.
           </p>
