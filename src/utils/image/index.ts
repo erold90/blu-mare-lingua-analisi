@@ -98,7 +98,7 @@ class ImageService {
   }
 
   /**
-   * Update favicon in document
+   * Update favicon in document with hard browser cache busting
    */
   updateFavicon(faviconPath: string): void {
     if (!faviconPath) return;
@@ -106,8 +106,16 @@ class ImageService {
     console.log("Updating favicon to:", faviconPath);
     
     try {
-      // Handle favicon.ico at root level specially
-      const finalPath = faviconPath === '/favicon.ico' ? faviconPath : this.getImageUrl(faviconPath);
+      // Add a timestamp or version to force cache refresh
+      const timestamp = new Date().getTime();
+      let finalPath = faviconPath;
+      
+      // Add cache busting parameter if not already present
+      if (!finalPath.includes('?')) {
+        finalPath = `${finalPath}?v=${timestamp}`;
+      }
+      
+      console.log("Final favicon path:", finalPath);
       
       // Get all existing favicon links
       const existingFavicons = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
@@ -119,30 +127,42 @@ class ImageService {
           linkElement.href = finalPath;
           console.log("Updated existing favicon link:", linkElement.rel);
         });
-        return;
+      } else {
+        // If no favicon exists, create both standard and shortcut icons
+        const iconTypes = [
+          { rel: 'icon', type: 'image/x-icon' },
+          { rel: 'shortcut icon', type: 'image/x-icon' }
+        ];
+        
+        iconTypes.forEach(iconType => {
+          const link = document.createElement('link');
+          link.rel = iconType.rel;
+          link.href = finalPath;
+          link.type = faviconPath.endsWith('.ico') ? 'image/x-icon' : 'image/png';
+          document.head.appendChild(link);
+          console.log(`Created new ${iconType.rel} link`);
+        });
       }
       
-      // If no favicon exists, create both standard and shortcut icons
-      const iconTypes = [
-        { rel: 'icon', type: 'image/x-icon' },
-        { rel: 'shortcut icon', type: 'image/x-icon' }
-      ];
-      
-      iconTypes.forEach(iconType => {
-        const link = document.createElement('link');
-        link.rel = iconType.rel;
-        link.href = finalPath;
-        link.type = faviconPath.endsWith('.ico') ? 'image/x-icon' : 'image/png';
-        document.head.appendChild(link);
-        console.log(`Created new ${iconType.rel} link`);
-      });
-      
-      // Force browser to refresh favicon by creating a temporary favicon
+      // Advanced browser cache busting technique
+      // 1. Create a temporary favicon with a data URL
       const tempLink = document.createElement('link');
       tempLink.rel = 'icon';
       tempLink.href = 'data:,'; // Empty favicon
       document.head.appendChild(tempLink);
-      setTimeout(() => tempLink.remove(), 10); // Remove after a short delay
+      
+      // 2. Remove it after a short delay to trigger a refresh
+      setTimeout(() => {
+        document.head.removeChild(tempLink);
+        
+        // 3. Force favicon reload with additional technique
+        const link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
+        if (link) {
+          const clone = link.cloneNode(true) as HTMLLinkElement;
+          link.parentNode?.replaceChild(clone, link);
+          console.log("Forced favicon refresh with node replacement");
+        }
+      }, 50);
       
     } catch (error) {
       console.error("Error updating favicon:", error);
