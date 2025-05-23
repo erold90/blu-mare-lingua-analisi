@@ -71,7 +71,7 @@ class ImageService {
       }
       
       toast.success("Immagine caricata con successo");
-      return imageRecord;
+      return imageRecord as ImageRecord;
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error("Errore nel caricamento dell'immagine");
@@ -101,7 +101,7 @@ class ImageService {
         throw error;
       }
       
-      return data || [];
+      return (data || []) as ImageRecord[];
     } catch (error) {
       console.error('Error fetching images:', error);
       return [];
@@ -125,7 +125,7 @@ class ImageService {
       }
       
       toast.success("Immagine aggiornata");
-      return data;
+      return data as ImageRecord;
     } catch (error) {
       console.error('Error updating image:', error);
       toast.error("Errore nell'aggiornamento dell'immagine");
@@ -248,7 +248,7 @@ class ImageService {
         throw error;
       }
       
-      return data || null;
+      return data as ImageRecord || null;
     } catch (error) {
       console.error('Error fetching cover image:', error);
       return null;

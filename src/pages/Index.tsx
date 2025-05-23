@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { HeroSection } from "@/components/home/HeroSection";
+import HeroSection from "@/components/home/HeroSection";
 import { IntroductionSection } from "@/components/home/IntroductionSection";
 import { LocationSection } from "@/components/home/LocationSection";
 import { ServicesSection } from "@/components/home/ServicesSection";
