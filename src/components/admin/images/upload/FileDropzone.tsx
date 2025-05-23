@@ -21,7 +21,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
     onDrop(acceptedFiles);
   };
 
-  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: handleDrop,
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.webp', '.gif']
@@ -38,19 +38,11 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
     }
   });
 
-  const handleClick = (e: React.MouseEvent) => {
-    console.log('🔥🔥🔥 DROPZONE CLICKED!!! Event:', e.type);
-    e.preventDefault();
-    e.stopPropagation();
-    open();
-  };
-
   console.log('🔥 FileDropzone - Current state:', { isDragActive });
 
   return (
     <div
       {...getRootProps()}
-      onClick={handleClick}
       className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
         isDragActive 
           ? 'border-primary bg-primary/5' 
