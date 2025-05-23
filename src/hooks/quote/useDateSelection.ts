@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { DateRange } from "react-day-picker";
-import { differenceInDays, addDays, isSameDay } from "date-fns";
+import { differenceInDays, addDays, isSameDay, startOfWeek, getWeek, getYear } from "date-fns";
 import { toast } from "sonner";
 import { usePrices } from "@/hooks/usePrices";
 import { apartments } from "@/data/apartments";
@@ -32,10 +32,33 @@ export function useDateSelection(form: UseFormReturn<FormValues>) {
     ? differenceInDays(dateRange.to, dateRange.from)
     : 0;
   
+  // Function to check if a date is in the last week of October
+  const isLastWeekOfOctober = (date: Date): boolean => {
+    const month = date.getMonth();
+    const year = date.getFullYear();
+    
+    if (month !== 9) return false; // October is month 9 (0-indexed)
+    
+    // Get the last Saturday of October
+    const lastDayOfOctober = new Date(year, 10, 0); // Last day of October
+    let lastSaturday = new Date(lastDayOfOctober);
+    
+    // Find the last Saturday
+    while (lastSaturday.getDay() !== 6) {
+      lastSaturday.setDate(lastSaturday.getDate() - 1);
+    }
+    
+    // Check if the date is in the last week (from last Saturday to end of month)
+    return date >= lastSaturday && date <= lastDayOfOctober;
+  };
+  
   // Function to check if a date has a price for any apartment
   const hasAnyApartmentPrice = (date: Date): boolean => {
+    // Get Saturday of the week containing this date
+    const weekStart = startOfWeek(date, { weekStartsOn: 6 });
+    
     for (const apartment of apartments) {
-      const price = getPriceForWeek(apartment.id, date);
+      const price = getPriceForWeek(apartment.id, weekStart);
       if (price > 0) {
         return true;
       }
@@ -45,28 +68,26 @@ export function useDateSelection(form: UseFormReturn<FormValues>) {
   
   // Function to check if a date is disabled
   const isDateDisabled = (date: Date): boolean => {
+    // Block dates in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (date < today) return true;
+    
+    // Block last week of October
+    if (isLastWeekOfOctober(date)) return true;
+    
     const day = date.getDay();
     
-    // Se è sabato (6), controlla direttamente i prezzi
-    if (day === 6) {
-      return !hasAnyApartmentPrice(date);
-    }
+    // Only allow Saturday (6), Sunday (0), and Monday (1) for check-in/check-out
+    if (day !== 6 && day !== 0 && day !== 1) return true;
     
-    // Per domenica (0) e lunedì (1), dobbiamo verificare se ci sono prezzi per il sabato precedente
-    if (day === 0) {
-      // Domenica - controlla se il sabato prima ha prezzi
-      const saturdayBefore = addDays(date, -1);
-      return !hasAnyApartmentPrice(saturdayBefore);
-    }
+    // For allowed days, check if there are prices available
+    // Get the Saturday that starts the pricing week for this date
+    const weekStart = startOfWeek(date, { weekStartsOn: 6 });
     
-    if (day === 1) {
-      // Lunedì - controlla se il sabato prima ha prezzi
-      const saturdayBefore = addDays(date, -2);
-      return !hasAnyApartmentPrice(saturdayBefore);
-    }
-    
-    // Qualsiasi altro giorno è disabilitato
-    return true;
+    // If it's Sunday or Monday, we still need to check the Saturday price
+    // because pricing is per week starting from Saturday
+    return !hasAnyApartmentPrice(weekStart);
   };
   
   // Handle date range selection
@@ -91,13 +112,20 @@ export function useDateSelection(form: UseFormReturn<FormValues>) {
       
       // Enforce minimum 5 nights
       if (nights < 5) {
-        toast("Il soggiorno minimo è di 5 notti");
+        toast.error("Il soggiorno minimo è di 5 notti");
         return;
       }
       
       // Enforce maximum 28 nights
       if (nights > 28) {
-        toast("Il soggiorno massimo è di 28 notti");
+        toast.error("Il soggiorno massimo è di 28 notti");
+        return;
+      }
+      
+      // Check if check-out is on allowed days
+      const checkOutDay = range.to.getDay();
+      if (checkOutDay !== 6 && checkOutDay !== 0 && checkOutDay !== 1) {
+        toast.error("Il check-out è disponibile solo sabato, domenica o lunedì");
         return;
       }
     }
@@ -125,4 +153,3 @@ export function useDateSelection(form: UseFormReturn<FormValues>) {
     handleDateChange
   };
 }
-
