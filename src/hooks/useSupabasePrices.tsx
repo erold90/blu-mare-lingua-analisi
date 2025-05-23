@@ -33,9 +33,9 @@ const PricesContext = createContext<PricesContextType | undefined>(undefined);
 export const SupabasePricesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [prices, setPrices] = useState<WeeklyPrice[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedYear, setSelectedYear] = useState(2025);
   
-  const availableYears = [2023, 2024, 2025, 2026, 2027];
+  const availableYears = [2025, 2026, 2027];
 
   const loadPricesForYear = useCallback(async (year: number) => {
     setIsLoading(true);
@@ -48,13 +48,80 @@ export const SupabasePricesProvider: React.FC<{ children: React.ReactNode }> = (
         price: Number(price.price)
       }));
       
-      setPrices(transformedPrices);
+      // Se non ci sono prezzi per il 2025, inizializzali con i dati forniti
+      if (year === 2025 && transformedPrices.length === 0) {
+        await initializePricesFor2025();
+        // Ricarica i prezzi dopo l'inizializzazione
+        const newData = await supabaseService.prices.getByYear(year);
+        const newTransformedPrices: WeeklyPrice[] = newData.map(price => ({
+          apartmentId: price.apartment_id,
+          weekStart: price.week_start,
+          price: Number(price.price)
+        }));
+        setPrices(newTransformedPrices);
+      } else {
+        setPrices(transformedPrices);
+      }
+      
       console.log(`Loaded ${transformedPrices.length} prices for year ${year}`);
     } catch (error) {
       console.error(`Failed to load prices for year ${year}:`, error);
       toast.error(`Errore nel caricamento dei prezzi per l'anno ${year}`);
     } finally {
       setIsLoading(false);
+    }
+  }, []);
+
+  const initializePricesFor2025 = useCallback(async () => {
+    console.log("Initializing prices for 2025 with provided data");
+    
+    // Definisce i prezzi della tabella fornita dall'utente
+    const priceData = [
+      // Giugno
+      { date: "2025-06-07", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
+      { date: "2025-06-14", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
+      { date: "2025-06-21", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
+      { date: "2025-06-28", prices: { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 } },
+      
+      // Luglio
+      { date: "2025-07-05", prices: { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 } },
+      { date: "2025-07-12", prices: { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 } },
+      { date: "2025-07-19", prices: { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 } },
+      { date: "2025-07-26", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 665, "appartamento-4": 700 } },
+      
+      // Agosto
+      { date: "2025-08-02", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 665, "appartamento-4": 700 } },
+      { date: "2025-08-09", prices: { "appartamento-1": 1150, "appartamento-2": 1250, "appartamento-3": 1075, "appartamento-4": 1100 } },
+      { date: "2025-08-16", prices: { "appartamento-1": 1150, "appartamento-2": 1250, "appartamento-3": 1075, "appartamento-4": 1100 } },
+      { date: "2025-08-23", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 675, "appartamento-4": 700 } },
+      { date: "2025-08-30", prices: { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 675, "appartamento-4": 700 } },
+      
+      // Settembre
+      { date: "2025-09-06", prices: { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 } },
+      { date: "2025-09-13", prices: { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 } },
+      { date: "2025-09-20", prices: { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 } },
+    ];
+
+    const pricesToInsert = [];
+    
+    for (const period of priceData) {
+      for (const [apartmentId, price] of Object.entries(period.prices)) {
+        pricesToInsert.push({
+          apartment_id: apartmentId,
+          year: 2025,
+          week_start: period.date,
+          price: price
+        });
+      }
+    }
+
+    try {
+      await supabaseService.prices.updateBatch(pricesToInsert);
+      console.log(`Initialized ${pricesToInsert.length} prices for 2025`);
+      toast.success("Prezzi 2025 inizializzati con successo");
+    } catch (error) {
+      console.error("Error initializing 2025 prices:", error);
+      toast.error("Errore nell'inizializzazione dei prezzi 2025");
     }
   }, []);
 

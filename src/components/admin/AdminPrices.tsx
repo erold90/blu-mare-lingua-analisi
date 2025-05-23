@@ -44,6 +44,7 @@ const AdminPrices = () => {
         <CardContent>
           <div className="text-sm text-muted-foreground mb-4">
             <p>I prezzi sono da intendersi per settimana (da sabato a sabato).</p>
+            <p>Prezzi disponibili per gli anni: {availableYears.join(', ')}</p>
           </div>
           
           <Tabs 

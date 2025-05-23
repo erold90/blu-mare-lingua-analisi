@@ -192,13 +192,23 @@ export const supabaseService = {
     },
 
     updateBatch: async (prices: Omit<Price, 'id' | 'created_at' | 'updated_at'>[]) => {
+      const timestamp = new Date().toISOString();
       const { data, error } = await supabase
         .from('prices')
-        .upsert(prices.map(p => ({ ...p, updated_at: new Date().toISOString() })))
+        .upsert(prices.map(p => ({ ...p, updated_at: timestamp })))
         .select();
       
       if (error) throw error;
       return data;
+    },
+
+    deleteByYear: async (year: number) => {
+      const { error } = await supabase
+        .from('prices')
+        .delete()
+        .eq('year', year);
+      
+      if (error) throw error;
     }
   }
 };
