@@ -1,69 +1,73 @@
 
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ImagePositioner } from "./ImagePositioner";
-import { useSettings } from "@/hooks/useSettings";
+import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ImageIcon, AlertCircle, RefreshCw } from "lucide-react";
-import { imageService } from "@/utils/imageService";
+import { ImageIcon, AlertCircle, Upload, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { imageService, ImageRecord } from "@/services/imageService";
+import { ImageUpload } from "../images/ImageUpload";
 
 export const HeroImageSection = () => {
-  const { siteSettings, updateSiteSettings } = useSettings();
-  const [imagePreviewPosition, setImagePreviewPosition] = useState(siteSettings.heroImagePosition || "center");
-  const [imageExists, setImageExists] = useState(false);
-  const [isCheckingImage, setIsCheckingImage] = useState(true);
-  const [retryCount, setRetryCount] = useState(0);
-  const [isRetrying, setIsRetrying] = useState(false);
-  
-  useEffect(() => {
-    setImagePreviewPosition(siteSettings.heroImagePosition || "center");
-  }, [siteSettings.heroImagePosition]);
+  const [heroImage, setHeroImage] = useState<ImageRecord | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showUpload, setShowUpload] = useState(false);
 
-  // Il percorso è fisso a una directory nella cartella public
-  const heroImagePath = '/images/hero/hero.jpg';
-
-  // Controlla se l'immagine hero esiste
-  useEffect(() => {
-    const checkImage = async () => {
-      setIsCheckingImage(true);
-      try {
-        // Debug dell'immagine
-        await imageService.debugImage(heroImagePath);
-        
-        // Controlla se esiste
-        const exists = await imageService.checkImageExists(heroImagePath);
-        console.log(`Admin panel - hero image exists check: ${exists}`);
-        setImageExists(exists);
-        
-        if (exists) {
-          // Forza il ricaricamento dell'immagine
-          await imageService.forceReloadImage(heroImagePath);
-        }
-      } catch (error) {
-        setImageExists(false);
-        console.error("Error checking hero image:", error);
-      } finally {
-        setIsCheckingImage(false);
-        setIsRetrying(false);
-      }
-    };
-    
-    checkImage();
-  }, [retryCount]);
-
-  const handlePositionChange = (position: string) => {
-    setImagePreviewPosition(position);
-    updateSiteSettings({ heroImagePosition: position });
+  const loadHeroImage = async () => {
+    setIsLoading(true);
+    try {
+      const heroImages = await imageService.getImagesByCategory('hero');
+      const primaryHero = heroImages.find(img => img.is_cover) || heroImages[0] || null;
+      setHeroImage(primaryHero);
+    } catch (error) {
+      console.error('Error loading hero image:', error);
+      toast.error("Errore nel caricamento dell'immagine hero");
+    } finally {
+      setIsLoading(false);
+    }
   };
-  
-  const handleRetryCheck = () => {
-    setIsRetrying(true);
-    setRetryCount(prev => prev + 1);
-    toast.info("Verifico nuovamente la presenza dell'immagine hero...");
+
+  useEffect(() => {
+    loadHeroImage();
+  }, []);
+
+  const handleUploadSuccess = () => {
+    loadHeroImage();
+    setShowUpload(false);
+    toast.success("Immagine hero caricata con successo");
+  };
+
+  const handleDeleteHero = async () => {
+    if (!heroImage) return;
+    
+    if (window.confirm('Sei sicuro di voler eliminare l\'immagine hero attuale?')) {
+      const success = await imageService.deleteImage(heroImage.id, heroImage.file_path);
+      if (success) {
+        setHeroImage(null);
+        toast.success("Immagine hero eliminata");
+      }
+    }
+  };
+
+  const handleSetAsPrimary = async (imageId: string) => {
+    try {
+      await imageService.updateImage(imageId, { is_cover: true });
+      
+      // Update other hero images to not be primary
+      const heroImages = await imageService.getImagesByCategory('hero');
+      const updatePromises = heroImages
+        .filter(img => img.id !== imageId)
+        .map(img => imageService.updateImage(img.id, { is_cover: false }));
+      
+      await Promise.all(updatePromises);
+      loadHeroImage();
+      toast.success("Immagine hero principale aggiornata");
+    } catch (error) {
+      console.error('Error setting primary hero image:', error);
+      toast.error("Errore nell'impostare l'immagine principale");
+    }
   };
 
   return (
@@ -71,69 +75,111 @@ export const HeroImageSection = () => {
       <CardHeader>
         <CardTitle>Immagine Hero</CardTitle>
         <CardDescription>
-          L'immagine principale visualizzata nella home page
+          L'immagine principale visualizzata nella home page (1920x1080px consigliato)
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-1 gap-6">
-          {isCheckingImage ? (
+        <div className="space-y-6">
+          {/* Upload Section */}
+          <div className="flex items-center justify-between">
+            <Button
+              onClick={() => setShowUpload(!showUpload)}
+              variant={showUpload ? "outline" : "default"}
+              className="flex items-center gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              {showUpload ? 'Nascondi upload' : 'Carica nuova immagine'}
+            </Button>
+            
+            {heroImage && (
+              <Button
+                onClick={handleDeleteHero}
+                variant="destructive"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                Elimina
+              </Button>
+            )}
+          </div>
+
+          {showUpload && (
+            <ImageUpload
+              category="hero"
+              onUploadSuccess={handleUploadSuccess}
+              maxFiles={1}
+              className="mb-6"
+            />
+          )}
+
+          {/* Hero Image Display */}
+          {isLoading ? (
             <Skeleton className="h-[300px] w-full" />
-          ) : imageExists ? (
-            <div>
-              <ImagePositioner
-                imageUrl={`${heroImagePath}?t=${Date.now()}`}
-                currentPosition={imagePreviewPosition}
-                onPositionChange={handlePositionChange}
-              />
-              <p className="text-sm text-muted-foreground mt-2">
-                Per cambiare l'immagine, caricare manualmente un file chiamato "hero.jpg" nella cartella /public/images/hero/
-              </p>
+          ) : heroImage ? (
+            <div className="space-y-4">
+              <div className="relative rounded-md overflow-hidden border">
+                <div className="aspect-video relative">
+                  <img 
+                    src={imageService.getImageUrl(heroImage.file_path)}
+                    alt={heroImage.alt_text || "Immagine Hero"}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Hero image failed to load');
+                      e.currentTarget.src = "/placeholder.svg";
+                    }}
+                  />
+                  {!heroImage.is_cover && (
+                    <Button
+                      onClick={() => handleSetAsPrimary(heroImage.id)}
+                      className="absolute top-2 right-2"
+                      size="sm"
+                    >
+                      Imposta come principale
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              <div className="text-sm text-muted-foreground">
+                <p className="font-medium">{heroImage.file_name}</p>
+                {heroImage.alt_text && (
+                  <p className="mt-1">{heroImage.alt_text}</p>
+                )}
+                {heroImage.is_cover && (
+                  <p className="mt-1 text-green-600 font-medium">✓ Immagine principale attiva</p>
+                )}
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
-              <Alert variant="destructive">
+              <Alert>
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="flex justify-between items-center">
-                  <span>Immagine hero non trovata nella posizione corretta.</span>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleRetryCheck}
-                    disabled={isRetrying}
-                    className="ml-auto flex items-center gap-1"
-                  >
-                    <RefreshCw size={16} className={`${isRetrying ? "animate-spin" : ""}`} />
-                    Ricontrolla
-                  </Button>
+                <AlertDescription>
+                  Nessuna immagine hero trovata. Carica un'immagine per visualizzarla nella homepage.
                 </AlertDescription>
               </Alert>
               
-              <div className="text-center p-6 border rounded-md">
+              <div className="text-center p-6 border rounded-md border-dashed">
                 <ImageIcon className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-                <p className="font-medium mb-2">Immagine hero non trovata</p>
-                <div className="text-muted-foreground text-sm space-y-2">
-                  <p className="font-semibold">Istruzioni:</p>
-                  <ol className="list-decimal list-inside text-left">
-                    <li>Caricare manualmente un file chiamato <code className="bg-gray-100 px-1 py-0.5 rounded">hero.jpg</code> (tutto minuscolo)</li>
-                    <li>Posizionarlo nella cartella <code className="bg-gray-100 px-1 py-0.5 rounded">/public/images/hero/</code></li>
-                    <li>Assicurarsi che l'immagine sia in formato JPG</li>
-                    <li>Aggiornare la pagina dopo il caricamento</li>
-                  </ol>
-                </div>
-                
-                <div className="mt-4 bg-amber-50 p-3 rounded text-left border border-amber-200">
-                  <p className="font-semibold text-amber-800 mb-2">Se hai caricato l'immagine via GitHub:</p>
-                  <ol className="list-decimal list-inside text-sm text-amber-700">
-                    <li>Verifica che il file si chiami esattamente "hero.jpg" (tutto minuscolo)</li>
-                    <li>Assicurati che il percorso sia esattamente "/public/images/hero/"</li>
-                    <li>Controlla che il commit sia stato completato e sincronizzato</li>
-                    <li>Cancella la cache del browser con Ctrl+F5 (Windows) o Cmd+Shift+R (Mac)</li>
-                    <li>Usa il pulsante "Ricontrolla" per verificare nuovamente la presenza dell'immagine</li>
-                  </ol>
-                </div>
+                <p className="font-medium mb-2">Nessuna immagine hero</p>
+                <p className="text-muted-foreground text-sm">
+                  Usa il pulsante "Carica nuova immagine" per aggiungere un'immagine hero.
+                </p>
               </div>
             </div>
           )}
+
+          {/* Instructions */}
+          <div className="bg-blue-50 p-4 rounded-md border border-blue-200">
+            <h4 className="font-semibold text-blue-800 mb-2">Istruzioni per l'immagine hero:</h4>
+            <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
+              <li>Risoluzione consigliata: 1920x1080px per una qualità ottimale</li>
+              <li>Formati supportati: JPEG, PNG, WebP</li>
+              <li>L'immagine verrà visualizzata come sfondo della sezione hero nella homepage</li>
+              <li>Puoi caricare più immagini e impostare quella principale</li>
+            </ul>
+          </div>
         </div>
       </CardContent>
     </Card>
