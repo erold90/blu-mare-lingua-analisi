@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Upload, Trash2, Eye, Plus } from 'lucide-react';
+import { Upload, Trash2, Eye, Plus, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { imageService, ImageRecord } from '@/services/imageService';
 
@@ -65,6 +65,12 @@ export const SiteImageSettings: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState<SiteImageType | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<Record<SiteImageType, File[]>>({
+    hero: [],
+    home_gallery: [],
+    social: [],
+    favicon: []
+  });
 
   const loadAllImages = async () => {
     setLoading(true);
@@ -94,7 +100,7 @@ export const SiteImageSettings: React.FC = () => {
     loadAllImages();
   }, []);
 
-  const handleFileUpload = async (type: SiteImageType, files: FileList | null) => {
+  const handleFileSelection = (type: SiteImageType, files: FileList | null) => {
     if (!files || files.length === 0) return;
 
     const section = imageSections.find(s => s.type === type);
@@ -109,20 +115,39 @@ export const SiteImageSettings: React.FC = () => {
       return;
     }
 
+    // Validazione dei file
+    const validFiles = Array.from(files).filter(file => {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} non è un'immagine valida`);
+        return false;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name} è troppo grande (max 10MB)`);
+        return false;
+      }
+
+      return true;
+    });
+
+    if (validFiles.length > 0) {
+      setSelectedFiles(prev => ({
+        ...prev,
+        [type]: validFiles
+      }));
+    }
+  };
+
+  const handleUploadToDatabase = async (type: SiteImageType) => {
+    const filesToUpload = selectedFiles[type];
+    if (filesToUpload.length === 0) return;
+
     setUploading(type);
 
     try {
-      const uploadPromises = Array.from(files).map(async (file, index) => {
-        // Validazione del file
-        if (!file.type.startsWith('image/')) {
-          throw new Error(`${file.name} non è un'immagine valida`);
-        }
+      const currentCount = images[type].length;
 
-        if (file.size > 10 * 1024 * 1024) {
-          throw new Error(`${file.name} è troppo grande (max 10MB)`);
-        }
-
-        // Carica l'immagine
+      const uploadPromises = filesToUpload.map(async (file, index) => {
         const uploadData = {
           category: type,
           file,
@@ -137,11 +162,25 @@ export const SiteImageSettings: React.FC = () => {
       const results = await Promise.all(uploadPromises);
       const successCount = results.filter(r => r !== null).length;
 
-      if (successCount === files.length) {
+      if (successCount === filesToUpload.length) {
         toast.success(`${successCount} ${successCount === 1 ? 'immagine caricata' : 'immagini caricate'} con successo`);
         await loadAllImages();
+        
+        // Clear selected files
+        setSelectedFiles(prev => ({
+          ...prev,
+          [type]: []
+        }));
+        
+        // Update favicon in document if it's a favicon upload
+        if (type === 'favicon' && results[0]) {
+          const faviconUrl = imageService.getImageUrl(results[0].file_path);
+          const imageUtilService = await import('@/utils/image');
+          imageUtilService.imageService.updateFavicon(faviconUrl);
+        }
+        
       } else {
-        toast.warning(`${successCount}/${files.length} immagini caricate`);
+        toast.warning(`${successCount}/${filesToUpload.length} immagini caricate`);
         await loadAllImages();
       }
     } catch (error) {
@@ -229,7 +268,7 @@ export const SiteImageSettings: React.FC = () => {
                   multiple={section.maxFiles > 1}
                   className="hidden"
                   id={`upload-${section.type}`}
-                  onChange={(e) => handleFileUpload(section.type, e.target.files)}
+                  onChange={(e) => handleFileSelection(section.type, e.target.files)}
                 />
                 <Label
                   htmlFor={`upload-${section.type}`}
@@ -237,15 +276,60 @@ export const SiteImageSettings: React.FC = () => {
                 >
                   <Upload className="h-8 w-8 text-muted-foreground" />
                   <span className="text-sm">
-                    {uploading === section.type ? 'Caricamento...' : 'Clicca per caricare'}
+                    Clicca per selezionare {section.maxFiles > 1 ? 'le immagini' : "l'immagine"}
                   </span>
                 </Label>
               </div>
             </div>
 
+            {/* Selected Files Preview */}
+            {selectedFiles[section.type].length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium">
+                    {selectedFiles[section.type].length} {selectedFiles[section.type].length === 1 ? 'file selezionato' : 'files selezionati'}
+                  </h4>
+                  <Button
+                    onClick={() => handleUploadToDatabase(section.type)}
+                    disabled={uploading === section.type}
+                    className="flex items-center gap-2"
+                  >
+                    {uploading === section.type ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Caricamento...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4" />
+                        Carica nel Database
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                <div className="grid gap-2">
+                  {selectedFiles[section.type].map((file, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 border rounded">
+                      <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
+                        <Upload className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{file.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(file.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Immagini caricate */}
             {images[section.type].length > 0 && (
               <div className="space-y-3">
+                <h4 className="font-medium">Immagini nel database</h4>
                 {images[section.type].map((image) => (
                   <div key={image.id} className="border rounded-lg p-3">
                     <div className="flex items-start gap-3">

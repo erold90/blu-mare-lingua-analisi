@@ -1,119 +1,83 @@
 
-import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { ImageIcon, AlertCircle, RefreshCw } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { imageService, ImageRecord } from "@/services/imageService";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const [heroImage, setHeroImage] = useState<ImageRecord | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const isMobile = useIsMobile();
-
-  const loadHeroImage = async () => {
-    setLoading(true);
-    setError(false);
-    
-    try {
-      const heroImages = await imageService.getImagesByCategory('hero');
-      const primaryHero = heroImages.find(img => img.is_cover) || heroImages[0] || null;
-      setHeroImage(primaryHero);
-    } catch (err) {
-      console.error('Error loading hero image:', err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
+    const loadHeroImage = async () => {
+      try {
+        const heroImages = await imageService.getImagesByCategory('hero');
+        const primaryImage = heroImages.find(img => img.is_cover) || heroImages[0] || null;
+        setHeroImage(primaryImage);
+      } catch (error) {
+        console.error('Error loading hero image:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadHeroImage();
   }, []);
 
-  const getImageUrl = () => {
-    if (!heroImage) return "/placeholder.svg";
-    return imageService.getImageUrl(heroImage.file_path);
+  const handleQuoteClick = () => {
+    navigate("/richiedi-preventivo");
   };
 
-  const getImageAlt = () => {
-    return heroImage?.alt_text || "Villa MareBlu - Appartamenti vacanze";
+  const getBackgroundImage = () => {
+    if (heroImage) {
+      return imageService.getImageUrl(heroImage.file_path);
+    }
+    // Fallback alla vecchia immagine statica
+    return "/images/hero/hero.jpg";
   };
-
-  if (loading) {
-    return (
-      <section className="relative h-[70vh] md:h-[80vh] flex items-center justify-center overflow-hidden">
-        <Skeleton className="absolute inset-0 w-full h-full" />
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <Skeleton className="h-12 md:h-16 w-3/4 mx-auto mb-4" />
-          <Skeleton className="h-6 w-2/3 mx-auto mb-8" />
-          <Skeleton className="h-12 w-48 mx-auto" />
-        </div>
-      </section>
-    );
-  }
-
-  if (error) {
-    return (
-      <section className="relative h-[70vh] md:h-[80vh] flex items-center justify-center overflow-hidden bg-gray-100">
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <AlertCircle className="h-16 w-16 mx-auto mb-4 text-red-500" />
-          <h1 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-            Errore nel caricamento
-          </h1>
-          <p className="text-lg md:text-xl text-gray-600 mb-8">
-            Non è stato possibile caricare l'immagine hero.
-          </p>
-          <Button onClick={loadHeroImage} className="inline-flex items-center gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Riprova
-          </Button>
-        </div>
-      </section>
-    );
-  }
 
   return (
-    <section className="relative h-[70vh] md:h-[80vh] flex items-center justify-center overflow-hidden">
-      {/* Background Image */}
-      <div className="absolute inset-0 w-full h-full">
-        {heroImage ? (
-          <img 
-            src={getImageUrl()}
-            alt={getImageAlt()}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              console.error('Hero image failed to load');
-              e.currentTarget.src = "/placeholder.svg";
-            }}
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-r from-blue-600 to-blue-800 flex items-center justify-center">
-            <ImageIcon className="h-24 w-24 text-white/50" />
-          </div>
-        )}
-        <div className="absolute inset-0 bg-black/40"></div>
-      </div>
-      
-      {/* Content */}
-      <div className="relative z-10 text-center px-4 max-w-4xl mx-auto text-white">
-        <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 drop-shadow-lg">
-          Villa MareBlu
+    <section 
+      className="relative h-[90vh] flex items-center justify-center text-white overflow-hidden"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('${getBackgroundImage()}')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div className="container mx-auto px-4 text-center z-10">
+        <h1 className="text-4xl md:text-6xl font-bold mb-6 drop-shadow-lg">
+          Villa Marina Resort
         </h1>
-        <p className="text-lg md:text-xl lg:text-2xl mb-8 drop-shadow-md">
-          I tuoi appartamenti vacanze sul mare
+        <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto drop-shadow-md">
+          Scopri il paradiso nel cuore della Sicilia. Appartamenti di lusso con vista mozzafiato 
+          e tutti i comfort per una vacanza indimenticabile.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button asChild size={isMobile ? "default" : "lg"} className="bg-primary hover:bg-primary/90">
-            <Link to="/appartamenti">Scopri gli Appartamenti</Link>
+          <Button 
+            size="lg" 
+            onClick={handleQuoteClick}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            Richiedi Preventivo
+            <ChevronRight className="ml-2 h-5 w-5" />
           </Button>
-          <Button asChild variant="outline" size={isMobile ? "default" : "lg"} className="text-white border-white hover:bg-white hover:text-primary">
-            <Link to="/preventivo">Richiedi Preventivo</Link>
+          <Button 
+            size="lg" 
+            variant="outline" 
+            onClick={() => navigate("/appartamenti")}
+            className="bg-white/20 backdrop-blur-sm border-white text-white hover:bg-white hover:text-gray-900 px-8 py-6 text-lg font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            Scopri gli Appartamenti
           </Button>
         </div>
       </div>
+      
+      {/* Overlay decorativo */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
     </section>
   );
 };
