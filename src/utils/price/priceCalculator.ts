@@ -6,7 +6,7 @@ import { calculateBasePrice } from "./basePrice";
 import { calculateExtras } from "./extrasCalculator";
 import { calculateDiscount } from "./discountCalculator";
 import { calculateNights } from "./dateUtils";
-import { getPriceForWeek } from "./weeklyPrice";
+import { getPriceForWeekSync } from "./weeklyPrice";
 import { calculateMultiApartmentPricing } from "./multiApartmentPricing";
 
 // Memorization cache to avoid recalculating prices for the same inputs
@@ -86,8 +86,8 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
     for (let week = 0; week < numberOfWeeks; week++) {
       const weekStartDate = weekStartDates[week];
       
-      // Get the price for this week
-      const weeklyPrice = getPriceForWeek(apartment.id, weekStartDate);
+      // Get the price for this week using sync function
+      const weeklyPrice = getPriceForWeekSync(apartment.id, weekStartDate);
       console.log(`Week ${week+1} price for ${apartment.id}: ${weeklyPrice}€ (starting on ${weekStartDate.toISOString().split('T')[0]})`);
       
       if (weeklyPrice > 0) {

@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useEffect } from "react";
 import { WeeklyPrice, SeasonalPricing, PricesContextType } from "./types";
-import { updateWeeklyPrice, resetAllPrices, forceInitializePrices } from "./priceOperations";
+import { updateWeeklyPrice, resetAllPrices, initializePricesFor2025 } from "./priceOperations";
 import { getWeeksForYear } from "./priceUtils";
 import { toast } from "sonner";
 
@@ -78,18 +78,41 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   // Initialize prices with predefined values
-  const initializePrices = () => {
-    const initialPrices = forceInitializePrices(setSeasonalPricing);
-    setWeeklyPrices(initialPrices);
-    setIsLoading(false);
-    toast.success("Prezzi inizializzati con successo");
+  const initializePrices = async () => {
+    try {
+      const initialPrices = await initializePricesFor2025();
+      
+      // Transform to seasonal pricing format
+      const seasonalData: SeasonalPricing = {
+        year: 2025,
+        prices: initialPrices
+      };
+      
+      setSeasonalPricing([seasonalData]);
+      setWeeklyPrices(initialPrices);
+      
+      // Save to localStorage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([seasonalData]));
+      
+      setIsLoading(false);
+      toast.success("Prezzi inizializzati con successo");
+    } catch (error) {
+      console.error("Error initializing prices:", error);
+      setIsLoading(false);
+      toast.error("Errore nell'inizializzazione dei prezzi");
+    }
   };
 
   // Reset all prices data
-  const resetPrices = () => {
-    resetAllPrices();
-    initializePrices();
-    toast.success("Prezzi reimpostati con successo");
+  const resetPrices = async () => {
+    try {
+      await resetAllPrices();
+      await initializePrices();
+      toast.success("Prezzi reimpostati con successo");
+    } catch (error) {
+      console.error("Error resetting prices:", error);
+      toast.error("Errore nel reset dei prezzi");
+    }
   };
 
   // Update weekly prices for the selected year
@@ -134,15 +157,27 @@ export const PricesProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   // Update price for specific week and apartment
-  const updatePrice = (apartmentId: string, weekStartStr: string, price: number) => {
-    updateWeeklyPrice(
-      apartmentId,
-      weekStartStr,
-      price,
-      seasonalPricing,
-      setSeasonalPricing,
-      setWeeklyPrices
-    );
+  const updatePrice = async (apartmentId: string, weekStartStr: string, price: number) => {
+    try {
+      await updateWeeklyPrice(apartmentId, weekStartStr, price, 2025);
+      
+      // Update local state
+      setWeeklyPrices(prev => {
+        const existing = prev.findIndex(p => p.apartmentId === apartmentId && p.weekStart === weekStartStr);
+        if (existing >= 0) {
+          const updated = [...prev];
+          updated[existing] = { apartmentId, weekStart: weekStartStr, price };
+          return updated;
+        } else {
+          return [...prev, { apartmentId, weekStart: weekStartStr, price }];
+        }
+      });
+      
+      toast.success("Prezzo aggiornato");
+    } catch (error) {
+      console.error("Error updating price:", error);
+      toast.error("Errore nell'aggiornamento del prezzo");
+    }
   };
 
   // Context value

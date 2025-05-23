@@ -178,6 +178,16 @@ export const supabaseService = {
         .eq('id', id);
       
       if (error) throw error;
+    },
+
+    saveBatch: async (tasks: any[]) => {
+      const { data, error } = await supabase
+        .from('cleaning_tasks')
+        .upsert(tasks)
+        .select();
+      
+      if (error) throw error;
+      return data;
     }
   }
 };
