@@ -1,15 +1,18 @@
 
+import * as React from "react";
 import { format } from "date-fns";
-import { Info, Pencil, Trash2 } from "lucide-react";
-import { Reservation, Apartment } from "@/hooks/useSupabaseReservations";
+import { it } from "date-fns/locale";
+import { MoreVertical, Edit, Trash2, Eye, FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Reservation, Apartment } from "@/hooks/useReservations";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 interface MobileReservationCardProps {
   reservation: Reservation;
@@ -17,75 +20,137 @@ interface MobileReservationCardProps {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onViewDetails: (reservation: Reservation) => void;
+  onViewSummary?: (reservation: Reservation) => void;
 }
 
-export const MobileReservationCard = ({ 
-  reservation, 
-  apartments, 
-  onEdit, 
-  onDelete, 
-  onViewDetails 
+export const MobileReservationCard = ({
+  reservation,
+  apartments,
+  onEdit,
+  onDelete,
+  onViewDetails,
+  onViewSummary
 }: MobileReservationCardProps) => {
-  // Find apartment names
-  const apartmentNames = reservation.apartmentIds.map(id => {
-    const apartment = apartments.find(a => a.id === id);
-    return apartment?.name || '';
-  }).join(", ");
+  const selectedApartments = apartments.filter(apt => 
+    reservation.apartmentIds.includes(apt.id)
+  );
 
-  // Calculate number of nights
-  const startDate = new Date(reservation.startDate);
-  const endDate = new Date(reservation.endDate);
-  const nights = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24));
+  const getPaymentStatusColor = (status: string) => {
+    switch (status) {
+      case "paid":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "deposit":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "notPaid":
+        return "bg-red-100 text-red-800 border-red-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
 
-  // Get payment status icon/color
-  let statusColor = "bg-gray-200";
-  if (reservation.paymentStatus === "paid") {
-    statusColor = "bg-green-200";
-  } else if (reservation.paymentStatus === "deposit") {
-    statusColor = "bg-yellow-200";
-  } else {
-    statusColor = "bg-red-200";
-  }
+  const getPaymentStatusText = (status: string) => {
+    switch (status) {
+      case "paid": return "Pagato";
+      case "deposit": return "Caparra";
+      case "notPaid": return "Non Pagato";
+      default: return status;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return format(new Date(dateString), "dd MMM", { locale: it });
+  };
 
   return (
-    <Card className="mb-3">
-      <CardHeader className="px-4 py-2 flex flex-row items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <div className={`w-3 h-3 rounded-full ${statusColor}`} />
-          <CardTitle className="text-base">{reservation.guestName}</CardTitle>
+    <div className="bg-white border rounded-lg p-4 mb-3 shadow-sm">
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex-1">
+          <h3 className="font-semibold text-lg text-gray-900 mb-1">
+            {reservation.guestName}
+          </h3>
+          <div className="flex items-center gap-2 mb-2">
+            <Badge 
+              variant="outline" 
+              className={cn("text-xs", getPaymentStatusColor(reservation.paymentStatus))}
+            >
+              {getPaymentStatusText(reservation.paymentStatus)}
+            </Badge>
+            {reservation.hasPets && (
+              <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-200">
+                🐕 Animali
+              </Badge>
+            )}
+            {reservation.hasLinen && (
+              <Badge variant="outline" className="text-xs bg-purple-100 text-purple-800 border-purple-200">
+                Biancheria
+              </Badge>
+            )}
+          </div>
         </div>
-        <div className="text-sm font-medium">€{reservation.finalPrice}</div>
-      </CardHeader>
-      <CardContent className="px-4 py-2">
-        <div className="text-sm">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Check-in:</span>
-            <span>{format(startDate, 'dd/MM/yyyy')}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Check-out:</span>
-            <span>{format(endDate, 'dd/MM/yyyy')}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Durata:</span>
-            <span>{nights} {nights === 1 ? 'notte' : 'notti'}</span>
-          </div>
-          <div className="mt-1 text-xs text-muted-foreground truncate">
-            {apartmentNames}
-          </div>
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onViewDetails(reservation)}>
+              <Eye className="mr-2 h-4 w-4" />
+              Dettagli
+            </DropdownMenuItem>
+            {onViewSummary && (
+              <DropdownMenuItem onClick={() => onViewSummary(reservation)}>
+                <FileText className="mr-2 h-4 w-4" />
+                Riepilogo
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => onEdit(reservation.id)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Modifica
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => onDelete(reservation.id)}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Elimina
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div className="space-y-2 text-sm">
+        <div className="flex justify-between">
+          <span className="text-gray-600">Periodo:</span>
+          <span className="font-medium">
+            {formatDate(reservation.startDate)} - {formatDate(reservation.endDate)}
+          </span>
         </div>
-      </CardContent>
-      <CardFooter className="px-2 py-2 flex justify-between gap-1">
-        <Button variant="ghost" size="sm" onClick={() => onViewDetails(reservation)}>
-          <Info className="h-4 w-4" />
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => onEdit(reservation.id)}>
-          <Pencil className="h-4 w-4" />
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => onDelete(reservation.id)} className="text-destructive">
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </CardFooter>
-    </Card>
+        
+        <div className="flex justify-between">
+          <span className="text-gray-600">Ospiti:</span>
+          <span className="font-medium">
+            {reservation.adults} adulti
+            {reservation.children > 0 && `, ${reservation.children} bambini`}
+            {reservation.cribs > 0 && `, ${reservation.cribs} culle`}
+          </span>
+        </div>
+        
+        <div className="flex justify-between">
+          <span className="text-gray-600">Appartamenti:</span>
+          <span className="font-medium text-right">
+            {selectedApartments.map(apt => apt.name).join(", ")}
+          </span>
+        </div>
+        
+        <div className="flex justify-between">
+          <span className="text-gray-600">Prezzo:</span>
+          <span className="font-semibold text-lg">
+            €{reservation.finalPrice.toFixed(2)}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 };

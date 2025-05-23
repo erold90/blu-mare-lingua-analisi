@@ -209,6 +209,7 @@ export type Database = {
           guest_name: string
           has_pets: boolean | null
           id: string
+          linen_option: string | null
           notes: string | null
           payment_method: string | null
           payment_status: string | null
@@ -228,6 +229,7 @@ export type Database = {
           guest_name: string
           has_pets?: boolean | null
           id: string
+          linen_option?: string | null
           notes?: string | null
           payment_method?: string | null
           payment_status?: string | null
@@ -247,6 +249,7 @@ export type Database = {
           guest_name?: string
           has_pets?: boolean | null
           id?: string
+          linen_option?: string | null
           notes?: string | null
           payment_method?: string | null
           payment_status?: string | null

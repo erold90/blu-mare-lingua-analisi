@@ -1,7 +1,6 @@
-
 import * as React from "react";
 import { toast } from "sonner";
-import { Plus, RefreshCw, Info, Database } from "lucide-react";
+import { Plus, RefreshCw, Info, Database, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReservations, Reservation } from "@/hooks/useReservations";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -10,6 +9,7 @@ import { ReservationFormData } from "./reservations/reservationSchema";
 import { ReservationDetailsDialog } from "./reservations/ReservationDetailsDialog";
 import { MobileReservationCard } from "./reservations/MobileReservationCard";
 import { ReservationFormDialog } from "./reservations/ReservationFormDialog";
+import { ReservationSummaryDialog } from "./reservations/ReservationSummaryDialog";
 import { DeleteConfirmationDialog } from "./reservations/DeleteConfirmationDialog";
 import { ReservationTable } from "./reservations/ReservationTable";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -32,6 +32,8 @@ const AdminReservations = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [reservationToDelete, setReservationToDelete] = React.useState<string | null>(null);
   const [selectedReservation, setSelectedReservation] = React.useState<Reservation | null>(null);
+  const [summaryReservation, setSummaryReservation] = React.useState<Reservation | null>(null);
+  const [isSummaryDialogOpen, setIsSummaryDialogOpen] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
   const [testingDatabase, setTestingDatabase] = React.useState(false);
@@ -143,6 +145,12 @@ const AdminReservations = () => {
     setIsDialogOpen(true);
   };
 
+  // Function to view reservation summary
+  const handleViewSummary = (reservation: Reservation) => {
+    setSummaryReservation(reservation);
+    setIsSummaryDialogOpen(true);
+  };
+
   // Function to confirm deletion
   const handleDeleteConfirm = async () => {
     if (reservationToDelete) {
@@ -191,11 +199,21 @@ const AdminReservations = () => {
           apartmentIds: data.apartmentIds,
           finalPrice: data.finalPrice,
           paymentMethod: data.paymentMethod,
-          paymentStatus: data.paymentStatus
+          paymentStatus: data.paymentStatus,
+          hasLinen: data.hasLinen
         });
         toast.success("Prenotazione aggiornata con successo!");
+        
+        // Show summary after successful update
+        const updatedReservation = {
+          ...data,
+          id: editingId,
+          startDate: data.startDate.toISOString(),
+          endDate: data.endDate.toISOString(),
+        };
+        handleViewSummary(updatedReservation);
       } else {
-        await addReservation({
+        const newReservation = {
           guestName: data.guestName,
           adults: data.adults,
           children: data.children,
@@ -208,9 +226,22 @@ const AdminReservations = () => {
           paymentMethod: data.paymentMethod,
           paymentStatus: data.paymentStatus,
           depositAmount: data.depositAmount,
-          notes: data.notes
-        });
+          notes: data.notes,
+          hasLinen: data.hasLinen
+        };
+        
+        await addReservation(newReservation);
         toast.success("Nuova prenotazione aggiunta con successo!");
+        
+        // Find the newly added reservation and show summary
+        await refreshData();
+        const latestReservation = reservations.find(r => 
+          r.guestName === data.guestName && 
+          r.startDate === data.startDate.toISOString()
+        );
+        if (latestReservation) {
+          handleViewSummary(latestReservation);
+        }
         
         // Dopo un'aggiunta, forza una sincronizzazione immediata
         if (dbStatus) {
@@ -435,6 +466,7 @@ const AdminReservations = () => {
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onViewDetails={handleViewDetails}
+                onViewSummary={handleViewSummary}
               />
             ))
           )}
@@ -456,6 +488,7 @@ const AdminReservations = () => {
           apartments={apartments}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onViewSummary={handleViewSummary}
         />
       )}
 
@@ -476,6 +509,14 @@ const AdminReservations = () => {
         apartments={apartments}
         onSubmit={onSubmit}
         initialData={reservationToEdit}
+      />
+
+      {/* Reservation Summary Dialog */}
+      <ReservationSummaryDialog
+        isOpen={isSummaryDialogOpen}
+        onOpenChange={setIsSummaryDialogOpen}
+        reservation={summaryReservation}
+        apartments={apartments}
       />
 
       {/* Delete Confirmation Dialog */}

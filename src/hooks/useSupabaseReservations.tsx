@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { apartments } from "@/data/apartments";
@@ -26,7 +25,7 @@ export interface Reservation {
   paymentStatus: "notPaid" | "deposit" | "paid";
   depositAmount?: number;
   notes?: string;
-  linenOption?: "standard" | "extra" | "deluxe";
+  hasLinen?: boolean; // Changed from linenOption to hasLinen
   lastUpdated?: number; // Timestamp dell'ultima modifica
   syncId?: string; // ID per sincronizzazione
   deviceId?: string; // ID del dispositivo di origine
@@ -86,7 +85,7 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
         paymentStatus: res.payment_status as "notPaid" | "deposit" | "paid",
         depositAmount: res.deposit_amount ? Number(res.deposit_amount) : undefined,
         notes: res.notes || undefined,
-        linenOption: res.linen_option as "standard" | "extra" | "deluxe" || "standard",
+        hasLinen: res.linen_option === 'yes', // Convert string to boolean
         lastUpdated: res.updated_at ? new Date(res.updated_at).getTime() : Date.now(),
         deviceId: res.device_id || undefined
       }));
@@ -129,7 +128,7 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
         payment_status: reservationData.paymentStatus,
         deposit_amount: reservationData.depositAmount,
         notes: reservationData.notes,
-        linen_option: reservationData.linenOption || "standard",
+        linen_option: reservationData.hasLinen ? 'yes' : 'no', // Convert boolean to string
         device_id: deviceId
       };
       
@@ -159,7 +158,7 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
         payment_status: updatedReservation.paymentStatus,
         deposit_amount: updatedReservation.depositAmount,
         notes: updatedReservation.notes,
-        linen_option: updatedReservation.linenOption || "standard",
+        linen_option: updatedReservation.hasLinen ? 'yes' : 'no', // Convert boolean to string
         device_id: deviceId
       };
       

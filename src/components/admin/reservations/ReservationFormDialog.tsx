@@ -80,7 +80,7 @@ export const ReservationFormDialog = ({
       paymentStatus: initialData.paymentStatus,
       depositAmount: initialData.depositAmount || 0,
       notes: initialData.notes,
-      linenOption: initialData.linenOption || "standard"
+      hasLinen: initialData.hasLinen || false
     } : {
       guestName: "",
       adults: 1,
@@ -95,7 +95,7 @@ export const ReservationFormDialog = ({
       paymentStatus: "notPaid",
       depositAmount: 0,
       notes: "",
-      linenOption: "standard"
+      hasLinen: false
     }
   });
 
@@ -117,7 +117,7 @@ export const ReservationFormDialog = ({
         paymentStatus: initialData.paymentStatus,
         depositAmount: initialData.depositAmount || 0,
         notes: initialData.notes,
-        linenOption: initialData.linenOption || "standard"
+        hasLinen: initialData.hasLinen || false
       });
     } else {
       form.reset({
@@ -134,7 +134,7 @@ export const ReservationFormDialog = ({
         paymentStatus: "notPaid",
         depositAmount: 0,
         notes: "",
-        linenOption: "standard"
+        hasLinen: false
       });
     }
   }, [initialData, form]);
@@ -268,32 +268,25 @@ export const ReservationFormDialog = ({
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="linenOption"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Biancheria</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                        value={field.value}
-                      >
+                <div className="flex items-center space-x-2 pt-6">
+                  <FormField
+                    control={form.control}
+                    name="hasLinen"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0">
                         <FormControl>
-                          <SelectTrigger className="text-sm">
-                            <SelectValue placeholder="Biancheria" />
-                          </SelectTrigger>
+                          <Checkbox 
+                            checked={field.value} 
+                            onCheckedChange={field.onChange} 
+                          />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="standard">Standard</SelectItem>
-                          <SelectItem value="extra">Extra</SelectItem>
-                          <SelectItem value="deluxe">Deluxe</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <div className="space-y-1 leading-none">
+                          <FormLabel className="text-sm">Biancheria</FormLabel>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
 
               <FormField
@@ -385,7 +378,7 @@ export const ReservationFormDialog = ({
                         )}
                       </div>
                       
-                      <div className="border rounded-lg shadow-sm w-full max-w-[260px] mx-auto">
+                      <div className="border rounded-lg shadow-sm w-full max-w-[280px] mx-auto">
                         <Calendar
                           mode="range"
                           selected={getCurrentDateRange()}
