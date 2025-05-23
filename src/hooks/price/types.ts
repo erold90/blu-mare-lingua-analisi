@@ -15,5 +15,10 @@ export interface PricesContextType {
   isLoading: boolean;
   updatePrice: (apartmentId: string, weekStart: Date, price: number) => Promise<void>;
   getPriceForWeek: (apartmentId: string, weekStart: Date) => number;
+  getWeeksForYear: (year: number) => { start: Date; end: Date }[];
+  availableYears?: number[];
+  selectedYear?: number;
+  setSelectedYear?: (year: number) => void;
+  resetPrices?: () => void;
   loadPrices: () => Promise<void>;
 }
