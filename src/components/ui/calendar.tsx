@@ -42,11 +42,11 @@ function Calendar({
           "h-10 md:h-14 w-full flex-1 p-0 font-medium text-sm md:text-base aria-selected:opacity-100 hover:bg-primary/10 transition-colors duration-200"
         ),
         day_range_end: "day-range-end",
-        day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-md shadow-lg",
+        day_selected: "bg-primary text-white hover:bg-primary hover:text-white focus:bg-primary focus:text-white rounded-md shadow-lg font-bold",
         day_today: "bg-accent text-accent-foreground font-bold border-2 border-primary/30",
         day_outside: "day-outside text-muted-foreground/50 opacity-40 aria-selected:bg-accent/30 aria-selected:text-muted-foreground aria-selected:opacity-30",
         day_disabled: "text-muted-foreground opacity-30 cursor-not-allowed hover:bg-transparent",
-        day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
+        day_range_middle: "aria-selected:bg-accent/80 aria-selected:text-primary-foreground rounded-none",
         day_hidden: "invisible",
         ...classNames,
       }}

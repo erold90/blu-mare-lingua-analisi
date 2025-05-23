@@ -36,7 +36,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
       </CardHeader>
       
       <CardContent className="space-y-4 md:space-y-6">
-        {/* Information alert - compatto per mobile e desktop */}
+        {/* Information alert - compatta per mobile e desktop */}
         <Alert className="bg-blue-50 border-blue-200">
           <InfoIcon className="h-4 w-4 md:h-5 md:w-5 text-blue-600 flex-shrink-0 mt-0.5" />
           <AlertDescription className="text-blue-800 text-xs md:text-sm leading-tight">
@@ -70,17 +70,17 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
                     nav_button_next: "absolute right-1 md:right-2",
                     table: "w-full border-collapse space-y-1 md:space-y-2 mt-2 md:mt-4",
                     head_row: "flex w-full",
-                    head_cell: "text-muted-foreground rounded-md w-full flex-1 font-medium text-xs md:text-sm py-2 md:py-3 text-center",
+                    head_cell: "text-muted-foreground rounded-md w-full flex-1 font-semibold text-xs md:text-sm py-2 md:py-3 text-center",
                     row: "flex w-full mt-1 md:mt-2",
-                    cell: "h-10 md:h-12 w-full flex-1 text-center text-sm md:text-base p-0 relative focus-within:relative focus-within:z-20",
-                    day: "h-10 md:h-12 w-full flex-1 p-0 font-medium text-sm md:text-base hover:bg-primary/10 transition-colors duration-200 rounded-md",
-                    day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-md shadow-md",
+                    cell: "h-10 md:h-12 w-9 md:w-12 flex-1 text-center text-sm md:text-base p-0 relative focus-within:relative focus-within:z-20",
+                    day: "h-10 md:h-12 w-9 md:w-12 flex-1 p-0 font-medium text-sm md:text-base hover:bg-primary/10 transition-colors duration-200 rounded-md",
+                    day_selected: "bg-primary text-white hover:bg-primary hover:text-white focus:bg-primary focus:text-white rounded-md shadow-md font-bold",
                     day_today: "bg-accent text-accent-foreground font-bold border-2 border-primary/30 rounded-md",
                     day_outside: "text-muted-foreground/50 opacity-40",
                     day_disabled: "text-muted-foreground opacity-30 cursor-not-allowed hover:bg-transparent",
-                    day_range_middle: "bg-accent/50 text-accent-foreground rounded-none",
-                    day_range_start: "bg-primary text-primary-foreground rounded-l-md rounded-r-none",
-                    day_range_end: "bg-primary text-primary-foreground rounded-r-md rounded-l-none"
+                    day_range_middle: "bg-accent/70 text-primary-foreground rounded-none",
+                    day_range_start: "bg-primary text-white font-bold rounded-l-md rounded-r-none",
+                    day_range_end: "bg-primary text-white font-bold rounded-r-md rounded-l-none"
                   }}
                 />
               </CardContent>
