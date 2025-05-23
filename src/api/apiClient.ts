@@ -1,3 +1,4 @@
+
 /**
  * API Client per la comunicazione con il server
  */
@@ -59,8 +60,24 @@ async function fetchApi<T>(
         };
       }
       
-      // Per altre chiamate, simuliamo risposte di dati vuoti ma validi
+      // Per le prenotazioni, ora creiamo una simulazione più persistente
       if (endpoint.includes('/reservations') && method === 'GET') {
+        // Tentiamo di recuperare i dati salvati in indexedDB se disponibile
+        try {
+          const storageKey = 'persistent_reservations';
+          const storedData = localStorage.getItem(storageKey);
+          if (storedData) {
+            const reservations = JSON.parse(storedData);
+            console.log('Utilizzando dati persistenti da localStorage:', reservations);
+            return {
+              success: true,
+              data: reservations as unknown as T
+            };
+          }
+        } catch (storageError) {
+          console.error('Errore nel recuperare dati persistenti:', storageError);
+        }
+        
         return {
           success: true,
           data: [] as unknown as T // Array vuoto per le prenotazioni
@@ -68,6 +85,21 @@ async function fetchApi<T>(
       }
       
       if (endpoint.includes('/cleaning') && method === 'GET') {
+        try {
+          const storageKey = 'persistent_cleaning_tasks';
+          const storedData = localStorage.getItem(storageKey);
+          if (storedData) {
+            const tasks = JSON.parse(storedData);
+            console.log('Utilizzando dati persistenti delle attività di pulizia:', tasks);
+            return {
+              success: true,
+              data: tasks as unknown as T
+            };
+          }
+        } catch (storageError) {
+          console.error('Errore nel recuperare dati persistenti delle attività di pulizia:', storageError);
+        }
+        
         return {
           success: true,
           data: [] as unknown as T // Array vuoto per le attività di pulizia
@@ -113,6 +145,24 @@ async function fetchApi<T>(
         success: false,
         error: 'Connection failed, working in offline mode'
       };
+    }
+    
+    // Per le prenotazioni, tentiamo di recuperare i dati salvati persistentemente
+    if (endpoint.includes('/reservations') && method === 'GET') {
+      try {
+        const storageKey = 'persistent_reservations';
+        const storedData = localStorage.getItem(storageKey);
+        if (storedData) {
+          const reservations = JSON.parse(storedData);
+          console.log('Utilizzando dati persistenti da localStorage dopo errore API:', reservations);
+          return {
+            success: true,
+            data: reservations as unknown as T
+          };
+        }
+      } catch (storageError) {
+        console.error('Errore nel recuperare dati persistenti:', storageError);
+      }
     }
     
     return {

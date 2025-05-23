@@ -32,6 +32,9 @@ export interface Reservation {
   deviceId?: string; // ID del dispositivo di origine
 }
 
+// Chiave per il localStorage persistente
+const PERSISTENT_STORAGE_KEY = 'persistent_reservations';
+
 // Get apartments from the data file instead of hardcoded values
 const defaultApartments: Apartment[] = apartments.map(apt => ({
   id: apt.id,
@@ -65,26 +68,86 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
     return id;
   });
   
+  // Funzione per salvare i dati in modo persistente (resistente ai cookie cancellati)
+  const savePersistentData = useCallback((data: Reservation[]) => {
+    try {
+      localStorage.setItem(PERSISTENT_STORAGE_KEY, JSON.stringify(data));
+      console.log('Dati salvati in localStorage persistente:', data.length, 'prenotazioni');
+    } catch (error) {
+      console.error('Errore nel salvare dati persistenti:', error);
+    }
+  }, []);
+  
+  // Funzione per caricare dati persistenti
+  const loadPersistentData = useCallback((): Reservation[] => {
+    try {
+      const storedData = localStorage.getItem(PERSISTENT_STORAGE_KEY);
+      if (storedData) {
+        const data = JSON.parse(storedData);
+        console.log('Dati caricati da localStorage persistente:', data.length, 'prenotazioni');
+        return data;
+      }
+    } catch (error) {
+      console.error('Errore nel caricare dati persistenti:', error);
+    }
+    return [];
+  }, []);
+  
   // Function to load reservations from database
   const loadReservations = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Prima tentiamo il caricamento dal database
       const loadedReservations = await databaseProxy.loadData<Reservation[]>(DataType.RESERVATIONS);
-      if (loadedReservations && Array.isArray(loadedReservations)) {
+      
+      if (loadedReservations && Array.isArray(loadedReservations) && loadedReservations.length > 0) {
         console.log(`Loaded ${loadedReservations.length} reservations from database`);
         setReservations(loadedReservations);
-      } else {
-        console.log("No reservations found in database or invalid data format");
-        setReservations([]);
+        
+        // Salviamo anche in modalità persistente
+        savePersistentData(loadedReservations);
+        return;
+      } 
+      
+      // Se il database è vuoto o non disponibile, proviamo a caricare da localStorage persistente
+      console.log("No reservations found in database or invalid data format, trying persistent storage");
+      const persistentData = loadPersistentData();
+      
+      if (persistentData.length > 0) {
+        console.log(`Loaded ${persistentData.length} reservations from persistent storage`);
+        setReservations(persistentData);
+        
+        // Sincronizziamo questi dati con il database
+        try {
+          await databaseProxy.saveData(DataType.RESERVATIONS, persistentData);
+          console.log("Synchronized persistent data with database");
+        } catch (syncError) {
+          console.error("Failed to sync persistent data with database:", syncError);
+        }
+        return;
       }
+      
+      // Se non troviamo dati da nessuna parte
+      console.log("No reservations found in any storage");
+      setReservations([]);
+      
     } catch (error) {
       console.error("Failed to load reservations:", error);
-      toast.error("Errore nel caricamento delle prenotazioni");
-      setReservations([]);
+      
+      // In caso di errore, proviamo comunque a caricare da localStorage persistente
+      const persistentData = loadPersistentData();
+      if (persistentData.length > 0) {
+        console.log(`Recovered ${persistentData.length} reservations from persistent storage after error`);
+        setReservations(persistentData);
+        toast.info("Utilizzando dati salvati localmente");
+      } else {
+        toast.error("Errore nel caricamento delle prenotazioni");
+        setReservations([]);
+      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [savePersistentData, loadPersistentData]);
   
   // Force a refresh of data from database
   const refreshData = useCallback(async () => {
@@ -128,14 +191,20 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
         try {
           await databaseProxy.saveData(DataType.RESERVATIONS, reservations);
           console.log("Reservations saved successfully");
+          
+          // Salviamo anche in localStorage persistente
+          savePersistentData(reservations);
         } catch (error) {
           console.error("Failed to save reservations:", error);
+          
+          // In caso di errore nel database, salviamo comunque in localStorage persistente
+          savePersistentData(reservations);
         }
       }
     };
     
     saveReservations();
-  }, [reservations, isLoading]);
+  }, [reservations, isLoading, savePersistentData]);
   
   const addReservation = useCallback(async (reservationData: Omit<Reservation, "id" | "lastUpdated" | "syncId" | "deviceId">) => {
     try {
@@ -152,15 +221,22 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
       console.log("Adding new reservation:", newReservation);
       
       // Aggiorna lo stato per l'interfaccia utente immediatamente
-      setReservations(prev => [...prev, newReservation]);
+      const updatedReservations = [...reservations, newReservation];
+      setReservations(updatedReservations);
       
       // Forza il salvataggio e la sincronizzazione dopo un'aggiunta
       try {
-        await databaseProxy.saveData(DataType.RESERVATIONS, [...reservations, newReservation]);
+        await databaseProxy.saveData(DataType.RESERVATIONS, updatedReservations);
         console.log("New reservation saved to database");
+        
+        // Salva anche in localStorage persistente
+        savePersistentData(updatedReservations);
       } catch (error) {
         console.error("Failed to save new reservation:", error);
         toast.error("Errore nel salvare la prenotazione");
+        
+        // In caso di errore nel database, salva comunque in localStorage persistente
+        savePersistentData(updatedReservations);
       }
       
       // Aggiorna i dati dopo il salvataggio per assicurarsi che tutto sia sincronizzato
@@ -171,7 +247,7 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
       console.error("Error in addReservation:", error);
       throw error;
     }
-  }, [reservations, deviceId, refreshData]);
+  }, [reservations, deviceId, refreshData, savePersistentData]);
   
   const updateReservation = useCallback(async (updatedReservation: Reservation) => {
     try {
@@ -197,9 +273,15 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
       try {
         await databaseProxy.saveData(DataType.RESERVATIONS, updatedReservations);
         console.log("Reservations updated in database");
+        
+        // Salva anche in localStorage persistente
+        savePersistentData(updatedReservations);
       } catch (error) {
         console.error("Failed to update reservation:", error);
         toast.error("Errore nell'aggiornare la prenotazione");
+        
+        // In caso di errore nel database, salva comunque in localStorage persistente
+        savePersistentData(updatedReservations);
       }
       
       // Aggiorna i dati dopo il salvataggio per assicurarsi che tutto sia sincronizzato
@@ -210,7 +292,7 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
       console.error("Error in updateReservation:", error);
       throw error;
     }
-  }, [reservations, deviceId, refreshData]);
+  }, [reservations, deviceId, refreshData, savePersistentData]);
   
   const deleteReservation = useCallback(async (id: string) => {
     try {
@@ -225,9 +307,15 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
       try {
         await databaseProxy.saveData(DataType.RESERVATIONS, updatedReservations);
         console.log("Reservations updated in database after delete");
+        
+        // Salva anche in localStorage persistente
+        savePersistentData(updatedReservations);
       } catch (error) {
         console.error("Failed to delete reservation:", error);
         toast.error("Errore nell'eliminare la prenotazione");
+        
+        // In caso di errore nel database, salva comunque in localStorage persistente
+        savePersistentData(updatedReservations);
       }
       
       // Aggiorna i dati dopo il salvataggio per assicurarsi che tutto sia sincronizzato
@@ -238,7 +326,7 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
       console.error("Error in deleteReservation:", error);
       throw error;
     }
-  }, [reservations, refreshData]);
+  }, [reservations, refreshData, savePersistentData]);
   
   // Check if an apartment is available for the given date range
   const getApartmentAvailability = useCallback((apartmentId: string, startDate: Date, endDate: Date): boolean => {

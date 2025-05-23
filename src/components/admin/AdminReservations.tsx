@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReservations, Reservation } from "@/hooks/useReservations";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -12,6 +12,7 @@ import { MobileReservationCard } from "./reservations/MobileReservationCard";
 import { ReservationFormDialog } from "./reservations/ReservationFormDialog";
 import { DeleteConfirmationDialog } from "./reservations/DeleteConfirmationDialog";
 import { ReservationTable } from "./reservations/ReservationTable";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const AdminReservations = () => {
   const { 
@@ -37,6 +38,20 @@ const AdminReservations = () => {
   const reservationToEdit = editingId 
     ? reservations.find(r => r.id === editingId) || null 
     : null;
+
+  // Mostra notifica al primo caricamento per informare sulla persistenza
+  React.useEffect(() => {
+    if (reservations.length > 0) {
+      const persistenceInfoKey = 'persistence_info_shown';
+      if (!localStorage.getItem(persistenceInfoKey)) {
+        toast.info(
+          "I dati vengono salvati localmente anche se cancelli i cookie. Usa il pulsante 'Sincronizza' per salvare online.",
+          { duration: 6000 }
+        );
+        localStorage.setItem(persistenceInfoKey, 'true');
+      }
+    }
+  }, [reservations]);
 
   // Handle manual refresh button click
   const handleRefresh = async () => {
@@ -174,6 +189,14 @@ const AdminReservations = () => {
         </div>
       </div>
 
+      {/* Avviso di persistenza */}
+      <Alert variant="default" className="bg-blue-50 border-blue-200">
+        <Info className="h-4 w-4 text-blue-500" />
+        <AlertDescription className="text-sm text-blue-700">
+          Le prenotazioni sono salvate sia online che localmente sul tuo dispositivo. Per assicurarti che i dati siano sincronizzati, usa il pulsante "Sincronizza".
+        </AlertDescription>
+      </Alert>
+
       {/* Loading indicator */}
       {(isLoading || refreshing) && (
         <div className="flex justify-center py-8">
@@ -228,6 +251,7 @@ const AdminReservations = () => {
       <div className="mt-4 p-4 bg-gray-50 rounded-md text-xs">
         <p className="font-medium">Stato database:</p>
         <p>Numero prenotazioni: {reservations.length}</p>
+        <p>Dati anche in localStorage persistente: Sì</p>
       </div>
 
       {/* Reservation Form Dialog */}
