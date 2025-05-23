@@ -1,3 +1,4 @@
+
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
@@ -81,11 +82,12 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       const { imageService } = await import('@/services/imageService');
       
       const uploadPromises = selectedFiles.map((file, index) => {
+        const fileKey = `file-${index}`;
         return imageService.uploadImage({
           category,
           apartment_id: apartmentId,
           file,
-          alt_text: altTexts[`file-${index}`] || '',
+          alt_text: altTexts[fileKey] || '',
           display_order: index
         });
       });
