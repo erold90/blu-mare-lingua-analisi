@@ -29,7 +29,9 @@ const transformSupabaseTask = (task: SupabaseCleaningTask): CleaningTask => ({
   apartmentId: task.apartmentId,
   apartmentName: '', // Will be populated by apartment lookup
   date: task.taskDate,
-  status: task.status === "in_progress" ? "inProgress" : task.status as "pending" | "completed" | "cancelled",
+  status: task.status === "in_progress" ? "inProgress" : 
+          task.status === "pending" ? "pending" :
+          task.status === "completed" ? "completed" : "cancelled",
   type: task.taskType === 'checkout' ? 'checkout' : 
         task.taskType === 'maintenance' ? 'maintenance' : 
         task.taskType === 'deep_clean' ? 'deep' : 'checkout',
@@ -46,7 +48,9 @@ const transformToSupabaseTask = (task: Omit<CleaningTask, "id">): Omit<SupabaseC
   taskType: task.type === 'checkout' ? 'checkout' : 
            task.type === 'maintenance' ? 'maintenance' : 
            task.type === 'deep' ? 'deep_clean' : 'checkout',
-  status: task.status === "inProgress" ? "in_progress" : task.status as "pending" | "completed" | "cancelled",
+  status: task.status === "inProgress" ? "in_progress" : 
+          task.status === "pending" ? "pending" :
+          task.status === "completed" ? "completed" : "cancelled",
   priority: task.priority || 'medium',
   assignee: task.assignedTo,
   notes: task.notes,
@@ -83,9 +87,12 @@ export const useCleaningManagementAdapter = () => {
   const updateTaskStatus = useCallback(async (id: string, status: CleaningTask["status"]) => {
     const existingTask = supabaseTasks.find(t => t.id === id);
     if (existingTask) {
+      const newStatus = status === "inProgress" ? "in_progress" : 
+                       status === "pending" ? "pending" :
+                       status === "completed" ? "completed" : "cancelled";
       await updateCleaningTask({
         ...existingTask,
-        status: status === "inProgress" ? "in_progress" : status as "pending" | "completed" | "cancelled"
+        status: newStatus
       });
     }
   }, [supabaseTasks, updateCleaningTask]);
