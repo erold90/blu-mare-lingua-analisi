@@ -33,7 +33,7 @@ export const useAuth = () => {
     }
   }, []);
   
-  // Funzione di login completamente riscritta per essere più robusta
+  // Funzione di login migliorata per garantire aggiornamento immediato dello stato
   const login = useCallback((username: string, password: string) => {
     // Preveniamo login multipli simultanei
     if (authChangeInProgress.current) return false;
@@ -41,18 +41,18 @@ export const useAuth = () => {
     if (username === adminCredentials.username && password === adminCredentials.password) {
       authChangeInProgress.current = true;
       
+      console.log("Login: Credenziali corrette, aggiornamento stato...");
+      
       // Prima salviamo lo stato nel localStorage
       localStorage.setItem("adminAuth", "true");
-      console.log("Login: Impostazione localStorage completata");
+      console.log("Login: localStorage aggiornato");
       
-      // Poi aggiorniamo lo stato React
+      // Poi aggiorniamo lo stato React in modo sincrono
       setIsAuthenticated(true);
-      console.log("Login: Stato autenticazione impostato a TRUE");
+      console.log("Login: Stato React aggiornato a TRUE");
       
-      // Reset del flag dopo un breve ritardo
-      setTimeout(() => {
-        authChangeInProgress.current = false;
-      }, 500);
+      // Reset del flag
+      authChangeInProgress.current = false;
       
       return true;
     }
@@ -75,10 +75,8 @@ export const useAuth = () => {
     setIsAuthenticated(false);
     console.log("Logout: Stato autenticazione impostato a FALSE");
     
-    // Reset del flag dopo un breve ritardo
-    setTimeout(() => {
-      authChangeInProgress.current = false;
-    }, 500);
+    // Reset del flag
+    authChangeInProgress.current = false;
   }, []);
 
   return { isAuthenticated, login, logout, adminCredentials };

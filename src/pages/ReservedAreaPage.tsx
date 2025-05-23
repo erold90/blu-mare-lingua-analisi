@@ -25,9 +25,17 @@ import ApiTestPage from '../pages/api-test';
 const LoginForm = () => {
   const [username, setUsername] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isLoggingIn, setIsLoggingIn] = React.useState(false);
+
+  // Redirect if already authenticated
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      console.log("User already authenticated, redirecting to dashboard");
+      navigate("/area-riservata/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,17 +43,34 @@ const LoginForm = () => {
     if (isLoggingIn) return;
     
     setIsLoggingIn(true);
+    console.log("Attempting login with:", username);
     
-    if (login(username, password)) {
-      toast.success("Login effettuato con successo");
-      console.log("Login form: Login riuscito, navigazione diretta alla dashboard");
-      // Usa navigate invece di window.location.href per evitare reload della pagina
-      navigate("/area-riservata/dashboard", { replace: true });
-    } else {
-      toast.error("Credenziali non valide");
+    try {
+      const loginSuccess = login(username, password);
+      
+      if (loginSuccess) {
+        toast.success("Login effettuato con successo");
+        console.log("Login successful, forcing redirect to dashboard");
+        
+        // Piccolo delay per assicurarsi che lo stato si aggiorni
+        setTimeout(() => {
+          navigate("/area-riservata/dashboard", { replace: true });
+        }, 100);
+      } else {
+        toast.error("Credenziali non valide");
+        setIsLoggingIn(false);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Errore durante il login");
       setIsLoggingIn(false);
     }
   };
+
+  // Don't show login form if user is authenticated
+  if (isAuthenticated) {
+    return <div>Reindirizzamento in corso...</div>;
+  }
 
   return (
     <div className="container flex items-center justify-center min-h-[80vh] px-4 mt-8 md:mt-0 md:min-h-[70vh]">
