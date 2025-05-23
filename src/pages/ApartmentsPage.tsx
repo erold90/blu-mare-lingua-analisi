@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -66,13 +67,30 @@ const ProgressiveImage = ({ src, alt, className }: { src: string, alt: string, c
 
 const ApartmentGallery = ({ images }: { images: string[] }) => {
   const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [isTransitioning, setIsTransitioning] = React.useState(false);
+
+  const changeImage = (newIndex: number) => {
+    if (isTransitioning || newIndex === currentIndex) return;
+    
+    setIsTransitioning(true);
+    
+    // Smooth transition delay
+    setTimeout(() => {
+      setCurrentIndex(newIndex);
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50);
+    }, 150);
+  };
 
   const nextImage = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+    const newIndex = (currentIndex + 1) % images.length;
+    changeImage(newIndex);
   };
 
   const prevImage = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+    const newIndex = (currentIndex - 1 + images.length) % images.length;
+    changeImage(newIndex);
   };
 
   // Precarica la prossima immagine per una transizione più fluida
@@ -80,46 +98,90 @@ const ApartmentGallery = ({ images }: { images: string[] }) => {
     if (images.length > 1) {
       const nextIdx = (currentIndex + 1) % images.length;
       imageService.preloadImage(images[nextIdx]);
+      
+      // Precarica anche l'immagine precedente
+      const prevIdx = (currentIndex - 1 + images.length) % images.length;
+      imageService.preloadImage(images[prevIdx]);
     }
   }, [currentIndex, images]);
 
   return (
-    <div className="relative w-full h-96 md:h-[500px] lg:h-[600px] overflow-hidden rounded-lg mt-4">
-      <div className="absolute inset-0">
-        <ProgressiveImage 
-          src={images[currentIndex] || "/placeholder.svg"} 
-          alt={`Immagine ${currentIndex + 1}`} 
-          className="w-full h-full object-contain bg-gray-50"
+    <div className="relative w-full h-96 md:h-[500px] lg:h-[700px] overflow-hidden rounded-lg mt-4 bg-gray-100">
+      {/* Contenitore per le transizioni fluide */}
+      <div className="relative w-full h-full">
+        {images.map((image, index) => (
+          <div
+            key={index}
+            className={`absolute inset-0 transition-all duration-500 ease-in-out ${
+              index === currentIndex 
+                ? 'opacity-100 scale-100 z-10' 
+                : 'opacity-0 scale-105 z-0'
+            }`}
+            style={{
+              transform: index === currentIndex 
+                ? 'translateX(0)' 
+                : index < currentIndex 
+                  ? 'translateX(-100%)' 
+                  : 'translateX(100%)'
+            }}
+          >
+            <ProgressiveImage 
+              src={image || "/placeholder.svg"} 
+              alt={`Immagine ${index + 1}`} 
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ))}
+        
+        {/* Overlay per transizione */}
+        <div 
+          className={`absolute inset-0 bg-black/10 transition-opacity duration-300 pointer-events-none ${
+            isTransitioning ? 'opacity-100' : 'opacity-0'
+          }`}
         />
       </div>
       
       {images.length > 1 && (
         <>
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1">
+          {/* Indicatori con animazioni migliorate */}
+          <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-20">
             {images.map((_, idx) => (
               <button 
                 key={idx}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-white' : 'bg-white/50'}`}
-                onClick={() => setCurrentIndex(idx)}
+                className={`transition-all duration-300 ease-out rounded-full ${
+                  idx === currentIndex 
+                    ? 'w-8 h-3 bg-white shadow-lg' 
+                    : 'w-3 h-3 bg-white/60 hover:bg-white/80 hover:scale-110'
+                }`}
+                onClick={() => changeImage(idx)}
                 aria-label={`Vai all'immagine ${idx + 1}`}
               />
             ))}
           </div>
           
+          {/* Pulsanti di navigazione con effetti migliorati */}
           <button
             onClick={prevImage}
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition-all duration-300 hover:scale-110"
+            disabled={isTransitioning}
+            className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 disabled:bg-black/20 text-white p-3 rounded-full transition-all duration-300 hover:scale-110 backdrop-blur-sm z-20 group"
             aria-label="Immagine precedente"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="h-5 w-5 transition-transform group-hover:-translate-x-0.5" />
           </button>
+          
           <button
             onClick={nextImage}
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition-all duration-300 hover:scale-110"
+            disabled={isTransitioning}
+            className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 disabled:bg-black/20 text-white p-3 rounded-full transition-all duration-300 hover:scale-110 backdrop-blur-sm z-20 group"
             aria-label="Immagine successiva"
           >
-            <ArrowRight className="h-4 w-4" />
+            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
           </button>
+          
+          {/* Contatore immagini */}
+          <div className="absolute top-4 right-4 bg-black/50 text-white text-sm px-3 py-1 rounded-full backdrop-blur-sm z-20">
+            {currentIndex + 1} / {images.length}
+          </div>
         </>
       )}
     </div>
