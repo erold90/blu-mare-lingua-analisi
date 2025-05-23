@@ -21,16 +21,12 @@ const AdminPrices = () => {
   
   const isMobile = useIsMobile();
   
-  // Filtra solo le settimane da giugno a settembre per la visualizzazione principale
-  // e per gennaio solo se è l'anno corrente
+  // Filtra solo le settimane da giugno a settembre per la stagione 2025
   const filterWeeks = (weeks: { start: Date; end: Date }[]) => {
     return weeks.filter(week => {
       const month = week.start.getMonth();
       
-      // Mostra settimane di gennaio
-      if (month === 0) return true;
-      
-      // Mostra settimane da giugno a settembre
+      // Mostra settimane da giugno a settembre (mesi 5-8 in JavaScript)
       return month >= 5 && month <= 8;
     });
   };
@@ -60,7 +56,7 @@ const AdminPrices = () => {
         <CardContent>
           <div className="text-sm text-muted-foreground mb-4">
             <p>I prezzi sono da intendersi per settimana (da sabato a sabato).</p>
-            <p>Prezzi disponibili per gli anni: {availableYears.join(', ')}</p>
+            <p>Periodo stagionale: da giugno a settembre. Prezzi disponibili per gli anni: {availableYears.join(', ')}</p>
           </div>
           
           <Tabs 
