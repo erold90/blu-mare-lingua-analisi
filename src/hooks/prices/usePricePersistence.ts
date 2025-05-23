@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { toast } from "sonner";
 import { supabaseService } from "@/services/supabaseService";
@@ -12,7 +11,7 @@ export const usePricePersistence = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   /**
-   * Initialize default prices for a year
+   * Initialize default prices for a year based on the correct price table
    * @param year The year to initialize prices for
    * @returns Array of initialized prices
    */
@@ -23,30 +22,46 @@ export const usePricePersistence = () => {
     const weeks = getSeasonWeeks(year);
     const defaultPrices = [];
     
+    // Correct prices from the user's table
+    const correctPrices = {
+      "2025-06-02": { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 },
+      "2025-06-09": { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 },
+      "2025-06-16": { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 },
+      "2025-06-23": { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 },
+      "2025-06-30": { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 },
+      "2025-07-07": { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 },
+      "2025-07-14": { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 },
+      "2025-07-21": { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 665, "appartamento-4": 700 },
+      "2025-07-28": { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 665, "appartamento-4": 700 },
+      "2025-08-04": { "appartamento-1": 1150, "appartamento-2": 1250, "appartamento-3": 1075, "appartamento-4": 1100 },
+      "2025-08-11": { "appartamento-1": 1150, "appartamento-2": 1250, "appartamento-3": 1075, "appartamento-4": 1100 },
+      "2025-08-18": { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 675, "appartamento-4": 700 },
+      "2025-08-25": { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 675, "appartamento-4": 700 },
+      "2025-09-01": { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 },
+      "2025-09-08": { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 },
+      "2025-09-15": { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 },
+      "2025-09-22": { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 },
+      "2025-09-29": { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 }
+    };
+    
     console.log(`📅 Creating prices for ${apartmentIds.length} apartments and ${weeks.length} weeks`);
     
     for (const week of weeks) {
-      for (const apartmentId of apartmentIds) {
-        // Example prices based on the week
-        let basePrice = 400;
-        const weekDate = new Date(week.start);
-        const month = weekDate.getMonth();
-        
-        // July and August are more expensive
-        if (month === 6 || month === 7) {
-          basePrice = 800;
+      const weekStr = week.startStr;
+      const weekPrices = correctPrices[weekStr as keyof typeof correctPrices];
+      
+      if (weekPrices) {
+        for (const apartmentId of apartmentIds) {
+          const price = weekPrices[apartmentId as keyof typeof weekPrices];
+          if (price) {
+            defaultPrices.push({
+              apartment_id: apartmentId,
+              year,
+              week_start: weekStr,
+              price: price
+            });
+          }
         }
-        // June and September are medium price
-        else if (month === 5 || month === 8) {
-          basePrice = 600;
-        }
-        
-        defaultPrices.push({
-          apartment_id: apartmentId,
-          year,
-          week_start: week.startStr,
-          price: basePrice
-        });
       }
     }
     
@@ -67,7 +82,7 @@ export const usePricePersistence = () => {
       // Save to localStorage for redundancy
       saveToLocalStorage(year, transformedPrices);
       
-      toast.success(`Prezzi inizializzati: ${transformedPrices.length} entries`);
+      toast.success(`Prezzi inizializzati correttamente: ${transformedPrices.length} entries`);
       return transformedPrices;
     } catch (error) {
       console.error("❌ Error initializing default prices:", error);
