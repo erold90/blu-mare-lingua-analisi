@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -38,7 +39,7 @@ export const SidebarProvider = React.forwardRef<
 >(
   (
     {
-      defaultOpen = true,
+      defaultOpen = false, // Cambiato da true a false per essere chiusa di default
       open: openProp,
       onOpenChange: setOpenProp,
       className,
