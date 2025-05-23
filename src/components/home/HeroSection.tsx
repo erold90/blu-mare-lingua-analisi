@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -49,10 +50,10 @@ const HeroSection = () => {
     >
       <div className="container mx-auto px-4 text-center z-10">
         <h1 className="text-4xl md:text-6xl font-bold mb-6 drop-shadow-lg">
-          Villa Marina Resort
+          Villa MareBlu
         </h1>
         <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto drop-shadow-md">
-          Scopri il paradiso nel cuore della Sicilia. Appartamenti di lusso con vista mozzafiato 
+          Scopri il paradiso nel cuore del Salento. Appartamenti di lusso con vista mozzafiato 
           e tutti i comfort per una vacanza indimenticabile.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
