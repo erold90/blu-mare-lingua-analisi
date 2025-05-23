@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { WeeklyPrice, SeasonalPricing } from "./types";
+import { discoveryStorage, DISCOVERY_STORAGE_KEYS } from "@/services/discoveryStorage";
 
 /**
  * Custom hook to manage the state for the prices provider
@@ -8,47 +9,45 @@ import { WeeklyPrice, SeasonalPricing } from "./types";
 export const useProviderState = () => {
   console.log("Initializing useProviderState");
   
-  // Load seasonal pricing from localStorage
+  // Load seasonal pricing from discovery storage
   const [seasonalPricing, setSeasonalPricing] = useState<SeasonalPricing[]>(() => {
-    console.log("useProviderState: Loading seasonal pricing from localStorage");
-    const savedPricing = localStorage.getItem("seasonalPricing");
+    console.log("useProviderState: Loading seasonal pricing from discovery storage");
+    const savedPricing = discoveryStorage.getItem<SeasonalPricing[]>(DISCOVERY_STORAGE_KEYS.SEASONAL_PRICING);
     
     if (savedPricing) {
       try {
-        const parsedPricing = JSON.parse(savedPricing);
-        console.log(`useProviderState: Loaded ${parsedPricing.length} seasons from localStorage`);
+        console.log(`useProviderState: Loaded ${savedPricing.length} seasons from discovery storage`);
         
         // Debug - log the first few prices
-        if (parsedPricing.length > 0 && parsedPricing[0].prices && parsedPricing[0].prices.length > 0) {
-          const firstFewPrices = parsedPricing[0].prices.slice(0, 5).map((p: WeeklyPrice) => 
+        if (savedPricing.length > 0 && savedPricing[0].prices && savedPricing[0].prices.length > 0) {
+          const firstFewPrices = savedPricing[0].prices.slice(0, 5).map((p: WeeklyPrice) => 
             `${p.apartmentId}: ${p.price}€ (${new Date(p.weekStart).toLocaleDateString()})`
           );
           console.log("Sample prices:", firstFewPrices);
         }
         
-        return parsedPricing;
+        return savedPricing;
       } catch (error) {
         console.error("Failed to parse saved seasonal pricing:", error);
         return [];
       }
     }
     
-    console.log("useProviderState: No seasonal pricing found in localStorage");
+    console.log("useProviderState: No seasonal pricing found in discovery storage");
     return [];
   });
   
   // Initialize weekly prices from 2025 season
   const [weeklyPrices, setWeeklyPrices] = useState<WeeklyPrice[]>(() => {
     console.log("Initializing weekly prices");
-    const savedPricing = localStorage.getItem("seasonalPricing");
+    const savedPricing = discoveryStorage.getItem<SeasonalPricing[]>(DISCOVERY_STORAGE_KEYS.SEASONAL_PRICING);
     
     if (savedPricing) {
       try {
-        const allPricing = JSON.parse(savedPricing);
-        const year2025 = allPricing.find((season: SeasonalPricing) => season.year === 2025);
+        const year2025 = savedPricing.find((season: SeasonalPricing) => season.year === 2025);
         
         if (year2025 && year2025.prices && year2025.prices.length > 0) {
-          console.log(`Found ${year2025.prices.length} prices for 2025 in localStorage`);
+          console.log(`Found ${year2025.prices.length} prices for 2025 in discovery storage`);
           
           // Debug - log a few prices for verification
           const apt1Prices = year2025.prices.filter((p: WeeklyPrice) => p.apartmentId === "apt-1");

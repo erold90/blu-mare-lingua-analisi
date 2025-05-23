@@ -2,6 +2,7 @@
 import { Dispatch, SetStateAction } from "react";
 import { WeeklyPrice, SeasonalPricing } from "./types";
 import { apartments } from "@/data/apartments";
+import { discoveryStorage, DISCOVERY_STORAGE_KEYS } from "@/services/discoveryStorage";
 
 /**
  * Updates a specific weekly price for an apartment
@@ -68,8 +69,8 @@ export const updateWeeklyPrice = (
   // Save to state
   setSeasonalPricing(updatedPricing);
   
-  // Save to localStorage immediately
-  localStorage.setItem("seasonalPricing", JSON.stringify(updatedPricing));
+  // Save to discovery storage immediately
+  discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.SEASONAL_PRICING, updatedPricing);
   
   // Also update weekly prices if they're for the current year
   const currentYearPrices = updatedPricing[yearIndex].prices;
@@ -83,7 +84,7 @@ export const updateWeeklyPrice = (
  */
 export const resetAllPrices = () => {
   console.log("Resetting all prices data");
-  localStorage.removeItem("seasonalPricing");
+  discoveryStorage.removeItem(DISCOVERY_STORAGE_KEYS.SEASONAL_PRICING);
 };
 
 /**
@@ -93,7 +94,7 @@ export const forceInitializePrices = (
   setSeasonalPricing: Dispatch<SetStateAction<SeasonalPricing[]>>
 ) => {
   console.log("Forcing price initialization with predefined values");
-  localStorage.removeItem("seasonalPricing");
+  discoveryStorage.removeItem(DISCOVERY_STORAGE_KEYS.SEASONAL_PRICING);
   
   // Create predefined pricing data for 2025 season based on the provided table
   const prices2025: WeeklyPrice[] = [];
@@ -157,9 +158,9 @@ export const forceInitializePrices = (
   const initialPricing = [{ year: 2025, prices: prices2025 }];
   setSeasonalPricing(initialPricing);
   
-  // Save to localStorage immediately
-  localStorage.setItem("seasonalPricing", JSON.stringify(initialPricing));
-  console.log("2025 seasonal prices saved to localStorage with values:", initialPricing[0].prices.length);
+  // Save to discovery storage immediately
+  discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.SEASONAL_PRICING, initialPricing);
+  console.log("2025 seasonal prices saved to discovery storage with values:", initialPricing[0].prices.length);
   
   return prices2025;
 };

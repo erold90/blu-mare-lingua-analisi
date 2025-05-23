@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { apartments } from "@/data/apartments";
+import { discoveryStorage, DISCOVERY_STORAGE_KEYS } from "@/services/discoveryStorage";
 
 // Type definitions
 export interface Apartment {
@@ -47,21 +48,38 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [apartments] = useState<Apartment[]>(defaultApartments);
   
-  // Load reservations from localStorage on mount
+  // Load reservations from discovery storage on mount
   useEffect(() => {
-    const savedReservations = localStorage.getItem("reservations");
+    const savedReservations = discoveryStorage.getItem<Reservation[]>(DISCOVERY_STORAGE_KEYS.RESERVATIONS);
     if (savedReservations) {
       try {
-        setReservations(JSON.parse(savedReservations));
+        setReservations(savedReservations);
       } catch (error) {
         console.error("Failed to parse saved reservations:", error);
       }
     }
+    
+    // Listen for storage updates from other tabs/windows
+    const handleStorageUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail?.key === DISCOVERY_STORAGE_KEYS.RESERVATIONS) {
+        const updatedReservations = discoveryStorage.getItem<Reservation[]>(DISCOVERY_STORAGE_KEYS.RESERVATIONS);
+        if (updatedReservations) {
+          setReservations(updatedReservations);
+        }
+      }
+    };
+
+    window.addEventListener("discoveryStorageUpdate", handleStorageUpdate);
+    
+    return () => {
+      window.removeEventListener("discoveryStorageUpdate", handleStorageUpdate);
+    };
   }, []);
   
-  // Save reservations to localStorage whenever they change
+  // Save reservations to discovery storage whenever they change
   useEffect(() => {
-    localStorage.setItem("reservations", JSON.stringify(reservations));
+    discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.RESERVATIONS, reservations);
   }, [reservations]);
   
   const addReservation = (reservationData: Omit<Reservation, "id">) => {

@@ -1,12 +1,11 @@
 
 import { CleaningTask } from "./types";
-
-const STORAGE_KEY = "cleaningTasks";
+import { discoveryStorage, DISCOVERY_STORAGE_KEYS } from "@/services/discoveryStorage";
 
 export const loadCleaningTasks = (): CleaningTask[] => {
   try {
-    const savedTasks = localStorage.getItem(STORAGE_KEY);
-    return savedTasks ? JSON.parse(savedTasks) : [];
+    const savedTasks = discoveryStorage.getItem<CleaningTask[]>(DISCOVERY_STORAGE_KEYS.CLEANING_TASKS);
+    return savedTasks || [];
   } catch (error) {
     console.error("Errore nel parsing delle attività di pulizia:", error);
     return [];
@@ -14,5 +13,5 @@ export const loadCleaningTasks = (): CleaningTask[] => {
 };
 
 export const saveCleaningTasks = (tasks: CleaningTask[]): void => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.CLEANING_TASKS, tasks);
 };
