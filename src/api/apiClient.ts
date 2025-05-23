@@ -1,4 +1,3 @@
-
 /**
  * API Client per la comunicazione con il server
  */
@@ -20,7 +19,7 @@ async function fetchApi<T>(
   endpoint: string, 
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
   body?: any,
-  timeout: number = 8000 // timeout di 8 secondi per default
+  timeout: number = 15000 // timeout aumentato a 15 secondi per connessioni più lente
 ): Promise<ApiResponse<T>> {
   try {
     const url = `${API_BASE_URL}${endpoint}`;
@@ -43,7 +42,10 @@ async function fetchApi<T>(
     }
     
     console.log(`Calling API: ${method} ${url}`, body ? 'with data' : '');
-    const response = await fetch(url, options);
+    
+    // Aggiungiamo un timestamp per evitare la cache
+    const urlWithTimestamp = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    const response = await fetch(urlWithTimestamp, options);
     clearTimeout(timeoutId); // Pulizia del timeout
     
     // Prima verifichiamo se la risposta è HTML invece di JSON (errore comune in sviluppo)
@@ -62,7 +64,7 @@ async function fetchApi<T>(
       
       // Per le prenotazioni, ora creiamo una simulazione più persistente
       if (endpoint.includes('/reservations') && method === 'GET') {
-        // Tentiamo di recuperare i dati salvati in indexedDB se disponibile
+        // Tentiamo di recuperare i dati salvati in localStorage se disponibile
         try {
           const storageKey = 'persistent_reservations';
           const storedData = localStorage.getItem(storageKey);
@@ -127,7 +129,7 @@ async function fetchApi<T>(
       success: true,
       data
     };
-  } catch (error) {
+  } catch (error: any) {
     if (error.name === 'AbortError') {
       console.error('API request timeout:', endpoint);
       return {
@@ -274,5 +276,51 @@ export const syncApi = {
   
   syncData: async (dataType: string) => {
     return fetchApi(`/sync/${dataType}`, 'POST');
+  }
+};
+
+/**
+ * API per la sincronizzazione forzata e verifica connessione
+ */
+export const systemApi = {
+  /**
+   * Verifica e forza la sincronizzazione dei dati con il database
+   */
+  forceSyncAllData: async () => {
+    // Prima verifica la connessione al database
+    const dbTest = await pingApi.testDatabaseConnection();
+    
+    if (!dbTest.success) {
+      return {
+        success: false,
+        error: 'Database non raggiungibile, impossibile sincronizzare'
+      };
+    }
+    
+    // Poi sincronizza tutti i tipi di dati
+    try {
+      // Prenotazioni
+      const reservationsSync = await syncApi.syncData('reservations');
+      
+      // Attività di pulizia
+      const cleaningSync = await syncApi.syncData('cleaning');
+      
+      // Appartamenti
+      const apartmentsSync = await syncApi.syncData('apartments');
+      
+      return {
+        success: true,
+        data: {
+          reservationsSync: reservationsSync.success,
+          cleaningSync: cleaningSync.success,
+          apartmentsSync: apartmentsSync.success
+        }
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Errore durante la sincronizzazione'
+      };
+    }
   }
 };

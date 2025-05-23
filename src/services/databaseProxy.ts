@@ -6,11 +6,13 @@
 
 import { DataType, externalStorage } from "./externalStorage";
 import { mysqlStorage } from "./mysqlStorage";
+import { toast } from "sonner";
 
 class DatabaseProxy {
   private useMySQL: boolean = false;
   private isInitializing: boolean = false;
   private initPromise: Promise<boolean> | null = null;
+  private syncInProgress: boolean = false;
   
   constructor() {
     // Controlla se possiamo usare MySQL al primo utilizzo
@@ -114,44 +116,66 @@ class DatabaseProxy {
    * Sincronizza i dati
    */
   public async synchronize(type: DataType): Promise<void> {
-    // Assicuriamoci che l'inizializzazione sia completata
-    await this.ensureInitialized();
-    
-    console.log(`Tentativo di sincronizzazione dei dati di tipo ${type}`);
-    
-    if (this.useMySQL) {
-      try {
-        // Prima carica i dati locali
-        const localData = await externalStorage.loadData(type);
-        
-        if (localData) {
-          // Se abbiamo dati locali, proviamo a sincronizzarli col server
-          console.log(`Sincronizzazione di dati locali per ${type} con il server`);
-          await mysqlStorage.saveData(type, localData);
-        }
-        
-        // Poi tenta di sincronizzare i dati dal server
-        await mysqlStorage.synchronize(type);
-        console.log(`Sincronizzazione MySQL completata per ${type}`);
-        
-        // Dopo la sincronizzazione, carica i dati più aggiornati
-        const updatedData = await mysqlStorage.loadData(type);
-        if (updatedData) {
-          // Aggiorna i dati locali con quelli dal server
-          await externalStorage.saveData(type, updatedData);
-          console.log(`Dati locali aggiornati dopo la sincronizzazione per ${type}`);
-        }
-      } catch (error) {
-        console.error(`Error synchronizing ${type} with MySQL:`, error);
-        console.log(`Passaggio alla sincronizzazione con localStorage per ${type}`);
-      }
-    } else {
-      console.log(`MySQL non disponibile, uso solo localStorage per ${type}`);
-      // Sincronizza comunque anche il localStorage
-      await externalStorage.synchronize(type);
+    // Se c'è già una sincronizzazione in corso, non avviarne un'altra
+    if (this.syncInProgress) {
+      console.log("Sincronizzazione già in corso, ignorata la richiesta");
+      return;
     }
     
-    console.log(`Sincronizzazione completata per ${type}`);
+    this.syncInProgress = true;
+    
+    try {
+      // Assicuriamoci che l'inizializzazione sia completata
+      await this.ensureInitialized();
+      
+      console.log(`Tentativo di sincronizzazione dei dati di tipo ${type}`);
+      
+      if (this.useMySQL) {
+        try {
+          // Prima carica i dati locali
+          const localData = await externalStorage.loadData(type);
+          
+          if (localData) {
+            // Se abbiamo dati locali, proviamo a sincronizzarli col server
+            console.log(`Sincronizzazione di dati locali per ${type} con il server`);
+            await mysqlStorage.saveData(type, localData);
+          }
+          
+          // Poi tenta di sincronizzare i dati dal server
+          await mysqlStorage.synchronize(type);
+          console.log(`Sincronizzazione MySQL completata per ${type}`);
+          
+          // Dopo la sincronizzazione, carica i dati più aggiornati
+          const updatedData = await mysqlStorage.loadData(type);
+          if (updatedData) {
+            // Aggiorna i dati locali con quelli dal server
+            await externalStorage.saveData(type, updatedData);
+            console.log(`Dati locali aggiornati dopo la sincronizzazione per ${type}`);
+          }
+        } catch (error) {
+          console.error(`Error synchronizing ${type} with MySQL:`, error);
+          toast.error(`Errore durante la sincronizzazione di ${this.getDataTypeLabel(type)}`);
+        }
+      } else {
+        console.log(`MySQL non disponibile, uso solo localStorage per ${type}`);
+        // Prova a riconnettere a MySQL
+        this.useMySQL = await this.checkMySQLAvailability();
+        
+        if (this.useMySQL) {
+          // Se ora siamo connessi, riprova la sincronizzazione
+          console.log("Riconnessione a MySQL riuscita, riprovo la sincronizzazione");
+          await this.synchronize(type);
+        } else {
+          // Sincronizza comunque anche il localStorage
+          await externalStorage.synchronize(type);
+          toast.warning("Database non disponibile, dati salvati solo localmente");
+        }
+      }
+      
+      console.log(`Sincronizzazione completata per ${type}`);
+    } finally {
+      this.syncInProgress = false;
+    }
   }
   
   /**
@@ -161,11 +185,45 @@ class DatabaseProxy {
     // Assicuriamoci che l'inizializzazione sia completata
     await this.ensureInitialized();
     
+    // Se siamo connessi a MySQL, usiamo la funzione dedicata
+    if (this.useMySQL) {
+      try {
+        await mysqlStorage.forceSyncAllData();
+        return;
+      } catch (error) {
+        console.error("Errore nella sincronizzazione di tutti i dati con MySQL:", error);
+        toast.error("Errore nella sincronizzazione con il database");
+      }
+    }
+    
+    // Fallback alla sincronizzazione basata su tipi
     console.log("Sincronizzazione di tutti i tipi di dati");
-    await Promise.all(Object.values(DataType).map(type => 
-      this.synchronize(type as DataType)
-    ));
-    console.log("Sincronizzazione completa di tutti i dati");
+    
+    toast.loading("Sincronizzazione di tutti i dati in corso...");
+    
+    try {
+      await Promise.all(Object.values(DataType).map(type => 
+        this.synchronize(type as DataType)
+      ));
+      
+      toast.dismiss();
+      toast.success("Sincronizzazione completa di tutti i dati");
+    } catch (error) {
+      console.error("Errore nella sincronizzazione di tutti i dati:", error);
+      toast.dismiss();
+      toast.error("Errore durante la sincronizzazione di alcuni dati");
+    }
+  }
+  
+  /**
+   * Forza un test completo della connessione al database
+   */
+  public async testDatabaseConnection(): Promise<boolean> {
+    // Reset dello stato
+    this.useMySQL = false;
+    
+    // Force recheck
+    return this.checkMySQLAvailability();
   }
   
   /**
@@ -181,6 +239,24 @@ class DatabaseProxy {
   public async recheckMySQLAvailability(): Promise<boolean> {
     this.initPromise = this.checkMySQLAvailability();
     return this.initPromise;
+  }
+  
+  /**
+   * Ottiene una label leggibile per il tipo di dati
+   */
+  private getDataTypeLabel(type: DataType): string {
+    switch(type) {
+      case DataType.RESERVATIONS:
+        return "prenotazioni";
+      case DataType.CLEANING_TASKS:
+        return "attività di pulizia";
+      case DataType.APARTMENTS:
+        return "appartamenti";
+      case DataType.PRICES:
+        return "prezzi";
+      default:
+        return type;
+    }
   }
 }
 

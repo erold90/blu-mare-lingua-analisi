@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import { Plus, RefreshCw, Info } from "lucide-react";
+import { Plus, RefreshCw, Info, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReservations, Reservation } from "@/hooks/useReservations";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -13,6 +13,8 @@ import { ReservationFormDialog } from "./reservations/ReservationFormDialog";
 import { DeleteConfirmationDialog } from "./reservations/DeleteConfirmationDialog";
 import { ReservationTable } from "./reservations/ReservationTable";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { databaseProxy } from "@/services/databaseProxy";
+import { testDatabaseConnection } from "@/hooks/cleaning/cleaningStorage";
 
 const AdminReservations = () => {
   const { 
@@ -32,6 +34,8 @@ const AdminReservations = () => {
   const [selectedReservation, setSelectedReservation] = React.useState<Reservation | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
+  const [testingDatabase, setTestingDatabase] = React.useState(false);
+  const [dbStatus, setDbStatus] = React.useState<boolean | null>(null);
   const isMobile = useIsMobile();
 
   // Find the reservation being edited
@@ -45,7 +49,7 @@ const AdminReservations = () => {
       const persistenceInfoKey = 'persistence_info_shown';
       if (!localStorage.getItem(persistenceInfoKey)) {
         toast.info(
-          "I dati vengono salvati localmente anche se cancelli i cookie. Usa il pulsante 'Sincronizza' per salvare online.",
+          "I dati vengono salvati sia localmente che sul database quando sei online. Usa il pulsante 'Sincronizza' periodicamente.",
           { duration: 6000 }
         );
         localStorage.setItem(persistenceInfoKey, 'true');
@@ -64,6 +68,28 @@ const AdminReservations = () => {
       toast.error("Errore durante l'aggiornamento dei dati");
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  // Handle database test button click
+  const handleDatabaseTest = async () => {
+    setTestingDatabase(true);
+    try {
+      const isConnected = await testDatabaseConnection();
+      setDbStatus(isConnected);
+      
+      if (isConnected) {
+        // Se la connessione è ok, forza una sincronizzazione completa
+        await databaseProxy.synchronizeAll();
+        // Poi aggiorna i dati locali
+        await refreshData();
+      }
+    } catch (error) {
+      console.error("Error testing database connection:", error);
+      setDbStatus(false);
+      toast.error("Errore nel test della connessione al database");
+    } finally {
+      setTestingDatabase(false);
     }
   };
 
@@ -160,6 +186,14 @@ const AdminReservations = () => {
     refreshData()
       .then(() => console.log("Initial data refresh successful"))
       .catch(err => console.error("Error in initial data refresh:", err));
+      
+    // Testa la connessione al database all'avvio
+    testDatabaseConnection()
+      .then(isConnected => setDbStatus(isConnected))
+      .catch(err => {
+        console.error("Error in initial database test:", err);
+        setDbStatus(false);
+      });
   }, [refreshData]);
 
   // Log quando le prenotazioni cambiano
@@ -172,6 +206,16 @@ const AdminReservations = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-lg md:text-xl font-bold">Gestione Prenotazioni</h2>
         <div className="flex space-x-2">
+          <Button 
+            onClick={handleDatabaseTest} 
+            size="sm" 
+            variant="outline"
+            disabled={testingDatabase}
+            className="bg-blue-50 hover:bg-blue-100 border-blue-200"
+          >
+            <Database className={cn("h-4 w-4 text-blue-600", testingDatabase && "animate-pulse")} />
+            {!isMobile && <span className="ml-2">Test Database</span>}
+          </Button>
           <Button 
             onClick={handleRefresh} 
             size="sm" 
@@ -189,11 +233,35 @@ const AdminReservations = () => {
         </div>
       </div>
 
-      {/* Avviso di persistenza */}
-      <Alert variant="default" className="bg-blue-50 border-blue-200">
-        <Info className="h-4 w-4 text-blue-500" />
-        <AlertDescription className="text-sm text-blue-700">
-          Le prenotazioni sono salvate sia online che localmente sul tuo dispositivo. Per assicurarti che i dati siano sincronizzati, usa il pulsante "Sincronizza".
+      {/* Avviso di stato connessione */}
+      <Alert 
+        variant="default" 
+        className={cn(
+          "border",
+          dbStatus === true ? "bg-green-50 border-green-200" : 
+          dbStatus === false ? "bg-red-50 border-red-200" : 
+          "bg-blue-50 border-blue-200"
+        )}
+      >
+        <Info className={cn(
+          "h-4 w-4", 
+          dbStatus === true ? "text-green-500" : 
+          dbStatus === false ? "text-red-500" : 
+          "text-blue-500"
+        )} />
+        <AlertDescription className={cn(
+          "text-sm",
+          dbStatus === true ? "text-green-700" : 
+          dbStatus === false ? "text-red-700" : 
+          "text-blue-700"
+        )}>
+          {dbStatus === true ? (
+            "Database MySQL connesso. I dati vengono sincronizzati correttamente tra dispositivi."
+          ) : dbStatus === false ? (
+            "Database MySQL non raggiungibile. I dati sono salvati solo localmente e non saranno visibili su altri dispositivi."
+          ) : (
+            "Stato del database in verifica... clicca 'Test Database' per verificare la connessione."
+          )}
         </AlertDescription>
       </Alert>
 
@@ -249,9 +317,10 @@ const AdminReservations = () => {
 
       {/* Debug info */}
       <div className="mt-4 p-4 bg-gray-50 rounded-md text-xs">
-        <p className="font-medium">Stato database:</p>
+        <p className="font-medium">Stato sincronizzazione:</p>
         <p>Numero prenotazioni: {reservations.length}</p>
-        <p>Dati anche in localStorage persistente: Sì</p>
+        <p>Stato database: {dbStatus === true ? "Connesso ✓" : dbStatus === false ? "Non connesso ✗" : "Non verificato ?"}</p>
+        <p>Dati salvati persistentemente: Sì (localStorage e MySQL quando disponibile)</p>
       </div>
 
       {/* Reservation Form Dialog */}

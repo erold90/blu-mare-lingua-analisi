@@ -5,6 +5,7 @@ import { apartments } from "@/data/apartments";
 import { toast } from "sonner";
 import { DataType } from "@/services/externalStorage";
 import { databaseProxy } from "@/services/databaseProxy";
+import { pingApi } from "@/api/apiClient";
 
 // Type definitions
 export interface Apartment {
@@ -68,6 +69,25 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
     return id;
   });
   
+  const [dbConnected, setDbConnected] = useState<boolean | null>(null);
+  
+  // Funzione per verificare la connessione al database all'avvio
+  useEffect(() => {
+    const checkDatabaseConnection = async () => {
+      try {
+        const response = await pingApi.testDatabaseConnection();
+        setDbConnected(response.success);
+        return response.success;
+      } catch (error) {
+        console.error("Errore nel test iniziale della connessione al database:", error);
+        setDbConnected(false);
+        return false;
+      }
+    };
+    
+    checkDatabaseConnection();
+  }, []);
+  
   // Funzione per salvare i dati in modo persistente (resistente ai cookie cancellati)
   const savePersistentData = useCallback((data: Reservation[]) => {
     try {
@@ -106,6 +126,9 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
         
         // Salviamo anche in modalità persistente
         savePersistentData(loadedReservations);
+        
+        // Aggiorna stato della connessione
+        setDbConnected(true);
         return;
       } 
       
@@ -121,8 +144,10 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
         try {
           await databaseProxy.saveData(DataType.RESERVATIONS, persistentData);
           console.log("Synchronized persistent data with database");
+          setDbConnected(true);
         } catch (syncError) {
           console.error("Failed to sync persistent data with database:", syncError);
+          setDbConnected(false);
         }
         return;
       }
@@ -144,6 +169,8 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
         toast.error("Errore nel caricamento delle prenotazioni");
         setReservations([]);
       }
+      
+      setDbConnected(false);
     } finally {
       setIsLoading(false);
     }
@@ -153,12 +180,20 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
   const refreshData = useCallback(async () => {
     setIsLoading(true);
     try {
+      // Prima verifichiamo la connessione al database
+      const connected = await databaseProxy.recheckMySQLAvailability();
+      setDbConnected(connected);
+      
+      // Poi proviamo a sincronizzare i dati
       await databaseProxy.synchronize(DataType.RESERVATIONS);
+      
+      // Infine ricarichiamo i dati
       await loadReservations();
       toast.success("Dati sincronizzati correttamente");
     } catch (error) {
       console.error("Error refreshing data:", error);
       toast.error("Errore durante la sincronizzazione");
+      
       // Ricarica comunque i dati locali in caso di errore
       await loadReservations();
     } finally {
@@ -170,18 +205,39 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
   useEffect(() => {
     loadReservations();
     
-    // Set up interval for periodic synchronization
-    const intervalId = setInterval(() => {
+    // Set up interval for periodic synchronization (ogni 5 minuti)
+    const syncIntervalId = setInterval(() => {
       databaseProxy.synchronize(DataType.RESERVATIONS)
-        .then(() => loadReservations())
         .catch(error => console.error("Error during periodic sync:", error));
-    }, 60000); // Sync every minute
+    }, 300000); // Sync every 5 minutes
     
-    // Clean up interval on unmount
+    // Set up interval for checking connection status (ogni 30 secondi)
+    const connectionCheckIntervalId = setInterval(() => {
+      pingApi.testDatabaseConnection()
+        .then(response => {
+          const isConnected = response.success;
+          if (isConnected !== dbConnected) {
+            // Se lo stato è cambiato, aggiorna
+            setDbConnected(isConnected);
+            
+            // Se siamo passati da offline a online, sincronizza i dati
+            if (isConnected && !dbConnected) {
+              console.log("Connessione ripristinata, sincronizzazione dati...");
+              databaseProxy.synchronize(DataType.RESERVATIONS)
+                .then(() => loadReservations())
+                .catch(error => console.error("Error during connection restoration sync:", error));
+            }
+          }
+        })
+        .catch(() => setDbConnected(false));
+    }, 30000); // Ogni 30 secondi
+    
+    // Clean up intervals on unmount
     return () => {
-      clearInterval(intervalId);
+      clearInterval(syncIntervalId);
+      clearInterval(connectionCheckIntervalId);
     };
-  }, [loadReservations]);
+  }, [loadReservations, dbConnected]);
   
   // Save reservations to database whenever they change
   useEffect(() => {
