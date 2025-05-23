@@ -12,7 +12,7 @@ export interface Apartment {
 
 export interface Reservation {
   id: string;
-  guestName: string;
+  guestName: string; // This is required
   adults: number;
   children: number;
   cribs: number;
@@ -25,7 +25,7 @@ export interface Reservation {
   paymentStatus: "notPaid" | "deposit" | "paid";
   depositAmount?: number;
   notes?: string;
-  hasLinen?: boolean; // Changed from linenOption to hasLinen
+  hasLinen?: boolean;
   lastUpdated?: number; // Timestamp dell'ultima modifica
   syncId?: string; // ID per sincronizzazione
   deviceId?: string; // ID del dispositivo di origine

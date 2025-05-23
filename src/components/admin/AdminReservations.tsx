@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { toast } from "sonner";
 import { Plus, RefreshCw, Info, Database, FileText } from "lucide-react";
@@ -191,7 +192,7 @@ const AdminReservations = () => {
           id: editingId,
           startDate: data.startDate.toISOString(),
           endDate: data.endDate.toISOString(),
-          guestName: data.guestName,
+          guestName: data.guestName, // Explicitly include required fields
           adults: data.adults,
           children: data.children,
           cribs: data.cribs,
@@ -205,11 +206,22 @@ const AdminReservations = () => {
         toast.success("Prenotazione aggiornata con successo!");
         
         // Show summary after successful update
-        const updatedReservation = {
-          ...data,
+        const updatedReservation: Reservation = {
           id: editingId,
+          guestName: data.guestName, // Ensure this is not optional
+          adults: data.adults,
+          children: data.children,
+          cribs: data.cribs,
+          hasPets: data.hasPets,
+          apartmentIds: data.apartmentIds,
           startDate: data.startDate.toISOString(),
           endDate: data.endDate.toISOString(),
+          finalPrice: data.finalPrice,
+          paymentMethod: data.paymentMethod,
+          paymentStatus: data.paymentStatus,
+          depositAmount: data.depositAmount,
+          notes: data.notes,
+          hasLinen: data.hasLinen
         };
         handleViewSummary(updatedReservation);
       } else {
