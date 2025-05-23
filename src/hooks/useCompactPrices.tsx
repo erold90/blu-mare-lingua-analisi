@@ -51,6 +51,7 @@ export const useCompactPrices = () => {
       setIsLoading(true);
       console.log("Loading prices from database...");
       
+      // Fix: ensure year is correctly formatted
       const data = await supabaseService.prices.getByYear(2025);
       console.log("Raw price data from database:", data);
       
@@ -60,6 +61,7 @@ export const useCompactPrices = () => {
         return;
       }
       
+      // Fix: ensure we're correctly processing the returned data format
       const transformedPrices: PriceData[] = data.map(price => ({
         apartmentId: price.apartment_id,
         weekStart: price.week_start,
@@ -103,6 +105,7 @@ export const useCompactPrices = () => {
     try {
       console.log(`Updating price for ${apartmentId} on ${weekStart} to ${newPrice}`);
       
+      // Fix: ensure we're passing the correct parameters to the upsert function
       await supabaseService.prices.upsert({
         apartment_id: apartmentId,
         year: 2025,

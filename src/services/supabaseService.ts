@@ -39,29 +39,52 @@ export const supabaseService = {
 
   prices: {
     getByYear: async (year: number) => {
-      const { data, error } = await supabase
-        .from('prices')
-        .select('*')
-        .eq('year', year)
-        .order('week_start');
+      console.log(`Fetching prices for year: ${year}`);
       
-      if (error) throw error;
-      return data || [];
+      // Fix: Add explicit debugging for the request
+      try {
+        const { data, error } = await supabase
+          .from('prices')
+          .select('*')
+          .eq('year', year)
+          .order('week_start');
+        
+        if (error) {
+          console.error("Error fetching prices:", error);
+          throw error;
+        }
+        
+        console.log(`Fetched ${data?.length || 0} prices from database`);
+        return data || [];
+      } catch (fetchError) {
+        console.error("Exception during price fetch:", fetchError);
+        throw fetchError;
+      }
     },
 
     upsert: async (priceData: any) => {
-      const { data, error } = await supabase
-        .from('prices')
-        .upsert(priceData, {
-          onConflict: 'apartment_id,week_start,year'
-        })
-        .select();
-      
-      if (error) {
-        console.error("Supabase upsert error:", error);
-        throw error;
+      // Fix: Add better error handling and logging
+      try {
+        console.log("Upserting price data:", priceData);
+        
+        const { data, error } = await supabase
+          .from('prices')
+          .upsert(priceData, {
+            onConflict: 'apartment_id,week_start,year'
+          })
+          .select();
+        
+        if (error) {
+          console.error("Supabase upsert error:", error);
+          throw error;
+        }
+        
+        console.log("Price updated successfully:", data);
+        return data;
+      } catch (upsertError) {
+        console.error("Exception during price upsert:", upsertError);
+        throw upsertError;
       }
-      return data;
     },
 
     updateBatch: async (pricesArray: any[]) => {
