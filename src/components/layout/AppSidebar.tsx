@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { Home, User, Calculator, Building, Mail, Shield, Cookie } from "lucide-react";
@@ -17,6 +16,63 @@ import {
   useSidebar
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
+
+export const sidebarItems = [
+  {
+    title: "Dashboard",
+    path: "/dashboard",
+    icon: "layout-dashboard", // Home icon
+    submenu: false,
+  },
+  {
+    title: "Prenotazioni",
+    path: "/admin/reservations",
+    icon: "calendar", // Calendar icon
+    submenu: false,
+  },
+  {
+    title: "Pulizie",
+    path: "/admin/cleaning",
+    icon: "broom", // Brush icon
+    submenu: false,
+  },
+  {
+    title: "Appartamenti",
+    path: "/admin/apartments",
+    icon: "home", // Home icon
+    submenu: false,
+  },
+  {
+    title: "Prezzi",
+    path: "/admin/prices",
+    icon: "tag", // Tag icon
+    submenu: false,
+  },
+  {
+    title: "Calendario",
+    path: "/admin/calendar",
+    icon: "calendar-days", // Calendar icon
+    submenu: false,
+  },
+  {
+    title: "Database",
+    path: "/database-test",
+    icon: "database", // Database icon
+    submenu: false,
+  },
+  {
+    title: "Test API",
+    path: "/api-test",
+    icon: "server", // Server icon
+    submenu: false,
+  },
+  {
+    title: "Impostazioni",
+    path: "/admin/settings",
+    icon: "settings", // Settings icon
+    submenu: false,
+  },
+];
 
 export function AppSidebar() {
   const { setOpenMobile, open, setOpen } = useSidebar();
