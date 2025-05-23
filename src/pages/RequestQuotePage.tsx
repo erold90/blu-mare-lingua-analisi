@@ -48,6 +48,9 @@ const RequestQuotePage = () => {
   const handleFamilyGroupsChange = (groups: FamilyGroup[]) => {
     setFamilyGroups(groups as any);
   };
+
+  // Find the apartment object for the dialog
+  const selectedApartmentForDialog = apartmentDialog ? apartments.find(apt => apt.id === apartmentDialog) : null;
   
   return (
     <div className="bg-gradient-to-b from-white to-secondary/30 min-h-screen">
@@ -124,12 +127,14 @@ const RequestQuotePage = () => {
         </Form>
         
         {/* Dialog per i dettagli dell'appartamento */}
-        <ApartmentDialog
-          apartmentId={apartmentDialog}
-          apartments={apartments}
-          onOpenChange={closeApartmentDialog}
-          onSelect={selectApartment}
-        />
+        {selectedApartmentForDialog && (
+          <ApartmentDialog
+            apartment={selectedApartmentForDialog}
+            isSelected={form.getValues("selectedApartments")?.includes(selectedApartmentForDialog.id) || false}
+            onToggle={() => selectApartment(selectedApartmentForDialog.id)}
+            onClose={closeApartmentDialog}
+          />
+        )}
         
         {/* Dialog per la composizione del gruppo */}
         <GroupDialog
