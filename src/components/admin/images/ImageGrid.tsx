@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { ImageCard } from './ImageCard';
 import { ImageRecord } from '@/services/imageService';
 
@@ -29,13 +29,13 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <Droppable droppableId={`apartment-images-${apartmentId}`} direction="horizontal">
+      <Droppable droppableId={`apartment-images-${apartmentId}`}>
         {(provided, snapshot) => (
           <div
             {...provided.droppableProps}
             ref={provided.innerRef}
-            className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${
-              snapshot.isDraggingOver ? 'bg-blue-50 rounded-lg p-2' : ''
+            className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-2 ${
+              snapshot.isDraggingOver ? 'bg-blue-50 rounded-lg' : ''
             }`}
           >
             {images.map((image, index) => (
@@ -48,7 +48,7 @@ export const ImageGrid: React.FC<ImageGridProps> = ({
                   <div
                     ref={provided.innerRef}
                     {...provided.draggableProps}
-                    className={`relative group transition-all duration-200 ${
+                    className={`transition-all duration-200 ${
                       snapshot.isDragging 
                         ? 'rotate-2 shadow-2xl scale-105 z-50' 
                         : 'hover:shadow-lg'

@@ -24,13 +24,14 @@ export const ImageCard: React.FC<ImageCardProps> = ({
   onDelete
 }) => {
   return (
-    <Card className="overflow-hidden border-2 border-transparent hover:border-blue-200 transition-colors relative">
+    <Card className="overflow-hidden border-2 border-transparent hover:border-blue-200 transition-colors relative group">
       {/* Drag Handle */}
       <div
         {...dragHandleProps}
-        className="absolute top-2 left-2 z-20 p-2 rounded-md bg-black/70 cursor-grab active:cursor-grabbing opacity-80 hover:opacity-100 transition-opacity"
+        className="absolute top-2 left-2 z-30 p-1 rounded-md bg-white/90 cursor-grab active:cursor-grabbing opacity-70 hover:opacity-100 transition-opacity shadow-sm"
+        style={{ touchAction: 'none' }}
       >
-        <GripVertical className="h-4 w-4 text-white" />
+        <GripVertical className="h-4 w-4 text-gray-600" />
       </div>
 
       <div className="relative aspect-video">
@@ -63,9 +64,6 @@ export const ImageCard: React.FC<ImageCardProps> = ({
             {image.alt_text}
           </p>
         )}
-        <p className="text-xs text-muted-foreground mt-1">
-          Ordine: {image.display_order}
-        </p>
       </CardContent>
     </Card>
   );

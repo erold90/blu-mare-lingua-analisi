@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ImageUpload } from './ImageUpload';
 import { ImageGrid } from './ImageGrid';
-import { DropResult } from 'react-beautiful-dnd';
+import { DropResult } from '@hello-pangea/dnd';
 import { toast } from 'sonner';
 import { imageService, ImageRecord } from '@/services/imageService';
 
@@ -25,6 +25,7 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
     setLoading(true);
     try {
       const apartmentImages = await imageService.getImagesByCategory('apartment', apartmentId);
+      console.log('Loaded images:', apartmentImages);
       setImages(apartmentImages);
     } catch (error) {
       console.error('Error loading images:', error);
@@ -97,12 +98,15 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
       const success = await imageService.reorderImages(updates);
       if (!success) {
         console.error('Failed to update image order, reloading...');
+        toast.error('Errore nel riordinare le immagini');
         loadImages();
       } else {
         console.log('Image order updated successfully');
+        toast.success('Ordine immagini aggiornato');
       }
     } catch (error) {
       console.error('Error updating image order:', error);
+      toast.error('Errore nel riordinare le immagini');
       loadImages();
     }
   };
