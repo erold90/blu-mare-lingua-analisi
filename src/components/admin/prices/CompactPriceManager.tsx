@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { apartments } from '@/data/apartments';
 import PriceEditableCell from './PriceEditableCell';
 import PriceMobileView from './PriceMobileView';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { calculatePriceStats, getPriceLevel } from '@/hooks/prices/priceUtils';
 
 const CompactPriceManager: React.FC = () => {
   const { 
@@ -33,13 +33,6 @@ const CompactPriceManager: React.FC = () => {
     isMobile
   });
 
-  const getPriceLevel = (price: number) => {
-    if (price >= 1000) return { level: 'peak', color: 'bg-red-500', label: 'Peak' };
-    if (price >= 700) return { level: 'high', color: 'bg-orange-500', label: 'High' };
-    if (price >= 450) return { level: 'medium', color: 'bg-yellow-500', label: 'Medium' };
-    return { level: 'low', color: 'bg-green-500', label: 'Low' };
-  };
-
   const calculateStats = () => {
     const totalPrices = prices.length;
     const avgPrice = totalPrices > 0 ? prices.reduce((sum, p) => sum + p.price, 0) / totalPrices : 0;
@@ -49,7 +42,7 @@ const CompactPriceManager: React.FC = () => {
     return { totalPrices, avgPrice: Math.round(avgPrice), maxPrice, minPrice };
   };
 
-  const stats = calculateStats();
+  const stats = calculatePriceStats(prices);
 
   if (isMobile) {
     return <PriceMobileView />;
