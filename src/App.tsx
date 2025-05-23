@@ -3,9 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route, useLocation } from "react-router-dom";
-import { useActivityLog } from "./hooks/useActivityLog";
-import { useEffect } from "react";
+import { Routes, Route } from "react-router-dom";
 
 import { AppLayout } from "./components/layout/AppLayout";
 import Index from "./pages/Index";
@@ -33,34 +31,6 @@ const queryClient = new QueryClient({
   }
 });
 
-// Component to track page views
-const PageViewTracker = () => {
-  const location = useLocation();
-  const { addSiteVisit, clearOldData } = useActivityLog();
-  
-  // Track the current page visit
-  useEffect(() => {
-    console.log("🗺️ Current pathname:", location.pathname);
-    console.log("🗺️ Full location object:", location);
-    
-    if (location.pathname === '/preventivo') {
-      console.log("✅ PREVENTIVO ROUTE DETECTED - Should render RequestQuotePage");
-    }
-    
-    if (location.pathname) {
-      console.log("🔄 Navigating to:", location.pathname);
-      addSiteVisit(location.pathname);
-    }
-  }, [location.pathname, addSiteVisit]);
-  
-  // Clear old data periodically
-  useEffect(() => {
-    clearOldData();
-  }, [clearOldData]);
-  
-  return null;
-};
-
 function App() {
   console.log("🚀 App: Rendering main App component");
   
@@ -78,12 +48,7 @@ function App() {
                   <Route path="/appartamenti" element={<ApartmentsPage />} />
                   <Route 
                     path="/preventivo" 
-                    element={
-                      <>
-                        {console.log("🎯 RENDERING PREVENTIVO ROUTE")}
-                        <RequestQuotePage />
-                      </>
-                    } 
+                    element={<RequestQuotePage />} 
                   />
                   <Route path="/area-riservata/*" element={<ReservedAreaPage />} />
                   <Route path="/contatti" element={<ContactsPage />} />
@@ -91,17 +56,8 @@ function App() {
                   <Route path="/cookie-policy" element={<CookiePolicyPage />} />
                   <Route path="/api-test" element={<ApiTestPage />} />
                 </Route>
-                <Route 
-                  path="*" 
-                  element={
-                    <>
-                      {console.log("🚨 404 ROUTE TRIGGERED for unknown path")}
-                      <NotFound />
-                    </>
-                  } 
-                />
+                <Route path="*" element={<NotFound />} />
               </Routes>
-              <PageViewTracker />
             </ActivityLogProvider>
           </SettingsProvider>
         </AuthProvider>
