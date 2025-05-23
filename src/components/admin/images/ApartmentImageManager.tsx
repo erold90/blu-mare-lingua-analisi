@@ -2,6 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Trash2 } from 'lucide-react';
 import { ImageUpload } from './ImageUpload';
 import { ImageGrid } from './ImageGrid';
 import { DropResult } from '@hello-pangea/dnd';
@@ -20,6 +32,7 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
   const [images, setImages] = useState<ImageRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadImages = async () => {
     setLoading(true);
@@ -57,6 +70,41 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
       if (success) {
         loadImages();
       }
+    }
+  };
+
+  const handleDeleteAllImages = async () => {
+    if (images.length === 0) {
+      toast.info('Non ci sono immagini da eliminare');
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const image of images) {
+        const success = await imageService.deleteImage(image.id, image.file_path);
+        if (success) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      }
+
+      if (failCount === 0) {
+        toast.success(`Eliminate con successo ${successCount} immagini`);
+      } else {
+        toast.warning(`Eliminate ${successCount} immagini, fallite ${failCount}`);
+      }
+      
+      loadImages();
+    } catch (error) {
+      console.error('Error deleting all images:', error);
+      toast.error('Errore nell\'eliminazione di tutte le immagini');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -126,12 +174,46 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Immagini - {apartmentName}</CardTitle>
-          <Button
-            onClick={() => setShowUpload(!showUpload)}
-            variant={showUpload ? "outline" : "default"}
-          >
-            {showUpload ? 'Nascondi upload' : 'Carica immagini'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="flex items-center gap-1"
+                  disabled={isDeleting || images.length === 0}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Elimina tutte
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Sei sicuro?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Questa azione eliminerà tutte le {images.length} immagini di questo appartamento.
+                    L'operazione non può essere annullata.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annulla</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleDeleteAllImages}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {isDeleting ? 'Eliminazione...' : 'Elimina tutte'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+
+            <Button
+              onClick={() => setShowUpload(!showUpload)}
+              variant={showUpload ? "outline" : "default"}
+            >
+              {showUpload ? 'Nascondi upload' : 'Carica immagini'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {showUpload && (
