@@ -14,19 +14,15 @@ export const cleaningApi = {
     return fetchApi(`/cleaning/${id}`);
   },
   
-  create: async (task: any) => {
-    return fetchApi('/cleaning', 'POST', task);
+  create: async (cleaningTask: any) => {
+    return fetchApi('/cleaning', 'POST', cleaningTask);
   },
   
-  update: async (id: string, task: any) => {
-    return fetchApi(`/cleaning/${id}`, 'PUT', task);
+  update: async (id: string, cleaningTask: any) => {
+    return fetchApi(`/cleaning/${id}`, 'PUT', cleaningTask);
   },
   
   delete: async (id: string) => {
     return fetchApi(`/cleaning/${id}`, 'DELETE');
-  },
-  
-  saveBatch: async (tasks: any[]) => {
-    return fetchApi('/cleaning/batch', 'POST', tasks);
   }
 };

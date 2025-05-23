@@ -3,38 +3,22 @@
  * System API endpoints
  */
 
-import { pingApi } from "./ping";
-import { syncApi } from "./sync";
+import { fetchApi } from "../core/fetchApi";
 
 export const systemApi = {
+  getStatus: async () => {
+    return fetchApi('/system/status');
+  },
+  
   forceSyncAllData: async () => {
-    const dbTest = await pingApi.testDatabaseConnection();
-    
-    if (!dbTest.success) {
-      return {
-        success: false,
-        error: 'Database non raggiungibile, impossibile sincronizzare'
-      };
-    }
-    
-    try {
-      const reservationsSync = await syncApi.syncData('reservations');
-      const cleaningSync = await syncApi.syncData('cleaning');
-      const apartmentsSync = await syncApi.syncData('apartments');
-      
-      return {
-        success: true,
-        data: {
-          reservationsSync: reservationsSync.success,
-          cleaningSync: cleaningSync.success,
-          apartmentsSync: apartmentsSync.success
-        }
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Errore durante la sincronizzazione'
-      };
-    }
+    return fetchApi('/system/sync/all', 'POST');
+  },
+  
+  getSystemInfo: async () => {
+    return fetchApi('/system/info');
+  },
+  
+  rebootApplication: async () => {
+    return fetchApi('/system/reboot', 'POST');
   }
 };

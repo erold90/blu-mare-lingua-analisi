@@ -10,7 +10,11 @@ export const pingApi = {
     return fetchApi('/ping');
   },
   
-  testDatabaseConnection: async () => {
-    return fetchApi('/ping/database');
+  testDatabaseConnection: async (options?: { timeout?: number }) => {
+    return fetchApi('/ping/database', 'POST', options);
+  },
+  
+  getDatabaseStatus: async () => {
+    return fetchApi('/ping/database/status');
   }
 };
