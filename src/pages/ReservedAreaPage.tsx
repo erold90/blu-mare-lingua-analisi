@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Admin components imports
 import AdminDashboard from "@/components/admin/AdminDashboard";
@@ -17,7 +17,6 @@ import AdminApartments from "@/components/admin/AdminApartments";
 import AdminSettings from "@/components/admin/AdminSettings";
 import AdminLog from "@/components/admin/AdminLog";
 import AdminLayout from "@/components/admin/AdminLayout";
-// Nuovi componenti
 import AdminCalendar from "@/components/admin/calendar/AdminCalendar";
 import AdminCleaningManagement from "@/components/admin/cleaning/AdminCleaningManagement";
 import ApiTestPage from '../pages/api-test';
@@ -28,13 +27,11 @@ const LoginForm = () => {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isLoggingIn, setIsLoggingIn] = React.useState(false);
-  const hasRedirected = React.useRef(false);
 
   // Redirect if already authenticated
   React.useEffect(() => {
-    if (isAuthenticated && !hasRedirected.current) {
+    if (isAuthenticated) {
       console.log("LoginForm - Already authenticated, redirecting to dashboard");
-      hasRedirected.current = true;
       navigate("/area-riservata/dashboard", { replace: true });
     }
   }, [isAuthenticated, navigate]);
@@ -54,7 +51,6 @@ const LoginForm = () => {
       if (loginSuccess) {
         toast.success("Login effettuato con successo");
         console.log("LoginForm - Login successful, navigating to dashboard");
-        hasRedirected.current = true;
         navigate("/area-riservata/dashboard", { replace: true });
       } else {
         toast.error("Credenziali non valide");
@@ -125,22 +121,9 @@ const LoginForm = () => {
 const ReservedAreaPage = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
-  const [isCheckingAuth, setIsCheckingAuth] = React.useState(true);
-  
-  // Attendi che lo stato di autenticazione sia stabile
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsCheckingAuth(false);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
   
   console.log("ReservedAreaPage - Rendering with auth state:", isAuthenticated);
   console.log("ReservedAreaPage - Current location:", location.pathname);
-  
-  if (isCheckingAuth) {
-    return <div className="p-8 text-center">Verifica autenticazione...</div>;
-  }
   
   // Check if we're at the root of the admin area
   const isAtAdminRoot = location.pathname === '/area-riservata' || location.pathname === '/area-riservata/';

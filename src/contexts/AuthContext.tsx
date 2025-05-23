@@ -1,11 +1,23 @@
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 
-export const useAuth = () => {
-  // Singleton pattern to ensure consistent auth state across components
+interface AuthContextType {
+  isAuthenticated: boolean;
+  login: (username: string, password: string) => boolean;
+  logout: () => void;
+  adminCredentials: {
+    username: string;
+    password: string;
+  };
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Singleton pattern per garantire stato consistente
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     const authStatus = localStorage.getItem("adminAuth") === "true";
-    console.log("useAuth - Initial auth state:", authStatus);
+    console.log("AuthProvider - Initial auth state:", authStatus);
     return authStatus;
   });
   
@@ -14,10 +26,10 @@ export const useAuth = () => {
     password: "205647"
   });
   
-  // Riferimento per evitare chiamate duplicate durante le transizioni di stato
+  // Riferimento per evitare chiamate duplicate
   const authChangeInProgress = useRef(false);
   
-  // Load admin credentials from localStorage on mount
+  // Carica credenziali admin dal localStorage
   useEffect(() => {
     const savedSettings = localStorage.getItem("adminSettings");
     if (savedSettings) {
@@ -33,12 +45,12 @@ export const useAuth = () => {
     }
   }, []);
   
-  // Effect per monitorare cambiamenti nel localStorage
+  // Monitora cambiamenti nel localStorage
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === "adminAuth") {
         const authStatus = event.newValue === "true";
-        console.log("useAuth - Storage changed externally, new auth status:", authStatus);
+        console.log("AuthProvider - Storage changed externally, new auth status:", authStatus);
         setIsAuthenticated(authStatus);
       }
     };
@@ -47,27 +59,26 @@ export const useAuth = () => {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
   
-  // Funzione di login migliorata per garantire aggiornamento immediato dello stato
+  // Funzione di login migliorata
   const login = useCallback((username: string, password: string) => {
-    // Preveniamo login multipli simultanei
     if (authChangeInProgress.current) {
-      console.log("useAuth - Login already in progress, skipping");
+      console.log("AuthProvider - Login already in progress, skipping");
       return false;
     }
     
-    console.log("useAuth - Attempting login for:", username);
+    console.log("AuthProvider - Attempting login for:", username);
     
     if (username === adminCredentials.username && password === adminCredentials.password) {
       authChangeInProgress.current = true;
       
-      console.log("useAuth - Credenziali corrette, aggiornamento stato...");
+      console.log("AuthProvider - Credenziali corrette, aggiornamento stato...");
       
-      // Prima salviamo lo stato nel localStorage
+      // Prima salva nel localStorage
       localStorage.setItem("adminAuth", "true");
       
-      // Imposta immediatamente lo stato di autenticazione
+      // Poi aggiorna lo stato React
       setIsAuthenticated(true);
-      console.log("useAuth - Authentication state updated to:", true);
+      console.log("AuthProvider - Authentication state updated to:", true);
       
       // Reset del flag
       setTimeout(() => {
@@ -77,27 +88,27 @@ export const useAuth = () => {
       return true;
     }
     
-    console.log("useAuth - Credenziali non valide");
+    console.log("AuthProvider - Credenziali non valide");
     return false;
   }, [adminCredentials]);
 
-  // Funzione di logout con la stessa logica protettiva
+  // Funzione di logout
   const logout = useCallback(() => {
     if (authChangeInProgress.current) {
-      console.log("useAuth - Logout already in progress, skipping");
+      console.log("AuthProvider - Logout already in progress, skipping");
       return;
     }
     
     authChangeInProgress.current = true;
     
-    console.log("useAuth - Executing logout");
+    console.log("AuthProvider - Executing logout");
     
-    // Prima rimuoviamo dal localStorage
+    // Prima rimuove dal localStorage
     localStorage.removeItem("adminAuth");
     
-    // Poi aggiorniamo lo stato React
+    // Poi aggiorna lo stato React
     setIsAuthenticated(false);
-    console.log("useAuth - Authentication state updated to:", false);
+    console.log("AuthProvider - Authentication state updated to:", false);
     
     // Reset del flag
     setTimeout(() => {
@@ -107,8 +118,20 @@ export const useAuth = () => {
 
   // Log dello stato corrente per debugging
   useEffect(() => {
-    console.log("useAuth - Current authentication state updated:", isAuthenticated);
+    console.log("AuthProvider - Current authentication state updated:", isAuthenticated);
   }, [isAuthenticated]);
 
-  return { isAuthenticated, login, logout, adminCredentials };
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, login, logout, adminCredentials }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { NavLink, useLocation, Link, useNavigate } from "react-router-dom";
 import { 
@@ -13,7 +12,7 @@ import {
   Brush,
   Server 
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
   Sheet,
@@ -47,12 +46,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     // Chiude il menu mobile se aperto
     setMenuOpen(false);
     
-    // Utilizziamo un approccio più diretto per il reindirizzamento
+    // Reindirizza all'area login
     setTimeout(() => {
-      // Usando window.location per un refresh completo della pagina
-      window.location.href = "/area-riservata";
+      navigate("/area-riservata", { replace: true });
     }, 300);
-  }, [logout]);
+  }, [logout, navigate]);
 
   const NavItems = () => (
     <nav className="space-y-1">
