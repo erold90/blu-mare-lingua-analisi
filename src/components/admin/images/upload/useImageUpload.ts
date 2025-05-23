@@ -31,7 +31,8 @@ export const useImageUpload = ({
   }, [filesWithAltText]);
 
   const handleDrop = useCallback((acceptedFiles: File[]) => {
-    console.log("Files dropped:", acceptedFiles);
+    console.log("=== FILES DROPPED ===");
+    console.log("Files dropped:", acceptedFiles.map(f => ({ name: f.name, size: f.size, type: f.type })));
     
     const validFiles = acceptedFiles.filter(file => {
       if (!file.type.startsWith('image/')) {
@@ -45,7 +46,7 @@ export const useImageUpload = ({
       return true;
     });
 
-    console.log("Valid files:", validFiles);
+    console.log("Valid files:", validFiles.map(f => ({ name: f.name, size: f.size })));
 
     const newFilesWithAltText = validFiles.map(file => ({
       file,
@@ -81,13 +82,19 @@ export const useImageUpload = ({
       return;
     }
 
-    console.log("Starting upload process for", filesWithAltText.length, "files");
-    console.log("Upload params:", { category, apartmentId });
+    console.log("=== STARTING UPLOAD PROCESS ===");
+    console.log("Upload parameters:", { 
+      category, 
+      apartmentId, 
+      fileCount: filesWithAltText.length,
+      maxFiles 
+    });
+    
     setUploading(true);
     setUploadErrors([]);
     
     try {
-      console.log("Image service loaded, starting uploads...");
+      console.log("Image service available:", !!imageService);
       
       // Upload files sequentially to avoid conflicts with simultaneous uploads
       const results = [];
@@ -97,11 +104,20 @@ export const useImageUpload = ({
         const fileData = filesWithAltText[index];
         const displayOrder = Number(index);
         
-        console.log(`Uploading file ${index + 1}/${filesWithAltText.length}:`, fileData.file.name, "Category:", category);
+        console.log(`=== UPLOADING FILE ${index + 1}/${filesWithAltText.length} ===`);
+        console.log("File details:", {
+          name: fileData.file.name,
+          size: fileData.file.size,
+          type: fileData.file.type,
+          category,
+          apartmentId,
+          displayOrder
+        });
         
         try {
           // Add a small delay between uploads to ensure unique timestamps
           if (index > 0) {
+            console.log("Adding delay between uploads...");
             await new Promise(resolve => setTimeout(resolve, 100));
           }
           
@@ -117,30 +133,32 @@ export const useImageUpload = ({
             ...(apartmentId && { apartment_id: apartmentId })
           };
           
-          console.log('Upload data:', uploadData);
+          console.log('Final upload data:', uploadData);
           
           const result = await imageService.uploadImage(uploadData);
           
           if (result) {
-            console.log(`Upload successful for ${fileData.file.name}:`, result);
+            console.log(`✅ Upload successful for ${fileData.file.name}:`, result);
             results.push(result);
           } else {
-            console.error(`Upload failed for ${fileData.file.name}`);
-            errors.push(`Errore caricamento: ${fileData.file.name}`);
+            console.error(`❌ Upload failed for ${fileData.file.name} - result is null`);
+            errors.push(`Errore caricamento: ${fileData.file.name} - Nessun risultato dal server`);
           }
         } catch (error) {
-          console.error(`Error uploading ${fileData.file.name}:`, error);
-          errors.push(`Errore caricamento: ${fileData.file.name} - ${error.message || 'Unknown error'}`);
+          console.error(`❌ Error uploading ${fileData.file.name}:`, error);
+          errors.push(`Errore caricamento: ${fileData.file.name} - ${error.message || 'Errore sconosciuto'}`);
         }
       }
       
       const successCount = results.length;
       
-      console.log("Upload results:", {
+      console.log("=== UPLOAD PROCESS COMPLETED ===");
+      console.log("Upload summary:", {
         total: filesWithAltText.length,
         successful: successCount,
         failed: errors.length,
-        category
+        category,
+        apartmentId
       });
       
       if (successCount === filesWithAltText.length) {
@@ -153,8 +171,15 @@ export const useImageUpload = ({
         
         // Call the success callback
         if (onUploadSuccess) {
-          console.log('Calling onUploadSuccess callback');
-          onUploadSuccess();
+          console.log('✅ Calling onUploadSuccess callback');
+          try {
+            await onUploadSuccess();
+            console.log('✅ onUploadSuccess callback completed');
+          } catch (callbackError) {
+            console.error('❌ Error in onUploadSuccess callback:', callbackError);
+          }
+        } else {
+          console.log('ℹ️ No onUploadSuccess callback provided');
         }
       } else if (successCount > 0) {
         toast.warning(`${successCount}/${filesWithAltText.length} immagini caricate`);
@@ -162,19 +187,26 @@ export const useImageUpload = ({
         
         // Call the success callback even for partial success
         if (onUploadSuccess) {
-          console.log('Calling onUploadSuccess callback (partial success)');
-          onUploadSuccess();
+          console.log('⚠️ Calling onUploadSuccess callback (partial success)');
+          try {
+            await onUploadSuccess();
+            console.log('✅ onUploadSuccess callback completed (partial)');
+          } catch (callbackError) {
+            console.error('❌ Error in onUploadSuccess callback (partial):', callbackError);
+          }
         }
       } else {
         toast.error("Nessuna immagine è stata caricata");
         setUploadErrors(errors);
       }
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('=== UPLOAD PROCESS FAILED ===');
+      console.error('General upload error:', error);
       toast.error("Errore nel caricamento delle immagini");
-      setUploadErrors([`Errore generale nel sistema di caricamento: ${error.message || 'Unknown error'}`]);
+      setUploadErrors([`Errore generale nel sistema di caricamento: ${error.message || 'Errore sconosciuto'}`]);
     } finally {
       setUploading(false);
+      console.log("=== UPLOAD PROCESS ENDED ===");
     }
   };
 
