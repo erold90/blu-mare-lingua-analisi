@@ -6,7 +6,7 @@ import { Json } from "@/integrations/supabase/types";
 
 // Helper function to serialize dates in FormValues
 const serializeFormValues = (formValues: FormValues): any => {
-  const serialized = { ...formValues };
+  const serialized: any = { ...formValues };
   
   // Convert Date objects to ISO strings for database storage
   if (serialized.checkIn instanceof Date) {
@@ -22,7 +22,7 @@ const serializeFormValues = (formValues: FormValues): any => {
 
 // Helper function to deserialize dates from database
 const deserializeFormValues = (dbFormValues: any): FormValues => {
-  const deserialized = { ...dbFormValues };
+  const deserialized: any = { ...dbFormValues };
   
   // Convert ISO strings back to Date objects
   if (typeof deserialized.checkIn === 'string') {
