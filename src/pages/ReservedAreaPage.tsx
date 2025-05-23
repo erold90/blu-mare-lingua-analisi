@@ -31,8 +31,9 @@ const LoginForm = () => {
 
   // Redirect if already authenticated
   React.useEffect(() => {
+    console.log("LoginForm - useEffect: isAuthenticated =", isAuthenticated);
     if (isAuthenticated) {
-      console.log("User already authenticated, redirecting to dashboard");
+      console.log("LoginForm - User already authenticated, redirecting to dashboard");
       navigate("/area-riservata/dashboard", { replace: true });
     }
   }, [isAuthenticated, navigate]);
@@ -43,25 +44,22 @@ const LoginForm = () => {
     if (isLoggingIn) return;
     
     setIsLoggingIn(true);
-    console.log("Attempting login with:", username);
+    console.log("LoginForm - Attempting login with:", username);
     
     try {
       const loginSuccess = login(username, password);
+      console.log("LoginForm - Login result:", loginSuccess);
       
       if (loginSuccess) {
         toast.success("Login effettuato con successo");
-        console.log("Login successful, forcing redirect to dashboard");
-        
-        // Piccolo delay per assicurarsi che lo stato si aggiorni
-        setTimeout(() => {
-          navigate("/area-riservata/dashboard", { replace: true });
-        }, 100);
+        console.log("LoginForm - Login successful, navigating to dashboard");
+        navigate("/area-riservata/dashboard", { replace: true });
       } else {
         toast.error("Credenziali non valide");
         setIsLoggingIn(false);
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("LoginForm - Login error:", error);
       toast.error("Errore durante il login");
       setIsLoggingIn(false);
     }
@@ -69,6 +67,7 @@ const LoginForm = () => {
 
   // Don't show login form if user is authenticated
   if (isAuthenticated) {
+    console.log("LoginForm - Showing redirect message");
     return <div>Reindirizzamento in corso...</div>;
   }
 
@@ -126,8 +125,9 @@ const ReservedAreaPage = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
   
-  console.log("ReservedAreaPage - Stato autenticazione:", isAuthenticated);
-  console.log("ReservedAreaPage - Percorso attuale:", location.pathname);
+  console.log("ReservedAreaPage - Rendering with:");
+  console.log("ReservedAreaPage - isAuthenticated:", isAuthenticated);
+  console.log("ReservedAreaPage - location.pathname:", location.pathname);
   
   return (
     <Routes>
@@ -145,26 +145,35 @@ const ReservedAreaPage = () => {
         path="/*" 
         element={
           isAuthenticated ? (
-            <AdminLayout>
-              <Routes>
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="prenotazioni" element={<AdminReservations />} />
-                <Route path="prezzi" element={<AdminPrices />} />
-                <Route path="appartamenti" element={<AdminApartments />} />
-                <Route path="impostazioni" element={<AdminSettings />} />
-                <Route path="log" element={<AdminLog />} />
-                <Route path="calendario" element={<AdminCalendar />} />
-                <Route path="pulizie" element={<AdminCleaningManagement />} />
-                <Route path="api-test" element={<ApiTestPage />} />
-                <Route path="*" element={<Navigate to="/area-riservata/dashboard" />} />
-              </Routes>
-            </AdminLayout>
+            <AdminLayoutWrapper />
           ) : (
             <Navigate to="/area-riservata" replace />
           )
         } 
       />
     </Routes>
+  );
+};
+
+// Componente wrapper separato per AdminLayout con logging
+const AdminLayoutWrapper = () => {
+  console.log("AdminLayoutWrapper - Rendering AdminLayout");
+  
+  return (
+    <AdminLayout>
+      <Routes>
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="prenotazioni" element={<AdminReservations />} />
+        <Route path="prezzi" element={<AdminPrices />} />
+        <Route path="appartamenti" element={<AdminApartments />} />
+        <Route path="impostazioni" element={<AdminSettings />} />
+        <Route path="log" element={<AdminLog />} />
+        <Route path="calendario" element={<AdminCalendar />} />
+        <Route path="pulizie" element={<AdminCleaningManagement />} />
+        <Route path="api-test" element={<ApiTestPage />} />
+        <Route path="*" element={<Navigate to="/area-riservata/dashboard" />} />
+      </Routes>
+    </AdminLayout>
   );
 };
 

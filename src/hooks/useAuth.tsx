@@ -5,7 +5,7 @@ export const useAuth = () => {
   // Leggiamo immediatamente lo stato di autenticazione dal localStorage
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     const authStatus = localStorage.getItem("adminAuth") === "true";
-    console.log("Inizializzazione stato autenticazione:", authStatus);
+    console.log("useAuth - Inizializzazione stato autenticazione:", authStatus);
     return authStatus;
   });
   
@@ -33,51 +33,83 @@ export const useAuth = () => {
     }
   }, []);
   
+  // Effect per monitorare cambiamenti nel localStorage
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const authStatus = localStorage.getItem("adminAuth") === "true";
+      console.log("useAuth - Storage change detected, new auth status:", authStatus);
+      setIsAuthenticated(authStatus);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+  
   // Funzione di login migliorata per garantire aggiornamento immediato dello stato
   const login = useCallback((username: string, password: string) => {
     // Preveniamo login multipli simultanei
-    if (authChangeInProgress.current) return false;
+    if (authChangeInProgress.current) {
+      console.log("useAuth - Login already in progress, skipping");
+      return false;
+    }
+    
+    console.log("useAuth - Attempting login for:", username);
+    console.log("useAuth - Expected credentials:", adminCredentials);
     
     if (username === adminCredentials.username && password === adminCredentials.password) {
       authChangeInProgress.current = true;
       
-      console.log("Login: Credenziali corrette, aggiornamento stato...");
+      console.log("useAuth - Credenziali corrette, aggiornamento stato...");
       
       // Prima salviamo lo stato nel localStorage
       localStorage.setItem("adminAuth", "true");
-      console.log("Login: localStorage aggiornato");
+      console.log("useAuth - localStorage aggiornato");
       
-      // Poi aggiorniamo lo stato React in modo sincrono
+      // Poi aggiorniamo lo stato React in modo sincrono e forzato
       setIsAuthenticated(true);
-      console.log("Login: Stato React aggiornato a TRUE");
+      console.log("useAuth - Stato React aggiornato a TRUE");
       
       // Reset del flag
-      authChangeInProgress.current = false;
+      setTimeout(() => {
+        authChangeInProgress.current = false;
+      }, 100);
       
       return true;
     }
     
-    console.log("Login: Credenziali non valide");
+    console.log("useAuth - Credenziali non valide");
     return false;
   }, [adminCredentials]);
 
   // Funzione di logout con la stessa logica protettiva
   const logout = useCallback(() => {
-    if (authChangeInProgress.current) return;
+    if (authChangeInProgress.current) {
+      console.log("useAuth - Logout already in progress, skipping");
+      return;
+    }
     
     authChangeInProgress.current = true;
     
+    console.log("useAuth - Executing logout");
+    
     // Prima rimuoviamo dal localStorage
     localStorage.removeItem("adminAuth");
-    console.log("Logout: localStorage rimosso");
+    console.log("useAuth - localStorage rimosso");
     
     // Poi aggiorniamo lo stato React
     setIsAuthenticated(false);
-    console.log("Logout: Stato autenticazione impostato a FALSE");
+    console.log("useAuth - Stato autenticazione impostato a FALSE");
     
     // Reset del flag
-    authChangeInProgress.current = false;
+    setTimeout(() => {
+      authChangeInProgress.current = false;
+    }, 100);
   }, []);
+
+  // Log dello stato corrente per debugging
+  useEffect(() => {
+    console.log("useAuth - Current state:", { isAuthenticated, authChangeInProgress: authChangeInProgress.current });
+  }, [isAuthenticated]);
 
   return { isAuthenticated, login, logout, adminCredentials };
 };
