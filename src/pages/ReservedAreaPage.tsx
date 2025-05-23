@@ -28,12 +28,14 @@ const LoginForm = () => {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isLoggingIn, setIsLoggingIn] = React.useState(false);
+  const hasRedirected = React.useRef(false);
 
   // Redirect if already authenticated
   React.useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !hasRedirected.current) {
       console.log("LoginForm - Already authenticated, redirecting to dashboard");
-      navigate("/area-riservata/dashboard");
+      hasRedirected.current = true;
+      navigate("/area-riservata/dashboard", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
@@ -52,8 +54,8 @@ const LoginForm = () => {
       if (loginSuccess) {
         toast.success("Login effettuato con successo");
         console.log("LoginForm - Login successful, navigating to dashboard");
-        // Use a direct window.location redirect to force a full page refresh
-        window.location.href = "/area-riservata/dashboard";
+        hasRedirected.current = true;
+        navigate("/area-riservata/dashboard", { replace: true });
       } else {
         toast.error("Credenziali non valide");
         setIsLoggingIn(false);
@@ -123,9 +125,22 @@ const LoginForm = () => {
 const ReservedAreaPage = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
+  const [isCheckingAuth, setIsCheckingAuth] = React.useState(true);
+  
+  // Attendi che lo stato di autenticazione sia stabile
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsCheckingAuth(false);
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
   
   console.log("ReservedAreaPage - Rendering with auth state:", isAuthenticated);
   console.log("ReservedAreaPage - Current location:", location.pathname);
+  
+  if (isCheckingAuth) {
+    return <div className="p-8 text-center">Verifica autenticazione...</div>;
+  }
   
   // Check if we're at the root of the admin area
   const isAtAdminRoot = location.pathname === '/area-riservata' || location.pathname === '/area-riservata/';

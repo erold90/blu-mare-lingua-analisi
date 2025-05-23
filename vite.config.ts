@@ -18,7 +18,7 @@ export default defineConfig(({ command }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  base: "./", // Forza percorsi relativi invece di assoluti
+  base: "", // Usa percorsi relativi al documento HTML corrente invece di percorsi assoluti
   build: {
     assetsDir: "assets",
     rollupOptions: {
