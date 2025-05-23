@@ -1,13 +1,12 @@
 
-import React, { useCallback, useEffect } from 'react';
-import { useDropzone } from 'react-dropzone';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { Upload, X, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
 import { imageService, ImageCategory } from '@/services/imageService';
+import { FileDropzone } from './upload/FileDropzone';
+import { FilePreview } from './upload/FilePreview';
+import { UploadErrors } from './upload/UploadErrors';
+import { useImageUpload } from './upload/useImageUpload';
 
 interface ImageUploadProps {
   category: ImageCategory;
@@ -17,12 +16,6 @@ interface ImageUploadProps {
   className?: string;
 }
 
-interface FileWithAltText {
-  file: File;
-  altText: string;
-  preview: string;
-}
-
 export const ImageUpload: React.FC<ImageUploadProps> = ({
   category,
   apartmentId,
@@ -30,202 +23,34 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   maxFiles = 10,
   className = ""
 }) => {
-  const [filesWithAltText, setFilesWithAltText] = React.useState<FileWithAltText[]>([]);
-  const [uploading, setUploading] = React.useState(false);
-  const [uploadErrors, setUploadErrors] = React.useState<string[]>([]);
-
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    console.log("Files dropped:", acceptedFiles);
-    
-    const validFiles = acceptedFiles.filter(file => {
-      if (!file.type.startsWith('image/')) {
-        toast.error(`${file.name} non è un'immagine valida`);
-        return false;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} è troppo grande (max 10MB)`);
-        return false;
-      }
-      return true;
-    });
-
-    console.log("Valid files:", validFiles);
-
-    const newFilesWithAltText = validFiles.map(file => ({
-      file,
-      altText: '',
-      preview: URL.createObjectURL(file)
-    }));
-
-    setFilesWithAltText(prev => [...prev, ...newFilesWithAltText].slice(0, maxFiles));
-    setUploadErrors([]); // Clear previous errors
-  }, [maxFiles]);
-
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'image/*': ['.jpeg', '.jpg', '.png', '.webp', '.gif']
-    },
-    maxFiles,
-    multiple: maxFiles > 1
+  const {
+    filesWithAltText,
+    uploading,
+    uploadErrors,
+    handleDrop,
+    removeFile,
+    handleAltTextChange,
+    handleUpload
+  } = useImageUpload({
+    category,
+    apartmentId,
+    onUploadSuccess,
+    maxFiles
   });
-
-  // Cleanup object URLs when component unmounts or files change
-  useEffect(() => {
-    return () => {
-      filesWithAltText.forEach(fileData => {
-        URL.revokeObjectURL(fileData.preview);
-      });
-    };
-  }, [filesWithAltText]);
-
-  const removeFile = (fileIndex: number) => {
-    setFilesWithAltText(prev => {
-      const fileToRemove = prev[fileIndex];
-      if (fileToRemove) {
-        URL.revokeObjectURL(fileToRemove.preview);
-      }
-      return prev.filter((_, i) => i !== fileIndex);
-    });
-  };
-
-  const handleAltTextChange = (fileIndex: number, value: string) => {
-    setFilesWithAltText(prev => 
-      prev.map((item, i) => 
-        i === fileIndex ? { ...item, altText: value } : item
-      )
-    );
-  };
-
-  const handleUpload = async () => {
-    if (filesWithAltText.length === 0) {
-      toast.error("Seleziona almeno un'immagine");
-      return;
-    }
-
-    console.log("Starting upload process for", filesWithAltText.length, "files");
-    setUploading(true);
-    setUploadErrors([]);
-    
-    try {
-      console.log("Image service loaded, starting uploads...");
-      
-      // Upload files sequentially to avoid conflicts with simultaneous uploads
-      const results = [];
-      const errors = [];
-      
-      for (let index = 0; index < filesWithAltText.length; index++) {
-        const fileData = filesWithAltText[index];
-        const displayOrder = Number(index);
-        
-        console.log(`Uploading file ${index + 1}/${filesWithAltText.length}:`, fileData.file.name);
-        
-        try {
-          // Add a small delay between uploads to ensure unique timestamps
-          if (index > 0) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-          
-          const result = await imageService.uploadImage({
-            category,
-            apartment_id: apartmentId,
-            file: fileData.file,
-            alt_text: fileData.altText || '',
-            display_order: displayOrder
-          });
-          
-          if (result) {
-            console.log(`Upload successful for ${fileData.file.name}:`, result);
-            results.push(result);
-          } else {
-            console.error(`Upload failed for ${fileData.file.name}`);
-            errors.push(`Errore caricamento: ${fileData.file.name}`);
-          }
-        } catch (error) {
-          console.error(`Error uploading ${fileData.file.name}:`, error);
-          errors.push(`Errore caricamento: ${fileData.file.name}`);
-        }
-      }
-      
-      const successCount = results.length;
-      
-      console.log("Upload results:", {
-        total: filesWithAltText.length,
-        successful: successCount,
-        failed: errors.length
-      });
-      
-      if (successCount === filesWithAltText.length) {
-        toast.success(`${successCount} immagini caricate con successo`);
-        // Cleanup object URLs before clearing
-        filesWithAltText.forEach(fileData => {
-          URL.revokeObjectURL(fileData.preview);
-        });
-        setFilesWithAltText([]);
-        onUploadSuccess?.();
-      } else if (successCount > 0) {
-        toast.warning(`${successCount}/${filesWithAltText.length} immagini caricate`);
-        setUploadErrors(errors);
-      } else {
-        toast.error("Nessuna immagine è stata caricata");
-        setUploadErrors(errors);
-      }
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast.error("Errore nel caricamento delle immagini");
-      setUploadErrors(["Errore generale nel sistema di caricamento"]);
-    } finally {
-      setUploading(false);
-    }
-  };
 
   return (
     <div className={`space-y-4 ${className}`}>
       <Card>
         <CardContent className="pt-6">
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              isDragActive 
-                ? 'border-primary bg-primary/5' 
-                : 'border-muted-foreground/25 hover:border-primary/50'
-            }`}
-          >
-            <input {...getInputProps()} />
-            <Upload className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
-            {isDragActive ? (
-              <p className="text-primary">Rilascia le immagini qui...</p>
-            ) : (
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Trascina le immagini qui o clicca per selezionare
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Formati supportati: JPEG, PNG, WebP, GIF (max 10MB)
-                </p>
-              </div>
-            )}
-          </div>
+          <FileDropzone 
+            onDrop={handleDrop}
+            maxFiles={maxFiles}
+            multiple={maxFiles > 1}
+          />
         </CardContent>
       </Card>
 
-      {uploadErrors.length > 0 && (
-        <Card className="border-red-200 bg-red-50">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-medium text-red-800 mb-2">Errori di caricamento:</h4>
-                <ul className="text-sm text-red-700 space-y-1">
-                  {uploadErrors.map((error, index) => (
-                    <li key={index}>• {error}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <UploadErrors errors={uploadErrors} />
 
       {filesWithAltText.length > 0 && (
         <Card>
@@ -233,43 +58,13 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             <h3 className="font-medium mb-4">Immagini selezionate ({filesWithAltText.length})</h3>
             <div className="space-y-4">
               {filesWithAltText.map((fileData, fileIndex) => (
-                <div key={`file-${fileIndex}`} className="flex items-start gap-4 p-3 border rounded-lg">
-                  <div className="flex-shrink-0">
-                    <div className="w-16 h-16 rounded-lg overflow-hidden bg-muted">
-                      <img
-                        src={fileData.preview}
-                        alt={`Preview ${fileIndex + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{fileData.file.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {(fileData.file.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                    <div className="mt-2">
-                      <Label htmlFor={`alt-text-${fileIndex}`} className="text-xs">
-                        Testo alternativo (opzionale)
-                      </Label>
-                      <Input
-                        id={`alt-text-${fileIndex}`}
-                        value={fileData.altText}
-                        onChange={(e) => handleAltTextChange(fileIndex, e.target.value)}
-                        placeholder="Descrizione dell'immagine..."
-                        className="mt-1 text-sm"
-                      />
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeFile(fileIndex)}
-                    className="flex-shrink-0"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
+                <FilePreview
+                  key={`file-${fileIndex}`}
+                  fileData={fileData}
+                  fileIndex={fileIndex}
+                  onRemove={removeFile}
+                  onAltTextChange={handleAltTextChange}
+                />
               ))}
             </div>
             <div className="flex justify-end mt-4">
