@@ -52,7 +52,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
   console.log('🔥 Root props:', Object.keys(rootProps));
   console.log('🔥 Input props:', Object.keys(inputProps));
 
-  const handleManualClick = (e: React.MouseEvent) => {
+  const handleManualClick = (e: React.MouseEvent<HTMLDivElement>) => {
     console.log('🔥🔥🔥 MANUAL CLICK DETECTED!!! Event:', e.type);
     if (rootProps.onClick) {
       console.log('🔥 Calling rootProps.onClick');
