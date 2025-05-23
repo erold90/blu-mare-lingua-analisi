@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { apartments } from "@/data/apartments";
 import { toast } from "sonner";
@@ -41,9 +41,9 @@ const defaultApartments: Apartment[] = apartments.map(apt => ({
 interface ReservationsContextType {
   reservations: Reservation[];
   apartments: Apartment[];
-  addReservation: (reservation: Omit<Reservation, "id" | "lastUpdated" | "syncId" | "deviceId">) => void;
-  updateReservation: (reservation: Reservation) => void;
-  deleteReservation: (id: string) => void;
+  addReservation: (reservation: Omit<Reservation, "id" | "lastUpdated" | "syncId" | "deviceId">) => Promise<void>;
+  updateReservation: (reservation: Reservation) => Promise<void>;
+  deleteReservation: (id: string) => Promise<void>;
   getApartmentAvailability: (apartmentId: string, startDate: Date, endDate: Date) => boolean;
   refreshData: () => Promise<void>;
   isLoading: boolean;
@@ -58,15 +58,15 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
   const [deviceId] = useState<string>(localStorage.getItem('vmb_device_id') || '');
   
   // Function to load reservations from database
-  const loadReservations = async () => {
+  const loadReservations = useCallback(async () => {
     setIsLoading(true);
     try {
       const loadedReservations = await databaseProxy.loadData<Reservation[]>(DataType.RESERVATIONS);
-      if (loadedReservations) {
+      if (loadedReservations && Array.isArray(loadedReservations)) {
         console.log(`Loaded ${loadedReservations.length} reservations from database`);
         setReservations(loadedReservations);
       } else {
-        console.log("No reservations found in database");
+        console.log("No reservations found in database or invalid data format");
         setReservations([]);
       }
     } catch (error) {
@@ -76,10 +76,10 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
   
   // Force a refresh of data from database
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     setIsLoading(true);
     try {
       await databaseProxy.synchronize(DataType.RESERVATIONS);
@@ -91,7 +91,7 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [loadReservations]);
   
   // Load reservations on mount
   useEffect(() => {
@@ -108,7 +108,7 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
     return () => {
       clearInterval(intervalId);
     };
-  }, []);
+  }, [loadReservations]);
   
   // Save reservations to database whenever they change
   useEffect(() => {
@@ -119,7 +119,7 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
     }
   }, [reservations, isLoading]);
   
-  const addReservation = (reservationData: Omit<Reservation, "id" | "lastUpdated" | "syncId" | "deviceId">) => {
+  const addReservation = useCallback(async (reservationData: Omit<Reservation, "id" | "lastUpdated" | "syncId" | "deviceId">) => {
     const newReservation: Reservation = {
       ...reservationData,
       id: uuidv4(),
@@ -131,9 +131,17 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
     };
     
     setReservations(prev => [...prev, newReservation]);
-  };
+    
+    // Forza il salvataggio e la sincronizzazione dopo un'aggiunta
+    try {
+      await databaseProxy.saveData(DataType.RESERVATIONS, [...reservations, newReservation]);
+    } catch (error) {
+      console.error("Failed to save new reservation:", error);
+      toast.error("Errore nel salvare la prenotazione");
+    }
+  }, [reservations, deviceId]);
   
-  const updateReservation = (updatedReservation: Reservation) => {
+  const updateReservation = useCallback(async (updatedReservation: Reservation) => {
     const formatted: Reservation = {
       ...updatedReservation,
       startDate: new Date(updatedReservation.startDate).toISOString(),
@@ -143,17 +151,36 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
       deviceId: deviceId
     };
     
-    setReservations(prev => 
-      prev.map(res => res.id === formatted.id ? formatted : res)
+    const updatedReservations = reservations.map(res => 
+      res.id === formatted.id ? formatted : res
     );
-  };
+    
+    setReservations(updatedReservations);
+    
+    // Forza il salvataggio dopo un aggiornamento
+    try {
+      await databaseProxy.saveData(DataType.RESERVATIONS, updatedReservations);
+    } catch (error) {
+      console.error("Failed to update reservation:", error);
+      toast.error("Errore nell'aggiornare la prenotazione");
+    }
+  }, [reservations, deviceId]);
   
-  const deleteReservation = (id: string) => {
-    setReservations(prev => prev.filter(res => res.id !== id));
-  };
+  const deleteReservation = useCallback(async (id: string) => {
+    const updatedReservations = reservations.filter(res => res.id !== id);
+    setReservations(updatedReservations);
+    
+    // Forza il salvataggio dopo un'eliminazione
+    try {
+      await databaseProxy.saveData(DataType.RESERVATIONS, updatedReservations);
+    } catch (error) {
+      console.error("Failed to delete reservation:", error);
+      toast.error("Errore nell'eliminare la prenotazione");
+    }
+  }, [reservations]);
   
   // Check if an apartment is available for the given date range
-  const getApartmentAvailability = (apartmentId: string, startDate: Date, endDate: Date): boolean => {
+  const getApartmentAvailability = useCallback((apartmentId: string, startDate: Date, endDate: Date): boolean => {
     // Convert dates to timestamps for easier comparison
     const start = startDate.getTime();
     const end = endDate.getTime();
@@ -169,7 +196,7 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
       // Check for overlap
       return (start < reservationEnd && end > reservationStart);
     });
-  };
+  }, [reservations]);
   
   return (
     <ReservationsContext.Provider value={{

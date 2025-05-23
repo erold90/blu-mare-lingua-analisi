@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { toast } from "sonner";
 import { Plus, RefreshCw } from "lucide-react";
@@ -59,7 +58,7 @@ const AdminReservations = () => {
     if (reservationToDelete) {
       setIsDeleting(true);
       try {
-        deleteReservation(reservationToDelete);
+        await deleteReservation(reservationToDelete);
         toast.success("Prenotazione eliminata con successo!");
         
         // Forza sincronizzazione dopo eliminazione
@@ -89,8 +88,10 @@ const AdminReservations = () => {
   // Function to handle form submission
   const onSubmit = async (data: ReservationFormData) => {
     try {
+      setIsDialogOpen(false); // Chiudi il dialogo prima, per una UX migliore
+
       if (editingId) {
-        updateReservation({
+        await updateReservation({
           ...data,
           id: editingId,
           startDate: data.startDate.toISOString(),
@@ -107,7 +108,7 @@ const AdminReservations = () => {
         });
         toast.success("Prenotazione aggiornata con successo!");
       } else {
-        addReservation({
+        await addReservation({
           guestName: data.guestName,
           adults: data.adults,
           children: data.children,
@@ -124,7 +125,6 @@ const AdminReservations = () => {
         });
         toast.success("Nuova prenotazione aggiunta con successo!");
       }
-      setIsDialogOpen(false);
       
       // Forza sincronizzazione dopo salvataggio
       await refreshData();
@@ -134,7 +134,7 @@ const AdminReservations = () => {
     }
   };
 
-  // Refresh data automatically on mount
+  // Refresh data automaticamente all'inizio
   React.useEffect(() => {
     refreshData();
   }, []);

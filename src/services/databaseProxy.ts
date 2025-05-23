@@ -43,6 +43,7 @@ class DatabaseProxy {
     }
     
     // Fallback al localStorage
+    console.log(`Usando localStorage per caricare i dati di tipo ${type} (MySQL non disponibile)`);
     return externalStorage.loadData<T>(type);
   }
   
@@ -56,6 +57,9 @@ class DatabaseProxy {
     if (this.useMySQL) {
       try {
         saved = await mysqlStorage.saveData(type, data);
+        if (!saved) {
+          console.warn(`Salvataggio in MySQL non riuscito per ${type}, usando localStorage`);
+        }
       } catch (error) {
         console.error(`Error saving ${type} to MySQL:`, error);
         saved = false;
@@ -65,6 +69,7 @@ class DatabaseProxy {
     // Salva sempre anche nel localStorage come backup
     try {
       await externalStorage.saveData(type, data);
+      console.log(`Dati di tipo ${type} salvati in localStorage (backup)`);
       return true; // Se almeno uno dei due metodi funziona, consideriamo il salvataggio riuscito
     } catch (error) {
       console.error(`Error saving ${type} to local storage:`, error);
@@ -76,25 +81,34 @@ class DatabaseProxy {
    * Sincronizza i dati
    */
   public async synchronize(type: DataType): Promise<void> {
+    console.log(`Tentativo di sincronizzazione dei dati di tipo ${type}`);
+    
     if (this.useMySQL) {
       try {
         await mysqlStorage.synchronize(type);
+        console.log(`Sincronizzazione MySQL completata per ${type}`);
       } catch (error) {
         console.error(`Error synchronizing ${type} with MySQL:`, error);
+        console.log(`Passaggio alla sincronizzazione con localStorage per ${type}`);
       }
+    } else {
+      console.log(`MySQL non disponibile, uso solo localStorage per ${type}`);
     }
     
     // Sincronizza sempre anche il localStorage
     await externalStorage.synchronize(type);
+    console.log(`Sincronizzazione localStorage completata per ${type}`);
   }
   
   /**
    * Sincronizza tutti i tipi di dati
    */
   public async synchronizeAll(): Promise<void> {
+    console.log("Sincronizzazione di tutti i tipi di dati");
     await Promise.all(Object.values(DataType).map(type => 
       this.synchronize(type as DataType)
     ));
+    console.log("Sincronizzazione completa di tutti i dati");
   }
 }
 

@@ -1,4 +1,3 @@
-
 /**
  * API Client per la comunicazione con il server
  */
@@ -38,6 +37,15 @@ async function fetchApi<T>(
     
     console.log(`Calling API: ${method} ${url}`);
     const response = await fetch(url, options);
+    
+    // Prima verifichiamo se la risposta è HTML invece di JSON (errore comune in sviluppo)
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.indexOf("application/json") === -1) {
+      console.warn(`Risposta non JSON ricevuta da ${url}. Tipo di contenuto: ${contentType}`);
+      
+      // Fallback ai dati locali
+      throw new Error(`Risposta non valida dall'API: formato non JSON`);
+    }
     
     // Controlla se la risposta è OK (status 200-299)
     if (!response.ok) {
