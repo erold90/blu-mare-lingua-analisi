@@ -1,5 +1,3 @@
-
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { apartments } from "@/data/apartments";
@@ -92,15 +90,28 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
         deviceId: res.device_id || undefined
       }));
       
-      // Sort reservations by start date (arrival date) - most recent first
+      // Sort reservations by arrival date - upcoming dates first, then past dates
       const sortedReservations = transformedReservations.sort((a, b) => {
         const dateA = new Date(a.startDate).getTime();
         const dateB = new Date(b.startDate).getTime();
-        return dateB - dateA; // Sort descending (most recent first)
+        const today = new Date().getTime();
+        
+        // Separate upcoming and past reservations
+        const aIsUpcoming = dateA >= today;
+        const bIsUpcoming = dateB >= today;
+        
+        if (aIsUpcoming && !bIsUpcoming) return -1; // A is upcoming, B is past
+        if (!aIsUpcoming && bIsUpcoming) return 1;  // A is past, B is upcoming
+        
+        if (aIsUpcoming && bIsUpcoming) {
+          return dateA - dateB; // Both upcoming: earliest first
+        } else {
+          return dateB - dateA; // Both past: most recent first
+        }
       });
       
       setReservations(sortedReservations);
-      console.log(`Loaded ${sortedReservations.length} reservations from Supabase, sorted by arrival date`);
+      console.log(`Loaded ${sortedReservations.length} reservations from Supabase, sorted by arrival date (upcoming first)`);
     } catch (error) {
       console.error("Failed to load reservations:", error);
       toast.error("Errore nel caricamento delle prenotazioni");
@@ -237,4 +248,3 @@ export const useSupabaseReservations = () => {
   
   return context;
 };
-

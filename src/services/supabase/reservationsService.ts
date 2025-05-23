@@ -5,7 +5,7 @@ export const reservationsService = {
     const { data, error } = await supabase
       .from('reservations')
       .select('*')
-      .order('start_date', { ascending: false }); // Order by arrival date, most recent first
+      .order('start_date', { ascending: true }); // Order by arrival date ascending for better client-side sorting
     
     if (error) throw error;
     return data;
