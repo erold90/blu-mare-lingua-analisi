@@ -1,3 +1,4 @@
+
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -11,11 +12,6 @@ import "./index.css";
 import { SupabaseReservationsProvider } from "@/hooks/useSupabaseReservations";
 import { SupabasePricesProvider } from "@/hooks/useSupabasePrices";
 
-// Keep the old providers for backward compatibility
-import { ReservationsProvider } from "@/hooks/useReservations";
-import { PricesProvider } from "@/hooks/usePrices";
-import { CleaningProvider } from "@/hooks/cleaning";
-
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(
@@ -23,17 +19,11 @@ createRoot(document.getElementById("root")!).render(
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <BrowserRouter>
-          {/* Wrap with both old and new providers for migration period */}
+          {/* Use only the new Supabase providers */}
           <SupabaseReservationsProvider>
             <SupabasePricesProvider>
-              <ReservationsProvider>
-                <PricesProvider>
-                  <CleaningProvider>
-                    <App />
-                    <Toaster />
-                  </CleaningProvider>
-                </PricesProvider>
-              </ReservationsProvider>
+              <App />
+              <Toaster />
             </SupabasePricesProvider>
           </SupabaseReservationsProvider>
         </BrowserRouter>

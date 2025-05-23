@@ -2,7 +2,7 @@
 import * as React from "react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { usePrices } from "@/hooks/usePrices";
+import { useSupabasePrices } from "@/hooks/useSupabasePrices";
 import { apartments } from "@/data/apartments";
 import PriceTable from "./PriceTable";
 import MobilePriceList from "./MobilePriceList";
@@ -14,7 +14,7 @@ interface PriceEditorProps {
 }
 
 const PriceEditor: React.FC<PriceEditorProps> = ({ year, weeks, isMobile }) => {
-  const { getPriceForWeek, updatePrice } = usePrices();
+  const { getPriceForWeek, updatePrice } = useSupabasePrices();
   
   const handlePriceChange = (apartmentId: string, weekStart: string, newPrice: number) => {
     updatePrice(apartmentId, weekStart, newPrice);

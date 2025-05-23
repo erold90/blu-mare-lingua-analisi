@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { CleaningProvider } from "@/hooks/cleaning";
+import { useSupabaseCleaningManagement } from "@/hooks/useSupabaseCleaningManagement";
 import { useDashboardData } from "./useDashboardData";
 import { DashboardMetrics } from "./DashboardMetrics";
 import { ActiveReservations } from "./ActiveReservations";
@@ -11,14 +11,6 @@ import { MonthlyReservationsChart } from "./MonthlyReservationsChart";
 import { CleaningStats } from "./CleaningStats";
 import { UpcomingMovements } from "./UpcomingMovements";
 
-// Wrapper con il provider di pulizia
-const AdminDashboardWithProvider = () => (
-  <CleaningProvider>
-    <AdminDashboardContent />
-  </CleaningProvider>
-);
-
-// Contenuto del dashboard che utilizza il provider
 // Memoize this component to prevent unnecessary re-renders
 const AdminDashboardContent = React.memo(() => {
   // Use the custom hook to get dashboard data
@@ -83,7 +75,7 @@ AdminDashboardContent.displayName = "AdminDashboardContent";
 
 // Componente di export
 const AdminDashboard = () => {
-  return <AdminDashboardWithProvider />;
+  return <AdminDashboardContent />;
 };
 
 export default AdminDashboard;

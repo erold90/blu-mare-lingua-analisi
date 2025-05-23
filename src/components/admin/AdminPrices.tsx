@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { usePrices } from "@/hooks/usePrices";
+import { useSupabasePrices } from "@/hooks/useSupabasePrices";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ const AdminPrices = () => {
     resetPrices,
     isLoading,
     getWeeksForYear
-  } = usePrices();
+  } = useSupabasePrices();
   
   const isMobile = useIsMobile();
   const weeks = getWeeksForYear(selectedYear);

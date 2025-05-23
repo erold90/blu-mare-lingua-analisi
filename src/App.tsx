@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,12 +16,9 @@ import ContactsPage from "./pages/ContactsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import CookiePolicyPage from "./pages/CookiePolicyPage";
 import NotFound from "./pages/NotFound";
-import { ReservationsProvider } from "./hooks/useReservations";
-import { PricesProvider } from "./hooks/price/PricesProvider";
 import { SettingsProvider } from "./hooks/useSettings";
 import { ActivityLogProvider } from "./hooks/useActivityLog";
-import { CleaningProvider } from "./hooks/cleaning";
-import ApiTestPage from './pages/api-test'; // Aggiungi questa importazione
+import ApiTestPage from './pages/api-test';
 
 // Create a new QueryClient instance (IMPORTANT: Don't use useState or useRef here!)
 const queryClient = new QueryClient({
@@ -60,34 +58,28 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <ReservationsProvider>
-          <PricesProvider>
-            <SettingsProvider>
-              <CleaningProvider>
-                <ActivityLogProvider>
-                  <Toaster />
-                  <Sonner />
-                  <BrowserRouter>
-                    <Routes>
-                      <Route element={<AppLayout />}>
-                        <Route path="/" element={<Index />} />
-                        <Route path="/appartamenti" element={<ApartmentsPage />} />
-                        <Route path="/preventivo" element={<RequestQuotePage />} />
-                        <Route path="/area-riservata/*" element={<ReservedAreaPage />} />
-                        <Route path="/contatti" element={<ContactsPage />} />
-                        <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-                        <Route path="/cookie-policy" element={<CookiePolicyPage />} />
-                      </Route>
-                      <Route path="/api-test" element={<ApiTestPage />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                    <PageViewTracker />
-                  </BrowserRouter>
-                </ActivityLogProvider>
-              </CleaningProvider>
-            </SettingsProvider>
-          </PricesProvider>
-        </ReservationsProvider>
+        <SettingsProvider>
+          <ActivityLogProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route element={<AppLayout />}>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/appartamenti" element={<ApartmentsPage />} />
+                  <Route path="/preventivo" element={<RequestQuotePage />} />
+                  <Route path="/area-riservata/*" element={<ReservedAreaPage />} />
+                  <Route path="/contatti" element={<ContactsPage />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                  <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+                </Route>
+                <Route path="/api-test" element={<ApiTestPage />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <PageViewTracker />
+            </BrowserRouter>
+          </ActivityLogProvider>
+        </SettingsProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

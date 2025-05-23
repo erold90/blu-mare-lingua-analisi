@@ -1,7 +1,7 @@
 
 import { format } from "date-fns";
 import { Pencil } from "lucide-react";
-import { Reservation } from "@/hooks/useReservations";
+import { Reservation } from "@/hooks/useSupabaseReservations";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Apartment } from "@/hooks/useReservations";
+import { Apartment } from "@/hooks/useSupabaseReservations";
 
 interface ReservationDetailsDialogProps {
   reservation: Reservation | null;

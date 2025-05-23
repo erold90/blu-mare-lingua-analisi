@@ -1,4 +1,3 @@
 
-export { CleaningProvider } from './CleaningProvider';
-export { useCleaningContext as useCleaningManagement } from './CleaningContext';
-export type { CleaningTask, CleaningContextType } from './types';
+// Re-export from the new Supabase module
+export { useSupabaseCleaningManagement as useCleaningManagement } from '../useSupabaseCleaningManagement';

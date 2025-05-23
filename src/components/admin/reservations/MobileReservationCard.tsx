@@ -1,7 +1,7 @@
 
 import { format } from "date-fns";
 import { Info, Pencil, Trash2 } from "lucide-react";
-import { Reservation, Apartment } from "@/hooks/useReservations";
+import { Reservation, Apartment } from "@/hooks/useSupabaseReservations";
 import { Button } from "@/components/ui/button";
 import {
   Card,

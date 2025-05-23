@@ -1,4 +1,4 @@
 
-// Re-export from the refactored module
-export { usePrices } from './price/usePrices';
-export { PricesProvider } from './price/PricesProvider';
+// Re-export from the new Supabase module
+export { useSupabasePrices as usePrices } from './useSupabasePrices';
+export { SupabasePricesProvider as PricesProvider } from './useSupabasePrices';

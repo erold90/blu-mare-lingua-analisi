@@ -3,15 +3,13 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { CleaningProvider, useCleaningManagement } from "@/hooks/cleaning";
+import { useSupabaseCleaningManagement } from "@/hooks/useSupabaseCleaningManagement";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { RefreshCw, Database, AlertCircle, CheckCircle, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { testDatabaseConnection, syncCleaningTasks } from "@/hooks/cleaning/cleaningStorage";
 import { pingApi } from "@/api/apiClient";
-import { DataType } from "@/services/externalStorage";
 
 import CleaningHeader from "./CleaningHeader";
 import CalendarView from "./views/CalendarView";
@@ -25,13 +23,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Componente principale avvolto nel provider
-const AdminCleaningManagementWithProvider = () => (
-  <CleaningProvider>
-    <AdminCleaningManagementContent />
-  </CleaningProvider>
-);
-
 // Contenuto interno che usa il context
 const AdminCleaningManagementContent = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -41,7 +32,7 @@ const AdminCleaningManagementContent = () => {
   const [dbStatus, setDbStatus] = useState<boolean | null>(null);
   const [lastSyncTime, setLastSyncTime] = useState<string>("");
   const isMobile = useIsMobile();
-  const { refreshTasks, isLoading } = useCleaningManagement();
+  const { refreshData, isLoading, syncCleaningTasks } = useSupabaseCleaningManagement();
   
   // Controlla lo stato del database all'avvio
   useEffect(() => {
@@ -72,7 +63,7 @@ const AdminCleaningManagementContent = () => {
   const handleRefresh = async () => {
     try {
       await syncCleaningTasks();
-      await refreshTasks();
+      await refreshData();
       
       // Aggiorna timestamp dell'ultima sincronizzazione
       const now = Date.now();
@@ -92,7 +83,9 @@ const AdminCleaningManagementContent = () => {
   const handleTestConnection = async () => {
     setIsTestingDb(true);
     try {
-      const isConnected = await testDatabaseConnection();
+      const isConnected = await pingApi.testDatabaseConnection()
+        .then(res => res.success)
+        .catch(() => false);
       setDbStatus(isConnected);
       
       if (isConnected) {
@@ -128,7 +121,7 @@ const AdminCleaningManagementContent = () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Badge variant={dbStatus ? "success" : dbStatus === null ? "outline" : "destructive"} className="mr-2">
+                <Badge variant={dbStatus ? "default" : dbStatus === null ? "outline" : "destructive"} className="mr-2">
                   {dbStatus ? (
                     <CheckCircle className="h-3 w-3 mr-1" />
                   ) : (
@@ -217,9 +210,9 @@ const AdminCleaningManagementContent = () => {
   );
 };
 
-// Esporta il componente avvolto nel provider
+// Esporta il componente
 const AdminCleaningManagement = () => {
-  return <AdminCleaningManagementWithProvider />;
+  return <AdminCleaningManagementContent />;
 };
 
 export default AdminCleaningManagement;
