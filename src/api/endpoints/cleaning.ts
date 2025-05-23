@@ -24,5 +24,9 @@ export const cleaningApi = {
   
   delete: async (id: string) => {
     return fetchApi(`/cleaning/${id}`, 'DELETE');
+  },
+  
+  saveBatch: async (tasks: any[]) => {
+    return fetchApi('/cleaning/batch', 'POST', tasks);
   }
 };

@@ -12,7 +12,7 @@ export const API_BASE_URL = process.env.NODE_ENV === 'production'
 export const DATABASE_CONFIG = {
   host: process.env.NODE_ENV === 'production' ? '31.11.39.219' : 'localhost', // Usa localhost quando in sviluppo (tunnel SSH)
   user: 'Sql1864200',
-  password: '', // Questa dovrebbe essere impostata lato server per sicurezza
+  password: '@Ginevra33', // Aggiungiamo la password corretta dal phpMyAdmin
   database: 'Sql1864200_1',
   port: 3306
 };
