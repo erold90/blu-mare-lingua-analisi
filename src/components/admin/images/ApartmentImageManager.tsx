@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -97,7 +96,6 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
     try {
       const success = await imageService.reorderImages(updates);
       if (!success) {
-        // If the update failed, reload the images to restore the correct order
         console.error('Failed to update image order, reloading...');
         loadImages();
       } else {
@@ -105,7 +103,6 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
       }
     } catch (error) {
       console.error('Error updating image order:', error);
-      // Reload images to restore the correct order
       loadImages();
     }
   };
@@ -169,55 +166,74 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className={`relative group ${
-                              snapshot.isDragging ? 'rotate-3 shadow-lg' : ''
+                            className={`relative group transition-all duration-200 ${
+                              snapshot.isDragging 
+                                ? 'rotate-2 shadow-2xl scale-105 z-50' 
+                                : 'hover:shadow-lg'
                             }`}
                             style={{
                               ...provided.draggableProps.style,
-                              transform: snapshot.isDragging 
-                                ? `${provided.draggableProps.style?.transform} rotate(3deg)`
-                                : provided.draggableProps.style?.transform
+                              pointerEvents: snapshot.isDragging ? 'none' : 'auto'
                             }}
                           >
-                            <Card className="overflow-hidden border-2 border-transparent hover:border-blue-200 transition-colors">
+                            <Card className="overflow-hidden border-2 border-transparent hover:border-blue-200 transition-colors relative">
+                              {/* Drag Handle - posizionato in modo prominente */}
+                              <div
+                                {...provided.dragHandleProps}
+                                className="absolute top-2 left-2 z-20 p-2 rounded-md bg-black/70 cursor-grab active:cursor-grabbing opacity-80 hover:opacity-100 transition-opacity"
+                                style={{ touchAction: 'none' }}
+                              >
+                                <GripVertical className="h-4 w-4 text-white" />
+                              </div>
+
                               <div className="relative aspect-video">
                                 <img
                                   src={imageService.getImageUrl(image.file_path)}
                                   alt={image.alt_text || `Immagine ${index + 1}`}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-cover select-none"
+                                  draggable={false}
                                 />
                                 {image.is_cover && (
-                                  <Badge className="absolute top-2 left-2 bg-yellow-500">
+                                  <Badge className="absolute top-2 right-2 bg-yellow-500 z-10">
                                     Copertina
                                   </Badge>
                                 )}
-                                <div className="absolute top-2 right-2 text-xs bg-black/50 text-white px-2 py-1 rounded">
+                                <div className="absolute bottom-2 left-2 text-xs bg-black/70 text-white px-2 py-1 rounded z-10">
                                   #{index + 1}
                                 </div>
-                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                
+                                {/* Action buttons - visibili solo on hover e non durante il drag */}
+                                <div className={`absolute inset-0 bg-black/50 transition-opacity flex items-center justify-center gap-2 ${
+                                  snapshot.isDragging 
+                                    ? 'opacity-0 pointer-events-none' 
+                                    : 'opacity-0 group-hover:opacity-100'
+                                }`}>
                                   <Button
                                     size="sm"
                                     variant="secondary"
-                                    onClick={() => handleSetCover(image.id)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleSetCover(image.id);
+                                    }}
                                     disabled={image.is_cover}
+                                    className="z-10"
                                   >
                                     <Star className="h-4 w-4" />
                                   </Button>
                                   <Button
                                     size="sm"
                                     variant="destructive"
-                                    onClick={() => handleDeleteImage(image)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteImage(image);
+                                    }}
+                                    className="z-10"
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </div>
-                                <div
-                                  {...provided.dragHandleProps}
-                                  className="absolute bottom-2 right-2 p-2 rounded bg-black/70 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80"
-                                >
-                                  <GripVertical className="h-4 w-4 text-white" />
-                                </div>
                               </div>
+                              
                               <CardContent className="p-3">
                                 <p className="text-sm font-medium truncate">
                                   {image.file_name}
