@@ -25,23 +25,64 @@ interface ServicesStepProps {
 }
 
 const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, apartments }) => {
-  console.log("🔍 ServicesStep: Rendering services step");
-  console.log("🔍 ServicesStep: Form values:", form.getValues());
-  console.log("🔍 ServicesStep: Apartments:", apartments);
+  console.log("🔍 ServicesStep: Starting render");
+  console.log("🔍 ServicesStep: Props received:", { 
+    formValues: form?.getValues(), 
+    apartmentsCount: apartments?.length 
+  });
   
   try {
-    const selectedApartmentIds = form.watch("selectedApartments") || [];
-    const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
+    // Defensive checks for required data
+    if (!form) {
+      console.error("❌ ServicesStep: Form is undefined");
+      throw new Error("Form non disponibile");
+    }
     
+    if (!apartments || !Array.isArray(apartments)) {
+      console.error("❌ ServicesStep: Apartments is invalid:", apartments);
+      throw new Error("Dati appartamenti non disponibili");
+    }
+    
+    // Get form values safely
+    const formValues = form.getValues();
+    console.log("🔍 ServicesStep: Form values:", formValues);
+    
+    // Get selected apartments safely
+    const selectedApartmentIds = formValues?.selectedApartments || [];
     console.log("🔍 ServicesStep: Selected apartment IDs:", selectedApartmentIds);
+    
+    if (!Array.isArray(selectedApartmentIds)) {
+      console.error("❌ ServicesStep: selectedApartmentIds is not an array:", selectedApartmentIds);
+      throw new Error("Selezione appartamenti non valida");
+    }
+    
+    const selectedApartments = apartments.filter(apt => 
+      apt && apt.id && selectedApartmentIds.includes(apt.id)
+    );
     console.log("🔍 ServicesStep: Selected apartments:", selectedApartments);
     
-    // Get guest counts
-    const { totalPeopleForLinen } = calculateGuestCounts(form.getValues());
+    // Calculate guest counts safely
+    let totalPeopleForLinen = 0;
+    try {
+      const guestCounts = calculateGuestCounts(formValues);
+      totalPeopleForLinen = guestCounts?.totalPeopleForLinen || 0;
+      console.log("🔍 ServicesStep: Guest counts calculated:", guestCounts);
+    } catch (error) {
+      console.error("❌ ServicesStep: Error calculating guest counts:", error);
+      // Use fallback values
+      totalPeopleForLinen = (formValues?.adults || 0) + (formValues?.children || 0);
+    }
     
-    console.log("🔍 ServicesStep: Total people for linen:", totalPeopleForLinen);
+    // Initialize services state safely
+    let servicesState;
+    try {
+      servicesState = useServicesState(form, selectedApartmentIds, apartments);
+      console.log("🔍 ServicesStep: Services state initialized:", servicesState);
+    } catch (error) {
+      console.error("❌ ServicesStep: Error initializing services state:", error);
+      throw new Error("Errore nell'inizializzazione dei servizi");
+    }
     
-    // Get state for services
     const {
       personsPerApartment,
       petsInApartment,
@@ -49,11 +90,15 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
       updatePersonsPerApartment,
       togglePetInApartment,
       hasReachedApartmentCapacity
-    } = useServicesState(form, selectedApartmentIds, apartments);
-    
-    console.log("🔍 ServicesStep: Services state loaded successfully");
+    } = servicesState;
     
     const multipleApartments = selectedApartments.length > 1;
+    
+    console.log("🔍 ServicesStep: Rendering components with data:", {
+      totalPeopleForLinen,
+      multipleApartments,
+      totalAssignedPersons
+    });
 
     return (
       <Card className="max-w-2xl mx-auto">
@@ -67,8 +112,8 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
             form={form}
             selectedApartments={selectedApartments}
             totalPeopleForLinen={totalPeopleForLinen}
-            personsPerApartment={personsPerApartment}
-            totalAssignedPersons={totalAssignedPersons}
+            personsPerApartment={personsPerApartment || {}}
+            totalAssignedPersons={totalAssignedPersons || 0}
             updatePersonsPerApartment={updatePersonsPerApartment}
             hasReachedApartmentCapacity={hasReachedApartmentCapacity}
           />
@@ -79,7 +124,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
           <PetsService 
             form={form}
             selectedApartments={selectedApartments}
-            petsInApartment={petsInApartment}
+            petsInApartment={petsInApartment || {}}
             togglePetInApartment={togglePetInApartment}
           />
         </CardContent>
@@ -91,7 +136,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
             disabled={
               form.watch("linenOption") === "extra" && 
               multipleApartments && 
-              totalAssignedPersons !== totalPeopleForLinen
+              (totalAssignedPersons || 0) !== totalPeopleForLinen
             }
           >
             Avanti
@@ -100,13 +145,29 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
       </Card>
     );
   } catch (error) {
-    console.error("❌ ServicesStep: Error rendering component:", error);
+    console.error("❌ ServicesStep: Critical error:", error);
     return (
       <Card className="max-w-2xl mx-auto">
         <CardContent className="p-8 text-center">
-          <p className="text-red-500">Errore nel caricamento dei servizi extra</p>
-          <p className="text-sm text-gray-500 mt-2">Controlla la console per maggiori dettagli</p>
-          <Button onClick={prevStep} className="mt-4">Torna indietro</Button>
+          <h2 className="text-xl font-semibold text-red-600 mb-4">Errore nei Servizi Extra</h2>
+          <p className="text-red-500 mb-2">
+            {error instanceof Error ? error.message : "Errore sconosciuto"}
+          </p>
+          <p className="text-sm text-gray-500 mb-4">
+            Controlla la console per maggiori dettagli
+          </p>
+          <div className="space-y-2">
+            <Button onClick={prevStep} className="w-full">
+              Torna al passaggio precedente
+            </Button>
+            <Button 
+              onClick={() => window.location.reload()} 
+              variant="outline" 
+              className="w-full"
+            >
+              Ricarica la pagina
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
