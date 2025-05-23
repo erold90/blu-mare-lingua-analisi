@@ -3,7 +3,7 @@ import * as React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { CleaningProvider, useCleaningContext } from "@/hooks/cleaning";
+import { CleaningProvider, useCleaningManagement } from "@/hooks/cleaning";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { RefreshCw } from "lucide-react";
@@ -28,7 +28,7 @@ const AdminCleaningManagementContent = () => {
   const [view, setView] = useState<"calendar" | "list" | "statistics">("calendar");
   const [selectedApartment, setSelectedApartment] = useState<string>("all");
   const isMobile = useIsMobile();
-  const { refreshTasks, isLoading } = useCleaningContext();
+  const { refreshTasks, isLoading } = useCleaningManagement();
   
   const handleRefresh = async () => {
     try {
