@@ -1,6 +1,5 @@
 
 import React, { useState } from "react";
-import { format } from "date-fns";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
+import { useCompactPrices } from "@/hooks/prices/useCompactPrices";
 
 interface PriceCopyDialogProps {
   isOpen: boolean;
@@ -27,18 +27,25 @@ const PriceCopyDialog: React.FC<PriceCopyDialogProps> = ({
   const [rounding, setRounding] = useState<"up" | "down" | "none">("none");
   const [roundToNearest, setRoundToNearest] = useState("5");
   const [isLoading, setIsLoading] = useState(false);
+  
+  const { copyPricesFromYear } = useCompactPrices();
 
   const handleCopyPrices = async () => {
     setIsLoading(true);
     
     try {
-      // This is a placeholder for the actual implementation
-      // In a real implementation, we'd call a function to copy prices
+      const success = await copyPricesFromYear(
+        sourceYear,
+        targetYear,
+        parseFloat(percentage),
+        rounding,
+        parseInt(roundToNearest),
+        apartmentId
+      );
       
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulating API call
-      
-      toast.success(`Prezzi copiati dall'anno ${sourceYear} all'anno ${targetYear} con aumento del ${percentage}%`);
-      onClose();
+      if (success) {
+        onClose();
+      }
     } catch (error) {
       toast.error("Errore durante la copia dei prezzi");
       console.error("Error copying prices:", error);

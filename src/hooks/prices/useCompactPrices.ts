@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { PriceData } from './types';
 import { usePricePersistence } from './usePricePersistence';
 import { getSeasonWeeks } from './weekUtils';
@@ -10,6 +10,8 @@ export const useCompactPrices = () => {
   const [prices, setPrices] = useState<PriceData[]>([]);
   const [editingCell, setEditingCell] = useState<{ apartmentId: string; weekStart: string } | null>(null);
   const { isLoading, loadPrices, updatePrice, initializeDefaultPrices } = usePricePersistence();
+  const mountedRef = useRef(false);
+  const loadingRef = useRef(false);
 
   // Get price for apartment and week
   const getPrice = useCallback((apartmentId: string, weekStart: string): number => {
@@ -129,7 +131,14 @@ export const useCompactPrices = () => {
 
   // Load prices for specific year
   const loadPricesData = useCallback(async (year: number = 2025) => {
+    if (loadingRef.current) {
+      console.log(`🔄 Already loading prices for year ${year}, skipping...`);
+      return [];
+    }
+    
+    loadingRef.current = true;
     console.log(`🚀 useCompactPrices: loading prices for year ${year}...`);
+    
     try {
       const loadedPrices = await loadPrices(year);
       console.log(`✅ Loaded ${loadedPrices.length} prices for year ${year}`);
@@ -151,13 +160,19 @@ export const useCompactPrices = () => {
       console.error(`❌ Error loading prices for year ${year}:`, error);
       toast.error(`Errore nel caricamento dei prezzi per l'anno ${year}`);
       return [];
+    } finally {
+      loadingRef.current = false;
     }
   }, [loadPrices]);
 
-  // Initialize on mount
+  // Initialize on mount (only once)
   useEffect(() => {
-    loadPricesData(2025);
-  }, [loadPricesData]);
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      console.log(`🚀 useCompactPrices: mounting, starting price loading...`);
+      loadPricesData(2025);
+    }
+  }, []);
 
   return {
     prices,
@@ -168,6 +183,10 @@ export const useCompactPrices = () => {
     copyPricesFromYear,
     editingCell,
     setEditingCell,
-    reloadPrices: () => loadPricesData(2025)
+    reloadPrices: () => {
+      if (!loadingRef.current) {
+        loadPricesData(2025);
+      }
+    }
   };
 };

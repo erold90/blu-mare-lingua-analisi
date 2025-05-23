@@ -1,21 +1,30 @@
 
-import React, { useState } from "react";
-import { format } from "date-fns";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCompactPrices } from "@/hooks/prices/useCompactPrices";
 import YearPriceGrid from "./YearPriceGrid";
 import YearSelector from "./YearSelector";
-import PriceCopyDialog from "./PriceCopyDialog";
 
 const AVAILABLE_YEARS = [2025, 2026, 2027, 2028, 2029, 2030];
 
 const CompactPriceManager: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<number>(2025);
   const { isLoading, getSeasonWeeks, prices, updatePrice, reloadPrices } = useCompactPrices();
+
+  // Memoize render info to prevent unnecessary logs
+  const renderInfo = useMemo(() => {
+    const info = {
+      pricesCount: prices.length,
+      isLoading,
+      weeksCount: getSeasonWeeks(selectedYear).length,
+      isMobile: window.innerWidth < 768
+    };
+    console.log("CompactPriceManager render:", info);
+    return info;
+  }, [prices.length, isLoading, selectedYear]);
 
   return (
     <div className="space-y-6">
