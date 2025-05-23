@@ -2,10 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { ImageUpload } from './ImageUpload';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
-import { Star, Trash2, GripVertical } from 'lucide-react';
+import { ImageGrid } from './ImageGrid';
+import { DropResult } from 'react-beautiful-dnd';
 import { toast } from 'sonner';
 import { imageService, ImageRecord } from '@/services/imageService';
 
@@ -141,115 +140,13 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
             />
           )}
 
-          {images.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Nessuna immagine caricata per questo appartamento
-            </div>
-          ) : (
-            <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId={`apartment-images-${apartmentId}`} direction="horizontal">
-                {(provided, snapshot) => (
-                  <div
-                    {...provided.droppableProps}
-                    ref={provided.innerRef}
-                    className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${
-                      snapshot.isDraggingOver ? 'bg-blue-50 rounded-lg p-2' : ''
-                    }`}
-                  >
-                    {images.map((image, index) => (
-                      <Draggable 
-                        key={image.id} 
-                        draggableId={image.id} 
-                        index={index}
-                      >
-                        {(provided, snapshot) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className={`relative group transition-all duration-200 ${
-                              snapshot.isDragging 
-                                ? 'rotate-2 shadow-2xl scale-105 z-50' 
-                                : 'hover:shadow-lg'
-                            }`}
-                          >
-                            <Card className="overflow-hidden border-2 border-transparent hover:border-blue-200 transition-colors relative">
-                              {/* Drag Handle - posizionato in modo prominente */}
-                              <div
-                                {...provided.dragHandleProps}
-                                className="absolute top-2 left-2 z-20 p-2 rounded-md bg-black/70 cursor-grab active:cursor-grabbing opacity-80 hover:opacity-100 transition-opacity"
-                              >
-                                <GripVertical className="h-4 w-4 text-white" />
-                              </div>
-
-                              <div className="relative aspect-video">
-                                <img
-                                  src={imageService.getImageUrl(image.file_path)}
-                                  alt={image.alt_text || `Immagine ${index + 1}`}
-                                  className="w-full h-full object-cover select-none"
-                                  draggable={false}
-                                />
-                                {image.is_cover && (
-                                  <Badge className="absolute top-2 right-2 bg-yellow-500 z-10">
-                                    Copertina
-                                  </Badge>
-                                )}
-                                
-                                {/* Action buttons - visibili solo on hover e non durante il drag */}
-                                <div className={`absolute inset-0 bg-black/50 transition-opacity flex items-center justify-center gap-2 ${
-                                  snapshot.isDragging 
-                                    ? 'opacity-0 pointer-events-none' 
-                                    : 'opacity-0 group-hover:opacity-100'
-                                }`}>
-                                  <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleSetCover(image.id);
-                                    }}
-                                    disabled={image.is_cover}
-                                    className="z-10"
-                                  >
-                                    <Star className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="destructive"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteImage(image);
-                                    }}
-                                    className="z-10"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                              
-                              <CardContent className="p-3">
-                                <p className="text-sm font-medium truncate">
-                                  {image.file_name}
-                                </p>
-                                {image.alt_text && (
-                                  <p className="text-xs text-muted-foreground mt-1 truncate">
-                                    {image.alt_text}
-                                  </p>
-                                )}
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Ordine: {image.display_order}
-                                </p>
-                              </CardContent>
-                            </Card>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          )}
+          <ImageGrid
+            images={images}
+            apartmentId={apartmentId}
+            onDragEnd={handleDragEnd}
+            onSetCover={handleSetCover}
+            onDelete={handleDeleteImage}
+          />
         </CardContent>
       </Card>
     </div>
