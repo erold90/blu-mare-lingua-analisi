@@ -5,58 +5,60 @@ import { UploadImageData, ImageRecord } from "./types";
 
 export class ImageStorageService {
   /**
-   * Check if bucket exists with retry mechanism
+   * Test basic Supabase connection
    */
-  private async checkBucketExists(retries = 3): Promise<boolean> {
-    for (let i = 0; i < retries; i++) {
-      console.log(`🔍 Attempt ${i + 1}/${retries} - Checking if villa-images bucket exists...`);
-      
-      try {
-        const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-        
-        console.log("📋 Raw buckets response:", { buckets, error: bucketsError });
-        
-        if (bucketsError) {
-          console.error(`❌ Bucket check error (attempt ${i + 1}):`, bucketsError);
-          if (i === retries - 1) return false;
-          await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1))); // Progressive delay
-          continue;
-        }
-        
-        if (!buckets) {
-          console.warn(`⚠️ No buckets returned (attempt ${i + 1})`);
-          if (i === retries - 1) return false;
-          await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-          continue;
-        }
-        
-        console.log("📊 Available buckets:", buckets.map(b => ({ 
-          name: b.name, 
-          id: b.id, 
-          public: b.public,
-          created_at: b.created_at 
-        })));
-        
-        const villaBucket = buckets.find(b => b.id === 'villa-images' || b.name === 'villa-images');
-        
-        if (villaBucket) {
-          console.log("✅ villa-images bucket found:", villaBucket);
-          return true;
-        } else {
-          console.warn(`⚠️ villa-images bucket not found in ${buckets.length} buckets (attempt ${i + 1})`);
-          if (i < retries - 1) {
-            console.log(`🔄 Retrying in ${(i + 1)} seconds...`);
-            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-          }
-        }
-      } catch (error) {
-        console.error(`💥 Exception during bucket check (attempt ${i + 1}):`, error);
-        if (i === retries - 1) return false;
-        await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
-      }
-    }
+  private async testSupabaseConnection(): Promise<void> {
+    console.log("🔗 Testing Supabase connection...");
     
-    return false;
+    try {
+      // Test basic connection with a simple query
+      const { data, error } = await supabase.from('images').select('count').limit(1);
+      console.log("✅ Supabase connection test result:", { data, error });
+      
+      if (error) {
+        console.error("❌ Supabase connection error:", error);
+        throw new Error(`Connessione Supabase fallita: ${error.message}`);
+      }
+    } catch (error) {
+      console.error("❌ Failed to test Supabase connection:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Attempt direct upload without checking bucket existence
+   */
+  private async attemptDirectUpload(filePath: string, file: File): Promise<any> {
+    console.log("🚀 Attempting direct upload to villa-images bucket...");
+    console.log("📁 File path:", filePath);
+    console.log("📄 File details:", {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
+
+    try {
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('villa-images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      console.log("📤 Direct upload result:", { uploadData, uploadError });
+
+      if (uploadError) {
+        console.error("❌ Direct upload error:", uploadError);
+        throw new Error(`Errore upload diretto: ${uploadError.message}`);
+      }
+
+      console.log("✅ Direct upload successful:", uploadData);
+      return uploadData;
+
+    } catch (error) {
+      console.error("💥 Exception during direct upload:", error);
+      throw error;
+    }
   }
 
   /**
@@ -76,6 +78,9 @@ export class ImageStorageService {
         is_cover,
         display_order
       });
+
+      // Test Supabase connection first
+      await this.testSupabaseConnection();
       
       // Generate unique file path with random component to avoid conflicts
       const fileExt = file.name.split('.').pop();
@@ -86,32 +91,9 @@ export class ImageStorageService {
       
       console.log("Generated file path:", filePath);
       
-      // Check if bucket exists with retry mechanism
-      console.log("🔍 Checking bucket access with retry mechanism...");
-      const bucketExists = await this.checkBucketExists(3);
-      
-      if (!bucketExists) {
-        console.error("❌ villa-images bucket not found after multiple attempts");
-        throw new Error("Bucket 'villa-images' non trovato. Controlla la configurazione Supabase.");
-      }
-      
-      console.log("✅ Bucket verification successful, proceeding with upload...");
-      
-      // Upload file to storage
-      console.log("📤 Starting file upload to storage...");
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('villa-images')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-        
-      if (uploadError) {
-        console.error("❌ Storage upload error:", uploadError);
-        throw new Error(`Errore upload storage: ${uploadError.message}`);
-      }
-      
-      console.log("✅ File uploaded successfully:", uploadData);
+      // Try direct upload without checking bucket existence
+      console.log("🎯 Skipping bucket verification - attempting direct upload...");
+      const uploadData = await this.attemptDirectUpload(filePath, file);
       
       // Create database record
       console.log("💾 Creating database record...");
@@ -145,6 +127,7 @@ export class ImageStorageService {
       console.log("=== UPLOAD COMPLETED SUCCESSFULLY ===");
       
       return imageRecord as ImageRecord;
+      
     } catch (error) {
       console.error('=== UPLOAD FAILED ===');
       console.error('Error details:', error);
@@ -155,10 +138,14 @@ export class ImageStorageService {
       
       if (error.message?.includes('row-level security')) {
         errorMessage = "Errore: Politiche di sicurezza non configurate. Contatta l'amministratore.";
-      } else if (error.message?.includes('bucket')) {
+      } else if (error.message?.includes('bucket') || error.message?.includes('Bucket')) {
         errorMessage = "Errore: Bucket di storage non trovato o non accessibile. Verifica la configurazione Supabase.";
       } else if (error.message?.includes('already exists')) {
         errorMessage = "Errore: File con lo stesso nome già esistente. Riprova.";
+      } else if (error.message?.includes('does not exist')) {
+        errorMessage = "Errore: Il bucket villa-images non esiste o non è accessibile.";
+      } else if (error.message?.includes('permission')) {
+        errorMessage = "Errore: Permessi insufficienti per accedere al storage.";
       } else if (error.message) {
         errorMessage = `Errore: ${error.message}`;
       }
