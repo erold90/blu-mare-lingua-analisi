@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -27,7 +26,7 @@ const HeroSection = () => {
   }, []);
 
   const handleQuoteClick = () => {
-    navigate("/richiedi-preventivo");
+    navigate("/preventivo");
   };
 
   const getBackgroundImage = () => {
