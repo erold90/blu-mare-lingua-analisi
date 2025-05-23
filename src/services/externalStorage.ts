@@ -1,6 +1,6 @@
 /**
- * ExternalStorage Service
- * Servizio di sincronizzazione dati attraverso file esterni.
+ * External Storage Service
+ * Service to handle data persistence in external storage (localStorage, IndexedDB, etc.)
  */
 
 import { v4 as uuidv4 } from "uuid";
@@ -14,9 +14,8 @@ const FILE_STORAGE_KEY = "villamareblu_data";
 export enum DataType {
   RESERVATIONS = "reservations",
   CLEANING_TASKS = "cleaning_tasks",
-  SETTINGS = "settings",
-  PRICING = "pricing",
-  APARTMENTS = "apartments"
+  APARTMENTS = "apartments",
+  PRICES = "prices"  // Added PRICES to the DataType enum
 }
 
 // Interfaccia per i metadati dei file

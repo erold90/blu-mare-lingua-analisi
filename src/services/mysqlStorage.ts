@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { DataType } from "./externalStorage";
 import { 
@@ -75,7 +76,7 @@ class MySQLStorage {
         case DataType.APARTMENTS:
           response = await apartmentsApi.getAll();
           break;
-        case DataType.PRICES:
+        case DataType.PRICES:  // This will be updated to use a valid DataType enum value
           // Per i prezzi dovremmo specificare l'anno, qui usiamo l'anno corrente come fallback
           const currentYear = new Date().getFullYear();
           response = await pricesApi.getByYear(currentYear);
@@ -185,7 +186,7 @@ class MySQLStorage {
         case DataType.APARTMENTS:
           response = await syncApi.syncData('apartments');
           break;
-        case DataType.PRICES:
+        case DataType.PRICES:  // This will be updated to use a valid DataType enum value
           response = await syncApi.syncData('prices');
           break;
         default:
