@@ -72,9 +72,11 @@ export const PriceManagementProvider: React.FC<{ children: React.ReactNode }> = 
   const loadPrices = useCallback(async () => {
     setIsLoading(true);
     try {
+      console.log("Loading prices from database...");
       const data = await supabaseService.prices.getByYear(2025);
       
       if (data.length === 0) {
+        console.log("No prices found, initializing...");
         await initializePrices();
         return;
       }
@@ -86,6 +88,15 @@ export const PriceManagementProvider: React.FC<{ children: React.ReactNode }> = 
       }));
       
       setPrices(transformedPrices);
+      console.log(`Loaded ${transformedPrices.length} prices from database`);
+      
+      // Also save to localStorage for quick access
+      const seasonalData = [{
+        year: 2025,
+        prices: transformedPrices
+      }];
+      localStorage.setItem("seasonalPricing", JSON.stringify(seasonalData));
+      
     } catch (error) {
       console.error('Failed to load prices:', error);
       toast.error('Errore nel caricamento dei prezzi');
@@ -96,6 +107,7 @@ export const PriceManagementProvider: React.FC<{ children: React.ReactNode }> = 
 
   const initializePrices = useCallback(async () => {
     console.log("Initializing 2025 season prices");
+    setIsLoading(true);
     
     const pricesToInsert = [];
     
@@ -111,6 +123,7 @@ export const PriceManagementProvider: React.FC<{ children: React.ReactNode }> = 
     }
 
     try {
+      console.log("Inserting prices into database...");
       await supabaseService.prices.updateBatch(pricesToInsert);
       
       const transformedPrices: WeeklyPrice[] = pricesToInsert.map(p => ({
@@ -120,10 +133,21 @@ export const PriceManagementProvider: React.FC<{ children: React.ReactNode }> = 
       }));
       
       setPrices(transformedPrices);
+      
+      // Save to localStorage
+      const seasonalData = [{
+        year: 2025,
+        prices: transformedPrices
+      }];
+      localStorage.setItem("seasonalPricing", JSON.stringify(seasonalData));
+      
       toast.success("Prezzi stagione 2025 inizializzati");
+      console.log(`Successfully initialized ${pricesToInsert.length} prices`);
     } catch (error) {
       console.error("Error initializing prices:", error);
       toast.error("Errore nell'inizializzazione dei prezzi");
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -146,6 +170,24 @@ export const PriceManagementProvider: React.FC<{ children: React.ReactNode }> = 
           return [...prev, { apartmentId, weekStart, price }];
         }
       });
+      
+      // Update localStorage
+      const savedPrices = localStorage.getItem("seasonalPricing");
+      if (savedPrices) {
+        const allPrices = JSON.parse(savedPrices);
+        const yearData = allPrices.find((season: any) => season.year === 2025);
+        if (yearData) {
+          const existingIndex = yearData.prices.findIndex(
+            (p: WeeklyPrice) => p.apartmentId === apartmentId && p.weekStart === weekStart
+          );
+          if (existingIndex >= 0) {
+            yearData.prices[existingIndex].price = price;
+          } else {
+            yearData.prices.push({ apartmentId, weekStart, price });
+          }
+          localStorage.setItem("seasonalPricing", JSON.stringify(allPrices));
+        }
+      }
       
       toast.success("Prezzo aggiornato");
     } catch (error) {

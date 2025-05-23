@@ -76,3 +76,27 @@ export const loadPricesFromDatabase = async (year: number): Promise<WeeklyPrice[
     throw error;
   }
 };
+
+// Export functions that were missing
+export const updateWeeklyPrice = updatePriceInDatabase;
+
+export const resetAllPrices = async (year: number = 2025): Promise<void> => {
+  try {
+    // Delete existing prices for the year
+    await supabaseService.prices.deleteByYear(year);
+    toast.success(`Prezzi ${year} resettati`);
+  } catch (error) {
+    console.error("Error resetting prices:", error);
+    toast.error("Errore nel reset dei prezzi");
+  }
+};
+
+export const forceInitializePrices = async (): Promise<WeeklyPrice[]> => {
+  console.log("Force initializing prices for 2025");
+  
+  // First reset existing prices
+  await resetAllPrices(2025);
+  
+  // Then initialize new prices
+  return await initializePricesFor2025();
+};

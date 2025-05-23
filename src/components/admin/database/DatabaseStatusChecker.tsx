@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
@@ -42,14 +43,10 @@ const DatabaseStatusChecker: React.FC = () => {
       )}
 
       {status === 'error' && (
-        <Alert variant={status === 'error' ? 'destructive' : 'default'}>
+        <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Database Status</AlertTitle>
-          <AlertDescription>
-            {status === 'loading' && "Checking database connection..."}
-            {status === 'connected' && "Database connected and operational"}
-            {status === 'error' && `Database error: ${error}`}
-          </AlertDescription>
+          <AlertDescription>Database error: {error}</AlertDescription>
         </Alert>
       )}
     </div>
