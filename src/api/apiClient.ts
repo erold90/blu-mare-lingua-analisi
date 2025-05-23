@@ -1,4 +1,3 @@
-
 /**
  * API Client per la comunicazione con il server
  */
@@ -58,6 +57,33 @@ async function fetchApi<T>(
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.indexOf("application/json") === -1) {
         console.warn(`Risposta non JSON ricevuta da ${url}. Tipo di contenuto: ${contentType}`);
+        
+        // Invece di ritornare subito un errore, proviamo a fare un'altra richiesta
+        // con più contenuti nell'header per evitare risposte HTML
+        try {
+          const retryOptions = {
+            ...options,
+            headers: {
+              ...options.headers,
+              'X-Requested-With': 'XMLHttpRequest',
+              'Accept': 'application/json'
+            }
+          };
+          
+          const retryResponse = await fetch(urlWithTimestamp, retryOptions);
+          const retryContentType = retryResponse.headers.get("content-type");
+          
+          if (retryContentType && retryContentType.indexOf("application/json") !== -1) {
+            // Se il retry è riuscito, continuiamo con questa risposta
+            const data = await retryResponse.json();
+            return {
+              success: true,
+              data
+            };
+          }
+        } catch (retryError) {
+          console.error('Errore nel tentativo di retry:', retryError);
+        }
         
         // In ambiente di sviluppo, simuliamo una risposta di successo per alcune chiamate
         if (endpoint === '/ping') {
@@ -308,7 +334,7 @@ export const reservationsApi = {
 };
 
 /**
- * API per le attività di pulizia
+ * API per le attività di pulizia con supporto migliorato per batch
  */
 export const cleaningApi = {
   getAll: async () => {
@@ -329,6 +355,11 @@ export const cleaningApi = {
   
   delete: async (id: string) => {
     return fetchApi(`/cleaning/${id}`, 'DELETE');
+  },
+  
+  // Nuovo metodo per il salvataggio batch
+  saveBatch: async (tasks: any[]) => {
+    return fetchApi('/cleaning/batch', 'POST', tasks);
   }
 };
 

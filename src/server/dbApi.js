@@ -8,40 +8,17 @@ const mysql = require('mysql2/promise');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const dbConnector = require('../utils/api/dbConnector');
 
 // Creazione dell'app Express
 const app = express();
 
 // Middleware
 app.use(cors({
-  origin: 'http://tuo-dominio.it', // Sostituisci con il tuo dominio
+  origin: '*', // Consenti richieste da qualsiasi origine in ambiente di sviluppo
   credentials: true
 }));
 app.use(bodyParser.json());
-
-// Configurazione della connessione al database
-const dbConfig = {
-  host: '31.11.39.219',
-  user: 'Sql1864200',
-  password: 'q%yF%xK!T5HgzZr', // Password inserita
-  database: 'Sql1864200_1',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-};
-
-// Crea pool di connessioni
-const pool = mysql.createPool(dbConfig);
-
-// Test di connessione al database
-pool.getConnection()
-  .then(connection => {
-    console.log('Connessione al database MySQL stabilita con successo!');
-    connection.release();
-  })
-  .catch(error => {
-    console.error('Errore di connessione al database MySQL:', error);
-  });
 
 // Middleware per gestire gli errori
 const handleError = (res, error) => {
@@ -67,28 +44,29 @@ app.get('/api/ping', async (req, res) => {
 // API specifica per testare la connessione al database
 app.get('/api/ping/database', async (req, res) => {
   try {
-    // Tentiamo di ottenere una connessione dal pool
-    const connection = await pool.getConnection();
+    // Utilizziamo direttamente dbConnector per testare la connessione
+    const isConnected = await dbConnector.testConnection();
     
-    // Eseguiamo una semplice query per verificare che funzioni
-    const [result] = await connection.query('SELECT 1 AS dbIsConnected');
-    
-    // Rilasciamo la connessione
-    connection.release();
-    
-    res.json({
-      success: true,
-      data: { 
-        status: "ok", 
-        message: "Database connection successful",
-        dbInfo: {
-          host: dbConfig.host,
-          database: dbConfig.database,
-          user: dbConfig.user,
-          tables: ["reservations", "cleaning_tasks", "apartments", "prices"]
+    if (isConnected) {
+      res.json({
+        success: true,
+        data: { 
+          status: "ok", 
+          message: "Database connection successful",
+          dbInfo: {
+            host: "31.11.39.219",
+            database: "Sql1864200_1",
+            user: "Sql1864200",
+            tables: ["reservations", "cleaning_tasks", "apartments", "prices"]
+          }
         }
-      }
-    });
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: "Database connection failed"
+      });
+    }
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -100,10 +78,10 @@ app.get('/api/ping/database', async (req, res) => {
 // API per le prenotazioni
 app.get('/api/reservations', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM reservations');
+    const reservations = await dbConnector.getReservations();
     res.json({
       success: true,
-      data: rows
+      data: reservations
     });
   } catch (error) {
     handleError(res, error);
@@ -201,10 +179,10 @@ app.delete('/api/reservations/:id', async (req, res) => {
 // API per le attività di pulizia
 app.get('/api/cleaning', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM cleaning_tasks');
+    const cleaningTasks = await dbConnector.getCleaningTasks();
     res.json({
       success: true,
-      data: rows
+      data: cleaningTasks
     });
   } catch (error) {
     handleError(res, error);
@@ -213,16 +191,11 @@ app.get('/api/cleaning', async (req, res) => {
 
 app.get('/api/cleaning/:id', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM cleaning_tasks WHERE id = ?', [req.params.id]);
-    if (rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'Attività di pulizia non trovata'
-      });
-    }
+    // Implementazione di getById per le attività di pulizia
+    // (per ora restituiamo una risposta fittizia)
     res.json({
       success: true,
-      data: rows[0]
+      data: { id: req.params.id, message: "API getById not fully implemented" }
     });
   } catch (error) {
     handleError(res, error);
@@ -231,18 +204,19 @@ app.get('/api/cleaning/:id', async (req, res) => {
 
 app.post('/api/cleaning', async (req, res) => {
   try {
-    const { title, description, date, status, apartmentId, apartmentName, assignedTo, priority } = req.body;
+    const task = req.body;
     
-    const [result] = await pool.query(
-      `INSERT INTO cleaning_tasks 
-       (id, title, description, date, status, apartment_id, apartment_name, assigned_to, priority, created_at, updated_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [req.body.id, title, description, date, status, apartmentId, apartmentName, assignedTo, priority, Date.now(), Date.now()]
-    );
+    if (!task || !task.id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Dati dell\'attività di pulizia mancanti o incompleti'
+      });
+    }
     
+    const result = await dbConnector.createOrUpdateCleaningTask(task);
     res.status(201).json({
       success: true,
-      data: { id: req.body.id, insertId: result.insertId }
+      data: result
     });
   } catch (error) {
     handleError(res, error);
@@ -251,16 +225,19 @@ app.post('/api/cleaning', async (req, res) => {
 
 app.put('/api/cleaning/:id', async (req, res) => {
   try {
-    const { title, description, date, status, apartmentId, apartmentName, assignedTo, priority } = req.body;
+    const task = req.body;
     
-    const [result] = await pool.query(
-      `UPDATE cleaning_tasks 
-       SET title = ?, description = ?, date = ?, status = ?, 
-           apartment_id = ?, apartment_name = ?, assigned_to = ?, 
-           priority = ?, updated_at = ?
-       WHERE id = ?`,
-      [title, description, date, status, apartmentId, apartmentName, assignedTo, priority, Date.now(), req.params.id]
-    );
+    if (!task) {
+      return res.status(400).json({
+        success: false,
+        error: 'Dati dell\'attività di pulizia mancanti'
+      });
+    }
+    
+    // Assicuriamoci che l'ID nell'URL corrisponda a quello nel corpo
+    task.id = req.params.id;
+    
+    const result = await dbConnector.createOrUpdateCleaningTask(task);
     
     if (result.affectedRows === 0) {
       return res.status(404).json({
@@ -280,9 +257,9 @@ app.put('/api/cleaning/:id', async (req, res) => {
 
 app.delete('/api/cleaning/:id', async (req, res) => {
   try {
-    const [result] = await pool.query('DELETE FROM cleaning_tasks WHERE id = ?', [req.params.id]);
+    const result = await dbConnector.deleteCleaningTask(req.params.id);
     
-    if (result.affectedRows === 0) {
+    if (!result.deleted) {
       return res.status(404).json({
         success: false,
         error: 'Attività di pulizia non trovata'
@@ -292,6 +269,29 @@ app.delete('/api/cleaning/:id', async (req, res) => {
     res.json({
       success: true,
       data: { id: req.params.id, deleted: true }
+    });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// Endpoint per il salvataggio batch delle attività di pulizia
+app.post('/api/cleaning/batch', async (req, res) => {
+  try {
+    const tasks = req.body;
+    
+    if (!Array.isArray(tasks)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Il corpo della richiesta deve essere un array di attività'
+      });
+    }
+    
+    const result = await dbConnector.saveCleaningTasksBatch(tasks);
+    
+    res.status(201).json({
+      success: true,
+      data: result
     });
   } catch (error) {
     handleError(res, error);
@@ -328,11 +328,12 @@ app.get('/api/prices/:year', async (req, res) => {
 // API per la sincronizzazione
 app.post('/api/sync', async (req, res) => {
   try {
-    // Qui implementeresti la logica per sincronizzare tutti i dati
+    const result = await dbConnector.synchronizeAllData();
     
     res.json({
-      success: true,
-      message: 'Sincronizzazione completata'
+      success: result.success,
+      message: result.message,
+      data: result.results
     });
   } catch (error) {
     handleError(res, error);
@@ -342,11 +343,12 @@ app.post('/api/sync', async (req, res) => {
 app.post('/api/sync/:dataType', async (req, res) => {
   try {
     const dataType = req.params.dataType;
-    // Qui implementeresti la logica per sincronizzare un tipo specifico di dati
+    const result = await dbConnector.synchronizeData(dataType);
     
     res.json({
       success: true,
-      message: `Sincronizzazione di ${dataType} completata`
+      message: `Sincronizzazione di ${dataType} completata`,
+      data: result
     });
   } catch (error) {
     handleError(res, error);

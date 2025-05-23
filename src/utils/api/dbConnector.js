@@ -1,4 +1,3 @@
-
 /**
  * Connettore MySQL per un'implementazione backend
  * 
@@ -281,13 +280,17 @@ async function deleteReservation(id) {
 }
 
 /**
- * Funzione per recuperare le attività di pulizia
+ * Funzione per recuperare le attività di pulizia con gestione errori migliorata
  */
 async function getCleaningTasks() {
   let connection;
   try {
     connection = await pool.getConnection();
     
+    // Prima verifichiamo che la tabella esista, se non esiste la creiamo
+    await ensureCleaningTasksTableExists(connection);
+    
+    // Query con ordinamento per data
     const [rows] = await connection.query(`
       SELECT * FROM cleaning_tasks
       ORDER BY date ASC
@@ -297,16 +300,229 @@ async function getCleaningTasks() {
     return rows.map(row => ({
       id: row.id,
       apartmentId: row.apartment_id,
+      apartmentName: row.apartment_name,
       date: row.date,
       status: row.status,
       notes: row.notes,
       assignedTo: row.assigned_to,
+      title: row.title || '',
+      description: row.description || '',
+      priority: row.priority || 'normal',
       lastUpdated: Number(row.last_updated) || Date.now(),
-      syncId: row.sync_id,
-      deviceId: row.device_id
+      syncId: row.sync_id || '',
+      deviceId: row.device_id || ''
     }));
   } catch (error) {
     console.error('Errore nel recupero delle attività di pulizia:', error);
+    throw error;
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+/**
+ * Funzione per assicurarsi che la tabella cleaning_tasks esista
+ */
+async function ensureCleaningTasksTableExists(connection) {
+  try {
+    await connection.query(`
+      CREATE TABLE IF NOT EXISTS cleaning_tasks (
+        id VARCHAR(36) PRIMARY KEY,
+        apartment_id VARCHAR(100) NOT NULL,
+        apartment_name VARCHAR(255),
+        date DATE NOT NULL,
+        status VARCHAR(20) NOT NULL,
+        notes TEXT,
+        assigned_to VARCHAR(100),
+        title VARCHAR(255),
+        description TEXT,
+        priority VARCHAR(20),
+        last_updated BIGINT,
+        sync_id VARCHAR(100),
+        device_id VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('Tabella cleaning_tasks verificata/creata');
+  } catch (error) {
+    console.error('Errore nel verificare/creare la tabella cleaning_tasks:', error);
+    throw error;
+  }
+}
+
+/**
+ * Funzione per salvare un'attività di pulizia
+ */
+async function createOrUpdateCleaningTask(task) {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    
+    // Verifichiamo che la tabella esista
+    await ensureCleaningTasksTableExists(connection);
+    
+    const {
+      id,
+      apartmentId,
+      apartmentName,
+      date,
+      status,
+      notes,
+      assignedTo,
+      title,
+      description,
+      priority,
+      lastUpdated,
+      syncId,
+      deviceId
+    } = task;
+    
+    // Verifichiamo se l'attività esiste già
+    const [existingRows] = await connection.query(
+      'SELECT id FROM cleaning_tasks WHERE id = ?',
+      [id]
+    );
+    
+    if (existingRows.length > 0) {
+      // Aggiornamento
+      const [result] = await connection.query(
+        `UPDATE cleaning_tasks 
+         SET apartment_id = ?, apartment_name = ?, date = ?, status = ?, 
+             notes = ?, assigned_to = ?, title = ?, description = ?,
+             priority = ?, last_updated = ?, sync_id = ?, device_id = ?
+         WHERE id = ?`,
+        [
+          apartmentId,
+          apartmentName,
+          date,
+          status,
+          notes,
+          assignedTo,
+          title || '',
+          description || '',
+          priority || 'normal',
+          lastUpdated || Date.now(),
+          syncId || '',
+          deviceId || '',
+          id
+        ]
+      );
+      
+      return { id, updated: true, affectedRows: result.affectedRows };
+    } else {
+      // Inserimento
+      const [result] = await connection.query(
+        `INSERT INTO cleaning_tasks 
+         (id, apartment_id, apartment_name, date, status, notes, assigned_to, 
+          title, description, priority, last_updated, sync_id, device_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          apartmentId,
+          apartmentName,
+          date,
+          status,
+          notes,
+          assignedTo,
+          title || '',
+          description || '',
+          priority || 'normal',
+          lastUpdated || Date.now(),
+          syncId || '',
+          deviceId || ''
+        ]
+      );
+      
+      return { id, created: true, affectedRows: result.affectedRows };
+    }
+  } catch (error) {
+    console.error(`Errore nel salvare l'attività di pulizia ${task.id}:`, error);
+    throw error;
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+/**
+ * Funzione per eliminare un'attività di pulizia
+ */
+async function deleteCleaningTask(id) {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    
+    const [result] = await connection.query(
+      'DELETE FROM cleaning_tasks WHERE id = ?',
+      [id]
+    );
+    
+    return { id, deleted: result.affectedRows > 0 };
+  } catch (error) {
+    console.error(`Errore nell'eliminazione dell'attività ${id}:`, error);
+    throw error;
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+/**
+ * Funzione per salvare più attività di pulizia in batch
+ */
+async function saveCleaningTasksBatch(tasks) {
+  if (!Array.isArray(tasks) || tasks.length === 0) {
+    return { success: true, message: 'Nessuna attività da salvare' };
+  }
+  
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    
+    // Verifichiamo che la tabella esista
+    await ensureCleaningTasksTableExists(connection);
+    
+    // Iniziamo una transazione
+    await connection.beginTransaction();
+    
+    let successCount = 0;
+    const results = [];
+    
+    for (const task of tasks) {
+      try {
+        const result = await createOrUpdateCleaningTask(task);
+        results.push(result);
+        successCount++;
+      } catch (taskError) {
+        console.error(`Errore nel salvare attività ${task.id}:`, taskError);
+        results.push({ id: task.id, error: taskError.message });
+      }
+    }
+    
+    // Se almeno un'attività è stata salvata con successo, committiamo
+    if (successCount > 0) {
+      await connection.commit();
+      return { 
+        success: true, 
+        message: `${successCount}/${tasks.length} attività salvate con successo`,
+        results
+      };
+    } else {
+      await connection.rollback();
+      return { 
+        success: false, 
+        message: 'Nessuna attività salvata con successo', 
+        results 
+      };
+    }
+  } catch (error) {
+    console.error('Errore nel salvataggio batch delle attività:', error);
+    if (connection) {
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error('Errore nel rollback:', rollbackError);
+      }
+    }
     throw error;
   } finally {
     if (connection) connection.release();
@@ -412,6 +628,9 @@ module.exports = {
   deleteReservation,
   createOrUpdateReservation,
   getCleaningTasks,
+  createOrUpdateCleaningTask,
+  deleteCleaningTask,
+  saveCleaningTasksBatch,
   getApartments,
   synchronizeData,
   synchronizeAllData
