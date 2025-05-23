@@ -16,7 +16,8 @@ export const reservationSchema = z.object({
   paymentMethod: z.enum(["cash", "bankTransfer", "creditCard"]),
   paymentStatus: z.enum(["notPaid", "deposit", "paid"]),
   depositAmount: z.coerce.number().min(0).optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  lastUpdated: z.number().optional() // Aggiungiamo campo per tracciare l'ultima modifica
 }).refine(data => {
   return data.endDate > data.startDate;
 }, {

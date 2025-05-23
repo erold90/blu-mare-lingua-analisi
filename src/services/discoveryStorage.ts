@@ -30,14 +30,23 @@ class DiscoveryStorage {
   private lastSyncTime: { [key: string]: number } = {};
   private pendingChanges: { [key: string]: boolean } = {};
   private sessionId: string;
+  private deviceId: string;
   
   constructor() {
     // Generate a unique session ID to identify this browser session
     this.sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    console.log(`DiscoveryStorage initialized with session ID: ${this.sessionId}`);
+    
+    // Get or create a persistent device ID
+    this.deviceId = localStorage.getItem('device_id') || `device_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    localStorage.setItem('device_id', this.deviceId);
+    
+    console.log(`DiscoveryStorage initialized with session ID: ${this.sessionId}, device ID: ${this.deviceId}`);
     
     // Setup event listeners for storage events from other tabs
     window.addEventListener("storage", this.handleStorageEvent);
+    
+    // Setup interval to check for updates regularly
+    setInterval(() => this.checkForServerUpdates(), 15000);
     
     // Check for synchronization on startup
     this.checkInitialSync();
@@ -70,6 +79,20 @@ class DiscoveryStorage {
   };
   
   /**
+   * Check for updates from the server
+   */
+  private async checkForServerUpdates() {
+    try {
+      // Check all keys for updates
+      for (const key of Object.values(STORAGE_KEYS)) {
+        await this.syncFromServer(key);
+      }
+    } catch (error) {
+      console.error("Error checking for server updates:", error);
+    }
+  }
+  
+  /**
    * Get an item from storage
    */
   getItem<T>(key: string): T | null {
@@ -92,6 +115,17 @@ class DiscoveryStorage {
    */
   setItem(key: string, value: any): void {
     try {
+      // Add timestamp to data if it's an array of objects
+      if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
+        value = value.map(item => {
+          // Only add timestamp if it doesn't exist or we're updating
+          if (!item.lastUpdated) {
+            return { ...item, lastUpdated: Date.now() };
+          }
+          return item;
+        });
+      }
+      
       // Convert value to string
       const stringValue = JSON.stringify(value);
       
@@ -194,7 +228,8 @@ class DiscoveryStorage {
       const syncData = {
         data,
         timestamp: Date.now(),
-        sessionId: this.sessionId
+        sessionId: this.sessionId,
+        deviceId: this.deviceId
       };
       
       localStorage.setItem(serverKey, JSON.stringify(syncData));
@@ -245,28 +280,80 @@ class DiscoveryStorage {
         const serverData = localStorage.getItem(serverKey);
         
         if (serverData) {
-          const { data, timestamp, sessionId } = JSON.parse(serverData);
+          const { data, timestamp, sessionId, deviceId } = JSON.parse(serverData);
           
-          // Only update if the data is from a different session and is newer than our last sync
-          if (sessionId !== this.sessionId && (!this.lastSyncTime[syncKey] || timestamp > this.lastSyncTime[syncKey])) {
-            console.log(`Found newer data for ${syncKey} from session ${sessionId}`);
+          // Only update if the data is from a different device or session and is newer than our last sync
+          const isFromDifferentDevice = deviceId !== this.deviceId;
+          const isFromDifferentSession = sessionId !== this.sessionId;
+          const isNewer = (!this.lastSyncTime[syncKey] || timestamp > this.lastSyncTime[syncKey]);
+          
+          if ((isFromDifferentDevice || isFromDifferentSession) && isNewer) {
+            console.log(`Found newer data for ${syncKey} from device ${deviceId}, session ${sessionId}`);
             
-            // Update local data
-            if (data !== null) {
+            // If it's an array, we need to merge carefully
+            if (Array.isArray(data)) {
+              const localData = this.getItem(syncKey);
+              
+              if (Array.isArray(localData) && localData.length > 0 && typeof localData[0] === 'object' && localData[0].id) {
+                // This is an array of objects with IDs, merge by ID
+                const mergedData = this.mergeArraysByLastUpdated(localData, data);
+                localStorage.setItem(this.getFullKey(syncKey), JSON.stringify(mergedData));
+              } else {
+                // Simple array, just replace
+                localStorage.setItem(this.getFullKey(syncKey), JSON.stringify(data));
+              }
+            } else if (data !== null) {
+              // For non-arrays, just update local data
               localStorage.setItem(this.getFullKey(syncKey), JSON.stringify(data));
-              
-              // Update last sync time
-              this.lastSyncTime[syncKey] = timestamp;
-              
-              // Notify listeners
-              this.dispatchStorageEvent(syncKey);
             }
+            
+            // Update last sync time
+            this.lastSyncTime[syncKey] = timestamp;
+            
+            // Notify listeners
+            this.dispatchStorageEvent(syncKey);
           }
         }
       } catch (error) {
         console.error(`Error syncing ${syncKey} from server:`, error);
       }
     }
+  }
+
+  /**
+   * Helper method to merge arrays by comparing lastUpdated timestamps
+   */
+  private mergeArraysByLastUpdated<T extends { id: string; lastUpdated?: number }>(
+    localArray: T[],
+    remoteArray: T[]
+  ): T[] {
+    // Create a map of all items by ID
+    const mergedMap = new Map<string, T>();
+    
+    // Add local items to map
+    localArray.forEach(item => {
+      mergedMap.set(item.id, item);
+    });
+    
+    // Add or update with remote items if they are newer
+    remoteArray.forEach(remoteItem => {
+      const localItem = mergedMap.get(remoteItem.id);
+      
+      if (!localItem) {
+        // Item doesn't exist locally, add it
+        mergedMap.set(remoteItem.id, remoteItem);
+      } else if (
+        remoteItem.lastUpdated && 
+        localItem.lastUpdated && 
+        remoteItem.lastUpdated > localItem.lastUpdated
+      ) {
+        // Remote item is newer, use it
+        mergedMap.set(remoteItem.id, remoteItem);
+      }
+    });
+    
+    // Convert map back to array
+    return Array.from(mergedMap.values());
   }
   
   /**
@@ -293,7 +380,7 @@ class DiscoveryStorage {
    * Force refresh data from server
    * This is useful for manually triggering a sync
    */
-  forceRefresh(): Promise<void> {
+  async forceRefresh(): Promise<void> {
     console.log("Forcing refresh of all data from server");
     return this.syncFromServer();
   }

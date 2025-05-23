@@ -29,6 +29,7 @@ const AdminReservations = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
   const [reservationToDelete, setReservationToDelete] = React.useState<string | null>(null);
   const [selectedReservation, setSelectedReservation] = React.useState<Reservation | null>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
   const isMobile = useIsMobile();
 
   // Find the reservation being edited
@@ -54,12 +55,23 @@ const AdminReservations = () => {
   };
 
   // Function to confirm deletion
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (reservationToDelete) {
-      deleteReservation(reservationToDelete);
-      toast.success("Prenotazione eliminata con successo!");
-      setIsDeleteDialogOpen(false);
-      setReservationToDelete(null);
+      setIsDeleting(true);
+      try {
+        deleteReservation(reservationToDelete);
+        toast.success("Prenotazione eliminata con successo!");
+        
+        // Forza sincronizzazione dopo eliminazione
+        await refreshData();
+      } catch (error) {
+        console.error("Error deleting reservation:", error);
+        toast.error("Errore durante l'eliminazione della prenotazione");
+      } finally {
+        setIsDeleting(false);
+        setIsDeleteDialogOpen(false);
+        setReservationToDelete(null);
+      }
     }
   };
 
@@ -75,7 +87,7 @@ const AdminReservations = () => {
   };
 
   // Function to handle form submission
-  const onSubmit = (data: ReservationFormData) => {
+  const onSubmit = async (data: ReservationFormData) => {
     try {
       if (editingId) {
         updateReservation({
@@ -113,11 +125,19 @@ const AdminReservations = () => {
         toast.success("Nuova prenotazione aggiunta con successo!");
       }
       setIsDialogOpen(false);
+      
+      // Forza sincronizzazione dopo salvataggio
+      await refreshData();
     } catch (error) {
       console.error("Error saving reservation:", error);
       toast.error("Errore nel salvare la prenotazione");
     }
   };
+
+  // Refresh data automatically on mount
+  React.useEffect(() => {
+    refreshData();
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -206,6 +226,7 @@ const AdminReservations = () => {
         isOpen={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
+        isDeleting={isDeleting}
       />
     </div>
   );

@@ -9,17 +9,20 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
 
 interface DeleteConfirmationDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
+  isDeleting?: boolean;
 }
 
 export const DeleteConfirmationDialog = ({ 
   isOpen, 
   onOpenChange, 
-  onConfirm 
+  onConfirm,
+  isDeleting = false
 }: DeleteConfirmationDialogProps) => {
   const isMobile = useIsMobile();
 
@@ -37,6 +40,7 @@ export const DeleteConfirmationDialog = ({
             variant="outline" 
             onClick={() => onOpenChange(false)}
             className={isMobile ? "w-full" : ""}
+            disabled={isDeleting}
           >
             Annulla
           </Button>
@@ -44,8 +48,19 @@ export const DeleteConfirmationDialog = ({
             variant="destructive" 
             onClick={onConfirm}
             className={isMobile ? "w-full" : ""}
+            disabled={isDeleting}
           >
-            Elimina
+            {isDeleting ? (
+              <div className="flex items-center">
+                <span className="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                Eliminazione...
+              </div>
+            ) : (
+              <>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Elimina
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

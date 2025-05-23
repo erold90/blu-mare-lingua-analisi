@@ -26,6 +26,7 @@ export interface Reservation {
   paymentStatus: "notPaid" | "deposit" | "paid";
   depositAmount?: number;
   notes?: string;
+  lastUpdated?: number; // Timestamp dell'ultima modifica
 }
 
 // Get apartments from the data file instead of hardcoded values
@@ -37,11 +38,11 @@ const defaultApartments: Apartment[] = apartments.map(apt => ({
 interface ReservationsContextType {
   reservations: Reservation[];
   apartments: Apartment[];
-  addReservation: (reservation: Omit<Reservation, "id">) => void;
+  addReservation: (reservation: Omit<Reservation, "id" | "lastUpdated">) => void;
   updateReservation: (reservation: Reservation) => void;
   deleteReservation: (id: string) => void;
   getApartmentAvailability: (apartmentId: string, startDate: Date, endDate: Date) => boolean;
-  refreshData: () => void;
+  refreshData: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -74,7 +75,7 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
   const refreshData = async () => {
     setIsLoading(true);
     try {
-      await discoveryStorage.syncFromServer(DISCOVERY_STORAGE_KEYS.RESERVATIONS);
+      await discoveryStorage.forceRefresh();
       toast.success("Dati sincronizzati correttamente");
       loadReservations();
     } catch (error) {
@@ -109,12 +110,13 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
     }
   }, [reservations, isLoading]);
   
-  const addReservation = (reservationData: Omit<Reservation, "id">) => {
+  const addReservation = (reservationData: Omit<Reservation, "id" | "lastUpdated">) => {
     const newReservation: Reservation = {
       ...reservationData,
       id: uuidv4(),
       startDate: new Date(reservationData.startDate).toISOString(),
-      endDate: new Date(reservationData.endDate).toISOString()
+      endDate: new Date(reservationData.endDate).toISOString(),
+      lastUpdated: Date.now()
     };
     
     setReservations(prev => [...prev, newReservation]);
@@ -124,7 +126,8 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
     const formatted: Reservation = {
       ...updatedReservation,
       startDate: new Date(updatedReservation.startDate).toISOString(),
-      endDate: new Date(updatedReservation.endDate).toISOString()
+      endDate: new Date(updatedReservation.endDate).toISOString(),
+      lastUpdated: Date.now()
     };
     
     setReservations(prev => 
