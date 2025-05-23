@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { Reservation, Apartment } from "@/hooks/useReservations";
 import { ReservationFormData, reservationSchema } from "./reservationSchema";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { DateRange } from "react-day-picker";
 import {
   Dialog,
   DialogContent,
@@ -136,6 +137,30 @@ export const ReservationFormDialog = ({
 
   const handleFormSubmit = (data: ReservationFormData) => {
     onSubmit(data);
+  };
+
+  // Handle date range selection
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    if (range?.from) {
+      form.setValue("startDate", range.from);
+    }
+    if (range?.to) {
+      form.setValue("endDate", range.to);
+    }
+  };
+
+  // Get current date range from form values
+  const getCurrentDateRange = (): DateRange | undefined => {
+    const startDate = form.watch("startDate");
+    const endDate = form.watch("endDate");
+    
+    if (startDate && endDate) {
+      return { from: startDate, to: endDate };
+    } else if (startDate) {
+      return { from: startDate, to: undefined };
+    }
+    
+    return undefined;
   };
 
   return (
@@ -299,95 +324,54 @@ export const ReservationFormDialog = ({
                 )}
               />
 
-              <div className={cn(
-                "grid gap-3",
-                "grid-cols-2"
-              )}>
-                <FormField
-                  control={form.control}
-                  name="startDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Check-in</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "pl-3 text-left font-normal text-sm",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "dd/MM/yyyy")
-                              ) : (
-                                <span>Seleziona data</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                              date < new Date(new Date().setHours(0, 0, 0, 0))
-                            }
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="endDate"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Check-out</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "pl-3 text-left font-normal text-sm",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "dd/MM/yyyy")
-                              ) : (
-                                <span>Seleziona data</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => {
-                              const startDate = form.getValues("startDate");
-                              return date <= startDate;
-                            }}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              {/* Date Range Picker */}
+              <FormItem className="flex flex-col">
+                <FormLabel>Periodo Soggiorno</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full pl-3 text-left font-normal",
+                          !getCurrentDateRange() && "text-muted-foreground"
+                        )}
+                      >
+                        {getCurrentDateRange()?.from ? (
+                          getCurrentDateRange()?.to ? (
+                            <>
+                              {format(getCurrentDateRange()!.from!, "dd/MM/yyyy")} -{" "}
+                              {format(getCurrentDateRange()!.to!, "dd/MM/yyyy")}
+                            </>
+                          ) : (
+                            format(getCurrentDateRange()!.from!, "dd/MM/yyyy")
+                          )
+                        ) : (
+                          <span>Seleziona check-in e check-out</span>
+                        )}
+                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={getCurrentDateRange()?.from}
+                      selected={getCurrentDateRange()}
+                      onSelect={handleDateRangeChange}
+                      numberOfMonths={1}
+                      disabled={(date) =>
+                        date < new Date(new Date().setHours(0, 0, 0, 0))
+                      }
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormDescription className="text-xs">
+                  Seleziona prima la data di check-in, poi quella di check-out
+                </FormDescription>
+              </FormItem>
             </div>
 
             {/* Payment Details */}
