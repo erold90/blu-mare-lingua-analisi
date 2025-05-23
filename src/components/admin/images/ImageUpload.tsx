@@ -62,9 +62,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   };
 
   const handleAltTextChange = (index: number, value: string) => {
+    const fileKey = `file-${index}`;
     setAltTexts(prev => ({
       ...prev,
-      [`file-${index}`]: value
+      [fileKey]: value
     }));
   };
 
