@@ -8,7 +8,7 @@ import ApartmentSelectionStep from "@/components/quote/ApartmentSelectionStep";
 import ServicesStep from "@/components/quote/ServicesStep";
 import SummaryStep from "@/components/quote/summary/SummaryStep";
 import GroupDialog from "@/components/quote/GroupDialog";
-import ApartmentDialog from "@/components/quote/ApartmentDialog";
+import { ApartmentDialog } from "@/components/quote/ApartmentDialog";
 import ProgressBar from "@/components/quote/ProgressBar";
 import { Form } from "@/components/ui/form";
 
