@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { useActivityLog } from "./hooks/useActivityLog";
 import { useEffect } from "react";
 
@@ -62,22 +62,20 @@ function App() {
           <ActivityLogProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route element={<AppLayout />}>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/appartamenti" element={<ApartmentsPage />} />
-                  <Route path="/preventivo" element={<RequestQuotePage />} />
-                  <Route path="/area-riservata/*" element={<ReservedAreaPage />} />
-                  <Route path="/contatti" element={<ContactsPage />} />
-                  <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
-                  <Route path="/cookie-policy" element={<CookiePolicyPage />} />
-                </Route>
-                <Route path="/api-test" element={<ApiTestPage />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <PageViewTracker />
-            </BrowserRouter>
+            <Routes>
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/appartamenti" element={<ApartmentsPage />} />
+                <Route path="/preventivo" element={<RequestQuotePage />} />
+                <Route path="/area-riservata/*" element={<ReservedAreaPage />} />
+                <Route path="/contatti" element={<ContactsPage />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+              </Route>
+              <Route path="/api-test" element={<ApiTestPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <PageViewTracker />
           </ActivityLogProvider>
         </SettingsProvider>
       </TooltipProvider>
