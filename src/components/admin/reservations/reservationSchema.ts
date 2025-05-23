@@ -17,6 +17,7 @@ export const reservationSchema = z.object({
   paymentStatus: z.enum(["notPaid", "deposit", "paid"]),
   depositAmount: z.coerce.number().min(0).optional(),
   notes: z.string().optional(),
+  linenOption: z.enum(["standard", "extra", "deluxe"]).default("standard"),
   lastUpdated: z.number().optional(), // Campo per tracciare l'ultima modifica
   syncId: z.string().optional(), // Identificativo univoco per sincronizzazione
   deviceId: z.string().optional() // Identificativo del dispositivo di origine

@@ -79,7 +79,8 @@ export const ReservationFormDialog = ({
       paymentMethod: initialData.paymentMethod,
       paymentStatus: initialData.paymentStatus,
       depositAmount: initialData.depositAmount || 0,
-      notes: initialData.notes
+      notes: initialData.notes,
+      linenOption: initialData.linenOption || "standard"
     } : {
       guestName: "",
       adults: 1,
@@ -93,7 +94,8 @@ export const ReservationFormDialog = ({
       paymentMethod: "cash",
       paymentStatus: "notPaid",
       depositAmount: 0,
-      notes: ""
+      notes: "",
+      linenOption: "standard"
     }
   });
 
@@ -105,7 +107,7 @@ export const ReservationFormDialog = ({
         guestName: initialData.guestName,
         adults: initialData.adults,
         children: initialData.children,
-        cribs: initialData.cribs,
+        cribs: initialData.cribs || 0,
         hasPets: initialData.hasPets,
         apartmentIds: initialData.apartmentIds,
         startDate: new Date(initialData.startDate),
@@ -114,7 +116,8 @@ export const ReservationFormDialog = ({
         paymentMethod: initialData.paymentMethod,
         paymentStatus: initialData.paymentStatus,
         depositAmount: initialData.depositAmount || 0,
-        notes: initialData.notes
+        notes: initialData.notes,
+        linenOption: initialData.linenOption || "standard"
       });
     } else {
       form.reset({
@@ -130,7 +133,8 @@ export const ReservationFormDialog = ({
         paymentMethod: "cash",
         paymentStatus: "notPaid",
         depositAmount: 0,
-        notes: ""
+        notes: "",
+        linenOption: "standard"
       });
     }
   }, [initialData, form]);
@@ -202,7 +206,7 @@ export const ReservationFormDialog = ({
 
               <div className={cn(
                 "grid gap-2",
-                isMobile ? "grid-cols-3" : "grid-cols-3"
+                isMobile ? "grid-cols-2" : "grid-cols-4"
               )}>
                 <FormField
                   control={form.control}
@@ -214,6 +218,8 @@ export const ReservationFormDialog = ({
                         <Input 
                           type="number"
                           min={1}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           {...field}
                         />
                       </FormControl>
@@ -232,6 +238,8 @@ export const ReservationFormDialog = ({
                         <Input 
                           type="number" 
                           min={0}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           {...field}
                         />
                       </FormControl>
@@ -250,9 +258,38 @@ export const ReservationFormDialog = ({
                         <Input 
                           type="number" 
                           min={0}
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           {...field}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="linenOption"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Biancheria</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="text-sm">
+                            <SelectValue placeholder="Biancheria" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="standard">Standard</SelectItem>
+                          <SelectItem value="extra">Extra</SelectItem>
+                          <SelectItem value="deluxe">Deluxe</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -324,7 +361,7 @@ export const ReservationFormDialog = ({
                 )}
               />
 
-              {/* Date Range Selector - Updated to a single calendar with range selection */}
+              {/* Date Range Selector - Calendar with range selection */}
               <FormField
                 control={form.control}
                 name="startDate"
@@ -348,14 +385,14 @@ export const ReservationFormDialog = ({
                         )}
                       </div>
                       
-                      <div className="border rounded-lg shadow-sm w-full max-w-[300px] mx-auto">
+                      <div className="border rounded-lg shadow-sm w-full max-w-[260px] mx-auto">
                         <Calendar
                           mode="range"
                           selected={getCurrentDateRange()}
                           onSelect={handleDateRangeChange}
                           numberOfMonths={1}
                           disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                          className="rounded-md max-w-full"
+                          className="rounded-md max-w-full scale-90 origin-top"
                         />
                       </div>
                     </div>
@@ -377,12 +414,19 @@ export const ReservationFormDialog = ({
                     <FormLabel>Prezzo Totale (€)</FormLabel>
                     <FormControl>
                       <Input 
-                        type="number" 
-                        min={0} 
-                        step="0.01"
+                        type="text"
                         inputMode="decimal"
-                        pattern="[0-9]*[.,]?[0-9]*"
-                        {...field}
+                        placeholder="0.00"
+                        onChange={(e) => {
+                          // Permetti solo numeri e punto/virgola
+                          const value = e.target.value.replace(/[^\d.,]/g, '');
+                          // Sostituisci virgola con punto
+                          const normalizedValue = value.replace(',', '.');
+                          // Converti in numero
+                          const numericValue = parseFloat(normalizedValue) || 0;
+                          field.onChange(numericValue);
+                        }}
+                        value={field.value.toString()}
                       />
                     </FormControl>
                     <FormMessage />
@@ -461,13 +505,19 @@ export const ReservationFormDialog = ({
                       <FormLabel>Importo Caparra (€)</FormLabel>
                       <FormControl>
                         <Input 
-                          type="number" 
-                          min={0} 
-                          max={form.getValues("finalPrice")}
-                          step="0.01"
+                          type="text"
                           inputMode="decimal"
-                          pattern="[0-9]*[.,]?[0-9]*"
-                          {...field}
+                          placeholder="0.00"
+                          onChange={(e) => {
+                            // Permetti solo numeri e punto/virgola
+                            const value = e.target.value.replace(/[^\d.,]/g, '');
+                            // Sostituisci virgola con punto
+                            const normalizedValue = value.replace(',', '.');
+                            // Converti in numero
+                            const numericValue = parseFloat(normalizedValue) || 0;
+                            field.onChange(numericValue);
+                          }}
+                          value={field.value.toString()}
                         />
                       </FormControl>
                       <FormMessage />
@@ -486,7 +536,7 @@ export const ReservationFormDialog = ({
                   <FormLabel>Note</FormLabel>
                   <FormControl>
                     <textarea 
-                      className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                       {...field}
                       placeholder="Note aggiuntive..."
                     />
