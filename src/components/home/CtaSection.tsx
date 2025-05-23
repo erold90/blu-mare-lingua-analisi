@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export const CtaSection = () => {
+  // Aggiungo un console.log per verificare che il componente venga renderizzato correttamente
+  console.log("🔍 CtaSection rendered with link to /preventivo");
+  
   return (
     <div className="py-16 md:py-24 bg-white">
       <div className="container px-6">
