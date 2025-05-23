@@ -12,7 +12,7 @@ const mysql = require('mysql2/promise');
 const pool = mysql.createPool({
   host: '31.11.39.219',
   user: 'Sql1864200',
-  password: 'TUA_PASSWORD_QUI', // Da inserire in modo sicuro in produzione
+  password: 'q%yF%xK!T5HgzZr', // Password inserita
   database: 'Sql1864200_1',
   waitForConnections: true,
   connectionLimit: 10,

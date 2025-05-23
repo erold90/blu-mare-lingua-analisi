@@ -24,7 +24,7 @@ app.use(bodyParser.json());
 const dbConfig = {
   host: '31.11.39.219',
   user: 'Sql1864200',
-  password: 'TUA_PASSWORD_QUI', // DA SOSTITUIRE con la password reale in modo sicuro
+  password: 'q%yF%xK!T5HgzZr', // Password inserita
   database: 'Sql1864200_1',
   waitForConnections: true,
   connectionLimit: 10,
