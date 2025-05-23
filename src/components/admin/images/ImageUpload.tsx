@@ -23,8 +23,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   maxFiles = 10,
   className = ""
 }) => {
-  console.log('=== ImageUpload Component Rendered ===');
-  console.log('ImageUpload props:', { category, apartmentId, maxFiles, className });
+  console.log('🔥🔥🔥 ImageUpload Component Rendered 🔥🔥🔥');
+  console.log('🔥 ImageUpload props:', { category, apartmentId, maxFiles, className });
 
   const {
     filesWithAltText,
@@ -41,14 +41,14 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     maxFiles
   });
 
-  console.log('ImageUpload state:', { 
+  console.log('🔥 ImageUpload state:', { 
     filesCount: filesWithAltText.length, 
     uploading, 
     errorsCount: uploadErrors.length 
   });
 
   const handleDropWrapper = (files: File[]) => {
-    console.log('ImageUpload - handleDropWrapper called with:', files);
+    console.log('🔥 ImageUpload - handleDropWrapper called with:', files.map(f => f.name));
     handleDrop(files);
   };
 
@@ -84,7 +84,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             <div className="flex justify-end mt-4">
               <Button 
                 onClick={() => {
-                  console.log('Upload button clicked!');
+                  console.log('🔥 Upload button clicked!');
                   handleUpload();
                 }} 
                 disabled={uploading}

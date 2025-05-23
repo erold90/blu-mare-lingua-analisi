@@ -17,6 +17,8 @@ export const useImageUpload = ({
   onUploadSuccess,
   maxFiles
 }: UseImageUploadProps) => {
+  console.log('🔥 useImageUpload hook initialized with:', { category, apartmentId, maxFiles });
+  
   const [filesWithAltText, setFilesWithAltText] = useState<FileWithAltText[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadErrors, setUploadErrors] = useState<string[]>([]);
@@ -31,31 +33,60 @@ export const useImageUpload = ({
   }, [filesWithAltText]);
 
   const handleDrop = useCallback((acceptedFiles: File[]) => {
-    console.log("=== FILES DROPPED ===");
-    console.log("Files dropped:", acceptedFiles.map(f => ({ name: f.name, size: f.size, type: f.type })));
+    console.log("🔥🔥🔥 FILES DROPPED - useImageUpload handleDrop called! 🔥🔥🔥");
+    console.log("🔥 acceptedFiles:", acceptedFiles);
+    console.log("🔥 acceptedFiles length:", acceptedFiles.length);
+    console.log("🔥 Files details:", acceptedFiles.map(f => ({ name: f.name, size: f.size, type: f.type })));
+    
+    if (acceptedFiles.length === 0) {
+      console.log("🔥 No files accepted - probably wrong format or size");
+      return;
+    }
     
     const validFiles = acceptedFiles.filter(file => {
+      console.log(`🔥 Validating file: ${file.name}, type: ${file.type}, size: ${file.size}`);
+      
       if (!file.type.startsWith('image/')) {
+        console.log(`🔥 Invalid file type for ${file.name}: ${file.type}`);
         toast.error(`${file.name} non è un'immagine valida`);
         return false;
       }
       if (file.size > 10 * 1024 * 1024) {
+        console.log(`🔥 File too large: ${file.name}, size: ${file.size}`);
         toast.error(`${file.name} è troppo grande (max 10MB)`);
         return false;
       }
+      console.log(`🔥 File ${file.name} is valid`);
       return true;
     });
 
-    console.log("Valid files:", validFiles.map(f => ({ name: f.name, size: f.size })));
+    console.log("🔥 Valid files after filtering:", validFiles.map(f => ({ name: f.name, size: f.size })));
 
-    const newFilesWithAltText = validFiles.map(file => ({
-      file,
-      altText: '',
-      preview: URL.createObjectURL(file)
-    }));
+    if (validFiles.length === 0) {
+      console.log("🔥 No valid files after filtering");
+      return;
+    }
 
-    setFilesWithAltText(prev => [...prev, ...newFilesWithAltText].slice(0, maxFiles));
+    const newFilesWithAltText = validFiles.map(file => {
+      const preview = URL.createObjectURL(file);
+      console.log(`🔥 Created preview URL for ${file.name}: ${preview}`);
+      return {
+        file,
+        altText: '',
+        preview
+      };
+    });
+
+    console.log("🔥 New files with alt text created:", newFilesWithAltText.length);
+
+    setFilesWithAltText(prev => {
+      const updated = [...prev, ...newFilesWithAltText].slice(0, maxFiles);
+      console.log("🔥 Updated filesWithAltText, new length:", updated.length);
+      return updated;
+    });
     setUploadErrors([]); // Clear previous errors
+    
+    console.log("🔥 handleDrop completed successfully");
   }, [maxFiles]);
 
   const removeFile = (fileIndex: number) => {
