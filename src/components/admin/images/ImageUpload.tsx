@@ -17,6 +17,11 @@ interface ImageUploadProps {
   className?: string;
 }
 
+interface FileWithAltText {
+  file: File;
+  altText: string;
+}
+
 export const ImageUpload: React.FC<ImageUploadProps> = ({
   category,
   apartmentId,
@@ -24,9 +29,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   maxFiles = 10,
   className = ""
 }) => {
-  const [selectedFiles, setSelectedFiles] = React.useState<File[]>([]);
+  const [filesWithAltText, setFilesWithAltText] = React.useState<FileWithAltText[]>([]);
   const [uploading, setUploading] = React.useState(false);
-  const [altTexts, setAltTexts] = React.useState<{ [key: string]: string }>({});
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const validFiles = acceptedFiles.filter(file => {
@@ -34,14 +38,19 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         toast.error(`${file.name} non è un'immagine valida`);
         return false;
       }
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      if (file.size > 10 * 1024 * 1024) {
         toast.error(`${file.name} è troppo grande (max 10MB)`);
         return false;
       }
       return true;
     });
 
-    setSelectedFiles(prev => [...prev, ...validFiles].slice(0, maxFiles));
+    const newFilesWithAltText = validFiles.map(file => ({
+      file,
+      altText: ''
+    }));
+
+    setFilesWithAltText(prev => [...prev, ...newFilesWithAltText].slice(0, maxFiles));
   }, [maxFiles]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -54,24 +63,19 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   });
 
   const removeFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-    setAltTexts(prev => {
-      const newAltTexts = { ...prev };
-      delete newAltTexts[`file-${index}`];
-      return newAltTexts;
-    });
+    setFilesWithAltText(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleAltTextChange = (index: number, value: string) => {
-    const fileKey = `file-${index}`;
-    setAltTexts(prev => ({
-      ...prev,
-      [fileKey]: value
-    }));
+    setFilesWithAltText(prev => 
+      prev.map((item, i) => 
+        i === index ? { ...item, altText: value } : item
+      )
+    );
   };
 
   const handleUpload = async () => {
-    if (selectedFiles.length === 0) {
+    if (filesWithAltText.length === 0) {
       toast.error("Seleziona almeno un'immagine");
       return;
     }
@@ -81,13 +85,12 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     try {
       const { imageService } = await import('@/services/imageService');
       
-      const uploadPromises = selectedFiles.map((file, index) => {
-        const fileKey = `file-${index}`;
+      const uploadPromises = filesWithAltText.map((fileData, index) => {
         return imageService.uploadImage({
           category,
           apartment_id: apartmentId,
-          file,
-          alt_text: altTexts[fileKey] || '',
+          file: fileData.file,
+          alt_text: fileData.altText || '',
           display_order: index
         });
       });
@@ -95,13 +98,12 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       const results = await Promise.all(uploadPromises);
       const successCount = results.filter(result => result !== null).length;
       
-      if (successCount === selectedFiles.length) {
+      if (successCount === filesWithAltText.length) {
         toast.success(`${successCount} immagini caricate con successo`);
-        setSelectedFiles([]);
-        setAltTexts({});
+        setFilesWithAltText([]);
         onUploadSuccess?.();
       } else {
-        toast.warning(`${successCount}/${selectedFiles.length} immagini caricate`);
+        toast.warning(`${successCount}/${filesWithAltText.length} immagini caricate`);
       }
     } catch (error) {
       console.error('Upload error:', error);
@@ -141,20 +143,20 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         </CardContent>
       </Card>
 
-      {selectedFiles.length > 0 && (
+      {filesWithAltText.length > 0 && (
         <Card>
           <CardContent className="pt-6">
-            <h3 className="font-medium mb-4">Immagini selezionate ({selectedFiles.length})</h3>
+            <h3 className="font-medium mb-4">Immagini selezionate ({filesWithAltText.length})</h3>
             <div className="space-y-4">
-              {selectedFiles.map((file, index) => (
+              {filesWithAltText.map((fileData, index) => (
                 <div key={index} className="flex items-start gap-4 p-3 border rounded-lg">
                   <div className="flex-shrink-0">
                     <ImageIcon className="h-12 w-12 text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{file.name}</p>
+                    <p className="text-sm font-medium truncate">{fileData.file.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB
+                      {(fileData.file.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                     <div className="mt-2">
                       <Label htmlFor={`alt-${index}`} className="text-xs">
@@ -162,7 +164,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                       </Label>
                       <Input
                         id={`alt-${index}`}
-                        value={altTexts[`file-${index}`] || ''}
+                        value={fileData.altText}
                         onChange={(e) => handleAltTextChange(index, e.target.value)}
                         placeholder="Descrizione dell'immagine..."
                         className="mt-1"
@@ -183,7 +185,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             </div>
             <div className="flex justify-end mt-4">
               <Button onClick={handleUpload} disabled={uploading}>
-                {uploading ? 'Caricamento...' : `Carica ${selectedFiles.length} immagini`}
+                {uploading ? 'Caricamento...' : `Carica ${filesWithAltText.length} immagini`}
               </Button>
             </div>
           </CardContent>
