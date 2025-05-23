@@ -2,6 +2,39 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { FormValues } from "@/utils/quoteFormSchema";
+import { Json } from "@/integrations/supabase/types";
+
+// Helper function to serialize dates in FormValues
+const serializeFormValues = (formValues: FormValues): any => {
+  const serialized = { ...formValues };
+  
+  // Convert Date objects to ISO strings for database storage
+  if (serialized.checkIn instanceof Date) {
+    serialized.checkIn = serialized.checkIn.toISOString();
+  }
+  
+  if (serialized.checkOut instanceof Date) {
+    serialized.checkOut = serialized.checkOut.toISOString();
+  }
+  
+  return serialized;
+};
+
+// Helper function to deserialize dates from database
+const deserializeFormValues = (dbFormValues: any): FormValues => {
+  const deserialized = { ...dbFormValues };
+  
+  // Convert ISO strings back to Date objects
+  if (typeof deserialized.checkIn === 'string') {
+    deserialized.checkIn = new Date(deserialized.checkIn);
+  }
+  
+  if (typeof deserialized.checkOut === 'string') {
+    deserialized.checkOut = new Date(deserialized.checkOut);
+  }
+  
+  return deserialized as FormValues;
+};
 
 export interface QuoteLog {
   id: string;
@@ -15,6 +48,15 @@ export interface SiteVisit {
   id: string;
   timestamp: string;
   page: string;
+}
+
+// Interface for database data
+interface DbQuoteLog {
+  id: string;
+  timestamp: string;
+  form_values: any;
+  step: number;
+  completed: boolean;
 }
 
 export function useSupabaseActivityLog() {
@@ -40,13 +82,14 @@ export function useSupabaseActivityLog() {
         return;
       }
       
-      const formattedLogs = data?.map(log => ({
+      // Convert database format to application format
+      const formattedLogs: QuoteLog[] = (data || []).map(log => ({
         id: log.id,
         timestamp: log.timestamp,
-        form_values: log.form_values,
+        form_values: deserializeFormValues(log.form_values),
         step: log.step,
         completed: log.completed
-      })) || [];
+      }));
       
       setQuoteLogs(formattedLogs);
     } catch (error) {
@@ -77,10 +120,11 @@ export function useSupabaseActivityLog() {
 
   const addQuoteLog = async (quoteData: Omit<QuoteLog, 'timestamp'> & { timestamp?: string }) => {
     try {
+      // Prepare data for database
       const logData = {
         id: quoteData.id,
         timestamp: quoteData.timestamp || new Date().toISOString(),
-        form_values: quoteData.form_values,
+        form_values: serializeFormValues(quoteData.form_values),
         step: quoteData.step,
         completed: quoteData.completed
       };
@@ -94,15 +138,21 @@ export function useSupabaseActivityLog() {
         return;
       }
 
-      // Update local state
+      // Update local state with deserialized form values
       setQuoteLogs(prev => {
         const existingIndex = prev.findIndex(log => log.id === quoteData.id);
+        const updatedQuoteData = {
+          ...quoteData,
+          timestamp: logData.timestamp,
+          form_values: quoteData.form_values // Keep the original FormValues object
+        };
+        
         if (existingIndex !== -1) {
           const updated = [...prev];
-          updated[existingIndex] = { ...quoteData, timestamp: logData.timestamp };
+          updated[existingIndex] = updatedQuoteData;
           return updated;
         } else {
-          return [{ ...quoteData, timestamp: logData.timestamp }, ...prev];
+          return [updatedQuoteData, ...prev];
         }
       });
     } catch (error) {
