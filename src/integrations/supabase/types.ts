@@ -195,6 +195,36 @@ export type Database = {
         }
         Relationships: []
       }
+      quote_logs: {
+        Row: {
+          completed: boolean
+          created_at: string
+          form_values: Json
+          id: string
+          step: number
+          timestamp: string
+          updated_at: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          form_values: Json
+          id: string
+          step: number
+          timestamp?: string
+          updated_at?: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          form_values?: Json
+          id?: string
+          step?: number
+          timestamp?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       reservations: {
         Row: {
           adults: number
@@ -255,6 +285,27 @@ export type Database = {
           payment_status?: string | null
           start_date?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      site_visits: {
+        Row: {
+          created_at: string
+          id: string
+          page: string
+          timestamp: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          page: string
+          timestamp?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          page?: string
+          timestamp?: string
         }
         Relationships: []
       }

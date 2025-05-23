@@ -14,7 +14,7 @@ import { it } from "date-fns/locale";
 import { useActivityLog } from "@/hooks/useActivityLog";
 import { useReservations } from "@/hooks/useReservations";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { CalendarIcon, Info, CalendarDays, Eye } from "lucide-react";
+import { CalendarIcon, Info, CalendarDays, Eye, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
@@ -23,7 +23,7 @@ import AdminLogDelete from "./AdminLogDelete";
 import { toast } from "sonner";
 
 const AdminLog = () => {
-  const { quoteLogs, siteVisits, getVisitsCount } = useActivityLog();
+  const { quoteLogs, siteVisits, getVisitsCount, loading, refreshData } = useActivityLog();
   const { apartments: apartmentsFromContext } = useReservations();
   const isMobile = useIsMobile();
   
@@ -33,6 +33,18 @@ const AdminLog = () => {
   });
   
   const [selectedQuote, setSelectedQuote] = useState<any | null>(null);
+  
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Caricamento dati...</span>
+        </div>
+      </div>
+    );
+  }
   
   // Filter quotes based on date range
   const filteredQuotes = useMemo(() => {
@@ -82,6 +94,13 @@ const AdminLog = () => {
   
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Log delle Attività</h2>
+        <Button onClick={refreshData} variant="outline" size="sm">
+          Aggiorna Dati
+        </Button>
+      </div>
+      
       <Tabs defaultValue="visits">
         <TabsList>
           <TabsTrigger value="visits">Visite</TabsTrigger>
@@ -89,6 +108,17 @@ const AdminLog = () => {
         </TabsList>
         
         <TabsContent value="visits" className="mt-6 space-y-6">
+          {/* Alert to show that the counter has been reset */}
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-green-600" />
+              <div>
+                <p className="text-green-800 font-medium">Contatore visite azzerato</p>
+                <p className="text-green-700 text-sm">Il sistema ora utilizza i dati reali dal database. I contatori sono stati azzerati e partiranno da zero.</p>
+              </div>
+            </div>
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardHeader className="pb-2">
@@ -109,7 +139,7 @@ const AdminLog = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{getVisitsCount('month')}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Totale di {siteVisits.length} visite dall'inizio
+                  Totale di {siteVisits.length} visite registrate
                 </p>
               </CardContent>
             </Card>
@@ -121,7 +151,7 @@ const AdminLog = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{getVisitsCount('year')}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Tendenza in {getVisitsCount('year') > getVisitsCount('month') * 6 ? 'crescita' : 'calo'}
+                  Dati salvati nel database Supabase
                 </p>
               </CardContent>
             </Card>
@@ -209,7 +239,7 @@ const AdminLog = () => {
                 <div>
                   <CardTitle>Preventivi richiesti</CardTitle>
                   <CardDescription>
-                    Elenco dei preventivi richiesti dai clienti
+                    Elenco dei preventivi salvati nel database Supabase
                   </CardDescription>
                 </div>
                 

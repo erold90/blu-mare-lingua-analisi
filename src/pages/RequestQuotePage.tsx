@@ -1,8 +1,8 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { useQuoteForm } from "@/hooks/useQuoteForm";
+import { usePageVisitTracker } from "@/hooks/usePageVisitTracker";
 import { apartments } from "@/data/apartments";
 
 // Import step components
@@ -19,6 +19,9 @@ import ProgressBar from "@/components/quote/ProgressBar";
 
 const RequestQuotePage = () => {
   console.log("🔍 RequestQuotePage: Loading quote form page");
+  
+  // Track page visits
+  usePageVisitTracker();
   
   try {
     const {
