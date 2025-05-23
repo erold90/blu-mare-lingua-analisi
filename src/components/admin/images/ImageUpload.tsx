@@ -86,7 +86,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       const { imageService } = await import('@/services/imageService');
       
       const uploadPromises = filesWithAltText.map((fileData, arrayIndex) => {
-        const displayOrder = Number(arrayIndex); // Assicuriamoci che sia un numero
+        const displayOrder = Number(arrayIndex);
         return imageService.uploadImage({
           category,
           apartment_id: apartmentId,
@@ -168,8 +168,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                         value={fileData.altText}
                         onChange={(e) => handleAltTextChange(fileIndex, e.target.value)}
                         placeholder="Descrizione dell'immagine..."
-                        className="mt-1"
-                        size="sm"
+                        className="mt-1 text-sm"
                       />
                     </div>
                   </div>
