@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -236,14 +235,31 @@ class ImageService {
    */
   async reorderImages(imageUpdates: { id: string; display_order: number }[]): Promise<boolean> {
     try {
-      const updates = imageUpdates.map(update => 
-        supabase
-          .from('images')
-          .update({ display_order: update.display_order })
-          .eq('id', update.id)
-      );
+      console.log('Starting reorder operation with updates:', imageUpdates);
       
-      await Promise.all(updates);
+      // Update each image's display_order individually to ensure they all succeed
+      const updatePromises = imageUpdates.map(async (update) => {
+        console.log(`Updating image ${update.id} to display_order ${update.display_order}`);
+        
+        const { error } = await supabase
+          .from('images')
+          .update({ 
+            display_order: update.display_order,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', update.id);
+          
+        if (error) {
+          console.error(`Error updating image ${update.id}:`, error);
+          throw error;
+        }
+        
+        return true;
+      });
+      
+      await Promise.all(updatePromises);
+      
+      console.log('All image orders updated successfully');
       toast.success("Ordine immagini aggiornato");
       return true;
     } catch (error) {

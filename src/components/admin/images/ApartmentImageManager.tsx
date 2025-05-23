@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ImageUpload } from './ImageUpload';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { Star, Trash2, GripVertical } from 'lucide-react';
 import { toast } from 'sonner';
 import { imageService, ImageRecord } from '@/services/imageService';
@@ -60,13 +60,30 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
     }
   };
 
-  const handleDragEnd = async (result: any) => {
-    if (!result.destination) return;
+  const handleDragEnd = async (result: DropResult) => {
+    console.log('Drag end result:', result);
+    
+    if (!result.destination) {
+      console.log('No destination, drag cancelled');
+      return;
+    }
 
+    const sourceIndex = result.source.index;
+    const destinationIndex = result.destination.index;
+
+    if (sourceIndex === destinationIndex) {
+      console.log('Same position, no change needed');
+      return;
+    }
+
+    console.log(`Moving image from position ${sourceIndex} to ${destinationIndex}`);
+
+    // Create a new array with reordered images
     const newImages = Array.from(images);
-    const [reorderedImage] = newImages.splice(result.source.index, 1);
-    newImages.splice(result.destination.index, 0, reorderedImage);
+    const [reorderedImage] = newImages.splice(sourceIndex, 1);
+    newImages.splice(destinationIndex, 0, reorderedImage);
 
+    // Update the local state immediately for better UX
     setImages(newImages);
 
     // Update display order in database
@@ -75,7 +92,22 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
       display_order: index
     }));
 
-    await imageService.reorderImages(updates);
+    console.log('Updating display orders:', updates);
+
+    try {
+      const success = await imageService.reorderImages(updates);
+      if (!success) {
+        // If the update failed, reload the images to restore the correct order
+        console.error('Failed to update image order, reloading...');
+        loadImages();
+      } else {
+        console.log('Image order updated successfully');
+      }
+    } catch (error) {
+      console.error('Error updating image order:', error);
+      // Reload images to restore the correct order
+      loadImages();
+    }
   };
 
   if (loading) {
@@ -117,22 +149,37 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
             </div>
           ) : (
             <DragDropContext onDragEnd={handleDragEnd}>
-              <Droppable droppableId="apartment-images">
-                {(provided) => (
+              <Droppable droppableId={`apartment-images-${apartmentId}`} direction="horizontal">
+                {(provided, snapshot) => (
                   <div
                     {...provided.droppableProps}
                     ref={provided.innerRef}
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                    className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 ${
+                      snapshot.isDraggingOver ? 'bg-blue-50 rounded-lg p-2' : ''
+                    }`}
                   >
                     {images.map((image, index) => (
-                      <Draggable key={image.id} draggableId={image.id} index={index}>
-                        {(provided) => (
+                      <Draggable 
+                        key={image.id} 
+                        draggableId={image.id} 
+                        index={index}
+                        isDragDisabled={loading}
+                      >
+                        {(provided, snapshot) => (
                           <div
                             ref={provided.innerRef}
                             {...provided.draggableProps}
-                            className="relative group"
+                            className={`relative group ${
+                              snapshot.isDragging ? 'rotate-3 shadow-lg' : ''
+                            }`}
+                            style={{
+                              ...provided.draggableProps.style,
+                              transform: snapshot.isDragging 
+                                ? `${provided.draggableProps.style?.transform} rotate(3deg)`
+                                : provided.draggableProps.style?.transform
+                            }}
                           >
-                            <Card className="overflow-hidden">
+                            <Card className="overflow-hidden border-2 border-transparent hover:border-blue-200 transition-colors">
                               <div className="relative aspect-video">
                                 <img
                                   src={imageService.getImageUrl(image.file_path)}
@@ -140,10 +187,13 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
                                   className="w-full h-full object-cover"
                                 />
                                 {image.is_cover && (
-                                  <Badge className="absolute top-2 left-2">
+                                  <Badge className="absolute top-2 left-2 bg-yellow-500">
                                     Copertina
                                   </Badge>
                                 )}
+                                <div className="absolute top-2 right-2 text-xs bg-black/50 text-white px-2 py-1 rounded">
+                                  #{index + 1}
+                                </div>
                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                                   <Button
                                     size="sm"
@@ -163,7 +213,7 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
                                 </div>
                                 <div
                                   {...provided.dragHandleProps}
-                                  className="absolute top-2 right-2 p-1 rounded bg-black/50 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="absolute bottom-2 right-2 p-2 rounded bg-black/70 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80"
                                 >
                                   <GripVertical className="h-4 w-4 text-white" />
                                 </div>
@@ -173,10 +223,13 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
                                   {image.file_name}
                                 </p>
                                 {image.alt_text && (
-                                  <p className="text-xs text-muted-foreground mt-1">
+                                  <p className="text-xs text-muted-foreground mt-1 truncate">
                                     {image.alt_text}
                                   </p>
                                 )}
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Ordine: {image.display_order}
+                                </p>
                               </CardContent>
                             </Card>
                           </div>
