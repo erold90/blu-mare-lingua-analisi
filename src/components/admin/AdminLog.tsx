@@ -343,29 +343,6 @@ const AdminLog = () => {
                                           </div>
                                         </div>
 
-                                        {/* Dati del cliente */}
-                                        <div>
-                                          <h3 className="font-medium mb-3">Dati del cliente</h3>
-                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                            <div>
-                                              <p className="text-muted-foreground">Nome</p>
-                                              <p>{selectedQuote.formValues.name || "Non specificato"}</p>
-                                            </div>
-                                            <div>
-                                              <p className="text-muted-foreground">Email</p>
-                                              <p>{selectedQuote.formValues.email || "Non specificata"}</p>
-                                            </div>
-                                            <div>
-                                              <p className="text-muted-foreground">Telefono</p>
-                                              <p>{selectedQuote.formValues.phone || "Non specificato"}</p>
-                                            </div>
-                                            <div>
-                                              <p className="text-muted-foreground">Città</p>
-                                              <p>{selectedQuote.formValues.city || "Non specificata"}</p>
-                                            </div>
-                                          </div>
-                                        </div>
-
                                         {/* Dettagli soggiorno */}
                                         <div>
                                           <h3 className="font-medium mb-3">Dettagli soggiorno</h3>
@@ -518,14 +495,6 @@ const AdminLog = () => {
                                             </div>
                                           </div>
                                         )}
-
-                                        {/* Dati tecnici */}
-                                        <div>
-                                          <h3 className="font-medium mb-3">Dati tecnici</h3>
-                                          <div className="bg-muted p-4 rounded-lg text-xs font-mono">
-                                            <pre>{JSON.stringify(selectedQuote, null, 2)}</pre>
-                                          </div>
-                                        </div>
                                       </div>
                                     )}
                                   </DialogContent>
