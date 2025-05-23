@@ -1,255 +1,197 @@
 
-import React, { useState, useEffect } from "react";
+import * as React from "react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Bed, Home, ArrowRight, ArrowLeft, Sun, ThermometerSun } from "lucide-react";
 import { Apartment } from "@/data/apartments";
-import { Bed, BedDouble, MapPin, Sun, ThermometerSun, ArrowLeft, ArrowRight } from "lucide-react";
-import { imageService } from "@/utils/imageService";
-import { Skeleton } from "@/components/ui/skeleton";
+import { imageService } from "@/utils/image";
 
 interface ApartmentDialogProps {
-  apartmentId: string | null;
-  apartments: Apartment[];
-  onOpenChange: (open: boolean) => void;
-  onSelect: (id: string) => void;
+  apartment: Apartment;
+  isSelected: boolean;
+  onToggle: () => void;
+  onClose?: () => void;
 }
 
-// Componente di immagine progressiva per caricamento ottimizzato
-const ProgressiveImage = ({ src, alt, className }: { src: string, alt: string, className?: string }) => {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [imgSrc, setImgSrc] = useState("/placeholder.svg");
-  
-  useEffect(() => {
-    if (src !== "/placeholder.svg") {
-      setIsLoaded(false);
-      
-      const img = new Image();
-      img.onload = () => {
-        setImgSrc(src);
-        setIsLoaded(true);
-      };
-      img.onerror = () => {
-        console.error(`Failed to load image: ${src}`);
-        setImgSrc("/placeholder.svg");
-        setIsLoaded(true);
-      };
-      img.src = src;
-    }
-  }, [src]);
-  
-  return (
-    <>
-      {!isLoaded && <Skeleton className={`${className} absolute inset-0`} />}
-      <img 
-        src={imgSrc}
-        alt={alt}
-        className={`${className} transition-opacity duration-300 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-        onError={(e) => {
-          console.error(`Error in image render: ${src}`);
-          e.currentTarget.src = "/placeholder.svg";
-        }}
-      />
-    </>
-  );
-};
-
-const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
-  apartmentId,
-  apartments,
-  onOpenChange,
-  onSelect
+export const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
+  apartment,
+  isSelected,
+  onToggle,
+  onClose
 }) => {
-  const apartment = apartments.find(apt => apt.id === apartmentId);
-  const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  useEffect(() => {
-    if (apartment) {
-      // Reimpostare l'indice delle immagini quando cambia l'appartamento
-      setCurrentImageIndex(0);
-      setIsLoading(true);
-      
-      // Controllo prima nella cache per un caricamento istantaneo
-      const cachedImages = imageService.getApartmentImagesFromCache(apartment.id);
-      if (cachedImages && cachedImages.length > 0) {
-        setGalleryImages(cachedImages);
-        setIsLoading(false);
-        
-        // Precarica le immagini successive in background per transizioni fluide
-        if (cachedImages.length > 1) {
-          imageService.preloadImages(cachedImages.slice(1, 4)); // Precarica le prossime 3
-        }
-        return;
-      }
-      
-      // Fallback alle immagini predefinite dell'appartamento se presenti
-      if (apartment.images && apartment.images.length > 0) {
-        setGalleryImages(apartment.images);
-        setIsLoading(false);
-      }
-      
-      // In background, cerca comunque le immagini più recenti senza bloccare l'interfaccia
-      imageService.scanApartmentImages(apartment.id).then(images => {
-        setIsLoading(false);
-        if (images && images.length > 0) {
-          setGalleryImages(images);
-          
-          // Precarica le prossime immagini
-          if (images.length > 1) {
-            imageService.preloadImages(images.slice(1, 4));
-          }
-        }
-      });
-    }
-  }, [apartment]);
-  
-  // Precarica l'immagine successiva quando cambia l'indice corrente
-  useEffect(() => {
-    if (galleryImages.length > 1) {
-      const nextIndex = (currentImageIndex + 1) % galleryImages.length;
-      imageService.preloadImage(galleryImages[nextIndex]);
-    }
-  }, [currentImageIndex, galleryImages]);
-  
-  const nextImage = () => {
-    if (galleryImages.length > 1) {
-      setCurrentImageIndex((prev) => (prev + 1) % galleryImages.length);
-    }
-  };
-  
-  const prevImage = () => {
-    if (galleryImages.length > 1) {
-      setCurrentImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
-    }
-  };
-  
-  if (!apartment) {
-    return null;
-  }
+  const [apartmentImages, setApartmentImages] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Determina l'URL dell'immagine corrente
-  const currentImage = galleryImages[currentImageIndex] || apartment.images[0] || "/placeholder.svg";
-  const imageUrl = currentImage.startsWith('/images/apartments/')
-    ? imageService.getImageUrl(currentImage)
-    : currentImage;
+  useEffect(() => {
+    const loadImages = async () => {
+      setLoading(true);
+      try {
+        console.log(`Loading images for apartment ${apartment.id} in dialog`);
+        
+        // Try to get images from Supabase first
+        const images = await imageService.scanApartmentImages(apartment.id);
+        
+        if (images && images.length > 0) {
+          console.log(`Found ${images.length} images for apartment ${apartment.id} in dialog`);
+          setApartmentImages(images);
+        } else {
+          console.log(`No images found for apartment ${apartment.id}, using default`);
+          setApartmentImages(apartment.images || []);
+        }
+      } catch (error) {
+        console.error(`Error loading images for apartment ${apartment.id}:`, error);
+        setApartmentImages(apartment.images || []);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadImages();
+  }, [apartment.id, apartment.images]);
+
+  const nextImage = () => {
+    if (apartmentImages.length > 1) {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % apartmentImages.length);
+    }
+  };
+
+  const prevImage = () => {
+    if (apartmentImages.length > 1) {
+      setCurrentImageIndex((prevIndex) => (prevIndex - 1 + apartmentImages.length) % apartmentImages.length);
+    }
+  };
+
+  const currentImage = apartmentImages.length > 0 ? apartmentImages[currentImageIndex] : "/placeholder.svg";
 
   return (
-    <Dialog open={!!apartmentId} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+    <Dialog onOpenChange={(open) => {
+      if (!open && onClose) {
+        onClose();
+      }
+    }}>
+      <DialogTrigger asChild>
+        <Button variant="outline">
+          Dettagli
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{apartment.name}</DialogTitle>
-          <DialogDescription>
-            {apartment.description}
-          </DialogDescription>
+          <DialogTitle className="text-xl sm:text-2xl">{apartment.name}</DialogTitle>
+          <DialogDescription>{apartment.description}</DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4">
-          <div className="aspect-video bg-muted rounded-md overflow-hidden relative">
-            <ProgressiveImage 
-              src={imageUrl} 
-              alt={apartment.name} 
-              className="w-full h-full object-cover"
-            />
-            
-            {galleryImages.length > 1 && (
-              <>
-                <button
-                  onClick={(e) => { e.preventDefault(); prevImage(); }}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-1 rounded-full"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={(e) => { e.preventDefault(); nextImage(); }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-1 rounded-full"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-                
-                <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
-                  {galleryImages.map((_, idx) => (
-                    <button 
-                      key={idx}
-                      className={`w-1.5 h-1.5 rounded-full ${idx === currentImageIndex ? 'bg-white' : 'bg-white/50'}`}
-                      onClick={(e) => { e.preventDefault(); setCurrentImageIndex(idx); }}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+        <div className="relative w-full h-64 md:h-80 overflow-hidden rounded-md mt-4">
+          {loading ? (
+            <div className="w-full h-full bg-muted flex items-center justify-center">
+              <span className="text-muted-foreground">Caricamento immagini...</span>
+            </div>
+          ) : (
+            <>
+              <div className="absolute inset-0">
+                <img 
+                  src={currentImage} 
+                  alt={`${apartment.name} - Immagine ${currentImageIndex + 1}`} 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error(`Error loading image: ${currentImage}`);
+                    e.currentTarget.src = "/placeholder.svg";
+                  }}
+                />
+              </div>
+              
+              {apartmentImages.length > 1 && (
+                <>
+                  <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1">
+                    {apartmentImages.map((_, idx) => (
+                      <button 
+                        key={idx}
+                        className={`w-2 h-2 rounded-full ${idx === currentImageIndex ? 'bg-white' : 'bg-white/50'}`}
+                        onClick={() => setCurrentImageIndex(idx)}
+                        aria-label={`Vai all'immagine ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                  
+                  <button
+                    onClick={prevImage}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-1 rounded-full"
+                    aria-label="Immagine precedente"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={nextImage}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-1 rounded-full"
+                    aria-label="Immagine successiva"
+                  >
+                    <ArrowRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+            </>
+          )}
+        </div>
+        
+        <div className="mt-6">
+          <h4 className="font-medium mb-2">Descrizione dettagliata</h4>
+          <p className="text-sm text-muted-foreground">{apartment.longDescription}</p>
+        </div>
+
+        {apartment.CIN && (
+          <div className="text-xs text-muted-foreground">
+            CIN: {apartment.CIN}
           </div>
-          
-          {/* Apartment Details */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
+        )}
+        
+        <div className="mt-4">
+          <h3 className="text-lg font-medium mb-2">Caratteristiche</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 mt-2">
             <div className="flex items-center gap-2">
-              <Bed className="h-4 w-4 text-primary" />
-              <span>{apartment.beds} posti letto</span>
+              <Bed className="h-5 w-5 text-primary" />
+              <span>{apartment.beds} {apartment.beds === 1 ? 'posto letto' : 'posti letto'}</span>
             </div>
             <div className="flex items-center gap-2">
-              <BedDouble className="h-4 w-4 text-primary" />
+              <Home className="h-5 w-5 text-primary" />
               <span>{apartment.bedrooms} {apartment.bedrooms === 1 ? 'camera' : 'camere'}</span>
             </div>
             <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-primary" />
-              <span>Piano {apartment.floor}</span>
+              <Sun className="h-5 w-5 text-primary" />
+              <span>{apartment.hasVeranda ? 'Ampia Veranda' : apartment.hasTerrace ? 'Terrazza Vista Mare' : ''}</span>
             </div>
             <div className="flex items-center gap-2">
-              <Sun className="h-4 w-4 text-primary" />
-              <span>
-                {apartment.hasVeranda ? 'Ampia Veranda' : apartment.hasTerrace ? 'Terrazza Vista Mare' : ''}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <ThermometerSun className="h-4 w-4 text-primary" />
+              <ThermometerSun className="h-5 w-5 text-primary" />
               <span>{apartment.hasAirConditioning ? 'Climatizzatore' : 'Non Climatizzato'}</span>
             </div>
           </div>
-          
-          {/* Long Description */}
-          {apartment.longDescription && (
-            <div className="mt-4">
-              <h4 className="font-medium mb-2">Descrizione dettagliata</h4>
-              <p className="text-sm text-muted-foreground">{apartment.longDescription}</p>
-            </div>
-          )}
-
-          {/* CIN */}
-          {apartment.CIN && (
-            <div className="text-xs text-muted-foreground">
-              CIN: {apartment.CIN}
-            </div>
-          )}
-          
-          {/* Services */}
-          <div>
-            <h4 className="font-medium mb-2">Servizi inclusi:</h4>
-            <div className="flex flex-wrap gap-2">
-              {apartment.services.map((service, index) => (
-                <span key={index} className="text-xs bg-muted px-2 py-1 rounded">{service}</span>
-              ))}
-            </div>
-          </div>
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-2">
+            {apartment.services && apartment.services.map((feature: string, index: number) => (
+              <li key={index} className="flex items-start gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary mt-2" />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
         </div>
         
-        <DialogFooter className="sm:justify-end">
+        <div className="flex justify-center mt-6 gap-4">
           <Button 
-            variant="default" 
-            onClick={() => onSelect(apartment.id)}
+            variant={isSelected ? "default" : "outline"}
+            onClick={onToggle}
           >
-            Seleziona
+            {isSelected ? "Selezionato" : "Seleziona"}
           </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
 };
-
-export default ApartmentDialog;

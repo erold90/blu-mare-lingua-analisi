@@ -93,7 +93,7 @@ class ImageService {
   /**
    * Get apartment images from cache - updated to check Supabase first
    */
-  async getApartmentImagesFromCache(apartmentId: string): Promise<string[] | null> {
+  async getApartmentImagesFromCache(apartmentId: string): Promise<string[]> {
     // Check if we have Supabase images first
     const hasSupabaseImages = await supabaseImageService.hasImages(apartmentId);
     
@@ -102,7 +102,8 @@ class ImageService {
     }
     
     // Fallback to old cache system
-    return apartmentImageService.getApartmentImagesFromCache(apartmentId);
+    const cachedImages = apartmentImageService.getApartmentImagesFromCache(apartmentId);
+    return cachedImages || [];
   }
   
   /**
