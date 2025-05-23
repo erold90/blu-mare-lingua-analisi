@@ -88,7 +88,7 @@ const ApartmentGallery = ({ images }: { images: string[] }) => {
     <div className="relative w-full h-64 md:h-80 overflow-hidden rounded-md mt-4">
       <div className="absolute inset-0">
         <ProgressiveImage 
-          src={imageService.getImageUrl(images[currentIndex]) || "/placeholder.svg"} 
+          src={images[currentIndex] || "/placeholder.svg"} 
           alt={`Immagine ${currentIndex + 1}`} 
           className="w-full h-full object-cover"
         />
@@ -195,13 +195,14 @@ const ApartmentModal = ({ apartment }: { apartment: Apartment & { gallery?: stri
 const ApartmentsPage = () => {
   const [apartments, setApartments] = useState<Apartment[]>(defaultApartments);
   const [apartmentImages, setApartmentImages] = useState<{ [key: string]: string[] }>({});
-  const [loading, setLoading] = useState(false); // Cambio cruciale: inizializza a false
+  const [loading, setLoading] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoadingAdditionalImages, setIsLoadingAdditionalImages] = useState(false);
   
-  // Funzione ottimizzata per caricare le immagini
+  // Funzione aggiornata per caricare le immagini da Supabase
   const loadApartmentImages = useCallback(async (apartments: Apartment[], showLoadingState = false) => {
-    // Mostra il loader solo se richiesto esplicitamente (per refresh manuali)
+    console.log("Loading apartment images from Supabase...");
+    
     if (showLoadingState) {
       setLoading(true);
       setLoadingProgress(0);
@@ -209,46 +210,41 @@ const ApartmentsPage = () => {
     
     const result: { [key: string]: string[] } = {};
     const total = apartments.length;
-    
-    // Carichiamo le immagini con un limite di concorrenza
-    // per evitare di sovraccaricare il browser
-    const concurrencyLimit = 3; // Aumentato da 2 a 3 per velocizzare
     let completed = 0;
     
-    const loadBatch = async (startIdx: number) => {
-      const endIdx = Math.min(startIdx + concurrencyLimit - 1, apartments.length - 1);
-      
-      const batchPromises = [];
-      for (let i = startIdx; i <= endIdx; i++) {
-        const apt = apartments[i];
-        batchPromises.push(
-          imageService.scanApartmentImages(apt.id).then(images => {
-            if (images && images.length > 0) {
-              result[apt.id] = images;
-            }
-            completed++;
-            if (showLoadingState) {
-              setLoadingProgress(Math.round((completed / total) * 100));
-            }
-          })
-        );
+    // Carica le immagini da Supabase per ogni appartamento
+    for (const apt of apartments) {
+      try {
+        console.log(`Loading images for apartment ${apt.id} from Supabase`);
+        
+        const images = await imageService.scanApartmentImages(apt.id);
+        
+        if (images && images.length > 0) {
+          console.log(`Found ${images.length} images for apartment ${apt.id}`);
+          result[apt.id] = images;
+        } else {
+          console.log(`No images found for apartment ${apt.id}`);
+        }
+        
+        completed++;
+        if (showLoadingState) {
+          setLoadingProgress(Math.round((completed / total) * 100));
+        }
+      } catch (error) {
+        console.error(`Error loading images for apartment ${apt.id}:`, error);
+        completed++;
+        if (showLoadingState) {
+          setLoadingProgress(Math.round((completed / total) * 100));
+        }
       }
-      
-      await Promise.all(batchPromises);
-      
-      // Se ci sono altri appartamenti da processare, carica il prossimo batch
-      if (endIdx < apartments.length - 1) {
-        return loadBatch(endIdx + 1);
-      }
-    };
+    }
     
-    // Inizia il caricamento
-    await loadBatch(0);
+    console.log("Apartment images loaded:", result);
     
     // Aggiorna lo stato con le immagini trovate
     setApartmentImages(prevState => ({...prevState, ...result}));
     
-    // Salva in localStorage
+    // Salva in localStorage per cache
     const existingImagesStr = localStorage.getItem("apartmentImages");
     const existingImages = existingImagesStr ? JSON.parse(existingImagesStr) : {};
     const updatedImages = {...existingImages, ...result};
@@ -257,7 +253,6 @@ const ApartmentsPage = () => {
     // Notifica altri componenti
     window.dispatchEvent(new CustomEvent("apartmentImagesUpdated"));
     
-    // Finito di caricare - solo se stavamo mostrando lo stato di caricamento
     if (showLoadingState) {
       setLoading(false);
     }
@@ -268,6 +263,8 @@ const ApartmentsPage = () => {
   // Carica dati e immagini all'avvio
   useEffect(() => {
     const loadData = async () => {
+      console.log("Loading apartment data and images...");
+      
       // Carica appartamenti da localStorage
       const savedApartments = localStorage.getItem("apartments");
       let currentApartments = [...defaultApartments];
@@ -281,41 +278,17 @@ const ApartmentsPage = () => {
         }
       }
       
-      // Carica immagini appartamenti da localStorage (estremamente veloce)
-      const savedImages = localStorage.getItem("apartmentImages");
-      if (savedImages) {
-        try {
-          const parsedImages = JSON.parse(savedImages);
-          setApartmentImages(parsedImages);
-          
-          // Precarica immediatamente le prime immagini di copertina per visualizzazione istantanea
-          const coverImages: string[] = [];
-          Object.values(parsedImages).forEach(images => {
-            if (Array.isArray(images) && images.length > 0) {
-              coverImages.push(images[0]);
-            }
-          });
-          
-          // Precarica subito tutte le immagini di copertina
-          imageService.preloadImages(coverImages, 4);
-          
-          // Carica in background le immagini aggiornate senza bloccare l'interfaccia
-          // e senza mostrare il loader per non disturbare l'utente
-          setIsLoadingAdditionalImages(true);
-          setTimeout(() => {
-            loadApartmentImages(currentApartments, false).finally(() => {
-              setIsLoadingAdditionalImages(false);
-            });
-          }, 500);
-        } catch (error) {
-          console.error("Errore nel parsing delle immagini:", error);
-          // In caso di errore, carica le immagini normalmente
-          loadApartmentImages(currentApartments, false);
-        }
-      } else {
-        // Nessun dato in cache, carica le immagini ma senza mostrare il loader
-        // per dare l'impressione che la pagina sia già pronta
-        loadApartmentImages(currentApartments, false);
+      // Carica sempre le immagini da Supabase (non più da localStorage)
+      console.log("Loading fresh images from Supabase...");
+      setIsLoadingAdditionalImages(true);
+      
+      try {
+        await loadApartmentImages(currentApartments, false);
+      } catch (error) {
+        console.error("Error loading images from Supabase:", error);
+        toast.error("Errore nel caricamento delle immagini");
+      } finally {
+        setIsLoadingAdditionalImages(false);
       }
     };
     
@@ -323,7 +296,7 @@ const ApartmentsPage = () => {
     
     // Listen for storage changes and custom events
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "apartments" || e.key === "apartmentImages") {
+      if (e.key === "apartments") {
         loadData();
       }
     };
@@ -343,46 +316,33 @@ const ApartmentsPage = () => {
   
   // Funzione per aggiornare manualmente le immagini
   const refreshImages = async () => {
-    toast.info("Aggiornamento immagini in corso...");
+    toast.info("Aggiornamento immagini da Supabase...");
     
-    // Prima pulisci la cache
+    // Pulisci la cache
     imageService.clearImageCache();
     
-    // Poi ricarica le immagini mostrando il loader
+    // Ricarica le immagini da Supabase
     await loadApartmentImages(apartments, true);
     
-    toast.success("Immagini aggiornate con successo!");
+    toast.success("Immagini aggiornate da Supabase!");
   };
   
-  // Prepare apartment data with gallery images
+  // Prepare apartment data with Supabase images
   const apartmentData = apartments.map(apt => {
     const aptImages = apartmentImages[apt.id] || [];
-    const coverIndices = (() => {
-      const savedCovers = localStorage.getItem("apartmentCovers");
-      if (savedCovers) {
-        try {
-          return JSON.parse(savedCovers);
-        } catch (error) {
-          return {};
-        }
-      }
-      return {};
-    })();
     
-    const coverImageIndex = coverIndices[apt.id] ?? 0;
-    
-    // Get the cover image (first image) and all images for gallery
+    // Use Supabase images if available, otherwise fallback to default
     let coverImage = "/placeholder.svg";
-    if (aptImages.length > 0 && coverImageIndex >= 0 && coverImageIndex < aptImages.length) {
-      coverImage = aptImages[coverImageIndex];
+    if (aptImages.length > 0) {
+      coverImage = aptImages[0];
     } else if (apt.images && apt.images.length > 0) {
       coverImage = apt.images[0];
     }
     
     return {
       ...apt,
-      images: [coverImage, ...(apt.images?.slice(1) || [])],
-      gallery: aptImages.length > 0 ? aptImages : apt.images,
+      images: aptImages.length > 0 ? aptImages : (apt.images || []),
+      gallery: aptImages.length > 0 ? aptImages : (apt.images || []),
     };
   });
 
@@ -399,7 +359,7 @@ const ApartmentsPage = () => {
       {loading && loadingProgress > 0 ? (
         <div className="text-center py-8">
           <div className="flex flex-col items-center gap-4">
-            <p className="text-lg">Caricamento immagini...</p>
+            <p className="text-lg">Caricamento immagini da Supabase...</p>
             <div className="w-full max-w-md h-2 bg-muted rounded-full overflow-hidden">
               <div 
                 className="h-full bg-primary transition-all duration-300 ease-in-out"
@@ -415,7 +375,7 @@ const ApartmentsPage = () => {
             <Card key={apartment.id} className="overflow-hidden h-full flex flex-col">
               <div className="aspect-[4/3] relative bg-muted">
                 <ProgressiveImage 
-                  src={imageService.getImageUrl(apartment.images[0])} 
+                  src={apartment.images[0]} 
                   alt={apartment.name}
                   className="w-full h-full object-cover"
                 />
@@ -471,7 +431,7 @@ const ApartmentsPage = () => {
           className="flex items-center gap-2"
         >
           <RefreshCcw className={`h-4 w-4 ${loading || isLoadingAdditionalImages ? 'animate-spin' : ''}`} />
-          {isLoadingAdditionalImages ? "Ottimizzazione immagini..." : "Aggiorna immagini"}
+          {isLoadingAdditionalImages ? "Caricamento da Supabase..." : "Aggiorna immagini da Supabase"}
         </Button>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { imageLoaderService } from "./loader";
 import { apartmentImageService } from "./apartment";
 import { imageCacheService } from "./cache";
 import { imageSessionService } from "./session";
+import { supabaseImageService } from "./supabase";
 
 /**
  * Main image service that combines functionality from specialized services
@@ -70,16 +71,37 @@ class ImageService {
   }
   
   /**
-   * Scan for all apartment images
+   * Scan for all apartment images - NEW: Check Supabase first, then fallback to file system
    */
-  scanApartmentImages(apartmentId: string, maxImages = 20): Promise<string[]> {
+  async scanApartmentImages(apartmentId: string, maxImages = 20): Promise<string[]> {
+    console.log(`Scanning images for apartment ${apartmentId} - checking Supabase first`);
+    
+    // First try to get images from Supabase
+    const supabaseImages = await supabaseImageService.getApartmentImages(apartmentId);
+    
+    if (supabaseImages.length > 0) {
+      console.log(`Found ${supabaseImages.length} images in Supabase for apartment ${apartmentId}`);
+      return supabaseImages;
+    }
+    
+    console.log(`No images found in Supabase for apartment ${apartmentId}, checking file system as fallback`);
+    
+    // Fallback to file system scan
     return apartmentImageService.scanApartmentImages(apartmentId, maxImages);
   }
   
   /**
-   * Get apartment images from cache
+   * Get apartment images from cache - updated to check Supabase first
    */
-  getApartmentImagesFromCache(apartmentId: string): string[] | null {
+  async getApartmentImagesFromCache(apartmentId: string): Promise<string[] | null> {
+    // Check if we have Supabase images first
+    const hasSupabaseImages = await supabaseImageService.hasImages(apartmentId);
+    
+    if (hasSupabaseImages) {
+      return await supabaseImageService.getApartmentImages(apartmentId);
+    }
+    
+    // Fallback to old cache system
     return apartmentImageService.getApartmentImagesFromCache(apartmentId);
   }
   
@@ -95,6 +117,26 @@ class ImageService {
    */
   debugImage(path: string): Promise<void> {
     return imageLoaderService.debugImage(path);
+  }
+
+  /**
+   * Get cover image for apartment - NEW: Check Supabase first
+   */
+  async getCoverImage(apartmentId: string): Promise<string | null> {
+    console.log(`Getting cover image for apartment ${apartmentId} from Supabase`);
+    
+    const coverImage = await supabaseImageService.getCoverImage(apartmentId);
+    
+    if (coverImage) {
+      console.log(`Found cover image in Supabase for apartment ${apartmentId}`);
+      return coverImage;
+    }
+    
+    console.log(`No cover image found in Supabase for apartment ${apartmentId}, checking file system`);
+    
+    // Fallback to file system
+    const fileSystemImages = await apartmentImageService.scanApartmentImages(apartmentId, 1);
+    return fileSystemImages.length > 0 ? fileSystemImages[0] : null;
   }
 
   /**
