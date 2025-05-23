@@ -21,7 +21,7 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
     onDrop(acceptedFiles);
   };
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop: handleDrop,
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.webp', '.gif']
@@ -35,21 +35,45 @@ export const FileDropzone: React.FC<FileDropzoneProps> = ({
     },
     onDropRejected: (rejectedFiles) => {
       console.log('🔥 Files rejected:', rejectedFiles);
+    },
+    onFileDialogOpen: () => {
+      console.log('🔥🔥🔥 FILE DIALOG OPENED!!!');
+    },
+    onFileDialogCancel: () => {
+      console.log('🔥 File dialog cancelled');
     }
   });
 
   console.log('🔥 FileDropzone - Current state:', { isDragActive });
 
+  const rootProps = getRootProps();
+  const inputProps = getInputProps();
+
+  console.log('🔥 Root props:', Object.keys(rootProps));
+  console.log('🔥 Input props:', Object.keys(inputProps));
+
+  const handleManualClick = (e: React.MouseEvent) => {
+    console.log('🔥🔥🔥 MANUAL CLICK DETECTED!!! Event:', e.type);
+    if (rootProps.onClick) {
+      console.log('🔥 Calling rootProps.onClick');
+      rootProps.onClick(e);
+    } else {
+      console.log('🔥 No rootProps.onClick, calling open() directly');
+      open();
+    }
+  };
+
   return (
     <div
-      {...getRootProps()}
+      {...rootProps}
+      onClick={handleManualClick}
       className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
         isDragActive 
           ? 'border-primary bg-primary/5' 
           : 'border-muted-foreground/25 hover:border-primary/50'
       }`}
     >
-      <input {...getInputProps()} />
+      <input {...inputProps} />
       <Upload className="h-10 w-10 mx-auto mb-4 text-muted-foreground" />
       {isDragActive ? (
         <p className="text-primary">Rilascia le immagini qui...</p>
