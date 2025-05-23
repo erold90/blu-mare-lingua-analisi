@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -189,6 +188,14 @@ const ApartmentGallery = ({ images }: { images: string[] }) => {
 };
 
 const ApartmentModal = ({ apartment }: { apartment: Apartment & { gallery?: string[] } }) => {
+  // Helper function to get climate control text for an apartment
+  const getClimateControlText = (apartment: Apartment) => {
+    if (apartment.id === "appartamento-1") {
+      return "Fresco Naturale";
+    }
+    return apartment.hasAirConditioning ? "Climatizzatore" : "Ventilazione Naturale";
+  };
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -254,7 +261,7 @@ const ApartmentModal = ({ apartment }: { apartment: Apartment & { gallery?: stri
               </div>
               <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-blue-50 to-transparent rounded-xl">
                 <ThermometerSun className="h-6 w-6 text-blue-600" />
-                <span className="font-medium">{apartment.hasAirConditioning ? 'Climatizzatore' : 'Ventilazione Naturale'}</span>
+                <span className="font-medium">{getClimateControlText(apartment)}</span>
               </div>
             </div>
             
@@ -432,6 +439,14 @@ const ApartmentsPage = () => {
     };
   });
 
+  // Helper function to get climate control text for an apartment
+  const getClimateControlText = (apartment: Apartment) => {
+    if (apartment.id === "appartamento-1") {
+      return "Fresco Naturale";
+    }
+    return apartment.hasAirConditioning ? "Climatizzatore" : "Ventilazione Naturale";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 relative overflow-hidden">
       {/* Background decorative elements */}
@@ -556,7 +571,7 @@ const ApartmentsPage = () => {
                       <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-blue-50/50 to-transparent rounded-lg">
                         <ThermometerSun className="h-4 w-4 text-blue-500" />
                         <span className="text-xs font-medium">
-                          {apartment.hasAirConditioning ? 'Climatizzato' : 'Naturale'}
+                          {getClimateControlText(apartment)}
                         </span>
                       </div>
                     </div>
