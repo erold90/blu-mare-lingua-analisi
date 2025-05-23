@@ -9,7 +9,213 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      apartments: {
+        Row: {
+          bedrooms: number | null
+          beds: number | null
+          capacity: number
+          cin: string | null
+          cleaning_fee: number | null
+          created_at: string | null
+          description: string | null
+          floor: string | null
+          has_air_conditioning: boolean | null
+          has_terrace: boolean | null
+          has_veranda: boolean | null
+          id: string
+          images: Json | null
+          long_description: string | null
+          name: string
+          price: number | null
+          services: Json | null
+          size: number | null
+          updated_at: string | null
+          view: string | null
+        }
+        Insert: {
+          bedrooms?: number | null
+          beds?: number | null
+          capacity: number
+          cin?: string | null
+          cleaning_fee?: number | null
+          created_at?: string | null
+          description?: string | null
+          floor?: string | null
+          has_air_conditioning?: boolean | null
+          has_terrace?: boolean | null
+          has_veranda?: boolean | null
+          id: string
+          images?: Json | null
+          long_description?: string | null
+          name: string
+          price?: number | null
+          services?: Json | null
+          size?: number | null
+          updated_at?: string | null
+          view?: string | null
+        }
+        Update: {
+          bedrooms?: number | null
+          beds?: number | null
+          capacity?: number
+          cin?: string | null
+          cleaning_fee?: number | null
+          created_at?: string | null
+          description?: string | null
+          floor?: string | null
+          has_air_conditioning?: boolean | null
+          has_terrace?: boolean | null
+          has_veranda?: boolean | null
+          id?: string
+          images?: Json | null
+          long_description?: string | null
+          name?: string
+          price?: number | null
+          services?: Json | null
+          size?: number | null
+          updated_at?: string | null
+          view?: string | null
+        }
+        Relationships: []
+      }
+      cleaning_tasks: {
+        Row: {
+          actual_duration: number | null
+          apartment_id: string
+          assignee: string | null
+          created_at: string | null
+          device_id: string | null
+          estimated_duration: number | null
+          id: string
+          notes: string | null
+          priority: string | null
+          status: string | null
+          task_date: string
+          task_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          actual_duration?: number | null
+          apartment_id: string
+          assignee?: string | null
+          created_at?: string | null
+          device_id?: string | null
+          estimated_duration?: number | null
+          id: string
+          notes?: string | null
+          priority?: string | null
+          status?: string | null
+          task_date: string
+          task_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          actual_duration?: number | null
+          apartment_id?: string
+          assignee?: string | null
+          created_at?: string | null
+          device_id?: string | null
+          estimated_duration?: number | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          status?: string | null
+          task_date?: string
+          task_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      prices: {
+        Row: {
+          apartment_id: string
+          created_at: string | null
+          id: number
+          price: number
+          updated_at: string | null
+          week_start: string
+          year: number
+        }
+        Insert: {
+          apartment_id: string
+          created_at?: string | null
+          id?: number
+          price: number
+          updated_at?: string | null
+          week_start: string
+          year: number
+        }
+        Update: {
+          apartment_id?: string
+          created_at?: string | null
+          id?: number
+          price?: number
+          updated_at?: string | null
+          week_start?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      reservations: {
+        Row: {
+          adults: number
+          apartment_ids: Json
+          children: number | null
+          created_at: string | null
+          cribs: number | null
+          deposit_amount: number | null
+          device_id: string | null
+          end_date: string
+          final_price: number | null
+          guest_name: string
+          has_pets: boolean | null
+          id: string
+          notes: string | null
+          payment_method: string | null
+          payment_status: string | null
+          start_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          adults?: number
+          apartment_ids: Json
+          children?: number | null
+          created_at?: string | null
+          cribs?: number | null
+          deposit_amount?: number | null
+          device_id?: string | null
+          end_date: string
+          final_price?: number | null
+          guest_name: string
+          has_pets?: boolean | null
+          id: string
+          notes?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          start_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          adults?: number
+          apartment_ids?: Json
+          children?: number | null
+          created_at?: string | null
+          cribs?: number | null
+          deposit_amount?: number | null
+          device_id?: string | null
+          end_date?: string
+          final_price?: number | null
+          guest_name?: string
+          has_pets?: boolean | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          start_date?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
