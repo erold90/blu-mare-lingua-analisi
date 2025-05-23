@@ -126,6 +126,45 @@ export type Database = {
         }
         Relationships: []
       }
+      images: {
+        Row: {
+          alt_text: string | null
+          apartment_id: string | null
+          category: string
+          created_at: string
+          display_order: number | null
+          file_name: string
+          file_path: string
+          id: string
+          is_cover: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          alt_text?: string | null
+          apartment_id?: string | null
+          category: string
+          created_at?: string
+          display_order?: number | null
+          file_name: string
+          file_path: string
+          id?: string
+          is_cover?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          alt_text?: string | null
+          apartment_id?: string | null
+          category?: string
+          created_at?: string
+          display_order?: number | null
+          file_name?: string
+          file_path?: string
+          id?: string
+          is_cover?: boolean | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       prices: {
         Row: {
           apartment_id: string

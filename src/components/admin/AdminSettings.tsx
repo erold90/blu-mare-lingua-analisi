@@ -1,32 +1,33 @@
 
 import * as React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BlockedDatesTab } from "@/components/admin/settings/BlockedDatesTab";
-import { ImagesTab } from "@/components/admin/settings/ImagesTab";
-import { AccountTab } from "@/components/admin/settings/AccountTab";
+import { SiteImageManager } from "./images/SiteImageManager";
 
 const AdminSettings = () => {
-  const [activeTab, setActiveTab] = React.useState("blocked-dates");
-  
   return (
     <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={setActiveTab} defaultValue="blocked-dates">
+      <Tabs defaultValue="images" className="w-full">
         <TabsList>
-          <TabsTrigger value="blocked-dates">Date Bloccate</TabsTrigger>
-          <TabsTrigger value="images">Immagini</TabsTrigger>
-          <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="images">Gestione Immagini</TabsTrigger>
+          <TabsTrigger value="general">Impostazioni Generali</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="blocked-dates" className="mt-6">
-          <BlockedDatesTab />
+        <TabsContent value="images">
+          <SiteImageManager />
         </TabsContent>
         
-        <TabsContent value="images" className="mt-6">
-          <ImagesTab />
-        </TabsContent>
-        
-        <TabsContent value="account" className="mt-6">
-          <AccountTab />
+        <TabsContent value="general">
+          <Card>
+            <CardHeader>
+              <CardTitle>Impostazioni Generali</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Altre impostazioni del sito saranno disponibili qui.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
