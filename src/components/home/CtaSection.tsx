@@ -3,9 +3,23 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useEffect } from "react";
 
 export const CtaSection = () => {
-  console.log("CtaSection rendering - Link pointing to /preventivo");
+  // Log component rendering and button info
+  useEffect(() => {
+    console.log("CtaSection mounting - Link pointing to /preventivo");
+    
+    return () => {
+      console.log("CtaSection unmounting");
+    };
+  }, []);
+  
+  // Handler function for click event
+  const handleClick = () => {
+    console.log("Preventivo button clicked - navigating to /preventivo");
+  };
+
   return (
     <div className="py-16 md:py-24 bg-white">
       <div className="container px-6">
@@ -18,9 +32,9 @@ export const CtaSection = () => {
               </div>
               <Button 
                 size="lg" 
-                className="w-full md:w-auto text-base" 
+                className="w-full md:w-auto text-base"
+                onClick={handleClick}
                 asChild
-                onClick={() => console.log("Preventivo button clicked")}
               >
                 <Link to="/preventivo">Richiedi un Preventivo</Link>
               </Button>
