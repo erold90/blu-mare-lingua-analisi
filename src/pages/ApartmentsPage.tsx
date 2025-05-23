@@ -589,22 +589,6 @@ const ApartmentsPage = () => {
             </div>
           </div>
         )}
-        
-        <div className="mt-16 text-center animate-fade-in animation-delay-500">
-          <Card className="max-w-md mx-auto bg-white/80 backdrop-blur-md shadow-xl border-0">
-            <CardContent className="p-6">
-              <Button 
-                variant="outline"
-                onClick={refreshImages}
-                disabled={loading || isLoadingAdditionalImages}
-                className="group bg-white/80 backdrop-blur-sm border border-white/20 hover:bg-white hover:border-blue-200 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 w-full"
-              >
-                <RefreshCcw className={`h-4 w-4 mr-2 ${loading || isLoadingAdditionalImages ? 'animate-spin' : 'group-hover:rotate-180 transition-transform duration-500'}`} />
-                {isLoadingAdditionalImages ? "Caricamento..." : "Aggiorna Immagini"}
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
       </div>
       
       {/* Bottom decorative gradient */}
