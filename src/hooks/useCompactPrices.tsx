@@ -45,23 +45,74 @@ export const useCompactPrices = () => {
     return weeks;
   }, []);
 
+  // Inizializza prezzi di default per il 2025
+  const initializeDefaultPrices = useCallback(async () => {
+    console.log("Initializing default prices for 2025...");
+    
+    const apartmentIds = ['appartamento-1', 'appartamento-2', 'appartamento-3', 'appartamento-4'];
+    const weeks = getSeasonWeeks();
+    const defaultPrices = [];
+    
+    for (const week of weeks) {
+      for (const apartmentId of apartmentIds) {
+        // Prezzi di esempio basati sulla settimana
+        let basePrice = 400;
+        const weekDate = new Date(week.start);
+        const month = weekDate.getMonth();
+        
+        // Luglio e Agosto più cari
+        if (month === 6 || month === 7) {
+          basePrice = 800;
+        }
+        // Giugno e Settembre prezzi medi
+        else if (month === 5 || month === 8) {
+          basePrice = 600;
+        }
+        
+        defaultPrices.push({
+          apartment_id: apartmentId,
+          year: 2025,
+          week_start: week.startStr,
+          price: basePrice
+        });
+      }
+    }
+    
+    try {
+      await supabaseService.prices.updateBatch(defaultPrices);
+      console.log(`Initialized ${defaultPrices.length} default prices`);
+      toast.success("Prezzi inizializzati con successo");
+    } catch (error) {
+      console.error("Error initializing default prices:", error);
+      toast.error("Errore nell'inizializzazione dei prezzi");
+    }
+  }, [getSeasonWeeks]);
+
   // Carica i prezzi dal database
   const loadPrices = useCallback(async () => {
     try {
       setIsLoading(true);
       console.log("Loading prices from database...");
       
-      // Fix: ensure year is correctly formatted
       const data = await supabaseService.prices.getByYear(2025);
       console.log("Raw price data from database:", data);
       
       if (!data || data.length === 0) {
-        console.log("No prices found in database");
-        setPrices([]);
+        console.log("No prices found, initializing default prices...");
+        await initializeDefaultPrices();
+        // Ricarica dopo l'inizializzazione
+        const newData = await supabaseService.prices.getByYear(2025);
+        if (newData && newData.length > 0) {
+          const transformedPrices: PriceData[] = newData.map(price => ({
+            apartmentId: price.apartment_id,
+            weekStart: price.week_start,
+            price: Number(price.price)
+          }));
+          setPrices(transformedPrices);
+        }
         return;
       }
       
-      // Fix: ensure we're correctly processing the returned data format
       const transformedPrices: PriceData[] = data.map(price => ({
         apartmentId: price.apartment_id,
         weekStart: price.week_start,
@@ -89,7 +140,7 @@ export const useCompactPrices = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [initializeDefaultPrices]);
 
   // Ottieni prezzo per appartamento e settimana
   const getPrice = useCallback((apartmentId: string, weekStart: string): number => {
@@ -105,7 +156,6 @@ export const useCompactPrices = () => {
     try {
       console.log(`Updating price for ${apartmentId} on ${weekStart} to ${newPrice}`);
       
-      // Fix: ensure we're passing the correct parameters to the upsert function
       await supabaseService.prices.upsert({
         apartment_id: apartmentId,
         year: 2025,
