@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -37,7 +36,7 @@ import {
   FormLabel,
   FormMessage
 } from "@/components/ui/form";
-import { Pencil, Plus, Trash2, CalendarIcon, Info } from "lucide-react";
+import { Pencil, Plus, Trash2, CalendarIcon, Info, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { it } from 'date-fns/locale';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -236,7 +235,15 @@ const MobileReservationCard = ({ reservation, apartments, onEdit, onDelete, onVi
 };
 
 const AdminReservations = () => {
-  const { reservations, apartments, addReservation, updateReservation, deleteReservation } = useReservations();
+  const { 
+    reservations, 
+    apartments, 
+    addReservation, 
+    updateReservation, 
+    deleteReservation,
+    refreshData,
+    isLoading
+  } = useReservations();
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
@@ -262,6 +269,11 @@ const AdminReservations = () => {
       notes: ""
     }
   });
+  
+  // Handle manual refresh button click
+  const handleRefresh = () => {
+    refreshData();
+  };
 
   // Function to open dialog for adding a new reservation
   const handleAddNew = () => {
@@ -366,15 +378,36 @@ const AdminReservations = () => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg md:text-xl font-bold">Gestione Prenotazioni</h2>
-        <Button onClick={handleAddNew} size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          {!isMobile && "Nuova Prenotazione"}
-          {isMobile && "Nuovo"}
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={handleRefresh} 
+            size="sm" 
+            variant="outline"
+            disabled={isLoading}
+          >
+            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            {!isMobile && <span className="ml-2">Sincronizza</span>}
+          </Button>
+          <Button onClick={handleAddNew} size="sm">
+            <Plus className="mr-2 h-4 w-4" />
+            {!isMobile && "Nuova Prenotazione"}
+            {isMobile && "Nuovo"}
+          </Button>
+        </div>
       </div>
 
+      {/* Loading indicator */}
+      {isLoading && (
+        <div className="flex justify-center py-8">
+          <div className="flex items-center space-x-2">
+            <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
+            <p className="text-muted-foreground">Sincronizzazione in corso...</p>
+          </div>
+        </div>
+      )}
+
       {/* Mobile view */}
-      {isMobile && (
+      {!isLoading && isMobile && (
         <div className="mt-4">
           {reservations.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -404,7 +437,7 @@ const AdminReservations = () => {
       )}
 
       {/* Desktop view */}
-      {!isMobile && (
+      {!isLoading && !isMobile && (
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -908,4 +941,3 @@ const AdminReservations = () => {
 };
 
 export default AdminReservations;
-

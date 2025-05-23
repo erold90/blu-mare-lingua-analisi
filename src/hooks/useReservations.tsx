@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { apartments } from "@/data/apartments";
 import { discoveryStorage, DISCOVERY_STORAGE_KEYS } from "@/services/discoveryStorage";
+import { toast } from "sonner";
 
 // Type definitions
 export interface Apartment {
@@ -40,6 +41,8 @@ interface ReservationsContextType {
   updateReservation: (reservation: Reservation) => void;
   deleteReservation: (id: string) => void;
   getApartmentAvailability: (apartmentId: string, startDate: Date, endDate: Date) => boolean;
+  refreshData: () => void;
+  isLoading: boolean;
 }
 
 const ReservationsContext = createContext<ReservationsContextType | undefined>(undefined);
@@ -47,40 +50,64 @@ const ReservationsContext = createContext<ReservationsContextType | undefined>(u
 export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [apartments] = useState<Apartment[]>(defaultApartments);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   
-  // Load reservations from discovery storage on mount
-  useEffect(() => {
+  // Function to load reservations from discovery storage
+  const loadReservations = () => {
+    setIsLoading(true);
     const savedReservations = discoveryStorage.getItem<Reservation[]>(DISCOVERY_STORAGE_KEYS.RESERVATIONS);
     if (savedReservations) {
       try {
+        console.log(`Loaded ${savedReservations.length} reservations from storage`);
         setReservations(savedReservations);
       } catch (error) {
         console.error("Failed to parse saved reservations:", error);
+        toast.error("Errore nel caricamento delle prenotazioni");
       }
+    } else {
+      console.log("No reservations found in storage");
     }
+    setIsLoading(false);
+  };
+  
+  // Force a refresh of data from the server
+  const refreshData = async () => {
+    setIsLoading(true);
+    try {
+      await discoveryStorage.syncFromServer(DISCOVERY_STORAGE_KEYS.RESERVATIONS);
+      toast.success("Dati sincronizzati correttamente");
+      loadReservations();
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      toast.error("Errore durante la sincronizzazione");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Load reservations from discovery storage on mount
+  useEffect(() => {
+    loadReservations();
     
-    // Listen for storage updates from other tabs/windows
-    const handleStorageUpdate = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      if (customEvent.detail?.key === DISCOVERY_STORAGE_KEYS.RESERVATIONS) {
-        const updatedReservations = discoveryStorage.getItem<Reservation[]>(DISCOVERY_STORAGE_KEYS.RESERVATIONS);
-        if (updatedReservations) {
-          setReservations(updatedReservations);
-        }
-      }
-    };
-
-    window.addEventListener("discoveryStorageUpdate", handleStorageUpdate);
+    // Listen for storage updates from other tabs/windows/devices
+    const unsubscribe = discoveryStorage.subscribe(DISCOVERY_STORAGE_KEYS.RESERVATIONS, () => {
+      console.log("Storage update detected, reloading reservations");
+      loadReservations();
+    });
     
+    // Clean up subscription on unmount
     return () => {
-      window.removeEventListener("discoveryStorageUpdate", handleStorageUpdate);
+      unsubscribe();
     };
   }, []);
   
   // Save reservations to discovery storage whenever they change
   useEffect(() => {
-    discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.RESERVATIONS, reservations);
-  }, [reservations]);
+    if (!isLoading && reservations.length > 0) {
+      console.log(`Saving ${reservations.length} reservations to discovery storage`);
+      discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.RESERVATIONS, reservations);
+    }
+  }, [reservations, isLoading]);
   
   const addReservation = (reservationData: Omit<Reservation, "id">) => {
     const newReservation: Reservation = {
@@ -135,7 +162,9 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
       addReservation,
       updateReservation,
       deleteReservation,
-      getApartmentAvailability
+      getApartmentAvailability,
+      refreshData,
+      isLoading
     }}>
       {children}
     </ReservationsContext.Provider>

@@ -17,6 +17,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // Sync data from server (in a real implementation, this would fetch data from a central API)
   discoveryStorage.syncFromServer().then(() => {
     console.log("Discovery storage sync complete");
+    
+    // Immediately refresh the page if we found newer data
+    // This ensures all components load with the latest data
+    const hasNewerData = localStorage.getItem('newer_data_found');
+    if (hasNewerData === 'true') {
+      localStorage.removeItem('newer_data_found');
+      console.log("Newer data found on sync, refreshing application...");
+      // Use a short timeout to ensure storage operations have completed
+      setTimeout(() => window.location.reload(), 100);
+    }
   });
   
   // Additional logging for debugging
