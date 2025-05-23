@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,8 @@ import { toast } from 'sonner';
 import { imageService, ImageRecord, ImageCategory } from '@/services/imageService';
 
 export const SiteImageManager: React.FC = () => {
+  console.log('=== SiteImageManager Component Rendered ===');
+  
   const [heroImages, setHeroImages] = useState<ImageRecord[]>([]);
   const [homeGalleryImages, setHomeGalleryImages] = useState<ImageRecord[]>([]);
   const [socialImages, setSocialImages] = useState<ImageRecord[]>([]);
@@ -118,75 +119,85 @@ export const SiteImageManager: React.FC = () => {
     }
   };
 
-  const ImageGrid: React.FC<{ images: ImageRecord[]; category: ImageCategory }> = ({ images, category }) => (
-    <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">{getDescription(category)}</p>
-      
-      <ImageUpload
-        category={category}
-        onUploadSuccess={handleUploadSuccess}
-        maxFiles={getMaxFiles(category)}
-        className="mb-6"
-      />
-
-      {images.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          Nessuna immagine caricata
+  const ImageGrid: React.FC<{ images: ImageRecord[]; category: ImageCategory }> = ({ images, category }) => {
+    console.log(`Rendering ImageGrid for category: ${category}, images count: ${images.length}`);
+    
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">{getDescription(category)}</p>
+        
+        <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-md">
+          <p className="text-sm text-yellow-800">
+            🔧 Debug: Controlla la console del browser per i log dettagliati dell'upload
+          </p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {images.map((image) => (
-            <Card key={image.id} className="overflow-hidden">
-              <div className="relative aspect-video">
-                <img
-                  src={imageService.getImageUrl(image.file_path)}
-                  alt={image.alt_text || image.file_name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    console.error('Error loading image:', image.file_path);
-                    e.currentTarget.src = "/placeholder.svg";
-                  }}
-                />
-                {image.is_cover && (
-                  <Badge className="absolute top-2 left-2">
-                    Principale
-                  </Badge>
-                )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  {!image.is_cover && (
+        
+        <ImageUpload
+          category={category}
+          onUploadSuccess={handleUploadSuccess}
+          maxFiles={getMaxFiles(category)}
+          className="mb-6"
+        />
+
+        {images.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            Nessuna immagine caricata
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {images.map((image) => (
+              <Card key={image.id} className="overflow-hidden">
+                <div className="relative aspect-video">
+                  <img
+                    src={imageService.getImageUrl(image.file_path)}
+                    alt={image.alt_text || image.file_name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('Error loading image:', image.file_path);
+                      e.currentTarget.src = "/placeholder.svg";
+                    }}
+                  />
+                  {image.is_cover && (
+                    <Badge className="absolute top-2 left-2">
+                      Principale
+                    </Badge>
+                  )}
+                  <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    {!image.is_cover && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => handleSetPrimary(image)}
+                      >
+                        <Star className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       size="sm"
-                      variant="secondary"
-                      onClick={() => handleSetPrimary(image)}
+                      variant="destructive"
+                      onClick={() => handleDeleteImage(image)}
                     >
-                      <Star className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleDeleteImage(image)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  </div>
                 </div>
-              </div>
-              <CardContent className="p-3">
-                <p className="text-sm font-medium truncate">
-                  {image.file_name}
-                </p>
-                {image.alt_text && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {image.alt_text}
+                <CardContent className="p-3">
+                  <p className="text-sm font-medium truncate">
+                    {image.file_name}
                   </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+                  {image.alt_text && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {image.alt_text}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -198,13 +209,18 @@ export const SiteImageManager: React.FC = () => {
     );
   }
 
+  console.log('SiteImageManager - Current active tab:', activeTab);
+
   return (
     <Card>
       <CardHeader>
         <CardTitle>Gestione Immagini Sito</CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ImageCategory)}>
+        <Tabs value={activeTab} onValueChange={(value) => {
+          console.log('Tab changed to:', value);
+          setActiveTab(value as ImageCategory);
+        }}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="hero">Hero</TabsTrigger>
             <TabsTrigger value="home_gallery">Galleria Home</TabsTrigger>

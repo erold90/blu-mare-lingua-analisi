@@ -23,7 +23,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
   maxFiles = 10,
   className = ""
 }) => {
-  console.log('ImageUpload rendered with:', { category, apartmentId, maxFiles });
+  console.log('=== ImageUpload Component Rendered ===');
+  console.log('ImageUpload props:', { category, apartmentId, maxFiles, className });
 
   const {
     filesWithAltText,
@@ -40,12 +41,23 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     maxFiles
   });
 
+  console.log('ImageUpload state:', { 
+    filesCount: filesWithAltText.length, 
+    uploading, 
+    errorsCount: uploadErrors.length 
+  });
+
+  const handleDropWrapper = (files: File[]) => {
+    console.log('ImageUpload - handleDropWrapper called with:', files);
+    handleDrop(files);
+  };
+
   return (
     <div className={`space-y-4 ${className}`}>
       <Card>
         <CardContent className="pt-6">
           <FileDropzone 
-            onDrop={handleDrop}
+            onDrop={handleDropWrapper}
             maxFiles={maxFiles}
             multiple={maxFiles > 1}
           />
@@ -71,7 +83,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
             </div>
             <div className="flex justify-end mt-4">
               <Button 
-                onClick={handleUpload} 
+                onClick={() => {
+                  console.log('Upload button clicked!');
+                  handleUpload();
+                }} 
                 disabled={uploading}
                 className="min-w-[120px]"
               >
