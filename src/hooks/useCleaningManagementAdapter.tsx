@@ -87,12 +87,12 @@ export const useCleaningManagementAdapter = () => {
   const updateTaskStatus = useCallback(async (id: string, status: CleaningTask["status"]) => {
     const existingTask = supabaseTasks.find(t => t.id === id);
     if (existingTask) {
-      const newStatus = status === "inProgress" ? "in_progress" : 
-                       status === "pending" ? "pending" :
-                       status === "completed" ? "completed" : "cancelled";
+      const supabaseStatus = status === "inProgress" ? "in_progress" : 
+                            status === "pending" ? "pending" :
+                            status === "completed" ? "completed" : "cancelled";
       await updateCleaningTask({
         ...existingTask,
-        status: newStatus
+        status: supabaseStatus as SupabaseCleaningTask["status"]
       });
     }
   }, [supabaseTasks, updateCleaningTask]);
