@@ -78,7 +78,7 @@ const DateSelectionStep: React.FC<DateSelectionStepProps> = ({ form, prevStep, n
                     day_today: "bg-accent text-accent-foreground font-bold border-2 border-primary/30 rounded-md",
                     day_outside: "text-muted-foreground/40 opacity-30",
                     day_disabled: "text-muted-foreground opacity-20 cursor-not-allowed hover:bg-transparent",
-                    day_range_middle: "bg-primary/15 text-black font-semibold rounded-none border-y-2 border-primary/20",
+                    day_range_middle: "bg-primary/10 text-gray-900 font-semibold rounded-none border-y-2 border-primary/20",
                     day_range_start: "bg-primary text-white font-bold rounded-r-none border-2 border-primary",
                     day_range_end: "bg-primary text-white font-bold rounded-l-none border-2 border-primary"
                   }}
