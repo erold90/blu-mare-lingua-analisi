@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { apartments as apartmentsData, Apartment } from "@/data/apartments";
-import { toast } from "sonner";
 import { discoveryStorage, DISCOVERY_STORAGE_KEYS } from "@/services/discoveryStorage";
 
 export const useApartmentManagement = () => {
@@ -139,8 +138,6 @@ export const useApartmentManagement = () => {
         )
       );
     }
-    
-    toast.success("Immagine di copertina impostata");
   };
 
   const updateApartment = (updatedApartment: Apartment) => {
@@ -149,7 +146,6 @@ export const useApartmentManagement = () => {
     );
     
     setApartments(updatedApartments);
-    toast.success("Appartamento aggiornato");
   };
 
   return {
