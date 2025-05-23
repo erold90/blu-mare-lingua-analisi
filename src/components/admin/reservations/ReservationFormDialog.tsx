@@ -324,54 +324,45 @@ export const ReservationFormDialog = ({
                 )}
               />
 
-              {/* Date Range Picker */}
-              <FormItem className="flex flex-col">
-                <FormLabel>Periodo Soggiorno</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !getCurrentDateRange() && "text-muted-foreground"
-                        )}
-                      >
-                        {getCurrentDateRange()?.from ? (
-                          getCurrentDateRange()?.to ? (
-                            <>
-                              {format(getCurrentDateRange()!.from!, "dd/MM/yyyy")} -{" "}
-                              {format(getCurrentDateRange()!.to!, "dd/MM/yyyy")}
-                            </>
-                          ) : (
-                            format(getCurrentDateRange()!.from!, "dd/MM/yyyy")
-                          )
+              {/* Date Range Selector - Updated to a single calendar with range selection */}
+              <FormField
+                control={form.control}
+                name="startDate"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Periodo Soggiorno</FormLabel>
+                    <div className="flex flex-col items-center space-y-2 mt-2">
+                      <div className="w-full text-center bg-gray-50 p-2 rounded-md text-sm mb-2">
+                        {getCurrentDateRange()?.from && getCurrentDateRange()?.to ? (
+                          <>
+                            <span className="font-medium">
+                              {format(getCurrentDateRange()!.from!, "dd/MM/yyyy")} - {format(getCurrentDateRange()!.to!, "dd/MM/yyyy")}
+                            </span>
+                            <br />
+                            <span className="text-xs text-muted-foreground">
+                              Seleziona prima check-in, poi check-out
+                            </span>
+                          </>
                         ) : (
-                          <span>Seleziona check-in e check-out</span>
+                          <span>Seleziona data check-in e check-out</span>
                         )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      initialFocus
-                      mode="range"
-                      defaultMonth={getCurrentDateRange()?.from}
-                      selected={getCurrentDateRange()}
-                      onSelect={handleDateRangeChange}
-                      numberOfMonths={1}
-                      disabled={(date) =>
-                        date < new Date(new Date().setHours(0, 0, 0, 0))
-                      }
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-                <FormDescription className="text-xs">
-                  Seleziona prima la data di check-in, poi quella di check-out
-                </FormDescription>
-              </FormItem>
+                      </div>
+                      
+                      <div className="border rounded-lg shadow-sm w-full max-w-[300px] mx-auto">
+                        <Calendar
+                          mode="range"
+                          selected={getCurrentDateRange()}
+                          onSelect={handleDateRangeChange}
+                          numberOfMonths={1}
+                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          className="rounded-md max-w-full"
+                        />
+                      </div>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Payment Details */}
