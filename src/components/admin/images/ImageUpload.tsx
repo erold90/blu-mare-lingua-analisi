@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
@@ -112,11 +111,22 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       
       console.log("Image service loaded, starting uploads...");
       
-      const uploadPromises = filesWithAltText.map(async (fileData, arrayIndex) => {
-        const displayOrder = Number(arrayIndex);
-        console.log(`Uploading file ${arrayIndex + 1}/${filesWithAltText.length}:`, fileData.file.name);
+      // Upload files sequentially to avoid conflicts with simultaneous uploads
+      const results = [];
+      const errors = [];
+      
+      for (let index = 0; index < filesWithAltText.length; index++) {
+        const fileData = filesWithAltText[index];
+        const displayOrder = Number(index);
+        
+        console.log(`Uploading file ${index + 1}/${filesWithAltText.length}:`, fileData.file.name);
         
         try {
+          // Add a small delay between uploads to ensure unique timestamps
+          if (index > 0) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+          
           const result = await imageService.uploadImage({
             category,
             apartment_id: apartmentId,
@@ -127,25 +137,23 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           
           if (result) {
             console.log(`Upload successful for ${fileData.file.name}:`, result);
+            results.push(result);
           } else {
             console.error(`Upload failed for ${fileData.file.name}`);
+            errors.push(`Errore caricamento: ${fileData.file.name}`);
           }
-          
-          return result;
         } catch (error) {
           console.error(`Error uploading ${fileData.file.name}:`, error);
-          return null;
+          errors.push(`Errore caricamento: ${fileData.file.name}`);
         }
-      });
-
-      const results = await Promise.all(uploadPromises);
-      const successCount = results.filter(result => result !== null).length;
-      const failedFiles = filesWithAltText.filter((_, index) => results[index] === null);
+      }
+      
+      const successCount = results.length;
       
       console.log("Upload results:", {
         total: filesWithAltText.length,
         successful: successCount,
-        failed: failedFiles.length
+        failed: errors.length
       });
       
       if (successCount === filesWithAltText.length) {
@@ -158,12 +166,10 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         onUploadSuccess?.();
       } else if (successCount > 0) {
         toast.warning(`${successCount}/${filesWithAltText.length} immagini caricate`);
-        const errorMessages = failedFiles.map(f => `Errore caricamento: ${f.file.name}`);
-        setUploadErrors(errorMessages);
+        setUploadErrors(errors);
       } else {
         toast.error("Nessuna immagine è stata caricata");
-        const errorMessages = failedFiles.map(f => `Errore caricamento: ${f.file.name}`);
-        setUploadErrors(errorMessages);
+        setUploadErrors(errors);
       }
     } catch (error) {
       console.error('Upload error:', error);

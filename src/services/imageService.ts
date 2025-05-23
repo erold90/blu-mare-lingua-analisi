@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -41,10 +42,11 @@ class ImageService {
         fileType: file.type
       });
       
-      // Generate unique file path
+      // Generate unique file path with random component to avoid conflicts
       const fileExt = file.name.split('.').pop();
       const timestamp = Date.now();
-      const fileName = `${category}_${apartment_id || 'general'}_${timestamp}.${fileExt}`;
+      const randomId = Math.random().toString(36).substring(2, 15);
+      const fileName = `${category}_${apartment_id || 'general'}_${timestamp}_${randomId}.${fileExt}`;
       const filePath = `${category}/${fileName}`;
       
       console.log("Generated file path:", filePath);
@@ -101,6 +103,8 @@ class ImageService {
         toast.error("Errore: Politiche di sicurezza non configurate. Contatta l'amministratore.");
       } else if (error.message?.includes('bucket')) {
         toast.error("Errore: Bucket di storage non trovato o non accessibile.");
+      } else if (error.message?.includes('already exists')) {
+        toast.error("Errore: File con lo stesso nome già esistente. Riprova.");
       } else {
         toast.error("Errore nel caricamento dell'immagine: " + (error.message || "Errore sconosciuto"));
       }
