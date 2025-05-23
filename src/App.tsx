@@ -39,6 +39,7 @@ const PageViewTracker = () => {
   // Track the current page visit
   useEffect(() => {
     if (location.pathname) {
+      console.log("Navigating to:", location.pathname);
       addSiteVisit(location.pathname);
     }
   }, [location.pathname]);
@@ -69,6 +70,7 @@ function App() {
                   <Route path="/contatti" element={<ContactsPage />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                   <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+                  <Route path="/api-test" element={<ApiTestPage />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
