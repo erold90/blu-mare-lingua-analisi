@@ -15,7 +15,7 @@ export interface CleaningTask {
   date: string;
   status: "pending" | "inProgress" | "completed" | "cancelled";
   type?: "checkout" | "checkin" | "maintenance" | "deep";
-  priority?: "low" | "medium" | "high";
+  priority?: "low" | "medium" | "high" | "urgent";
   notes?: string;
   assignedTo?: string;
   lastUpdated?: number;
@@ -29,11 +29,11 @@ const transformSupabaseTask = (task: SupabaseCleaningTask): CleaningTask => ({
   apartmentId: task.apartmentId,
   apartmentName: '', // Will be populated by apartment lookup
   date: task.taskDate,
-  status: task.status,
+  status: task.status === "in_progress" ? "inProgress" : task.status as "pending" | "inProgress" | "completed" | "cancelled",
   type: task.taskType === 'checkout' ? 'checkout' : 
         task.taskType === 'maintenance' ? 'maintenance' : 
         task.taskType === 'deep_clean' ? 'deep' : 'checkout',
-  priority: task.priority,
+  priority: task.priority as "low" | "medium" | "high" | "urgent",
   notes: task.notes,
   assignedTo: task.assignee,
   deviceId: task.deviceId
@@ -46,7 +46,7 @@ const transformToSupabaseTask = (task: Omit<CleaningTask, "id">): Omit<SupabaseC
   taskType: task.type === 'checkout' ? 'checkout' : 
            task.type === 'maintenance' ? 'maintenance' : 
            task.type === 'deep' ? 'deep_clean' : 'checkout',
-  status: task.status,
+  status: task.status === "inProgress" ? "in_progress" : task.status,
   priority: task.priority || 'medium',
   assignee: task.assignedTo,
   notes: task.notes,
@@ -85,7 +85,7 @@ export const useCleaningManagementAdapter = () => {
     if (existingTask) {
       await updateCleaningTask({
         ...existingTask,
-        status
+        status: status === "inProgress" ? "in_progress" : status
       });
     }
   }, [supabaseTasks, updateCleaningTask]);

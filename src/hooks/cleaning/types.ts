@@ -8,7 +8,7 @@ export interface CleaningTask {
   date: string;
   status: "pending" | "inProgress" | "completed" | "cancelled";
   type?: "checkout" | "checkin" | "maintenance" | "deep";
-  priority?: "low" | "medium" | "high";
+  priority?: "low" | "medium" | "high" | "urgent";
   notes?: string;
   assignedTo?: string;
   lastUpdated?: number;
