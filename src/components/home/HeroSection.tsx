@@ -89,8 +89,7 @@ const HeroSection = () => {
           <div className="h-1 w-32 bg-gradient-to-r from-transparent via-white to-transparent mx-auto mb-8 animate-scale-in animation-delay-500" />
           
           <p className="text-xl md:text-2xl mb-12 max-w-3xl mx-auto drop-shadow-lg leading-relaxed animate-fade-in animation-delay-700">
-            Scopri il paradiso nel cuore del Salento. Appartamenti di lusso con vista mozzafiato 
-            e tutti i comfort per una vacanza indimenticabile.
+            Villa con vista mare nel Salento. Tranquillità e comfort per una vacanza indimenticabile.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in animation-delay-1000">

@@ -52,9 +52,9 @@ export const IntroductionSection = () => {
           
           <div className={`space-y-8 transition-all duration-1000 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
             <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed font-light">
-              Situati nel <span className="font-medium text-primary">pittoresco Sud del Salento</span>, 
-              i nostri appartamenti offrono il rifugio ideale per una fuga tranquilla. 
-              Ogni dettaglio è curato per <span className="font-medium text-primary">massimo comfort e stile</span>.
+              Situata nel <span className="font-medium text-primary">pittoresco Sud del Salento</span>, 
+              la nostra villa offre il rifugio ideale per una fuga tranquilla. 
+              Ogni dettaglio è curato per <span className="font-medium text-primary">massima tranquillità e comfort</span>.
             </p>
             
             <div className="h-px w-24 bg-gradient-to-r from-transparent via-blue-300 to-transparent mx-auto" />
