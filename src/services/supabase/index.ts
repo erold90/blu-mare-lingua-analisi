@@ -1,4 +1,8 @@
 
+import { apartmentsService } from './apartmentsService';
+import { pricesService } from './pricesService';
+import { reservationsService } from './reservationsService';
+import { cleaningService } from './cleaningService';
 export { apartmentsService } from './apartmentsService';
 export { pricesService } from './pricesService';
 export { reservationsService } from './reservationsService';
