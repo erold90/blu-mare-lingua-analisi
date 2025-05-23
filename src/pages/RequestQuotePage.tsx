@@ -16,9 +16,13 @@ const RequestQuotePage = () => {
     };
   }, []);
   
+  // Log before render
+  React.useEffect(() => {
+    console.log("🎨 RequestQuotePage: JSX rendering");
+  });
+  
   return (
     <div className="min-h-screen bg-gray-50 py-12">
-      {console.log("🎨 RequestQuotePage: JSX rendering")}
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
