@@ -3,9 +3,12 @@ import * as React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { CleaningProvider, useCleaningManagement } from "@/hooks/cleaning";
+import { CleaningProvider, useCleaningContext } from "@/hooks/cleaning";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 import CleaningHeader from "./CleaningHeader";
 import CalendarView from "./views/CalendarView";
@@ -25,17 +28,48 @@ const AdminCleaningManagementContent = () => {
   const [view, setView] = useState<"calendar" | "list" | "statistics">("calendar");
   const [selectedApartment, setSelectedApartment] = useState<string>("all");
   const isMobile = useIsMobile();
+  const { refreshTasks, isLoading } = useCleaningContext();
+  
+  const handleRefresh = async () => {
+    try {
+      await refreshTasks();
+    } catch (error) {
+      console.error("Errore durante l'aggiornamento:", error);
+    }
+  };
   
   return (
     <div className="space-y-6">
-      <CleaningHeader 
-        view={view}
-        setView={setView}
-        selectedApartment={selectedApartment}
-        setSelectedApartment={setSelectedApartment}
-      />
+      <div className="flex justify-between items-center mb-6">
+        <CleaningHeader 
+          view={view}
+          setView={setView}
+          selectedApartment={selectedApartment}
+          setSelectedApartment={setSelectedApartment}
+        />
+        
+        <Button 
+          onClick={handleRefresh} 
+          size="sm" 
+          variant="outline"
+          disabled={isLoading}
+          className="ml-4"
+        >
+          <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
+          Sincronizza
+        </Button>
+      </div>
       
-      {view === "calendar" && (
+      {isLoading && (
+        <div className="flex justify-center py-8">
+          <div className="flex items-center space-x-2">
+            <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
+            <p className="text-muted-foreground">Sincronizzazione in corso...</p>
+          </div>
+        </div>
+      )}
+      
+      {!isLoading && view === "calendar" && (
         <CalendarView
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}
@@ -44,14 +78,14 @@ const AdminCleaningManagementContent = () => {
         />
       )}
       
-      {view === "list" && (
+      {!isLoading && view === "list" && (
         <ListView
           selectedApartment={selectedApartment}
           isMobile={isMobile}
         />
       )}
       
-      {view === "statistics" && (
+      {!isLoading && view === "statistics" && (
         <StatisticsView />
       )}
     </div>

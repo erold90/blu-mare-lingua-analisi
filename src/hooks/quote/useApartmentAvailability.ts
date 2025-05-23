@@ -6,8 +6,22 @@ import { useReservations } from "@/hooks/useReservations";
 
 export function useApartmentAvailability(apartments: Apartment[], formValues: FormValues) {
   const [availableApartments, setAvailableApartments] = useState<(Apartment & { booked?: boolean })[]>([]);
-  const { getApartmentAvailability } = useReservations();
+  const { getApartmentAvailability, refreshData } = useReservations();
   
+  // Sync data on component mount to ensure latest availability
+  useEffect(() => {
+    const syncAvailability = async () => {
+      try {
+        await refreshData();
+      } catch (error) {
+        console.error("Error syncing availability data:", error);
+      }
+    };
+    
+    syncAvailability();
+  }, []); // Only on mount
+  
+  // Update availability when form values change
   useEffect(() => {
     const filteredApartments = apartments.map(apartment => {
       // Verify if the apartment is already booked for the selected dates

@@ -1,14 +1,18 @@
 
-import { Apartment } from "@/hooks/useReservations";
-
 export interface CleaningTask {
   id: string;
   apartmentId: string;
-  apartmentName: string;
-  date: string; // ISO date string
-  status: "pending" | "inProgress" | "completed";
+  checkoutDate?: string; // Data di check-out
+  checkinDate?: string; // Data di check-in
+  date: string; // Data dell'attività
+  status: "pending" | "inProgress" | "completed" | "cancelled";
+  type: "checkout" | "checkin" | "maintenance" | "deep";
+  priority: "low" | "medium" | "high";
   notes?: string;
   assignedTo?: string;
+  lastUpdated?: number;
+  syncId?: string;
+  deviceId?: string;
 }
 
 export interface CleaningContextType {
@@ -21,4 +25,6 @@ export interface CleaningContextType {
   generateTasksFromReservations: () => void;
   getTasksByDate: (date: Date) => CleaningTask[];
   getTasksByApartmentId: (apartmentId: string) => CleaningTask[];
+  refreshTasks: () => Promise<void>;
+  isLoading: boolean;
 }

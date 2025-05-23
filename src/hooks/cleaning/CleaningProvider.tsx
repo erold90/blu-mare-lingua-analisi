@@ -8,21 +8,49 @@ import {
   getTasksByDateUtil,
   getTasksByApartmentIdUtil
 } from "./cleaningOperations";
-import { loadCleaningTasks, saveCleaningTasks } from "./cleaningStorage";
+import { loadCleaningTasks, saveCleaningTasks, syncCleaningTasks } from "./cleaningStorage";
+import { toast } from "sonner";
+import { externalStorage, DataType } from "@/services/externalStorage";
 
 export const CleaningProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   const [cleaningTasks, setCleaningTasks] = useState<CleaningTask[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { reservations, apartments } = useReservations();
   
-  // Load cleaning tasks from localStorage on start
+  // Load cleaning tasks from external storage on start
   useEffect(() => {
-    setCleaningTasks(loadCleaningTasks());
+    const fetchTasks = async () => {
+      setIsLoading(true);
+      try {
+        const tasks = await loadCleaningTasks();
+        setCleaningTasks(tasks);
+      } catch (error) {
+        console.error("Errore nel caricamento delle attività di pulizia:", error);
+        toast.error("Errore nel caricamento delle attività di pulizia");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchTasks();
+    
+    // Subscribe to updates
+    const unsubscribe = externalStorage.subscribe(DataType.CLEANING_TASKS, async () => {
+      console.log("Cleaning tasks updated externally, reloading");
+      fetchTasks();
+    });
+    
+    return () => {
+      unsubscribe();
+    };
   }, []);
   
-  // Save cleaning tasks to localStorage when they change
+  // Save cleaning tasks to external storage when they change
   useEffect(() => {
-    saveCleaningTasks(cleaningTasks);
-  }, [cleaningTasks]);
+    if (!isLoading && cleaningTasks.length >= 0) {
+      saveCleaningTasks(cleaningTasks);
+    }
+  }, [cleaningTasks, isLoading]);
   
   // Add a new cleaning task
   const addTask = (task: Omit<CleaningTask, "id">) => {
@@ -60,6 +88,22 @@ export const CleaningProvider: React.FC<{children: React.ReactNode}> = ({ childr
     setCleaningTasks(prev => prev.filter(task => task.id !== id));
   };
   
+  // Force refresh cleaning tasks
+  const refreshTasks = async () => {
+    setIsLoading(true);
+    try {
+      await syncCleaningTasks();
+      const tasks = await loadCleaningTasks();
+      setCleaningTasks(tasks);
+      toast.success("Attività di pulizia sincronizzate");
+    } catch (error) {
+      console.error("Errore nella sincronizzazione delle attività:", error);
+      toast.error("Errore nella sincronizzazione");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   // Generate tasks automatically from reservations
   const generateTasksFromReservations = () => {
     const newTasks = generateTasksFromReservationsUtil(
@@ -92,7 +136,9 @@ export const CleaningProvider: React.FC<{children: React.ReactNode}> = ({ childr
       deleteTask,
       generateTasksFromReservations,
       getTasksByDate,
-      getTasksByApartmentId
+      getTasksByApartmentId,
+      refreshTasks,
+      isLoading
     }}>
       {children}
     </CleaningContext.Provider>
