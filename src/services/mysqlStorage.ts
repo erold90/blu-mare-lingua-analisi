@@ -21,6 +21,8 @@ class MySQLStorage {
   private connectionOptions: MySQLConnectionOptions;
   private connected: boolean = false;
   private storagePrefix: string = "mysql_data_";
+  private retryAttempts: number = 0;
+  private maxRetries: number = 3;
   
   constructor(options: MySQLConnectionOptions) {
     this.connectionOptions = options;
@@ -34,17 +36,46 @@ class MySQLStorage {
       // Test la connessione al database tramite API
       console.log("Inizializzazione connessione MySQL tramite API:", this.connectionOptions.host);
       
-      // Verifichiamo se l'API è raggiungibile
-      const response = await fetch(`${this.baseUrl}/ping`);
+      // Verifichiamo se l'API è raggiungibile con un timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 secondi di timeout
       
-      if (response.ok) {
-        console.log("API raggiungibili e funzionanti");
-        this.connected = true;
-        return true;
-      } else {
-        console.log("API non disponibili, modalità offline attiva");
-        this.connected = false;
-        return false;
+      try {
+        const response = await fetch(`${this.baseUrl}/ping`, {
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          console.log("API raggiungibili e funzionanti");
+          this.connected = true;
+          this.retryAttempts = 0;
+          return true;
+        } else {
+          console.log("API non disponibili (risposta non ok), modalità offline attiva");
+          this.connected = false;
+          return false;
+        }
+      } catch (error) {
+        clearTimeout(timeoutId);
+        
+        if (error.name === 'AbortError') {
+          console.log("Timeout nella connessione alle API");
+        } else {
+          console.error("Errore nella connessione alle API:", error);
+        }
+        
+        if (this.retryAttempts < this.maxRetries) {
+          this.retryAttempts++;
+          console.log(`Tentativo ${this.retryAttempts}/${this.maxRetries} di connessione fallito`);
+          return false;
+        } else {
+          this.retryAttempts = 0;
+          console.log("Numero massimo di tentativi raggiunto, modalità offline attiva");
+          this.connected = false;
+          return false;
+        }
       }
     } catch (error) {
       console.error("Errore nella connessione alle API:", error);
@@ -82,9 +113,9 @@ class MySQLStorage {
    * Load data from MySQL database via API
    */
   public async loadData<T>(type: DataType): Promise<T | null> {
-    // Prova ad inizializzare la connessione se non è già connesso
     if (!this.connected) {
-      await this.initialize();
+      console.log(`MySQL non connesso, caricando dati da localStorage per ${type}`);
+      return this.loadFromLocalStorage<T>(type);
     }
     
     try {
@@ -113,12 +144,25 @@ class MySQLStorage {
       }
       
       if (response.success && response.data) {
+        console.log(`Dati caricati con successo dal server per ${type}:`, response.data);
+        
+        // Per il tipo RESERVATIONS, controlla se i dati sono un array vuoto (database vuoto)
+        if (type === DataType.RESERVATIONS && Array.isArray(response.data) && response.data.length === 0) {
+          console.log("Nessuna prenotazione nel database, verifico se ci sono dati locali");
+          const localData = this.loadFromLocalStorage<T>(type);
+          
+          if (localData && Array.isArray(localData) && (localData as any[]).length > 0) {
+            console.log("Trovati dati locali, li utilizzo e li sincronizzerò col server");
+            return localData;
+          }
+        }
+        
         // Salva anche in localStorage come cache
         this.saveToLocalStorage(type, response.data);
         return response.data as T;
       }
       
-      console.error(`Errore nel caricamento dei dati ${type}:`, response.error);
+      console.error(`Errore nel caricamento dei dati ${type} o dati vuoti:`, response.error);
       // Fallback al localStorage
       return this.loadFromLocalStorage<T>(type);
     } catch (error) {
@@ -136,25 +180,49 @@ class MySQLStorage {
     // Salva immediatamente in localStorage per sicurezza
     this.saveToLocalStorage(type, data);
     
-    // Prova ad inizializzare la connessione se non è già connesso
-    if (!this.connected) {
-      await this.initialize();
-    }
-    
     // Se non siamo connessi, ritorna true perché abbiamo comunque salvato in localStorage
     if (!this.connected) {
+      console.log(`MySQL non connesso, dati salvati solo in localStorage per ${type}`);
       return true;
     }
     
     try {
-      console.log(`Salvataggio dati ${type} su MySQL via API`);
+      console.log(`Salvataggio dati ${type} su MySQL via API`, data);
       
       let response;
       
       // Per salvataggi di collezioni dobbiamo gestire il caso in modo diverso
       if (Array.isArray(data)) {
-        // Per ora salviamo solo localmente perché le API non supportano batch updates
-        // Implementazione futura: API per sincronizzare array di oggetti
+        console.log(`Saving array of ${data.length} items for ${type}`);
+        
+        // Per le prenotazioni, dobbiamo salvare una ad una
+        if (type === DataType.RESERVATIONS && data.length > 0) {
+          console.log("Salvando prenotazioni una ad una");
+          
+          const results = await Promise.all(
+            (data as any[]).map(async (reservation) => {
+              try {
+                if (reservation.id) {
+                  const updateResponse = await reservationsApi.update(reservation.id, reservation);
+                  return updateResponse.success;
+                } else {
+                  const createResponse = await reservationsApi.create(reservation);
+                  return createResponse.success;
+                }
+              } catch (error) {
+                console.error(`Errore nel salvataggio della prenotazione ${reservation.id}:`, error);
+                return false;
+              }
+            })
+          );
+          
+          const allSuccess = results.every(success => success);
+          console.log(`Risultato salvataggio prenotazioni: ${allSuccess ? "completato" : "con errori"}`);
+          return allSuccess;
+        }
+        
+        // Per ora salviamo solo localmente per altri tipi di array
+        console.log(`Dati di tipo array ${type} salvati solo in localStorage (API batch non implementata)`);
         return true;
       } else {
         // Per dati singoli, possiamo fare una richiesta API diretta
@@ -198,20 +266,26 @@ class MySQLStorage {
    * Sincronizza i dati con il database MySQL tramite API
    */
   public async synchronize(type: DataType): Promise<void> {
-    // Prova ad inizializzare la connessione se non è già connesso
-    if (!this.connected) {
-      await this.initialize();
-    }
-    
     // Se non siamo connessi, non possiamo sincronizzare
     if (!this.connected) {
+      console.log(`MySQL non connesso, impossibile sincronizzare i dati ${type}`);
       throw new Error("Connessione al server non disponibile, impossibile sincronizzare i dati");
     }
     
     try {
       console.log(`Sincronizzazione dati ${type} con MySQL via API`);
       
-      // Chiamata all'API di sincronizzazione specifica
+      // Prima otteniamo i dati locali
+      const localData = this.loadFromLocalStorage<any>(type);
+      
+      // Se abbiamo dati locali e sono un array (come le prenotazioni), 
+      // proviamo a sincronizzarli con il server
+      if (localData && Array.isArray(localData) && localData.length > 0) {
+        console.log(`Sincronizzando ${localData.length} elementi locali con il server per ${type}`);
+        await this.saveData(type, localData);
+      }
+      
+      // Poi chiamiamo l'API di sincronizzazione specifica
       let response;
       
       switch(type) {
@@ -234,6 +308,13 @@ class MySQLStorage {
       
       if (response && response.success) {
         console.log(`Sincronizzazione ${type} completata con successo`);
+        
+        // Dopo la sincronizzazione, ricarichiamo i dati dal server
+        // per assicurarci di avere la versione più aggiornata
+        const updatedData = await this.loadData(type);
+        if (updatedData) {
+          this.saveToLocalStorage(type, updatedData);
+        }
       } else {
         console.error(`Errore nella sincronizzazione ${type}:`, response?.error);
       }
@@ -241,6 +322,13 @@ class MySQLStorage {
       console.error(`Errore nella sincronizzazione dei dati ${type} con MySQL:`, error);
       throw error;
     }
+  }
+  
+  /**
+   * Verifica la connessione al database
+   */
+  public isConnected(): boolean {
+    return this.connected;
   }
 }
 

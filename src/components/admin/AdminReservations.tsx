@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { toast } from "sonner";
 import { Plus, RefreshCw } from "lucide-react";
@@ -29,6 +30,7 @@ const AdminReservations = () => {
   const [reservationToDelete, setReservationToDelete] = React.useState<string | null>(null);
   const [selectedReservation, setSelectedReservation] = React.useState<Reservation | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [refreshing, setRefreshing] = React.useState(false);
   const isMobile = useIsMobile();
 
   // Find the reservation being edited
@@ -37,8 +39,17 @@ const AdminReservations = () => {
     : null;
 
   // Handle manual refresh button click
-  const handleRefresh = () => {
-    refreshData();
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshData();
+      toast.success("Dati aggiornati con successo");
+    } catch (error) {
+      console.error("Error in manual refresh:", error);
+      toast.error("Errore durante l'aggiornamento dei dati");
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   // Function to open dialog for adding a new reservation
@@ -60,9 +71,6 @@ const AdminReservations = () => {
       try {
         await deleteReservation(reservationToDelete);
         toast.success("Prenotazione eliminata con successo!");
-        
-        // Forza sincronizzazione dopo eliminazione
-        await refreshData();
       } catch (error) {
         console.error("Error deleting reservation:", error);
         toast.error("Errore durante l'eliminazione della prenotazione");
@@ -125,19 +133,24 @@ const AdminReservations = () => {
         });
         toast.success("Nuova prenotazione aggiunta con successo!");
       }
-      
-      // Forza sincronizzazione dopo salvataggio
-      await refreshData();
     } catch (error) {
       console.error("Error saving reservation:", error);
       toast.error("Errore nel salvare la prenotazione");
     }
   };
 
-  // Refresh data automaticamente all'inizio
+  // Refresh data automaticamente all'inizio e mostra i logs dell'operazione
   React.useEffect(() => {
-    refreshData();
-  }, []);
+    console.log("AdminReservations mounted, refreshing data...");
+    refreshData()
+      .then(() => console.log("Initial data refresh successful"))
+      .catch(err => console.error("Error in initial data refresh:", err));
+  }, [refreshData]);
+
+  // Log quando le prenotazioni cambiano
+  React.useEffect(() => {
+    console.log("Reservations updated:", reservations);
+  }, [reservations]);
 
   return (
     <div className="space-y-4">
@@ -148,9 +161,9 @@ const AdminReservations = () => {
             onClick={handleRefresh} 
             size="sm" 
             variant="outline"
-            disabled={isLoading}
+            disabled={isLoading || refreshing}
           >
-            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            <RefreshCw className={cn("h-4 w-4", (isLoading || refreshing) && "animate-spin")} />
             {!isMobile && <span className="ml-2">Sincronizza</span>}
           </Button>
           <Button onClick={handleAddNew} size="sm">
@@ -162,7 +175,7 @@ const AdminReservations = () => {
       </div>
 
       {/* Loading indicator */}
-      {isLoading && (
+      {(isLoading || refreshing) && (
         <div className="flex justify-center py-8">
           <div className="flex items-center space-x-2">
             <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -172,7 +185,7 @@ const AdminReservations = () => {
       )}
 
       {/* Mobile view */}
-      {!isLoading && isMobile && (
+      {!(isLoading || refreshing) && isMobile && (
         <div className="mt-4">
           {reservations.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
@@ -202,7 +215,7 @@ const AdminReservations = () => {
       )}
 
       {/* Desktop view */}
-      {!isLoading && !isMobile && (
+      {!(isLoading || refreshing) && !isMobile && (
         <ReservationTable 
           reservations={reservations}
           apartments={apartments}
@@ -210,6 +223,12 @@ const AdminReservations = () => {
           onDelete={handleDelete}
         />
       )}
+
+      {/* Debug info */}
+      <div className="mt-4 p-4 bg-gray-50 rounded-md text-xs">
+        <p className="font-medium">Stato database:</p>
+        <p>Numero prenotazioni: {reservations.length}</p>
+      </div>
 
       {/* Reservation Form Dialog */}
       <ReservationFormDialog

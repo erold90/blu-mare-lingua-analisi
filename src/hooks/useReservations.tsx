@@ -55,7 +55,15 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [apartments] = useState<Apartment[]>(defaultApartments);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [deviceId] = useState<string>(localStorage.getItem('vmb_device_id') || '');
+  const [deviceId] = useState<string>(() => {
+    // Ottieni o genera un ID dispositivo univoco
+    let id = localStorage.getItem('vmb_device_id');
+    if (!id) {
+      id = uuidv4();
+      localStorage.setItem('vmb_device_id', id);
+    }
+    return id;
+  });
   
   // Function to load reservations from database
   const loadReservations = useCallback(async () => {
@@ -88,6 +96,8 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
     } catch (error) {
       console.error("Error refreshing data:", error);
       toast.error("Errore durante la sincronizzazione");
+      // Ricarica comunque i dati locali in caso di errore
+      await loadReservations();
     } finally {
       setIsLoading(false);
     }
@@ -112,72 +122,123 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
   
   // Save reservations to database whenever they change
   useEffect(() => {
-    if (!isLoading && reservations.length >= 0) {
-      console.log(`Saving ${reservations.length} reservations to database`);
-      databaseProxy.saveData(DataType.RESERVATIONS, reservations)
-        .catch(error => console.error("Failed to save reservations:", error));
-    }
+    const saveReservations = async () => {
+      if (!isLoading && reservations.length >= 0) {
+        console.log(`Saving ${reservations.length} reservations to database`);
+        try {
+          await databaseProxy.saveData(DataType.RESERVATIONS, reservations);
+          console.log("Reservations saved successfully");
+        } catch (error) {
+          console.error("Failed to save reservations:", error);
+        }
+      }
+    };
+    
+    saveReservations();
   }, [reservations, isLoading]);
   
   const addReservation = useCallback(async (reservationData: Omit<Reservation, "id" | "lastUpdated" | "syncId" | "deviceId">) => {
-    const newReservation: Reservation = {
-      ...reservationData,
-      id: uuidv4(),
-      startDate: new Date(reservationData.startDate).toISOString(),
-      endDate: new Date(reservationData.endDate).toISOString(),
-      lastUpdated: Date.now(),
-      syncId: uuidv4(),
-      deviceId: deviceId
-    };
-    
-    setReservations(prev => [...prev, newReservation]);
-    
-    // Forza il salvataggio e la sincronizzazione dopo un'aggiunta
     try {
-      await databaseProxy.saveData(DataType.RESERVATIONS, [...reservations, newReservation]);
+      const newReservation: Reservation = {
+        ...reservationData,
+        id: uuidv4(),
+        startDate: new Date(reservationData.startDate).toISOString(),
+        endDate: new Date(reservationData.endDate).toISOString(),
+        lastUpdated: Date.now(),
+        syncId: uuidv4(),
+        deviceId: deviceId
+      };
+      
+      console.log("Adding new reservation:", newReservation);
+      
+      // Aggiorna lo stato per l'interfaccia utente immediatamente
+      setReservations(prev => [...prev, newReservation]);
+      
+      // Forza il salvataggio e la sincronizzazione dopo un'aggiunta
+      try {
+        await databaseProxy.saveData(DataType.RESERVATIONS, [...reservations, newReservation]);
+        console.log("New reservation saved to database");
+      } catch (error) {
+        console.error("Failed to save new reservation:", error);
+        toast.error("Errore nel salvare la prenotazione");
+      }
+      
+      // Aggiorna i dati dopo il salvataggio per assicurarsi che tutto sia sincronizzato
+      setTimeout(() => {
+        refreshData().catch(err => console.error("Error refreshing after add:", err));
+      }, 1000);
     } catch (error) {
-      console.error("Failed to save new reservation:", error);
-      toast.error("Errore nel salvare la prenotazione");
+      console.error("Error in addReservation:", error);
+      throw error;
     }
-  }, [reservations, deviceId]);
+  }, [reservations, deviceId, refreshData]);
   
   const updateReservation = useCallback(async (updatedReservation: Reservation) => {
-    const formatted: Reservation = {
-      ...updatedReservation,
-      startDate: new Date(updatedReservation.startDate).toISOString(),
-      endDate: new Date(updatedReservation.endDate).toISOString(),
-      lastUpdated: Date.now(),
-      syncId: updatedReservation.syncId || uuidv4(),
-      deviceId: deviceId
-    };
-    
-    const updatedReservations = reservations.map(res => 
-      res.id === formatted.id ? formatted : res
-    );
-    
-    setReservations(updatedReservations);
-    
-    // Forza il salvataggio dopo un aggiornamento
     try {
-      await databaseProxy.saveData(DataType.RESERVATIONS, updatedReservations);
+      const formatted: Reservation = {
+        ...updatedReservation,
+        startDate: new Date(updatedReservation.startDate).toISOString(),
+        endDate: new Date(updatedReservation.endDate).toISOString(),
+        lastUpdated: Date.now(),
+        syncId: updatedReservation.syncId || uuidv4(),
+        deviceId: deviceId
+      };
+      
+      console.log("Updating reservation:", formatted);
+      
+      const updatedReservations = reservations.map(res => 
+        res.id === formatted.id ? formatted : res
+      );
+      
+      // Aggiorna lo stato per l'interfaccia utente immediatamente
+      setReservations(updatedReservations);
+      
+      // Forza il salvataggio dopo un aggiornamento
+      try {
+        await databaseProxy.saveData(DataType.RESERVATIONS, updatedReservations);
+        console.log("Reservations updated in database");
+      } catch (error) {
+        console.error("Failed to update reservation:", error);
+        toast.error("Errore nell'aggiornare la prenotazione");
+      }
+      
+      // Aggiorna i dati dopo il salvataggio per assicurarsi che tutto sia sincronizzato
+      setTimeout(() => {
+        refreshData().catch(err => console.error("Error refreshing after update:", err));
+      }, 1000);
     } catch (error) {
-      console.error("Failed to update reservation:", error);
-      toast.error("Errore nell'aggiornare la prenotazione");
+      console.error("Error in updateReservation:", error);
+      throw error;
     }
-  }, [reservations, deviceId]);
+  }, [reservations, deviceId, refreshData]);
   
   const deleteReservation = useCallback(async (id: string) => {
-    const updatedReservations = reservations.filter(res => res.id !== id);
-    setReservations(updatedReservations);
-    
-    // Forza il salvataggio dopo un'eliminazione
     try {
-      await databaseProxy.saveData(DataType.RESERVATIONS, updatedReservations);
+      console.log("Deleting reservation:", id);
+      
+      const updatedReservations = reservations.filter(res => res.id !== id);
+      
+      // Aggiorna lo stato per l'interfaccia utente immediatamente
+      setReservations(updatedReservations);
+      
+      // Forza il salvataggio dopo un'eliminazione
+      try {
+        await databaseProxy.saveData(DataType.RESERVATIONS, updatedReservations);
+        console.log("Reservations updated in database after delete");
+      } catch (error) {
+        console.error("Failed to delete reservation:", error);
+        toast.error("Errore nell'eliminare la prenotazione");
+      }
+      
+      // Aggiorna i dati dopo il salvataggio per assicurarsi che tutto sia sincronizzato
+      setTimeout(() => {
+        refreshData().catch(err => console.error("Error refreshing after delete:", err));
+      }, 1000);
     } catch (error) {
-      console.error("Failed to delete reservation:", error);
-      toast.error("Errore nell'eliminare la prenotazione");
+      console.error("Error in deleteReservation:", error);
+      throw error;
     }
-  }, [reservations]);
+  }, [reservations, refreshData]);
   
   // Check if an apartment is available for the given date range
   const getApartmentAvailability = useCallback((apartmentId: string, startDate: Date, endDate: Date): boolean => {
