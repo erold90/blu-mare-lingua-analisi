@@ -1,36 +1,34 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 
-console.log("🚀 RequestQuotePage: Component file loaded");
+console.log("🚀 RequestQuotePage: Component file loaded - SIMPLIFIED VERSION");
 
 const RequestQuotePage = () => {
-  console.log("🚀 RequestQuotePage: Component rendering started");
-  
-  useEffect(() => {
-    console.log("✅ RequestQuotePage mounted successfully");
-    return () => console.log("👋 RequestQuotePage unmounted");
-  }, []);
+  console.log("🚀 RequestQuotePage: Component rendering started - SIMPLE");
   
   return (
-    <div className="bg-gradient-to-b from-white to-secondary/30 min-h-screen">
-      <div className="container px-4 py-12 md:py-16">
-        <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-serif font-bold mb-3 text-primary">
-            Richiedi un Preventivo
-          </h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Compila il form per ricevere un preventivo personalizzato per il tuo soggiorno.
-          </p>
-        </div>
-        
-        <div className="max-w-3xl mx-auto">
-          <div className="bg-white p-8 rounded-lg shadow-lg">
-            <p className="text-center text-lg">
-              Pagina del preventivo caricata correttamente! 🎉
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="container mx-auto px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Richiedi un Preventivo
+            </h1>
+            <p className="text-xl text-gray-600">
+              La pagina funziona correttamente! 🎉
             </p>
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              Il form sarà implementato nei prossimi step.
-            </p>
+          </div>
+          
+          <div className="bg-white rounded-lg shadow-md p-8">
+            <div className="text-center">
+              <h2 className="text-2xl font-semibold mb-4">Pagina Preventivo Caricata</h2>
+              <p className="text-gray-600 mb-6">
+                Il routing verso /preventivo funziona perfettamente.
+              </p>
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                ✅ Componente RequestQuotePage renderizzato con successo
+              </div>
+            </div>
           </div>
         </div>
       </div>
