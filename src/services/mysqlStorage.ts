@@ -27,8 +27,8 @@ class MySQLStorage {
   private storagePrefix: string = "mysql_data_";
   private retryAttempts: number = 0;
   private maxRetries: number = 3;
-  private lastConnectionAttempt: number = 0; // timestamp dell'ultimo tentativo di connessione
-  private connectionTimeout: number = 30000; // 30 secondi tra un tentativo e l'altro
+  private lastConnectionAttempt: number = 0;
+  private connectionTimeout: number = 30000;
   
   constructor(options: MySQLConnectionOptions) {
     this.connectionOptions = options;
@@ -54,59 +54,24 @@ class MySQLStorage {
       this.lastConnectionAttempt = now;
       this.isInitializing = true;
       
-      // Test la connessione al database tramite API
-      console.log("Inizializzazione connessione MySQL tramite API:", this.connectionOptions.host);
-      
-      // Verifichiamo se l'API è raggiungibile con un timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 secondi di timeout
+      console.log("Test connessione al database MySQL...");
       
       try {
-        // Prima proviamo a testare direttamente la connessione al database
+        // Testiamo direttamente la connessione al database usando l'endpoint dedicato
         const dbTestResponse = await pingApi.testDatabaseConnection();
-        clearTimeout(timeoutId);
         
         if (dbTestResponse.success) {
           console.log("Connessione al database MySQL verificata con successo:", dbTestResponse.data);
           this.connected = true;
           this.retryAttempts = 0;
-          toast.success("Connessione al database MySQL stabilita");
           return true;
         }
         
-        console.log("Test di connessione al database fallito, provo con il ping generico");
-        
-        // Fallback al ping generico
-        const response = await fetch(`${this.baseUrl}/ping`, {
-          signal: controller.signal,
-          headers: {
-            // Aggiungi un timestamp per evitare caching
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        });
-        
-        if (response.ok) {
-          console.log("API raggiungibili e funzionanti, ma database non disponibile");
-          this.connected = false;
-          toast.warning("API raggiungibili ma database non disponibile. Dati salvati solo localmente.");
-          return false;
-        } else {
-          console.log("API non disponibili (risposta non ok), modalità offline attiva");
-          this.connected = false;
-          toast.warning("Modalità offline attiva: dati salvati localmente");
-          return false;
-        }
+        console.log("Test di connessione al database fallito:", dbTestResponse.error);
+        this.connected = false;
+        return false;
       } catch (error) {
-        clearTimeout(timeoutId);
-        
-        if (error.name === 'AbortError') {
-          console.log("Timeout nella connessione alle API");
-          toast.error("Timeout nella connessione al server");
-        } else {
-          console.error("Errore nella connessione alle API:", error);
-        }
+        console.error("Errore nella connessione al database:", error);
         
         if (this.retryAttempts < this.maxRetries) {
           this.retryAttempts++;
@@ -115,7 +80,6 @@ class MySQLStorage {
         } else {
           this.retryAttempts = 0;
           console.log("Numero massimo di tentativi raggiunto, modalità offline attiva");
-          toast.warning("Passaggio alla modalità offline dopo multipli tentativi falliti");
           this.connected = false;
           return false;
         }
@@ -123,8 +87,7 @@ class MySQLStorage {
         this.isInitializing = false;
       }
     } catch (error) {
-      console.error("Errore nella connessione alle API:", error);
-      toast.error("Errore di connessione al server, lavorando in modalità offline");
+      console.error("Errore generale nell'inizializzazione:", error);
       this.connected = false;
       this.isInitializing = false;
       return false;
@@ -156,7 +119,7 @@ class MySQLStorage {
   }
   
   /**
-   * Load data from MySQL database via API
+   * Load data from MySQL database via API with improved error handling
    */
   public async loadData<T>(type: DataType): Promise<T | null> {
     // Tentiamo di stabilire una connessione se necessario
@@ -166,6 +129,11 @@ class MySQLStorage {
     
     try {
       console.log(`Caricamento dati ${type} da MySQL via API`);
+      
+      if (!this.connected) {
+        console.log(`MySQL non connesso, uso localStorage per ${type}`);
+        return this.loadFromLocalStorage<T>(type);
+      }
       
       let response;
       
@@ -180,7 +148,6 @@ class MySQLStorage {
           response = await apartmentsApi.getAll();
           break;
         case DataType.PRICES:
-          // Per i prezzi dovremmo specificare l'anno, qui usiamo l'anno corrente come fallback
           const currentYear = new Date().getFullYear();
           response = await pricesApi.getByYear(currentYear);
           break;
@@ -192,30 +159,15 @@ class MySQLStorage {
       if (response.success && response.data) {
         console.log(`Dati caricati con successo dal server per ${type}:`, response.data);
         
-        // Per il tipo RESERVATIONS, controlla se i dati sono un array vuoto (database vuoto)
-        if (type === DataType.RESERVATIONS && Array.isArray(response.data) && response.data.length === 0) {
-          console.log("Nessuna prenotazione nel database, verifico se ci sono dati locali");
-          const localData = this.loadFromLocalStorage<T>(type);
-          
-          if (localData && Array.isArray(localData) && (localData as any[]).length > 0) {
-            console.log("Trovati dati locali, li utilizzo e li sincronizzerò col server");
-            
-            // Se ci sono dati locali ma nessun dato sul server, sincronizziamo
-            try {
-              await this.saveData(type, localData);
-              console.log("Dati locali sincronizzati con il server");
-              return localData;
-            } catch (syncError) {
-              console.error("Errore nella sincronizzazione automatica:", syncError);
-            }
-            
-            return localData;
-          }
+        // Verifica se i dati sono validi
+        if (this.isValidData(response.data, type)) {
+          // Salva in localStorage come cache
+          this.saveToLocalStorage(type, response.data);
+          return response.data as T;
+        } else {
+          console.warn(`Dati ricevuti dal server per ${type} non validi`, response.data);
+          return this.loadFromLocalStorage<T>(type);
         }
-        
-        // Salva anche in localStorage come cache
-        this.saveToLocalStorage(type, response.data);
-        return response.data as T;
       }
       
       console.error(`Errore nel caricamento dei dati ${type} o dati vuoti:`, response.error);
@@ -223,19 +175,32 @@ class MySQLStorage {
       return this.loadFromLocalStorage<T>(type);
     } catch (error) {
       console.error(`Errore nel caricamento dei dati ${type} da MySQL:`, error);
-      
-      // Se non siamo connessi, proviamo a riconnettere
-      if (!this.connected) {
-        await this.initialize();
-      }
-      
-      // In caso di errore, proviamo a caricare dal localStorage come fallback
       return this.loadFromLocalStorage<T>(type);
     }
   }
   
   /**
-   * Save data to MySQL database via API
+   * Verifica se i dati sono validi in base al tipo
+   */
+  private isValidData(data: any, type: DataType): boolean {
+    if (data === null || data === undefined) return false;
+    
+    switch(type) {
+      case DataType.RESERVATIONS:
+        return Array.isArray(data);
+      case DataType.CLEANING_TASKS:
+        return Array.isArray(data);
+      case DataType.APARTMENTS:
+        return Array.isArray(data);
+      case DataType.PRICES:
+        return data !== null;
+      default:
+        return true;
+    }
+  }
+  
+  /**
+   * Save data to MySQL database via API with improved batch handling
    */
   public async saveData<T>(type: DataType, data: T): Promise<boolean> {
     // Tentiamo di stabilire una connessione se necessario
@@ -246,112 +211,184 @@ class MySQLStorage {
     // Salva immediatamente in localStorage per sicurezza
     this.saveToLocalStorage(type, data);
     
+    if (!this.connected) {
+      console.log(`MySQL non connesso, dati salvati solo in localStorage per ${type}`);
+      return false;
+    }
+    
     try {
       console.log(`Salvataggio dati ${type} su MySQL via API`, data);
-      
-      let response;
       
       // Per salvataggi di collezioni dobbiamo gestire il caso in modo diverso
       if (Array.isArray(data)) {
         console.log(`Saving array of ${data.length} items for ${type}`);
         
-        // Per le prenotazioni, dobbiamo salvare una ad una
+        // Per le prenotazioni, dobbiamo processarle in batch
         if (type === DataType.RESERVATIONS && data.length > 0) {
-          console.log("Salvando prenotazioni una ad una");
-          
-          const results = await Promise.allSettled(
-            (data as any[]).map(async (reservation) => {
-              try {
-                if (reservation.id) {
-                  const updateResponse = await reservationsApi.update(reservation.id, reservation);
-                  return updateResponse.success;
-                } else {
-                  const createResponse = await reservationsApi.create(reservation);
-                  return createResponse.success;
-                }
-              } catch (error) {
-                console.error(`Errore nel salvataggio della prenotazione ${reservation.id}:`, error);
-                return false;
-              }
-            })
-          );
-          
-          const allSuccess = results.every(result => result.status === 'fulfilled' && result.value === true);
-          console.log(`Risultato salvataggio prenotazioni: ${allSuccess ? "completato" : "con errori"}`);
-          
-          if (!allSuccess) {
-            toast.warning("Alcune prenotazioni potrebbero non essere state sincronizzate. Riprova più tardi.");
-          }
-          
-          return allSuccess;
+          return await this.saveReservationsBatch(data);
         }
         
         // Per le attività di pulizia, stesso approccio
         if (type === DataType.CLEANING_TASKS && data.length > 0) {
-          console.log("Salvando attività di pulizia una ad una");
-          
-          const results = await Promise.allSettled(
-            (data as any[]).map(async (task) => {
-              try {
-                if (task.id) {
-                  const updateResponse = await cleaningApi.update(task.id, task);
-                  return updateResponse.success;
-                } else {
-                  const createResponse = await cleaningApi.create(task);
-                  return createResponse.success;
-                }
-              } catch (error) {
-                console.error(`Errore nel salvataggio dell'attività ${task.id}:`, error);
-                return false;
-              }
-            })
-          );
-          
-          const allSuccess = results.every(result => result.status === 'fulfilled' && result.value === true);
-          console.log(`Risultato salvataggio attività: ${allSuccess ? "completato" : "con errori"}`);
-          return allSuccess;
+          return await this.saveCleaningTasksBatch(data);
         }
         
         // Per ora salviamo solo localmente per altri tipi di array
         console.log(`Dati di tipo array ${type} salvati solo in localStorage (API batch non implementata)`);
-        return true;
+        return false;
       } else {
         // Per dati singoli, possiamo fare una richiesta API diretta
-        switch(type) {
-          case DataType.RESERVATIONS:
-            if ('id' in (data as any)) {
-              response = await reservationsApi.update((data as any).id, data);
-            } else {
-              response = await reservationsApi.create(data);
-            }
-            break;
-          case DataType.CLEANING_TASKS:
-            if ('id' in (data as any)) {
-              response = await cleaningApi.update((data as any).id, data);
-            } else {
-              response = await cleaningApi.create(data);
-            }
-            break;
-          default:
-            console.warn(`Tipo di dati non gestito per il salvataggio: ${type}`);
-            return false;
-        }
-        
-        if (response && response.success) {
-          return true;
-        }
-        
-        console.error(`Errore nel salvataggio dei dati ${type}:`, response?.error);
-        // Ritorna comunque true perché abbiamo salvato in localStorage
-        toast.warning("Dato salvato localmente ma non sincronizzato con il database");
-        return true;
+        return await this.saveSingleItem(type, data);
       }
     } catch (error) {
       console.error(`Errore nel salvataggio dei dati ${type} su MySQL:`, error);
-      toast.error("Errore di connessione, dati salvati solo localmente");
+      return false;
+    }
+  }
+  
+  /**
+   * Salvataggio batch di prenotazioni con gestione errori migliorata
+   */
+  private async saveReservationsBatch(reservations: any[]): Promise<boolean> {
+    try {
+      console.log(`Salvataggio batch di ${reservations.length} prenotazioni`);
       
-      // In caso di errore, consideriamo comunque un successo perché abbiamo salvato in localStorage
-      return true;
+      // Suddividi le prenotazioni in batch più piccoli per evitare timeout
+      const batchSize = 5;
+      const batches = [];
+      
+      for (let i = 0; i < reservations.length; i += batchSize) {
+        batches.push(reservations.slice(i, i + batchSize));
+      }
+      
+      console.log(`Creati ${batches.length} batch di prenotazioni`);
+      
+      // Processa ogni batch
+      let successCount = 0;
+      
+      for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+        console.log(`Processando batch ${i+1}/${batches.length} con ${batch.length} prenotazioni`);
+        
+        const results = await Promise.allSettled(
+          batch.map(async (reservation) => {
+            try {
+              if (reservation.id) {
+                const updateResponse = await reservationsApi.update(reservation.id, reservation);
+                return updateResponse.success;
+              } else {
+                const createResponse = await reservationsApi.create(reservation);
+                return createResponse.success;
+              }
+            } catch (error) {
+              console.error(`Errore nel salvataggio della prenotazione ${reservation.id || 'nuova'}:`, error);
+              return false;
+            }
+          })
+        );
+        
+        // Conta i successi
+        const batchSuccesses = results.filter(result => 
+          result.status === 'fulfilled' && result.value === true
+        ).length;
+        
+        successCount += batchSuccesses;
+        console.log(`Batch ${i+1}/${batches.length}: ${batchSuccesses}/${batch.length} prenotazioni salvate`);
+      }
+      
+      const allSuccess = successCount === reservations.length;
+      console.log(`Risultato salvataggio prenotazioni: ${successCount}/${reservations.length} salvate`);
+      
+      if (!allSuccess) {
+        toast.warning(`Alcune prenotazioni (${reservations.length - successCount}) non sono state sincronizzate. I dati potrebbero non essere visibili su altri dispositivi.`);
+      }
+      
+      return successCount > 0; // Consideriamo un successo parziale come un successo
+    } catch (error) {
+      console.error("Errore nel salvataggio batch di prenotazioni:", error);
+      return false;
+    }
+  }
+  
+  /**
+   * Salvataggio batch di attività di pulizia
+   */
+  private async saveCleaningTasksBatch(tasks: any[]): Promise<boolean> {
+    try {
+      // Implementazione simile al salvataggio delle prenotazioni
+      console.log(`Salvataggio batch di ${tasks.length} attività di pulizia`);
+      
+      const results = await Promise.allSettled(
+        tasks.map(async (task) => {
+          try {
+            if (task.id) {
+              const updateResponse = await cleaningApi.update(task.id, task);
+              return updateResponse.success;
+            } else {
+              const createResponse = await cleaningApi.create(task);
+              return createResponse.success;
+            }
+          } catch (error) {
+            console.error(`Errore nel salvataggio dell'attività ${task.id || 'nuova'}:`, error);
+            return false;
+          }
+        })
+      );
+      
+      const successCount = results.filter(result => 
+        result.status === 'fulfilled' && result.value === true
+      ).length;
+      
+      const allSuccess = successCount === tasks.length;
+      console.log(`Risultato salvataggio attività: ${successCount}/${tasks.length} salvate`);
+      
+      if (!allSuccess) {
+        toast.warning(`Alcune attività di pulizia (${tasks.length - successCount}) non sono state sincronizzate.`);
+      }
+      
+      return successCount > 0;
+    } catch (error) {
+      console.error("Errore nel salvataggio batch di attività di pulizia:", error);
+      return false;
+    }
+  }
+  
+  /**
+   * Salvataggio di un singolo elemento
+   */
+  private async saveSingleItem(type: DataType, data: any): Promise<boolean> {
+    try {
+      let response;
+      
+      switch(type) {
+        case DataType.RESERVATIONS:
+          if ('id' in data) {
+            response = await reservationsApi.update(data.id, data);
+          } else {
+            response = await reservationsApi.create(data);
+          }
+          break;
+        case DataType.CLEANING_TASKS:
+          if ('id' in data) {
+            response = await cleaningApi.update(data.id, data);
+          } else {
+            response = await cleaningApi.create(data);
+          }
+          break;
+        default:
+          console.warn(`Tipo di dati non gestito per il salvataggio: ${type}`);
+          return false;
+      }
+      
+      if (response && response.success) {
+        return true;
+      }
+      
+      console.error(`Errore nel salvataggio dei dati ${type}:`, response?.error);
+      return false;
+    } catch (error) {
+      console.error(`Errore nel salvataggio dell'elemento di tipo ${type}:`, error);
+      return false;
     }
   }
   
@@ -363,26 +400,17 @@ class MySQLStorage {
     if (!this.connected) {
       const connected = await this.initialize();
       if (!connected) {
-        toast.error("Database non connesso, impossibile sincronizzare");
         throw new Error("Connessione al server non disponibile, impossibile sincronizzare i dati");
       }
     }
     
     try {
       console.log(`Sincronizzazione dati ${type} con MySQL via API`);
-      toast.loading(`Sincronizzazione in corso...`);
       
-      // Prima otteniamo i dati locali
+      // Prima otteniamo i dati locali come backup
       const localData = this.loadFromLocalStorage<any>(type);
       
-      // Se abbiamo dati locali e sono un array (come le prenotazioni), 
-      // proviamo a sincronizzarli con il server
-      if (localData && Array.isArray(localData) && localData.length > 0) {
-        console.log(`Sincronizzando ${localData.length} elementi locali con il server per ${type}`);
-        await this.saveData(type, localData);
-      }
-      
-      // Poi chiamiamo l'API di sincronizzazione specifica
+      // Chiamiamo l'API di sincronizzazione specifica per aggiornare i dati sul server
       let response;
       
       switch(type) {
@@ -400,14 +428,11 @@ class MySQLStorage {
           break;
         default:
           console.warn(`Tipo di dati non gestito per la sincronizzazione: ${type}`);
-          toast.dismiss();
           return;
       }
       
       if (response && response.success) {
         console.log(`Sincronizzazione ${type} completata con successo`);
-        toast.dismiss();
-        toast.success(`Sincronizzazione di ${this.getDataTypeLabel(type)} completata con successo`);
         
         // Dopo la sincronizzazione, ricarichiamo i dati dal server
         // per assicurarci di avere la versione più aggiornata
@@ -417,13 +442,10 @@ class MySQLStorage {
         }
       } else {
         console.error(`Errore nella sincronizzazione ${type}:`, response?.error);
-        toast.dismiss();
-        toast.error(`Errore nella sincronizzazione di ${this.getDataTypeLabel(type)}`);
+        throw new Error(`Errore nella sincronizzazione dei dati ${type}`);
       }
     } catch (error) {
       console.error(`Errore nella sincronizzazione dei dati ${type} con MySQL:`, error);
-      toast.dismiss();
-      toast.error(`Errore nella sincronizzazione di ${this.getDataTypeLabel(type)}`);
       throw error;
     }
   }
@@ -433,18 +455,27 @@ class MySQLStorage {
    */
   public async forceSyncAllData(): Promise<boolean> {
     try {
+      // Prima verifica la connessione
+      if (!this.connected) {
+        const connected = await this.initialize();
+        if (!connected) {
+          toast.error("Database non connesso, impossibile sincronizzare");
+          return false;
+        }
+      }
+      
+      console.log("Forza sincronizzazione di tutti i dati");
       const response = await systemApi.forceSyncAllData();
       
       if (response.success) {
-        toast.success("Sincronizzazione di tutti i dati completata con successo");
+        console.log("Sincronizzazione forzata completata con successo:", response.data);
         return true;
       } else {
-        toast.error(`Errore nella sincronizzazione: ${response.error}`);
+        console.error("Errore nella sincronizzazione forzata:", response.error);
         return false;
       }
     } catch (error) {
       console.error("Errore nella sincronizzazione forzata:", error);
-      toast.error("Errore durante la sincronizzazione dei dati");
       return false;
     }
   }
