@@ -126,6 +126,11 @@ async function fetchApi<T>(
 export const pingApi = {
   check: async () => {
     return fetchApi('/ping');
+  },
+  
+  // Aggiungiamo una nuova funzione per testare la connessione al database
+  testDatabaseConnection: async () => {
+    return fetchApi('/ping/database');
   }
 };
 

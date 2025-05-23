@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { DataType } from "./externalStorage";
 import { 
@@ -6,7 +5,8 @@ import {
   cleaningApi, 
   apartmentsApi, 
   pricesApi, 
-  syncApi 
+  syncApi,
+  pingApi
 } from "@/api/apiClient";
 
 interface MySQLConnectionOptions {
@@ -20,6 +20,8 @@ class MySQLStorage {
   private baseUrl: string = "/api";
   private connectionOptions: MySQLConnectionOptions;
   private connected: boolean = false;
+  private isInitializing: boolean = false;
+  private initPromise: Promise<boolean> | null = null;
   private storagePrefix: string = "mysql_data_";
   private retryAttempts: number = 0;
   private maxRetries: number = 3;
@@ -41,11 +43,24 @@ class MySQLStorage {
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 secondi di timeout
       
       try {
+        // Prima proviamo a testare direttamente la connessione al database
+        const dbTestResponse = await pingApi.testDatabaseConnection();
+        clearTimeout(timeoutId);
+        
+        if (dbTestResponse.success) {
+          console.log("Connessione al database MySQL verificata con successo:", dbTestResponse.data);
+          this.connected = true;
+          this.retryAttempts = 0;
+          toast.success("Connessione al database MySQL stabilita");
+          return true;
+        }
+        
+        console.log("Test di connessione al database fallito, provo con il ping generico");
+        
+        // Fallback al ping generico
         const response = await fetch(`${this.baseUrl}/ping`, {
           signal: controller.signal
         });
-        
-        clearTimeout(timeoutId);
         
         if (response.ok) {
           console.log("API raggiungibili e funzionanti");
@@ -55,6 +70,7 @@ class MySQLStorage {
         } else {
           console.log("API non disponibili (risposta non ok), modalità offline attiva");
           this.connected = false;
+          toast.warning("Modalità offline attiva: dati salvati localmente");
           return false;
         }
       } catch (error) {
@@ -62,6 +78,7 @@ class MySQLStorage {
         
         if (error.name === 'AbortError') {
           console.log("Timeout nella connessione alle API");
+          toast.error("Timeout nella connessione al server");
         } else {
           console.error("Errore nella connessione alle API:", error);
         }
@@ -73,6 +90,7 @@ class MySQLStorage {
         } else {
           this.retryAttempts = 0;
           console.log("Numero massimo di tentativi raggiunto, modalità offline attiva");
+          toast.warning("Passaggio alla modalità offline dopo multipli tentativi falliti");
           this.connected = false;
           return false;
         }

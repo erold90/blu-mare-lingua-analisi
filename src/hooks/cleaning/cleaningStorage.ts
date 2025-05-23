@@ -2,6 +2,8 @@
 import { CleaningTask } from "./types";
 import { DataType } from "@/services/externalStorage";
 import { databaseProxy } from "@/services/databaseProxy";
+import { toast } from "sonner";
+import { pingApi } from "@/api/apiClient";
 
 export const loadCleaningTasks = async (): Promise<CleaningTask[]> => {
   try {
@@ -28,5 +30,26 @@ export const syncCleaningTasks = async (): Promise<void> => {
   } catch (error) {
     console.error("Errore nella sincronizzazione delle attività di pulizia:", error);
     throw error;
+  }
+};
+
+// Test della connessione al database
+export const testDatabaseConnection = async (): Promise<boolean> => {
+  try {
+    const response = await pingApi.testDatabaseConnection();
+    
+    if (response.success) {
+      toast.success("Connessione al database MySQL stabilita con successo");
+      console.info("Dettagli connessione database:", response.data);
+      return true;
+    } else {
+      toast.error(`Errore di connessione al database: ${response.error}`);
+      console.error("Errore nel test di connessione al database:", response.error);
+      return false;
+    }
+  } catch (error) {
+    toast.error("Impossibile verificare la connessione al database");
+    console.error("Eccezione durante il test di connessione al database:", error);
+    return false;
   }
 };

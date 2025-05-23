@@ -1,4 +1,3 @@
-
 /**
  * Server API per interagire con il database MySQL
  * Questo file andrebbe posizionato sul server (ad es. in una cartella server/ o api/)
@@ -52,6 +51,51 @@ const handleError = (res, error) => {
     error: error.message || 'Si è verificato un errore interno del server'
   });
 };
+
+// API per testare la connessione al database
+app.get('/api/ping', async (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: { status: "ok", message: "API server is running" }
+    });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// API specifica per testare la connessione al database
+app.get('/api/ping/database', async (req, res) => {
+  try {
+    // Tentiamo di ottenere una connessione dal pool
+    const connection = await pool.getConnection();
+    
+    // Eseguiamo una semplice query per verificare che funzioni
+    const [result] = await connection.query('SELECT 1 AS dbIsConnected');
+    
+    // Rilasciamo la connessione
+    connection.release();
+    
+    res.json({
+      success: true,
+      data: { 
+        status: "ok", 
+        message: "Database connection successful",
+        dbInfo: {
+          host: dbConfig.host,
+          database: dbConfig.database,
+          user: dbConfig.user,
+          tables: ["reservations", "cleaning_tasks", "apartments", "prices"]
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: `Database connection failed: ${error.message}`
+    });
+  }
+});
 
 // API per le prenotazioni
 app.get('/api/reservations', async (req, res) => {
