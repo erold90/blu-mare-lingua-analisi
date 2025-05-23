@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { NavLink, useLocation, Link, useNavigate } from "react-router-dom";
 import { 
@@ -9,7 +10,8 @@ import {
   History, 
   Home, 
   Menu, 
-  Brush, 
+  Brush,
+  Server 
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -125,6 +127,18 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       >
         <Image className="h-5 w-5" />
         <span>Appartamenti</span>
+      </NavLink>
+      <NavLink
+        to="/area-riservata/api-test"
+        className={({ isActive }) =>
+          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
+            isActive ? "bg-accent font-medium" : "hover:bg-muted"
+          }`
+        }
+        onClick={() => setMenuOpen(false)}
+      >
+        <Server className="h-5 w-5" />
+        <span>Test API</span>
       </NavLink>
       <NavLink
         to="/area-riservata/impostazioni"

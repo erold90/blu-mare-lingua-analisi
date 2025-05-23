@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -72,7 +71,6 @@ function App() {
                 <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                 <Route path="/cookie-policy" element={<CookiePolicyPage />} />
               </Route>
-              <Route path="/api-test" element={<ApiTestPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             <PageViewTracker />

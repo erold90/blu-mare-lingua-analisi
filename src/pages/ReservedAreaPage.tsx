@@ -20,6 +20,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 // Nuovi componenti
 import AdminCalendar from "@/components/admin/calendar/AdminCalendar";
 import AdminCleaningManagement from "@/components/admin/cleaning/AdminCleaningManagement";
+import ApiTestPage from '../pages/api-test';
 
 const LoginForm = () => {
   const [username, setUsername] = React.useState("");
@@ -148,6 +149,7 @@ const ReservedAreaPage = () => {
                 {/* Nuove route */}
                 <Route path="calendario" element={<AdminCalendar />} />
                 <Route path="pulizie" element={<AdminCleaningManagement />} />
+                <Route path="api-test" element={<ApiTestPage />} />
                 <Route path="*" element={<Navigate to="/area-riservata/dashboard" />} />
               </Routes>
             </AdminLayout>
