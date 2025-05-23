@@ -4,6 +4,7 @@ import { UseFormReturn } from "react-hook-form";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/price/priceCalculator";
+import { refreshPricesCache } from "@/utils/price/weeklyPrice";
 import { v4 as uuidv4 } from "uuid";
 import { useActivityLog } from "@/hooks/useActivityLog";
 
@@ -26,10 +27,21 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
   sendWhatsApp
 }) => {
   const formValues = form.getValues();
-  const priceInfo = calculateTotalPrice(formValues, apartments);
   const selectedApartmentIds = formValues.selectedApartments || [formValues.selectedApartment];
   const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
   const { addQuoteLog } = useActivityLog();
+  
+  // Refresh prices cache when component mounts to ensure we have latest prices
+  useEffect(() => {
+    refreshPricesCache().then(() => {
+      console.log("Prices cache refreshed for quote calculation");
+    }).catch(err => {
+      console.error("Error refreshing prices cache:", err);
+    });
+  }, []);
+  
+  // Calculate prices after cache refresh
+  const priceInfo = calculateTotalPrice(formValues, apartments);
   
   // If only one apartment is selected, make sure it's the main selectedApartment
   useEffect(() => {

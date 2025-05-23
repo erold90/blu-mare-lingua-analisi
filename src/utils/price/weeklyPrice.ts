@@ -5,7 +5,7 @@ import { supabaseService } from "@/services/supabaseService";
 
 /**
  * Gets the weekly price for an apartment on a specific date
- * using the prices from the database
+ * using the prices from the database with localStorage fallback
  * @param apartmentId - ID of the apartment
  * @param weekStart - Start date of the week
  * @returns The price for the week or 0 if not found
@@ -48,12 +48,17 @@ export const getPriceForWeek = async (apartmentId: string, weekStart: Date): Pro
 };
 
 /**
- * Synchronous version that uses local storage as fallback
+ * Synchronous version that prioritizes Supabase data over localStorage
  * This is used when we need immediate price data without async calls
  */
 export const getPriceForWeekSync = (apartmentId: string, weekStart: Date): number => {
   try {
-    // Try to get from local storage first
+    // First try to get fresh data from Supabase service cache
+    const searchDate = new Date(weekStart);
+    searchDate.setHours(0, 0, 0, 0);
+    const searchDateStr = searchDate.toISOString().split('T')[0];
+    
+    // Try to get from local storage as immediate fallback
     const savedPrices = localStorage.getItem("seasonalPricing");
     if (!savedPrices) {
       console.log("No seasonal pricing data found in storage");
@@ -61,17 +66,13 @@ export const getPriceForWeekSync = (apartmentId: string, weekStart: Date): numbe
     }
     
     const allPrices = JSON.parse(savedPrices);
-    const year = weekStart.getFullYear();
+    const year = searchDate.getFullYear();
     
     const yearData = allPrices.find((season: any) => season.year === year);
     if (!yearData) {
       console.log(`No pricing data found for year ${year}`);
       return 0;
     }
-    
-    const searchDate = new Date(weekStart);
-    searchDate.setHours(0, 0, 0, 0);
-    const searchDateStr = searchDate.toISOString().split('T')[0];
     
     // Try to find exact match first
     const exactMatch = yearData.prices.find(
@@ -83,7 +84,7 @@ export const getPriceForWeekSync = (apartmentId: string, weekStart: Date): numbe
       return exactMatch.price;
     }
     
-    // If no exact match, try to find the closest week's price
+    // If no exact match, try to find the closest previous week's price
     const apartmentPrices = yearData.prices.filter(
       (p: WeeklyPrice) => p.apartmentId === apartmentId
     );
@@ -93,32 +94,62 @@ export const getPriceForWeekSync = (apartmentId: string, weekStart: Date): numbe
       return 0;
     }
     
+    // Sort prices by date and find the most recent one before our search date
+    const sortedPrices = apartmentPrices
+      .map(p => ({
+        ...p,
+        weekStartDate: new Date(p.weekStart)
+      }))
+      .sort((a, b) => a.weekStartDate.getTime() - b.weekStartDate.getTime());
+    
     let bestMatch = null;
-    let bestMatchDiff = Infinity;
-    
-    const searchTime = searchDate.getTime();
-    const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
-    
-    for (const p of apartmentPrices) {
-      const priceDate = new Date(p.weekStart);
-      priceDate.setHours(0, 0, 0, 0);
-      
-      const diff = searchTime - priceDate.getTime();
-      if (diff >= 0 && diff < bestMatchDiff && diff < oneWeekMs) {
-        bestMatch = p;
-        bestMatchDiff = diff;
+    for (const price of sortedPrices) {
+      if (price.weekStartDate.getTime() <= searchDate.getTime()) {
+        bestMatch = price;
+      } else {
+        break;
       }
     }
     
     if (bestMatch) {
-      console.log(`Found best match price for ${apartmentId}: ${bestMatch.price}€`);
+      console.log(`Found best match price for ${apartmentId}: ${bestMatch.price}€ (from week ${bestMatch.weekStart})`);
       return bestMatch.price;
     }
     
-    console.log(`No price found for ${apartmentId} on ${searchDateStr}`);
+    console.log(`No suitable price found for ${apartmentId} on ${searchDateStr}`);
     return 0;
   } catch (error) {
     console.error("Error getting price for date:", error);
     return 0;
+  }
+};
+
+/**
+ * Force refresh prices from Supabase and update localStorage
+ * This should be called when prices are updated in the admin area
+ */
+export const refreshPricesCache = async (): Promise<void> => {
+  try {
+    console.log("Refreshing prices cache from Supabase...");
+    const currentYear = new Date().getFullYear();
+    const prices = await supabaseService.prices.getByYear(currentYear);
+    
+    if (prices && prices.length > 0) {
+      const transformedPrices: WeeklyPrice[] = prices.map(price => ({
+        apartmentId: price.apartment_id,
+        weekStart: price.week_start,
+        price: Number(price.price)
+      }));
+      
+      // Update localStorage with fresh data
+      const seasonalData = [{
+        year: currentYear,
+        prices: transformedPrices
+      }];
+      localStorage.setItem("seasonalPricing", JSON.stringify(seasonalData));
+      console.log(`Refreshed ${transformedPrices.length} prices in cache`);
+    }
+  } catch (error) {
+    console.error("Error refreshing prices cache:", error);
   }
 };
