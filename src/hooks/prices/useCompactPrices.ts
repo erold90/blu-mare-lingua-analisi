@@ -5,6 +5,7 @@ import { usePricePersistence } from './usePricePersistence';
 import { getSeasonWeeks } from './weekUtils';
 import { findPrice, generateYearPrices } from './priceUtils';
 import { toast } from "sonner";
+import { clearPriceCalculationCache } from "@/utils/price/priceCalculator";
 
 export const useCompactPrices = () => {
   const [prices, setPrices] = useState<PriceData[]>([]);
@@ -32,6 +33,9 @@ export const useCompactPrices = () => {
           return [...prev, { apartmentId, weekStart, price: newPrice }];
         }
       });
+      
+      // Clear price calculation cache when prices change
+      clearPriceCalculationCache();
     }
     return success;
   }, [updatePrice]);
@@ -88,6 +92,9 @@ export const useCompactPrices = () => {
         // Reload prices to ensure we have the latest data
         await loadPricesData(targetYear);
         
+        // Clear price calculation cache when prices change
+        clearPriceCalculationCache();
+        
         toast.success(`Prezzi copiati con successo dall'anno ${sourceYear} all'anno ${targetYear}`);
         return true;
       } else {
@@ -118,6 +125,9 @@ export const useCompactPrices = () => {
         
         // Reload prices to ensure we have the latest data
         await loadPricesData(targetYear);
+        
+        // Clear price calculation cache when prices change
+        clearPriceCalculationCache();
         
         toast.success(`Prezzi copiati con successo dall'anno ${sourceYear} all'anno ${targetYear}`);
         return true;
@@ -174,6 +184,35 @@ export const useCompactPrices = () => {
     }
   }, []);
 
+  // Force reload/initialize prices
+  const forceInitializeDefaultPrices = useCallback(async (year: number = 2025) => {
+    try {
+      console.log(`🔄 Force initializing default prices for year ${year}...`);
+      const newPrices = await initializeDefaultPrices(year);
+      
+      // Update state with the new prices
+      setPrices(prev => {
+        // Filter out prices for the year we just loaded
+        const otherYearPrices = prev.filter(p => {
+          const weekDate = new Date(p.weekStart);
+          return weekDate.getFullYear() !== year;
+        });
+        
+        // Add the newly loaded prices
+        return [...otherYearPrices, ...newPrices];
+      });
+      
+      // Clear price calculation cache when prices change
+      clearPriceCalculationCache();
+      
+      return newPrices;
+    } catch (error) {
+      console.error(`❌ Error initializing default prices for year ${year}:`, error);
+      toast.error(`Errore nell'inizializzazione dei prezzi per l'anno ${year}`);
+      return [];
+    }
+  }, [initializeDefaultPrices]);
+
   return {
     prices,
     isLoading,
@@ -181,6 +220,7 @@ export const useCompactPrices = () => {
     getPrice,
     updatePrice: handleUpdatePrice,
     copyPricesFromYear,
+    initializeDefaultPrices: forceInitializeDefaultPrices,
     editingCell,
     setEditingCell,
     reloadPrices: () => {

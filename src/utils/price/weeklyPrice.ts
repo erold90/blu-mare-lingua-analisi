@@ -73,6 +73,17 @@ export const getPriceForWeekSync = (apartmentId: string, weekStart: Date): numbe
     searchDate.setHours(0, 0, 0, 0);
     const searchDateStr = searchDate.toISOString().split('T')[0];
     
+    // Try to find exact match first
+    const exactMatch = yearData.prices.find(
+      (p: WeeklyPrice) => p.apartmentId === apartmentId && p.weekStart === searchDateStr
+    );
+    
+    if (exactMatch) {
+      console.log(`Found exact price match for ${apartmentId} on ${searchDateStr}: ${exactMatch.price}€`);
+      return exactMatch.price;
+    }
+    
+    // If no exact match, try to find the closest week's price
     const apartmentPrices = yearData.prices.filter(
       (p: WeeklyPrice) => p.apartmentId === apartmentId
     );

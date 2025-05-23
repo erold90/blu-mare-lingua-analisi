@@ -273,3 +273,46 @@ export const usePricePersistence = () => {
     initializeDefaultPrices,
   };
 };
+
+function saveToLocalStorage(year: number, prices: PriceData[]) {
+  try {
+    const savedPrices = localStorage.getItem("seasonalPricing");
+    let allPrices = [];
+    
+    if (savedPrices) {
+      allPrices = JSON.parse(savedPrices);
+      const yearIndex = allPrices.findIndex((y: any) => y.year === year);
+      
+      if (yearIndex >= 0) {
+        allPrices[yearIndex].prices = prices;
+      } else {
+        allPrices.push({ year, prices });
+      }
+    } else {
+      allPrices = [{ year, prices }];
+    }
+    
+    localStorage.setItem("seasonalPricing", JSON.stringify(allPrices));
+    console.log(`💾 Updated localStorage with ${prices.length} prices for year ${year}`);
+  } catch (error) {
+    console.error("Failed to save prices to localStorage:", error);
+  }
+}
+
+function loadFromLocalStorage(year: number): PriceData[] {
+  try {
+    const savedPrices = localStorage.getItem("seasonalPricing");
+    if (savedPrices) {
+      const parsed = JSON.parse(savedPrices);
+      const yearData = parsed.find((y: any) => y.year === year);
+      if (yearData && yearData.prices) {
+        console.log(`🔄 Loading ${yearData.prices.length} prices from localStorage for year ${year}`);
+        return yearData.prices;
+      }
+    }
+    return [];
+  } catch (error) {
+    console.error("Failed to load from localStorage:", error);
+    return [];
+  }
+}

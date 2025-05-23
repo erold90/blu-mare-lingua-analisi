@@ -1,8 +1,8 @@
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { RefreshCw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCompactPrices } from "@/hooks/prices/useCompactPrices";
 import YearPriceGrid from "./YearPriceGrid";
@@ -12,7 +12,30 @@ const AVAILABLE_YEARS = [2025, 2026, 2027, 2028, 2029, 2030];
 
 const CompactPriceManager: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<number>(2025);
-  const { isLoading, getSeasonWeeks, prices, updatePrice, reloadPrices } = useCompactPrices();
+  const [needsInitialization, setNeedsInitialization] = useState<boolean>(false);
+  const { 
+    isLoading, 
+    getSeasonWeeks, 
+    prices, 
+    updatePrice, 
+    reloadPrices, 
+    initializeDefaultPrices 
+  } = useCompactPrices();
+
+  // Check if we need to initialize prices
+  useEffect(() => {
+    if (!isLoading && prices.length === 0) {
+      setNeedsInitialization(true);
+    } else {
+      setNeedsInitialization(false);
+    }
+  }, [isLoading, prices.length]);
+
+  // Handle initialization of default prices
+  const handleInitializePrices = async () => {
+    await initializeDefaultPrices(selectedYear);
+    setNeedsInitialization(false);
+  };
 
   // Memoize render info to prevent unnecessary logs
   const renderInfo = useMemo(() => {
@@ -50,6 +73,31 @@ const CompactPriceManager: React.FC = () => {
         selectedYear={selectedYear}
         onYearChange={setSelectedYear}
       />
+      
+      {needsInitialization && (
+        <Alert variant="warning">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Prezzi non inizializzati</AlertTitle>
+          <AlertDescription className="flex items-center justify-between">
+            <span>Non ci sono prezzi configurati per l'anno {selectedYear}.</span>
+            <Button 
+              variant="default" 
+              size="sm"
+              onClick={handleInitializePrices}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                  Inizializzazione...
+                </>
+              ) : (
+                "Inizializza Prezzi"
+              )}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
       
       {isLoading ? (
         <Card>
