@@ -8,16 +8,18 @@
 
 const mysql = require('mysql2/promise');
 
-// Configurazione del pool di connessioni
+// Configurazione del pool di connessioni con i parametri di connessione più sicuri
 const pool = mysql.createPool({
-  host: '31.11.39.219',
-  user: 'Sql1864200',
-  password: '@Ginevra33',
-  database: 'Sql1864200_1',
+  host: process.env.DB_HOST || '31.11.39.219',
+  user: process.env.DB_USER || 'Sql1864200',
+  password: process.env.DB_PASSWORD || '@Ginevra33',
+  database: process.env.DB_NAME || 'Sql1864200_1',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  connectTimeout: 15000 // Timeout della connessione aumentato a 15 secondi
+  connectTimeout: 15000, // Timeout della connessione aumentato a 15 secondi
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 10000 // 10 secondi per mantenere la connessione attiva
 });
 
 /**

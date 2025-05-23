@@ -4,7 +4,6 @@
  */
 
 // Importa il modulo MySQL
-const mysql = require('mysql2/promise');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -356,7 +355,7 @@ app.post('/api/sync/:dataType', async (req, res) => {
 });
 
 // Avvio del server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server API attivo sulla porta ${PORT}`);
 });
