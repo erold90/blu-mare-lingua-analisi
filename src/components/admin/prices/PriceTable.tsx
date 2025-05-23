@@ -102,8 +102,8 @@ const PriceTable: React.FC<PriceTableProps> = ({
         onClose={() => setEditingPrice(null)}
         onSave={handleSavePrice}
         apartmentName={editingPrice?.apartmentName || ""}
-        weekStart={editingPrice?.weekStart || new Date()}
-        weekEnd={editingPrice?.weekEnd || new Date()}
+        weekStart={editingPrice?.weekStart}
+        weekEnd={editingPrice?.weekEnd}
         currentPrice={editingPrice?.currentPrice || 0}
       />
     </>

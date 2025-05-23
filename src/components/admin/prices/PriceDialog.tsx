@@ -12,8 +12,10 @@ interface PriceDialogProps {
   onClose: () => void;
   onSave: (price: number) => void;
   apartmentName: string;
-  weekLabel: string;
+  weekLabel?: string;
   currentPrice: number;
+  weekStart?: Date;
+  weekEnd?: Date;
 }
 
 const PriceDialog: React.FC<PriceDialogProps> = ({
@@ -22,7 +24,9 @@ const PriceDialog: React.FC<PriceDialogProps> = ({
   onSave,
   apartmentName,
   weekLabel,
-  currentPrice
+  currentPrice,
+  weekStart,
+  weekEnd
 }) => {
   const [price, setPrice] = useState(currentPrice.toString());
   
@@ -37,13 +41,18 @@ const PriceDialog: React.FC<PriceDialogProps> = ({
     }
   };
   
+  // Generate the week label if weekStart and weekEnd are provided but no weekLabel
+  const displayWeekLabel = weekLabel || (weekStart && weekEnd ? 
+    `${format(weekStart, "d MMM", { locale: it })} - ${format(weekEnd, "d MMM", { locale: it })}` : 
+    "");
+  
   return (
     <Dialog open={isOpen} onOpenChange={value => !value && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Modifica prezzo</DialogTitle>
           <DialogDescription>
-            {apartmentName} - {weekLabel}
+            {apartmentName} - {displayWeekLabel}
           </DialogDescription>
         </DialogHeader>
         
