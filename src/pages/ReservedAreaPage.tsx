@@ -27,26 +27,20 @@ const LoginForm = () => {
   const [password, setPassword] = React.useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
-  const isMobile = useIsMobile();
   const [isLoggingIn, setIsLoggingIn] = React.useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (isLoggingIn) return; // Previene doppi click
+    if (isLoggingIn) return;
     
     setIsLoggingIn(true);
     
     if (login(username, password)) {
       toast.success("Login effettuato con successo");
-      
-      console.log("Login form: Login riuscito, reindirizzamento tra 800ms");
-      
-      // Ritardo consistente per garantire che tutti gli stati siano aggiornati
-      setTimeout(() => {
-        console.log("Login form: Esecuzione reindirizzamento a dashboard");
-        window.location.href = "/area-riservata/dashboard";
-      }, 800);
+      console.log("Login form: Login riuscito, navigazione diretta alla dashboard");
+      // Usa navigate invece di window.location.href per evitare reload della pagina
+      navigate("/area-riservata/dashboard", { replace: true });
     } else {
       toast.error("Credenziali non valide");
       setIsLoggingIn(false);
@@ -105,35 +99,23 @@ const LoginForm = () => {
 
 const ReservedAreaPage = () => {
   const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   
-  // Registriamo i cambiamenti di stato di autenticazione
-  React.useEffect(() => {
-    console.log("ReservedAreaPage - Stato autenticazione:", isAuthenticated);
-    console.log("ReservedAreaPage - Percorso attuale:", location.pathname);
-    
-    if (isAuthenticated && location.pathname === '/area-riservata') {
-      console.log("ReservedAreaPage - Reindirizzamento a dashboard");
-      navigate('/area-riservata/dashboard', { replace: true });
-    }
-  }, [isAuthenticated, location.pathname, navigate]);
-  
-  // Se siamo su /area-riservata ma siamo già autenticati, reindirizzare immediatamente
-  if (isAuthenticated && location.pathname === '/area-riservata') {
-    console.log("ReservedAreaPage - Reindirizzamento diretto a dashboard");
-    return <Navigate to="/area-riservata/dashboard" replace />;
-  }
+  console.log("ReservedAreaPage - Stato autenticazione:", isAuthenticated);
+  console.log("ReservedAreaPage - Percorso attuale:", location.pathname);
   
   return (
     <Routes>
-      <Route path="/" element={
-        !isAuthenticated ? (
-          <LoginForm />
-        ) : (
-          <Navigate to="/area-riservata/dashboard" replace />
-        )
-      } />
+      <Route 
+        path="/" 
+        element={
+          isAuthenticated ? (
+            <Navigate to="/area-riservata/dashboard" replace />
+          ) : (
+            <LoginForm />
+          )
+        } 
+      />
       <Route 
         path="/*" 
         element={
@@ -146,7 +128,6 @@ const ReservedAreaPage = () => {
                 <Route path="appartamenti" element={<AdminApartments />} />
                 <Route path="impostazioni" element={<AdminSettings />} />
                 <Route path="log" element={<AdminLog />} />
-                {/* Nuove route */}
                 <Route path="calendario" element={<AdminCalendar />} />
                 <Route path="pulizie" element={<AdminCleaningManagement />} />
                 <Route path="api-test" element={<ApiTestPage />} />
