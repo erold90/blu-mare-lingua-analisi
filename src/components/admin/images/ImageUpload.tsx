@@ -1,4 +1,3 @@
-
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
@@ -86,7 +85,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           apartment_id: apartmentId,
           file,
           alt_text: altTexts[`file-${index}`] || '',
-          display_order: index
+          display_order: Number(index)
         })
       );
 
