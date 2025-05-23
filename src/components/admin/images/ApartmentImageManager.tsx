@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -160,7 +161,6 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
                         key={image.id} 
                         draggableId={image.id} 
                         index={index}
-                        isDragDisabled={loading}
                       >
                         {(provided, snapshot) => (
                           <div
@@ -171,17 +171,12 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
                                 ? 'rotate-2 shadow-2xl scale-105 z-50' 
                                 : 'hover:shadow-lg'
                             }`}
-                            style={{
-                              ...provided.draggableProps.style,
-                              pointerEvents: snapshot.isDragging ? 'none' : 'auto'
-                            }}
                           >
                             <Card className="overflow-hidden border-2 border-transparent hover:border-blue-200 transition-colors relative">
                               {/* Drag Handle - posizionato in modo prominente */}
                               <div
                                 {...provided.dragHandleProps}
                                 className="absolute top-2 left-2 z-20 p-2 rounded-md bg-black/70 cursor-grab active:cursor-grabbing opacity-80 hover:opacity-100 transition-opacity"
-                                style={{ touchAction: 'none' }}
                               >
                                 <GripVertical className="h-4 w-4 text-white" />
                               </div>
@@ -198,9 +193,6 @@ export const ApartmentImageManager: React.FC<ApartmentImageManagerProps> = ({
                                     Copertina
                                   </Badge>
                                 )}
-                                <div className="absolute bottom-2 left-2 text-xs bg-black/70 text-white px-2 py-1 rounded z-10">
-                                  #{index + 1}
-                                </div>
                                 
                                 {/* Action buttons - visibili solo on hover e non durante il drag */}
                                 <div className={`absolute inset-0 bg-black/50 transition-opacity flex items-center justify-center gap-2 ${
