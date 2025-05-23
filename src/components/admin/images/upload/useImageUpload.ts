@@ -97,7 +97,7 @@ export const useImageUpload = ({
         const fileData = filesWithAltText[index];
         const displayOrder = Number(index);
         
-        console.log(`Uploading file ${index + 1}/${filesWithAltText.length}:`, fileData.file.name);
+        console.log(`Uploading file ${index + 1}/${filesWithAltText.length}:`, fileData.file.name, "Category:", category);
         
         try {
           // Add a small delay between uploads to ensure unique timestamps
@@ -105,11 +105,15 @@ export const useImageUpload = ({
             await new Promise(resolve => setTimeout(resolve, 100));
           }
           
+          // Per le immagini del sito, assicuriamoci che is_cover sia impostato correttamente
+          const isCoverImage = category !== 'apartment' && index === 0;
+          
           const uploadData = {
             category,
             file: fileData.file,
             alt_text: fileData.altText || '',
             display_order: displayOrder,
+            is_cover: isCoverImage,
             ...(apartmentId && { apartment_id: apartmentId })
           };
           
@@ -135,7 +139,8 @@ export const useImageUpload = ({
       console.log("Upload results:", {
         total: filesWithAltText.length,
         successful: successCount,
-        failed: errors.length
+        failed: errors.length,
+        category
       });
       
       if (successCount === filesWithAltText.length) {

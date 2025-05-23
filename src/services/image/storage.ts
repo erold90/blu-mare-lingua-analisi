@@ -16,7 +16,8 @@ export class ImageStorageService {
         apartment_id,
         fileName: file.name,
         fileSize: file.size,
-        fileType: file.type
+        fileType: file.type,
+        is_cover
       });
       
       // Generate unique file path with random component to avoid conflicts
@@ -30,7 +31,7 @@ export class ImageStorageService {
       
       // Check if bucket exists and is accessible
       const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-      console.log("Available buckets:", buckets, "Error:", bucketsError);
+      console.log("Available buckets:", buckets?.map(b => b.name), "Error:", bucketsError);
       
       // Upload file to storage
       const { data: uploadData, error: uploadError } = await supabase.storage

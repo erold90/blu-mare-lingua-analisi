@@ -75,7 +75,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
                 disabled={uploading}
                 className="min-w-[120px]"
               >
-                {uploading ? 'Caricamento...' : `Carica ${filesWithAltText.length} immagini`}
+                {uploading ? 'Caricamento...' : `Carica ${filesWithAltText.length} ${filesWithAltText.length === 1 ? 'immagine' : 'immagini'}`}
               </Button>
             </div>
           </CardContent>
