@@ -13,13 +13,22 @@ import { calculateMultiApartmentPricing } from "./multiApartmentPricing";
 const priceCalculationCache = new Map<string, PriceCalculation>();
 
 /**
+ * Safely convert a date value to ISO string
+ */
+const toISOStringSafe = (date: Date | string | undefined): string => {
+  if (!date) return '';
+  if (typeof date === 'string') return date;
+  return date.toISOString();
+};
+
+/**
  * Generate a cache key for the price calculation
  */
 const generateCacheKey = (formValues: FormValues, apartments: Apartment[]): string => {
   // Include only the values that affect the price calculation
   const cacheKeyParts = [
-    formValues.checkIn?.toISOString(),
-    formValues.checkOut?.toISOString(),
+    toISOStringSafe(formValues.checkIn),
+    toISOStringSafe(formValues.checkOut),
     formValues.selectedApartments?.join(',') || formValues.selectedApartment,
     formValues.adults,
     formValues.children,
