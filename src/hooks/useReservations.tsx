@@ -3,7 +3,8 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { apartments } from "@/data/apartments";
 import { toast } from "sonner";
-import { externalStorage, DataType } from "@/services/externalStorage";
+import { DataType } from "@/services/externalStorage";
+import { databaseProxy } from "@/services/databaseProxy";
 
 // Type definitions
 export interface Apartment {
@@ -56,16 +57,16 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [deviceId] = useState<string>(localStorage.getItem('vmb_device_id') || '');
   
-  // Function to load reservations from external storage
+  // Function to load reservations from database
   const loadReservations = async () => {
     setIsLoading(true);
     try {
-      const loadedReservations = await externalStorage.loadData<Reservation[]>(DataType.RESERVATIONS);
+      const loadedReservations = await databaseProxy.loadData<Reservation[]>(DataType.RESERVATIONS);
       if (loadedReservations) {
-        console.log(`Loaded ${loadedReservations.length} reservations from external storage`);
+        console.log(`Loaded ${loadedReservations.length} reservations from database`);
         setReservations(loadedReservations);
       } else {
-        console.log("No reservations found in external storage");
+        console.log("No reservations found in database");
         setReservations([]);
       }
     } catch (error) {
@@ -77,11 +78,11 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
     }
   };
   
-  // Force a refresh of data from external storage
+  // Force a refresh of data from database
   const refreshData = async () => {
     setIsLoading(true);
     try {
-      await externalStorage.synchronize(DataType.RESERVATIONS);
+      await databaseProxy.synchronize(DataType.RESERVATIONS);
       await loadReservations();
       toast.success("Dati sincronizzati correttamente");
     } catch (error) {
@@ -92,27 +93,28 @@ export const ReservationsProvider: React.FC<{children: React.ReactNode}> = ({ ch
     }
   };
   
-  // Load reservations on mount and set up subscription
+  // Load reservations on mount
   useEffect(() => {
     loadReservations();
     
-    // Subscribe to updates
-    const unsubscribe = externalStorage.subscribe(DataType.RESERVATIONS, () => {
-      console.log("Reservation data updated externally, reloading");
-      loadReservations();
-    });
+    // Set up interval for periodic synchronization
+    const intervalId = setInterval(() => {
+      databaseProxy.synchronize(DataType.RESERVATIONS)
+        .then(() => loadReservations())
+        .catch(error => console.error("Error during periodic sync:", error));
+    }, 60000); // Sync every minute
     
-    // Clean up subscription on unmount
+    // Clean up interval on unmount
     return () => {
-      unsubscribe();
+      clearInterval(intervalId);
     };
   }, []);
   
-  // Save reservations to external storage whenever they change
+  // Save reservations to database whenever they change
   useEffect(() => {
     if (!isLoading && reservations.length >= 0) {
-      console.log(`Saving ${reservations.length} reservations to external storage`);
-      externalStorage.saveData(DataType.RESERVATIONS, reservations)
+      console.log(`Saving ${reservations.length} reservations to database`);
+      databaseProxy.saveData(DataType.RESERVATIONS, reservations)
         .catch(error => console.error("Failed to save reservations:", error));
     }
   }, [reservations, isLoading]);
