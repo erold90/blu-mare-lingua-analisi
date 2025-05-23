@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -20,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
 import { apartments } from "@/data/apartments";
+import AdminLogDelete from "./AdminLogDelete";
 
 const AdminLog = () => {
   const { quoteLogs, siteVisits, getVisitsCount } = useActivityLog();
@@ -71,6 +71,13 @@ const AdminLog = () => {
     
     return chartData;
   }, [siteVisits, dateRange]);
+
+  const handleDeleteQuote = (quoteId: string) => {
+    // Qui dovrai implementare la logica per eliminare il log
+    // Per ora mostriamo solo un toast
+    console.log(`Eliminazione del preventivo con ID: ${quoteId}`);
+    toast.success("Log del preventivo eliminato");
+  };
   
   return (
     <div className="space-y-6">
@@ -258,7 +265,7 @@ const AdminLog = () => {
                         <TableHead className="hidden md:table-cell">Check-in</TableHead>
                         <TableHead className="hidden md:table-cell">Check-out</TableHead>
                         <TableHead className="text-right">Prezzo</TableHead>
-                        <TableHead className="w-[80px]">Azioni</TableHead>
+                        <TableHead className="w-[120px]">Azioni</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -295,192 +302,239 @@ const AdminLog = () => {
                               {price.totalPrice > 0 ? `${price.totalPrice}€` : "-"}
                             </TableCell>
                             <TableCell>
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setSelectedQuote({
-                                      ...quote,
-                                      price
-                                    })}
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-2xl max-h-screen overflow-y-auto">
-                                  <DialogHeader>
-                                    <DialogTitle>Dettagli preventivo</DialogTitle>
-                                  </DialogHeader>
-                                  
-                                  {selectedQuote && (
-                                    <div className="space-y-6 py-4">
-                                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        <div>
-                                          <p className="text-sm font-medium">Data richiesta</p>
-                                          <p className="text-sm text-muted-foreground">
-                                            {format(new Date(selectedQuote.timestamp), "dd/MM/yyyy HH:mm", { locale: it })}
-                                          </p>
+                              <div className="flex gap-1">
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => setSelectedQuote({
+                                        ...quote,
+                                        price
+                                      })}
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                                    <DialogHeader>
+                                      <DialogTitle>Log completo del preventivo</DialogTitle>
+                                    </DialogHeader>
+                                    
+                                    {selectedQuote && (
+                                      <div className="space-y-6 py-4">
+                                        {/* Informazioni generali */}
+                                        <div className="bg-muted p-4 rounded-lg">
+                                          <h3 className="font-medium mb-3">Informazioni del log</h3>
+                                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                            <div>
+                                              <p className="text-muted-foreground">ID Log</p>
+                                              <p className="font-mono text-xs">{selectedQuote.id}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-muted-foreground">Timestamp</p>
+                                              <p>{format(new Date(selectedQuote.timestamp), "dd/MM/yyyy HH:mm:ss", { locale: it })}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-muted-foreground">Step completato</p>
+                                              <p>{selectedQuote.step}/5</p>
+                                            </div>
+                                          </div>
                                         </div>
+
+                                        {/* Dati del cliente */}
                                         <div>
-                                          <p className="text-sm font-medium">Cliente</p>
-                                          <p className="text-sm text-muted-foreground">
-                                            {selectedQuote.formValues.name || "Anonimo"}
-                                          </p>
+                                          <h3 className="font-medium mb-3">Dati del cliente</h3>
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                            <div>
+                                              <p className="text-muted-foreground">Nome</p>
+                                              <p>{selectedQuote.formValues.name || "Non specificato"}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-muted-foreground">Email</p>
+                                              <p>{selectedQuote.formValues.email || "Non specificata"}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-muted-foreground">Telefono</p>
+                                              <p>{selectedQuote.formValues.phone || "Non specificato"}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-muted-foreground">Città</p>
+                                              <p>{selectedQuote.formValues.city || "Non specificata"}</p>
+                                            </div>
+                                          </div>
                                         </div>
+
+                                        {/* Dettagli soggiorno */}
                                         <div>
-                                          <p className="text-sm font-medium">Email</p>
-                                          <p className="text-sm text-muted-foreground">
-                                            {selectedQuote.formValues.email || "-"}
-                                          </p>
-                                        </div>
-                                        <div>
-                                          <p className="text-sm font-medium">Telefono</p>
-                                          <p className="text-sm text-muted-foreground">
-                                            {selectedQuote.formValues.phone || "-"}
-                                          </p>
-                                        </div>
-                                      </div>
-                                      
-                                      <div className="border-t pt-4">
-                                        <h3 className="text-sm font-medium mb-2">Dettagli soggiorno</h3>
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                          <div>
-                                            <p className="text-xs text-muted-foreground">Check-in</p>
-                                            <p className="text-sm">
-                                              {selectedQuote.formValues.checkIn ? 
+                                          <h3 className="font-medium mb-3">Dettagli soggiorno</h3>
+                                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                            <div>
+                                              <p className="text-muted-foreground">Check-in</p>
+                                              <p>{selectedQuote.formValues.checkIn ? 
                                                 format(new Date(selectedQuote.formValues.checkIn), "dd/MM/yyyy", { locale: it }) : 
-                                                "-"}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <p className="text-xs text-muted-foreground">Check-out</p>
-                                            <p className="text-sm">
-                                              {selectedQuote.formValues.checkOut ? 
+                                                "Non specificato"}
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <p className="text-muted-foreground">Check-out</p>
+                                              <p>{selectedQuote.formValues.checkOut ? 
                                                 format(new Date(selectedQuote.formValues.checkOut), "dd/MM/yyyy", { locale: it }) : 
-                                                "-"}
-                                            </p>
-                                          </div>
-                                          <div>
-                                            <p className="text-xs text-muted-foreground">Notti</p>
-                                            <p className="text-sm">{selectedQuote.price.nights}</p>
-                                          </div>
-                                          <div>
-                                            <p className="text-xs text-muted-foreground">Ospiti</p>
-                                            <p className="text-sm">
-                                              {selectedQuote.formValues.adults + (selectedQuote.formValues.children || 0)}
-                                            </p>
+                                                "Non specificato"}
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <p className="text-muted-foreground">Notti</p>
+                                              <p>{selectedQuote.price.nights}</p>
+                                            </div>
                                           </div>
                                         </div>
-                                        
-                                        <div className="mt-4 space-y-2">
-                                          <div>
-                                            <p className="text-xs text-muted-foreground">Adulti</p>
-                                            <p className="text-sm">{selectedQuote.formValues.adults}</p>
-                                          </div>
-                                          <div>
-                                            <p className="text-xs text-muted-foreground">Bambini</p>
-                                            <p className="text-sm">{selectedQuote.formValues.children || 0}</p>
+
+                                        {/* Ospiti */}
+                                        <div>
+                                          <h3 className="font-medium mb-3">Composizione gruppo</h3>
+                                          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+                                            <div>
+                                              <p className="text-muted-foreground">Adulti</p>
+                                              <p>{selectedQuote.formValues.adults}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-muted-foreground">Bambini</p>
+                                              <p>{selectedQuote.formValues.children || 0}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-muted-foreground">Animali</p>
+                                              <p>{selectedQuote.formValues.hasPets ? "Sì" : "No"}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-muted-foreground">Totale ospiti</p>
+                                              <p>{selectedQuote.formValues.adults + (selectedQuote.formValues.children || 0)}</p>
+                                            </div>
                                           </div>
                                         </div>
-                                      </div>
-                                      
-                                      <div className="border-t pt-4">
-                                        <h3 className="text-sm font-medium mb-2">Appartamenti selezionati</h3>
-                                        <div className="space-y-3">
-                                          {selectedQuote.formValues.selectedApartments ? 
-                                            selectedQuote.formValues.selectedApartments.map((aptId: string) => {
-                                              const apt = apartments.find(a => a.id === aptId);
-                                              return apt ? (
-                                                <div key={aptId} className="flex items-center justify-between border-b pb-2">
-                                                  <span>{apt.name}</span>
-                                                  <Badge variant="outline">{apt.capacity} persone</Badge>
+
+                                        {/* Appartamenti */}
+                                        <div>
+                                          <h3 className="font-medium mb-3">Appartamenti selezionati</h3>
+                                          <div className="space-y-2">
+                                            {selectedQuote.formValues.selectedApartments ? 
+                                              selectedQuote.formValues.selectedApartments.map((aptId: string) => {
+                                                const apt = apartments.find(a => a.id === aptId);
+                                                return apt ? (
+                                                  <div key={aptId} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                                                    <div>
+                                                      <p className="font-medium">{apt.name}</p>
+                                                      <p className="text-sm text-muted-foreground">{apt.capacity} persone • {apt.bedrooms} camere</p>
+                                                    </div>
+                                                    <Badge variant="outline">{apt.id}</Badge>
+                                                  </div>
+                                                ) : null;
+                                              }) :
+                                              selectedQuote.formValues.selectedApartment ? (
+                                                <div className="p-3 bg-muted rounded-lg">
+                                                  {(() => {
+                                                    const apt = apartments.find(a => a.id === selectedQuote.formValues.selectedApartment);
+                                                    return apt ? (
+                                                      <div className="flex items-center justify-between">
+                                                        <div>
+                                                          <p className="font-medium">{apt.name}</p>
+                                                          <p className="text-sm text-muted-foreground">{apt.capacity} persone • {apt.bedrooms} camere</p>
+                                                        </div>
+                                                        <Badge variant="outline">{apt.id}</Badge>
+                                                      </div>
+                                                    ) : <p className="text-muted-foreground">Appartamento non trovato</p>;
+                                                  })()}
                                                 </div>
-                                              ) : null;
-                                            }) :
-                                            selectedQuote.formValues.selectedApartment ? (
-                                              <div className="flex items-center justify-between border-b pb-2">
-                                                {(() => {
-                                                  const apt = apartments.find(a => a.id === selectedQuote.formValues.selectedApartment);
-                                                  return apt ? (
-                                                    <>
-                                                      <span>{apt.name}</span>
-                                                      <Badge variant="outline">{apt.capacity} persone</Badge>
-                                                    </>
-                                                  ) : null;
-                                                })()}
+                                              ) : (
+                                                <p className="text-sm text-muted-foreground">Nessun appartamento selezionato</p>
+                                              )
+                                            }
+                                          </div>
+                                        </div>
+
+                                        {/* Servizi extra */}
+                                        <div>
+                                          <h3 className="font-medium mb-3">Servizi aggiuntivi</h3>
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                            <div>
+                                              <p className="text-muted-foreground">Biancheria</p>
+                                              <p>{selectedQuote.formValues.linenOption || "Non specificato"}</p>
+                                            </div>
+                                            <div>
+                                              <p className="text-muted-foreground">Lettini</p>
+                                              <p>{selectedQuote.formValues.cribs || 0}</p>
+                                            </div>
+                                          </div>
+                                        </div>
+
+                                        {/* Riepilogo prezzi */}
+                                        <div>
+                                          <h3 className="font-medium mb-3">Riepilogo costi</h3>
+                                          <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
+                                            <div className="flex justify-between">
+                                              <span className="text-muted-foreground">Prezzo base</span>
+                                              <span>{selectedQuote.price.basePrice}€</span>
+                                            </div>
+                                            {selectedQuote.price.extras > 0 && (
+                                              <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Extra</span>
+                                                <span>{selectedQuote.price.extras}€</span>
                                               </div>
-                                            ) : (
-                                              <p className="text-sm text-muted-foreground">Nessun appartamento selezionato</p>
-                                            )
-                                          }
-                                        </div>
-                                      </div>
-                                      
-                                      <div className="border-t pt-4">
-                                        <h3 className="text-sm font-medium mb-2">Riepilogo costi</h3>
-                                        <div className="space-y-2">
-                                          <div className="flex justify-between">
-                                            <span className="text-sm text-muted-foreground">Prezzo base</span>
-                                            <span className="text-sm">{selectedQuote.price.basePrice}€</span>
-                                          </div>
-                                          {selectedQuote.price.extras > 0 && (
+                                            )}
                                             <div className="flex justify-between">
-                                              <span className="text-sm text-muted-foreground">Extra</span>
-                                              <span className="text-sm">{selectedQuote.price.extras}€</span>
+                                              <span className="text-muted-foreground">Pulizia</span>
+                                              <span>{selectedQuote.price.cleaningFee}€</span>
                                             </div>
-                                          )}
-                                          <div className="flex justify-between">
-                                            <span className="text-sm text-muted-foreground">Pulizia</span>
-                                            <span className="text-sm">{selectedQuote.price.cleaningFee}€</span>
-                                          </div>
-                                          <div className="flex justify-between">
-                                            <span className="text-sm text-muted-foreground">Tassa di soggiorno</span>
-                                            <span className="text-sm text-green-600">Inclusa</span>
-                                          </div>
-                                          {selectedQuote.price.savings > 0 && (
                                             <div className="flex justify-between">
-                                              <span className="text-sm text-muted-foreground">Risparmio</span>
-                                              <span className="text-sm text-green-600">-{selectedQuote.price.savings}€</span>
+                                              <span className="text-muted-foreground">Tassa di soggiorno</span>
+                                              <span className="text-green-600">Inclusa</span>
                                             </div>
-                                          )}
-                                          <div className="border-t pt-2 mt-2">
-                                            <div className="flex justify-between font-medium">
-                                              <span>Totale</span>
-                                              <span>{selectedQuote.price.totalPrice}€</span>
-                                            </div>
-                                            <div className="flex justify-between text-sm text-muted-foreground">
-                                              <span>Caparra (30%)</span>
-                                              <span>{selectedQuote.price.deposit}€</span>
+                                            {selectedQuote.price.savings > 0 && (
+                                              <div className="flex justify-between">
+                                                <span className="text-muted-foreground">Risparmio</span>
+                                                <span className="text-green-600">-{selectedQuote.price.savings}€</span>
+                                              </div>
+                                            )}
+                                            <div className="border-t pt-2 mt-2">
+                                              <div className="flex justify-between font-medium text-base">
+                                                <span>Totale</span>
+                                                <span>{selectedQuote.price.totalPrice}€</span>
+                                              </div>
+                                              <div className="flex justify-between text-muted-foreground mt-1">
+                                                <span>Caparra (30%)</span>
+                                                <span>{selectedQuote.price.deposit}€</span>
+                                              </div>
                                             </div>
                                           </div>
                                         </div>
-                                      </div>
-                                      
-                                      {selectedQuote.formValues.notes && (
-                                        <div className="border-t pt-4">
-                                          <h3 className="text-sm font-medium mb-2">Note</h3>
-                                          <p className="text-sm text-muted-foreground">
-                                            {selectedQuote.formValues.notes}
-                                          </p>
+
+                                        {/* Note */}
+                                        {selectedQuote.formValues.notes && (
+                                          <div>
+                                            <h3 className="font-medium mb-3">Note</h3>
+                                            <div className="bg-muted p-4 rounded-lg">
+                                              <p className="text-sm">{selectedQuote.formValues.notes}</p>
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Dati tecnici */}
+                                        <div>
+                                          <h3 className="font-medium mb-3">Dati tecnici</h3>
+                                          <div className="bg-muted p-4 rounded-lg text-xs font-mono">
+                                            <pre>{JSON.stringify(selectedQuote, null, 2)}</pre>
+                                          </div>
                                         </div>
-                                      )}
-                                      
-                                      <div className="flex justify-end">
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => {
-                                            setSelectedQuote(null);
-                                          }}
-                                        >
-                                          Chiudi
-                                        </Button>
                                       </div>
-                                    </div>
-                                  )}
-                                </DialogContent>
-                              </Dialog>
+                                    )}
+                                  </DialogContent>
+                                </Dialog>
+
+                                <AdminLogDelete 
+                                  quoteId={quote.id} 
+                                  customerName={formValues.name} 
+                                />
+                              </div>
                             </TableCell>
                           </TableRow>
                         );

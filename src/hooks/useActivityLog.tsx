@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { FormValues } from "@/utils/quoteFormSchema";
 
@@ -19,6 +20,7 @@ interface ActivityLogContextType {
   quoteLogs: QuoteLog[];
   siteVisits: SiteVisit[];
   addQuoteLog: (quoteData: QuoteLog) => void;
+  deleteQuoteLog: (quoteId: string) => void;
   addSiteVisit: (page: string) => void;
   getVisitsCount: (period: 'day' | 'month' | 'year') => number;
   getQuoteLogsForDay: (date: Date) => QuoteLog[];
@@ -103,6 +105,10 @@ export const ActivityLogProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
     });
   };
+
+  const deleteQuoteLog = (quoteId: string) => {
+    setQuoteLogs(prev => prev.filter(log => log.id !== quoteId));
+  };
   
   const addSiteVisit = (page: string) => {
     if (page.includes("/area-riservata")) {
@@ -181,6 +187,7 @@ export const ActivityLogProvider: React.FC<{ children: React.ReactNode }> = ({ c
       quoteLogs,
       siteVisits,
       addQuoteLog,
+      deleteQuoteLog,
       addSiteVisit,
       getVisitsCount,
       getQuoteLogsForDay,
