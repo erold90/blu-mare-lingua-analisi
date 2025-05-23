@@ -78,7 +78,7 @@ export const CtaSection = () => {
                   asChild
                 >
                   <Link to="/preventivo" className="flex items-center gap-3">
-                    <span>Richiedi un Preventivo</span>
+                    <span>Calcola Preventivo</span>
                     <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </Link>
                 </Button>

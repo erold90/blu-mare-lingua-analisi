@@ -99,7 +99,7 @@ const HeroSection = () => {
               onClick={handleQuoteClick}
               className="group bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white hover:text-gray-900 px-10 py-6 text-lg font-semibold rounded-full shadow-2xl hover:shadow-white/20 transition-all duration-500 transform hover:scale-105"
             >
-              Richiedi Preventivo
+              Calcola Preventivo
               <ChevronRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Button>
             
