@@ -2,10 +2,10 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
 export const useAuth = () => {
-  // Leggiamo immediatamente lo stato di autenticazione dal localStorage
+  // Singleton pattern to ensure consistent auth state across components
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     const authStatus = localStorage.getItem("adminAuth") === "true";
-    console.log("useAuth - Inizializzazione stato autenticazione:", authStatus);
+    console.log("useAuth - Initial auth state:", authStatus);
     return authStatus;
   });
   
@@ -35,10 +35,12 @@ export const useAuth = () => {
   
   // Effect per monitorare cambiamenti nel localStorage
   useEffect(() => {
-    const handleStorageChange = () => {
-      const authStatus = localStorage.getItem("adminAuth") === "true";
-      console.log("useAuth - Storage change detected, new auth status:", authStatus);
-      setIsAuthenticated(authStatus);
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "adminAuth") {
+        const authStatus = event.newValue === "true";
+        console.log("useAuth - Storage changed externally, new auth status:", authStatus);
+        setIsAuthenticated(authStatus);
+      }
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -54,7 +56,6 @@ export const useAuth = () => {
     }
     
     console.log("useAuth - Attempting login for:", username);
-    console.log("useAuth - Expected credentials:", adminCredentials);
     
     if (username === adminCredentials.username && password === adminCredentials.password) {
       authChangeInProgress.current = true;
@@ -63,11 +64,10 @@ export const useAuth = () => {
       
       // Prima salviamo lo stato nel localStorage
       localStorage.setItem("adminAuth", "true");
-      console.log("useAuth - localStorage aggiornato");
       
-      // Poi aggiorniamo lo stato React in modo sincrono e forzato
+      // Imposta immediatamente lo stato di autenticazione
       setIsAuthenticated(true);
-      console.log("useAuth - Stato React aggiornato a TRUE");
+      console.log("useAuth - Authentication state updated to:", true);
       
       // Reset del flag
       setTimeout(() => {
@@ -94,11 +94,10 @@ export const useAuth = () => {
     
     // Prima rimuoviamo dal localStorage
     localStorage.removeItem("adminAuth");
-    console.log("useAuth - localStorage rimosso");
     
     // Poi aggiorniamo lo stato React
     setIsAuthenticated(false);
-    console.log("useAuth - Stato autenticazione impostato a FALSE");
+    console.log("useAuth - Authentication state updated to:", false);
     
     // Reset del flag
     setTimeout(() => {
@@ -108,7 +107,7 @@ export const useAuth = () => {
 
   // Log dello stato corrente per debugging
   useEffect(() => {
-    console.log("useAuth - Current state:", { isAuthenticated, authChangeInProgress: authChangeInProgress.current });
+    console.log("useAuth - Current authentication state updated:", isAuthenticated);
   }, [isAuthenticated]);
 
   return { isAuthenticated, login, logout, adminCredentials };
