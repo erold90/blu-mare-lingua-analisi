@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -34,20 +33,40 @@ class ImageService {
     try {
       const { category, apartment_id, file, alt_text, is_cover = false, display_order = 0 } = data;
       
+      console.log("Starting image upload:", {
+        category,
+        apartment_id,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type
+      });
+      
       // Generate unique file path
       const fileExt = file.name.split('.').pop();
       const timestamp = Date.now();
       const fileName = `${category}_${apartment_id || 'general'}_${timestamp}.${fileExt}`;
       const filePath = `${category}/${fileName}`;
       
+      console.log("Generated file path:", filePath);
+      
+      // Check if bucket exists and is accessible
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+      console.log("Available buckets:", buckets, "Error:", bucketsError);
+      
       // Upload file to storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('villa-images')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
         
       if (uploadError) {
+        console.error("Storage upload error:", uploadError);
         throw uploadError;
       }
+      
+      console.log("File uploaded successfully:", uploadData);
       
       // Create database record
       const { data: imageRecord, error: dbError } = await supabase
@@ -65,16 +84,26 @@ class ImageService {
         .single();
         
       if (dbError) {
+        console.error("Database insert error:", dbError);
         // Clean up uploaded file if database insert fails
         await supabase.storage.from('villa-images').remove([uploadData.path]);
         throw dbError;
       }
       
+      console.log("Database record created:", imageRecord);
       toast.success("Immagine caricata con successo");
       return imageRecord as ImageRecord;
     } catch (error) {
       console.error('Error uploading image:', error);
-      toast.error("Errore nel caricamento dell'immagine");
+      
+      // Provide more specific error messages
+      if (error.message?.includes('row-level security')) {
+        toast.error("Errore: Politiche di sicurezza non configurate. Contatta l'amministratore.");
+      } else if (error.message?.includes('bucket')) {
+        toast.error("Errore: Bucket di storage non trovato o non accessibile.");
+      } else {
+        toast.error("Errore nel caricamento dell'immagine: " + (error.message || "Errore sconosciuto"));
+      }
       return null;
     }
   }

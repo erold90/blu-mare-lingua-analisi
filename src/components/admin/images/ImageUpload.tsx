@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageCategory } from '@/services/imageService';
 
@@ -32,8 +32,11 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
 }) => {
   const [filesWithAltText, setFilesWithAltText] = React.useState<FileWithAltText[]>([]);
   const [uploading, setUploading] = React.useState(false);
+  const [uploadErrors, setUploadErrors] = React.useState<string[]>([]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
+    console.log("Files dropped:", acceptedFiles);
+    
     const validFiles = acceptedFiles.filter(file => {
       if (!file.type.startsWith('image/')) {
         toast.error(`${file.name} non è un'immagine valida`);
@@ -46,6 +49,8 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       return true;
     });
 
+    console.log("Valid files:", validFiles);
+
     const newFilesWithAltText = validFiles.map(file => ({
       file,
       altText: '',
@@ -53,6 +58,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
     }));
 
     setFilesWithAltText(prev => [...prev, ...newFilesWithAltText].slice(0, maxFiles));
+    setUploadErrors([]); // Clear previous errors
   }, [maxFiles]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -97,24 +103,50 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
       return;
     }
 
+    console.log("Starting upload process for", filesWithAltText.length, "files");
     setUploading(true);
+    setUploadErrors([]);
     
     try {
       const { imageService } = await import('@/services/imageService');
       
-      const uploadPromises = filesWithAltText.map((fileData, arrayIndex) => {
+      console.log("Image service loaded, starting uploads...");
+      
+      const uploadPromises = filesWithAltText.map(async (fileData, arrayIndex) => {
         const displayOrder = Number(arrayIndex);
-        return imageService.uploadImage({
-          category,
-          apartment_id: apartmentId,
-          file: fileData.file,
-          alt_text: fileData.altText || '',
-          display_order: displayOrder
-        });
+        console.log(`Uploading file ${arrayIndex + 1}/${filesWithAltText.length}:`, fileData.file.name);
+        
+        try {
+          const result = await imageService.uploadImage({
+            category,
+            apartment_id: apartmentId,
+            file: fileData.file,
+            alt_text: fileData.altText || '',
+            display_order: displayOrder
+          });
+          
+          if (result) {
+            console.log(`Upload successful for ${fileData.file.name}:`, result);
+          } else {
+            console.error(`Upload failed for ${fileData.file.name}`);
+          }
+          
+          return result;
+        } catch (error) {
+          console.error(`Error uploading ${fileData.file.name}:`, error);
+          return null;
+        }
       });
 
       const results = await Promise.all(uploadPromises);
       const successCount = results.filter(result => result !== null).length;
+      const failedFiles = filesWithAltText.filter((_, index) => results[index] === null);
+      
+      console.log("Upload results:", {
+        total: filesWithAltText.length,
+        successful: successCount,
+        failed: failedFiles.length
+      });
       
       if (successCount === filesWithAltText.length) {
         toast.success(`${successCount} immagini caricate con successo`);
@@ -124,12 +156,19 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
         });
         setFilesWithAltText([]);
         onUploadSuccess?.();
-      } else {
+      } else if (successCount > 0) {
         toast.warning(`${successCount}/${filesWithAltText.length} immagini caricate`);
+        const errorMessages = failedFiles.map(f => `Errore caricamento: ${f.file.name}`);
+        setUploadErrors(errorMessages);
+      } else {
+        toast.error("Nessuna immagine è stata caricata");
+        const errorMessages = failedFiles.map(f => `Errore caricamento: ${f.file.name}`);
+        setUploadErrors(errorMessages);
       }
     } catch (error) {
       console.error('Upload error:', error);
       toast.error("Errore nel caricamento delle immagini");
+      setUploadErrors(["Errore generale nel sistema di caricamento"]);
     } finally {
       setUploading(false);
     }
@@ -164,6 +203,24 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({
           </div>
         </CardContent>
       </Card>
+
+      {uploadErrors.length > 0 && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-medium text-red-800 mb-2">Errori di caricamento:</h4>
+                <ul className="text-sm text-red-700 space-y-1">
+                  {uploadErrors.map((error, index) => (
+                    <li key={index}>• {error}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {filesWithAltText.length > 0 && (
         <Card>
