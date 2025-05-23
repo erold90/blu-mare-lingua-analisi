@@ -77,7 +77,7 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
         children: res.children || 0,
         cribs: res.cribs || 0,
         hasPets: res.has_pets || false,
-        apartmentIds: Array.isArray(res.apartment_ids) ? res.apartment_ids : [],
+        apartmentIds: Array.isArray(res.apartment_ids) ? res.apartment_ids as string[] : [],
         startDate: res.start_date,
         endDate: res.end_date,
         finalPrice: res.final_price ? Number(res.final_price) : 0,
