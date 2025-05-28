@@ -12,7 +12,7 @@ export const HomeImageCarousel = () => {
   useEffect(() => {
     const loadImages = async () => {
       try {
-        const galleryImages = await imageService.getImagesByCategory('gallery');
+        const galleryImages = await imageService.getImagesByCategory('home_gallery');
         setImages(galleryImages);
       } catch (error) {
         console.error('Error loading gallery images:', error);
