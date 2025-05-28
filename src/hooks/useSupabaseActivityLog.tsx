@@ -124,7 +124,7 @@ export function useSupabaseActivityLog() {
       const logData = {
         id: quoteData.id,
         timestamp: quoteData.timestamp || new Date().toISOString(),
-        form_values: serializeFormValues(quoteData.form_values),
+        form_values: serializeFormValues(quoteData.form_values) as Json,
         step: quoteData.step,
         completed: quoteData.completed
       };
