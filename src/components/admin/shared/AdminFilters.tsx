@@ -112,14 +112,14 @@ export const AdminFilters = ({
               <div className="space-y-2">
                 <Label>Appartamento</Label>
                 <Select 
-                  value={filters.apartmentId || ""} 
-                  onValueChange={(value) => updateFilter("apartmentId", value || undefined)}
+                  value={filters.apartmentId || "all"} 
+                  onValueChange={(value) => updateFilter("apartmentId", value === "all" ? undefined : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Tutti gli appartamenti" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tutti gli appartamenti</SelectItem>
+                    <SelectItem value="all">Tutti gli appartamenti</SelectItem>
                     {apartments.map((apt) => (
                       <SelectItem key={apt.id} value={apt.id}>
                         {apt.name}
@@ -134,14 +134,14 @@ export const AdminFilters = ({
               <div className="space-y-2">
                 <Label>Stato Pagamento</Label>
                 <Select 
-                  value={filters.paymentStatus || ""} 
-                  onValueChange={(value) => updateFilter("paymentStatus", value || undefined)}
+                  value={filters.paymentStatus || "all"} 
+                  onValueChange={(value) => updateFilter("paymentStatus", value === "all" ? undefined : value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Tutti gli stati" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Tutti gli stati</SelectItem>
+                    <SelectItem value="all">Tutti gli stati</SelectItem>
                     <SelectItem value="notPaid">Non Pagato</SelectItem>
                     <SelectItem value="deposit">Caparra</SelectItem>
                     <SelectItem value="paid">Pagato</SelectItem>
