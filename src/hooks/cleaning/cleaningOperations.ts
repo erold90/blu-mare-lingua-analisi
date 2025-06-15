@@ -1,5 +1,5 @@
 
-import { CleaningTask } from "../useCleaningManagement";
+import type { CleaningTask } from "../useCleaningManagement";
 import { Reservation, Apartment } from "@/hooks/useReservations";
 
 // Generate tasks from reservations

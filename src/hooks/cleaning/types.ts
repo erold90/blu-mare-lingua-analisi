@@ -1,3 +1,3 @@
 
 // Updated to use the unified CleaningTask interface from useCleaningManagement
-export { CleaningTask, CleaningContextType } from '../useCleaningManagement';
+export type { CleaningTask, CleaningContextType } from '../useCleaningManagement';

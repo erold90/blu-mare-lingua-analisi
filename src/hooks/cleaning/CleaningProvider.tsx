@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useReservations } from "@/hooks/useReservations";
-import { CleaningTask, CleaningContextType } from "../useCleaningManagement";
+import type { CleaningTask, CleaningContextType } from "../useCleaningManagement";
 import CleaningContext from "./CleaningContext";
 import { 
   generateTasksFromReservationsUtil,
@@ -53,7 +53,7 @@ export const CleaningProvider: React.FC<{children: React.ReactNode}> = ({ childr
   }, [cleaningTasks, isLoading]);
   
   // Add a new cleaning task
-  const addTask = (task: Omit<CleaningTask, "id" | "createdAt" | "updatedAt">) => {
+  const addTask = async (task: Omit<CleaningTask, "id" | "createdAt" | "updatedAt">) => {
     const newTask: CleaningTask = {
       ...task,
       id: crypto.randomUUID()
@@ -63,28 +63,28 @@ export const CleaningProvider: React.FC<{children: React.ReactNode}> = ({ childr
   };
   
   // Update a task's status
-  const updateTaskStatus = (id: string, status: CleaningTask["status"]) => {
+  const updateTaskStatus = async (id: string, status: CleaningTask["status"]) => {
     setCleaningTasks(prev => 
       prev.map(task => task.id === id ? { ...task, status } : task)
     );
   };
   
   // Update a task's notes
-  const updateTaskNotes = (id: string, notes: string) => {
+  const updateTaskNotes = async (id: string, notes: string) => {
     setCleaningTasks(prev => 
       prev.map(task => task.id === id ? { ...task, notes } : task)
     );
   };
   
   // Assign a task to a person
-  const updateTaskAssignment = (id: string, assignedTo: string) => {
+  const updateTaskAssignment = async (id: string, assignedTo: string) => {
     setCleaningTasks(prev => 
       prev.map(task => task.id === id ? { ...task, assignee: assignedTo } : task)
     );
   };
   
   // Delete a task
-  const deleteTask = (id: string) => {
+  const deleteTask = async (id: string) => {
     setCleaningTasks(prev => prev.filter(task => task.id !== id));
   };
   

@@ -22,6 +22,20 @@ export interface CleaningTask {
   updatedAt?: string;
 }
 
+export interface CleaningContextType {
+  cleaningTasks: CleaningTask[];
+  addTask: (task: Omit<CleaningTask, "id" | "createdAt" | "updatedAt">) => Promise<void>;
+  updateTaskStatus: (id: string, status: CleaningTask["status"]) => Promise<void>;
+  updateTaskNotes: (id: string, notes: string) => Promise<void>;
+  updateTaskAssignment: (id: string, assignedTo: string) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
+  generateTasksFromReservations: () => void;
+  getTasksByDate: (date: Date) => CleaningTask[];
+  getTasksByApartmentId: (apartmentId: string) => CleaningTask[];
+  refreshTasks: () => Promise<void>;
+  isLoading: boolean;
+}
+
 export const useCleaningManagement = () => {
   const [cleaningTasks, setCleaningTasks] = useState<CleaningTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
