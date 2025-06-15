@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { apartments } from "@/data/apartments";
@@ -119,8 +118,12 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
         }
       });
       
+      console.log(`📊 LOADED RESERVATIONS (${sortedReservations.length} total):`);
+      sortedReservations.forEach((res, index) => {
+        console.log(`  ${index + 1}. ${res.guestName}: Apartments [${res.apartmentIds.join(', ')}], ${res.startDate} → ${res.endDate}`);
+      });
+      
       setReservations(sortedReservations);
-      console.log(`Loaded ${sortedReservations.length} reservations from Supabase, sorted by arrival date (upcoming first)`);
     } catch (error) {
       console.error("Failed to load reservations:", error);
       toast.error("Errore nel caricamento delle prenotazioni");
@@ -220,31 +223,32 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
     const requestStart = startDate.getTime();
     const requestEnd = endDate.getTime();
     
-    console.log(`🔍 Checking availability for apartment ${apartmentId} from ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
-    console.log(`🔍 Request timestamps: ${requestStart} to ${requestEnd}`);
+    console.log(`\n🔍 DETAILED AVAILABILITY CHECK for apartment ${apartmentId}:`);
+    console.log(`   Request period: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
+    console.log(`   Request timestamps: ${requestStart} to ${requestEnd}`);
     
     // Check for conflicts with existing reservations
     const hasConflict = reservations.some(reservation => {
       // Skip if this reservation doesn't include the apartment
       if (!reservation.apartmentIds.includes(apartmentId)) {
-        console.log(`  ⏭️ Skipping reservation ${reservation.id} - doesn't include apartment ${apartmentId}`);
+        console.log(`   ⏭️ Skipping reservation ${reservation.guestName} - doesn't include apartment ${apartmentId}`);
         return false;
       }
       
       const reservationStart = new Date(reservation.startDate).getTime();
       const reservationEnd = new Date(reservation.endDate).getTime();
       
-      console.log(`  🔍 Comparing with reservation ${reservation.id} (${reservation.guestName}):`);
-      console.log(`      Dates: ${reservation.startDate} to ${reservation.endDate}`);
-      console.log(`      Timestamps: ${reservationStart} to ${reservationEnd}`);
+      console.log(`   🔍 Comparing with reservation ${reservation.guestName}:`);
+      console.log(`       Existing dates: ${reservation.startDate} to ${reservation.endDate}`);
+      console.log(`       Existing timestamps: ${reservationStart} to ${reservationEnd}`);
       
       // LOGICA CORRETTA: Una prenotazione è in conflitto solo se i periodi di soggiorno si sovrappongono
       // ESCLUSI i giorni di transizione (check-in e check-out)
       // 
       // Esempi:
-      // - Prenotazione A: 1 agosto (check-in) -> 8 agosto (check-out)
-      // - Prenotazione B: 8 agosto (check-in) -> 15 agosto (check-out) ✓ DISPONIBILE
-      // - Prenotazione C: 7 agosto (check-in) -> 10 agosto (check-out) ✗ CONFLITTO
+      // - Prenotazione A: 1 agosto (check-in) → 8 agosto (check-out)
+      // - Prenotazione B: 8 agosto (check-in) → 15 agosto (check-out) ✓ DISPONIBILE
+      // - Prenotazione C: 7 agosto (check-in) → 10 agosto (check-out) ✗ CONFLITTO
       //
       // La logica è: c'è conflitto solo se:
       // requestStart < reservationEnd AND requestEnd > reservationStart
@@ -253,25 +257,26 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
       const hasOverlap = (requestStart < reservationEnd && requestEnd > reservationStart);
       const isTransitionDay = (requestStart === reservationEnd || requestEnd === reservationStart);
       
-      console.log(`      hasOverlap: ${hasOverlap} (${requestStart} < ${reservationEnd} && ${requestEnd} > ${reservationStart})`);
-      console.log(`      isTransitionDay: ${isTransitionDay} (${requestStart} === ${reservationEnd} || ${requestEnd} === ${reservationStart})`);
+      console.log(`       hasOverlap: ${hasOverlap} (${requestStart} < ${reservationEnd} && ${requestEnd} > ${reservationStart})`);
+      console.log(`       isTransitionDay: ${isTransitionDay} (${requestStart} === ${reservationEnd} || ${requestEnd} === ${reservationStart})`);
+      console.log(`       Check-in matches existing check-out: ${requestStart === reservationEnd}`);
+      console.log(`       Check-out matches existing check-in: ${requestEnd === reservationStart}`);
       
       const conflict = hasOverlap && !isTransitionDay;
       
       if (conflict) {
-        console.log(`      ❌ CONFLICT: Overlap detected without transition day`);
+        console.log(`       ❌ CONFLICT DETECTED: Period overlap without valid transition`);
       } else if (hasOverlap && isTransitionDay) {
-        console.log(`      ✅ OK: Transition day overlap allowed`);
+        console.log(`       ✅ TRANSITION DAY ALLOWED: Valid check-in/check-out overlap`);
       } else {
-        console.log(`      ✅ OK: No overlap`);
+        console.log(`       ✅ NO OVERLAP: Periods don't conflict`);
       }
       
       return conflict;
     });
     
     const isAvailable = !hasConflict;
-    console.log(`🏠 Final result for apartment ${apartmentId}: ${isAvailable ? '✅ AVAILABLE' : '❌ NOT AVAILABLE'}`);
-    console.log(`📊 Summary: Request ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]} vs ${reservations.filter(r => r.apartmentIds.includes(apartmentId)).length} existing reservations for this apartment`);
+    console.log(`🎯 FINAL RESULT for apartment ${apartmentId}: ${isAvailable ? '✅ AVAILABLE' : '❌ NOT AVAILABLE'}`);
     
     return isAvailable;
   }, [reservations]);
