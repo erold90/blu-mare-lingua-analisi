@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { 
   Building2, 
   Calendar, 
-  CleaningServices, 
+  Sparkles, 
   Plus,
   Eye,
   ArrowRight
@@ -70,7 +70,7 @@ const OperationalSection: React.FC<OperationalSectionProps> = ({ data }) => {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="flex items-center gap-2">
-              <CleaningServices className="h-5 w-5 text-green-600" />
+              <Sparkles className="h-5 w-5 text-green-600" />
               Stato Pulizie
             </span>
             <Button variant="outline" size="sm">

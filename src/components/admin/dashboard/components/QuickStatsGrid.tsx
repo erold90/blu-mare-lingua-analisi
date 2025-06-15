@@ -7,7 +7,7 @@ import {
   Calendar, 
   Users, 
   Euro, 
-  CleaningServices, 
+  Sparkles, 
   TrendingUp, 
   TrendingDown,
   Minus
@@ -97,7 +97,7 @@ const QuickStatsGrid: React.FC<QuickStatsGridProps> = ({ data }) => {
       <StatCard
         title="Pulizie"
         value={`${pendingCleanings} da fare`}
-        icon={CleaningServices}
+        icon={Sparkles}
         color={pendingCleanings > 0 ? "text-orange-600" : "text-green-600"}
         badge="Oggi"
         progress={completionRate}
