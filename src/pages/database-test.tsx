@@ -1,10 +1,9 @@
-
 import * as React from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import DatabaseStatusChecker from "@/components/admin/database/DatabaseStatusChecker";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { testDatabaseConnection } from "@/hooks/cleaning/cleaningStorage";
+import { pingApi } from "@/api/apiClient";
 import { databaseProxy } from "@/services/databaseProxy";
 import { DataType } from "@/services/externalStorage";
 import { Button } from "@/components/ui/button";
@@ -20,9 +19,9 @@ const DatabaseTestPage = () => {
     setTestResults(prev => [...prev, "🔄 Test della connessione al database in corso..."]);
     
     try {
-      const isConnected = await testDatabaseConnection();
+      const result = await pingApi.testDatabaseConnection();
       
-      if (isConnected) {
+      if (result.success) {
         setTestResults(prev => [...prev, "✅ Connessione al database riuscita!"]);
       } else {
         setTestResults(prev => [...prev, "❌ Connessione al database fallita!"]);
