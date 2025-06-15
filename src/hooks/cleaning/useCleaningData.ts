@@ -2,17 +2,14 @@
 import { useState, useEffect } from "react";
 import { CleaningTask } from "../useCleaningManagement";
 import { supabaseService } from "@/services/supabaseService";
-import { loadCleaningTasks, saveCleaningTasks, syncCleaningTasks } from "./cleaningStorage";
 import { toast } from "sonner";
-import { externalStorage, DataType } from "@/services/externalStorage";
 
 export const useCleaningData = (apartments: any[], reservationsLoading: boolean) => {
   const [cleaningTasks, setCleaningTasks] = useState<CleaningTask[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const transformSupabaseTask = (task: any): CleaningTask => {
-    // Assicurati che apartments non sia vuoto prima di cercare
-    const apartment = apartments.length > 0 ? apartments.find(apt => apt.id === task.apartment_id) : null;
+    const apartment = apartments.find(apt => apt.id === task.apartment_id);
     
     return {
       id: task.id,
@@ -34,29 +31,22 @@ export const useCleaningData = (apartments: any[], reservationsLoading: boolean)
 
   const fetchTasks = async () => {
     if (reservationsLoading || apartments.length === 0) {
-      console.log("Skipping task fetch - waiting for apartments to load");
+      console.log("Attendo il caricamento degli appartamenti...");
       return;
     }
     
     setIsLoading(true);
     try {
-      console.log("Loading cleaning tasks from Supabase...");
+      console.log("Caricamento attività di pulizia da Supabase...");
       const data = await supabaseService.cleaningTasks.getAll();
       
       const transformedTasks: CleaningTask[] = data.map(transformSupabaseTask);
       
       setCleaningTasks(transformedTasks);
-      console.log(`Loaded ${transformedTasks.length} cleaning tasks from Supabase`);
+      console.log(`Caricate ${transformedTasks.length} attività di pulizia da Supabase`);
     } catch (error) {
       console.error("Errore nel caricamento delle attività di pulizia:", error);
-      try {
-        const localTasks = await loadCleaningTasks();
-        setCleaningTasks(localTasks);
-        console.log("Loaded cleaning tasks from local storage as fallback");
-      } catch (localError) {
-        console.error("Errore anche nel caricamento locale:", localError);
-        toast.error("Errore nel caricamento delle attività di pulizia");
-      }
+      toast.error("Errore nel caricamento delle attività di pulizia");
     } finally {
       setIsLoading(false);
     }
@@ -64,15 +54,13 @@ export const useCleaningData = (apartments: any[], reservationsLoading: boolean)
 
   const refreshTasks = async () => {
     if (apartments.length === 0) {
-      console.log("Cannot refresh tasks - apartments not loaded yet");
+      console.log("Impossibile aggiornare - appartamenti non ancora caricati");
       return;
     }
     
     setIsLoading(true);
     try {
-      console.log("Refreshing cleaning tasks...");
-      await syncCleaningTasks();
-      
+      console.log("Aggiornamento attività di pulizia...");
       const data = await supabaseService.cleaningTasks.getAll();
       const transformedTasks: CleaningTask[] = data.map(transformSupabaseTask);
       
@@ -90,17 +78,6 @@ export const useCleaningData = (apartments: any[], reservationsLoading: boolean)
     if (apartments.length > 0 && !reservationsLoading) {
       fetchTasks();
     }
-    
-    const unsubscribe = externalStorage.subscribe(DataType.CLEANING_TASKS, async () => {
-      console.log("Cleaning tasks updated externally, reloading");
-      if (apartments.length > 0) {
-        fetchTasks();
-      }
-    });
-    
-    return () => {
-      unsubscribe();
-    };
   }, [apartments.length, reservationsLoading]);
 
   return {

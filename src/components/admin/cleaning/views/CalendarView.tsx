@@ -1,13 +1,11 @@
 
 import * as React from "react";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { format, isSameDay } from "date-fns";
+import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { useCleaningManagement } from "@/hooks/useCleaningManagement";
-import { useReservations } from "@/hooks/useReservations";
+import { useCleaningContext } from "@/hooks/cleaning/useCleaningContext";
 import CleaningTaskCard from "../CleaningTaskCard";
 
 interface CalendarViewProps {
@@ -23,8 +21,7 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   selectedApartment,
   isMobile
 }) => {
-  const { cleaningTasks, getTasksByDate } = useCleaningManagement();
-  const { apartments } = useReservations();
+  const { cleaningTasks, getTasksByDate } = useCleaningContext();
   
   // Calcola le attività per la data selezionata
   const selectedDateTasks = useMemo(() => {

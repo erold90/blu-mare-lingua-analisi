@@ -88,10 +88,10 @@ export type Database = {
           estimated_duration: number | null
           id: string
           notes: string | null
-          priority: string | null
-          status: string | null
+          priority: string
+          status: string
           task_date: string
-          task_type: string | null
+          task_type: string
           updated_at: string | null
         }
         Insert: {
@@ -101,12 +101,12 @@ export type Database = {
           created_at?: string | null
           device_id?: string | null
           estimated_duration?: number | null
-          id: string
+          id?: string
           notes?: string | null
-          priority?: string | null
-          status?: string | null
+          priority?: string
+          status?: string
           task_date: string
-          task_type?: string | null
+          task_type?: string
           updated_at?: string | null
         }
         Update: {
@@ -118,15 +118,15 @@ export type Database = {
           estimated_duration?: number | null
           id?: string
           notes?: string | null
-          priority?: string | null
-          status?: string | null
+          priority?: string
+          status?: string
           task_date?: string
-          task_type?: string | null
+          task_type?: string
           updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "fk_cleaning_tasks_apartment"
+            foreignKeyName: "cleaning_tasks_apartment_id_fkey"
             columns: ["apartment_id"]
             isOneToOne: false
             referencedRelation: "apartments"

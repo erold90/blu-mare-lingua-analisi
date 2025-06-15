@@ -1,8 +1,7 @@
-import { useState } from "react";
+
 import { CleaningTask } from "../useCleaningManagement";
 import { supabaseService } from "@/services/supabaseService";
 import { toast } from "sonner";
-import { saveCleaningTasks } from "./cleaningStorage";
 
 export const useCleaningCrud = (
   cleaningTasks: CleaningTask[],
@@ -11,7 +10,7 @@ export const useCleaningCrud = (
 ) => {
   const addTask = async (task: Omit<CleaningTask, "id" | "createdAt" | "updatedAt">) => {
     try {
-      console.log("Adding new cleaning task:", task);
+      console.log("Aggiunta nuova attività di pulizia:", task);
       
       // Verifica che l'appartamento esista
       const apartment = apartments.find(apt => apt.id === task.apartmentId);
@@ -22,7 +21,6 @@ export const useCleaningCrud = (
       }
       
       const newTask = {
-        id: crypto.randomUUID(),
         apartment_id: task.apartmentId,
         task_date: task.taskDate,
         task_type: task.taskType,
@@ -35,30 +33,31 @@ export const useCleaningCrud = (
         device_id: task.deviceId || crypto.randomUUID()
       };
       
-      await supabaseService.cleaningTasks.create(newTask);
+      const createdTask = await supabaseService.cleaningTasks.create(newTask);
       
       const localTask: CleaningTask = {
-        id: newTask.id,
-        apartmentId: newTask.apartment_id,
+        id: createdTask.id,
+        apartmentId: createdTask.apartment_id,
         apartmentName: apartment.name,
-        taskDate: newTask.task_date,
-        taskType: newTask.task_type as CleaningTask["taskType"],
-        status: (newTask.status === "in_progress" ? "inProgress" : newTask.status) as CleaningTask["status"],
-        priority: newTask.priority as CleaningTask["priority"],
-        assignee: newTask.assignee || undefined,
-        notes: newTask.notes || undefined,
-        estimatedDuration: newTask.estimated_duration,
-        actualDuration: newTask.actual_duration || undefined,
-        deviceId: newTask.device_id || undefined
+        taskDate: createdTask.task_date,
+        taskType: createdTask.task_type as CleaningTask["taskType"],
+        status: (createdTask.status === "in_progress" ? "inProgress" : createdTask.status) as CleaningTask["status"],
+        priority: createdTask.priority as CleaningTask["priority"],
+        assignee: createdTask.assignee || undefined,
+        notes: createdTask.notes || undefined,
+        estimatedDuration: createdTask.estimated_duration,
+        actualDuration: createdTask.actual_duration || undefined,
+        deviceId: createdTask.device_id || undefined,
+        createdAt: createdTask.created_at || undefined,
+        updatedAt: createdTask.updated_at || undefined
       };
       
       setCleaningTasks(prev => [...prev, localTask]);
-      saveCleaningTasks([...cleaningTasks, localTask]);
-      
       toast.success("Attività di pulizia aggiunta con successo");
     } catch (error) {
       console.error("Errore nell'aggiunta dell'attività:", error);
       toast.error("Errore nell'aggiungere l'attività di pulizia");
+      throw error;
     }
   };
 
@@ -85,9 +84,6 @@ export const useCleaningCrud = (
       setCleaningTasks(prev => 
         prev.map(task => task.id === id ? { ...task, status } : task)
       );
-      
-      const updatedTasks = cleaningTasks.map(task => task.id === id ? { ...task, status } : task);
-      saveCleaningTasks(updatedTasks);
       
       toast.success("Stato attività aggiornato");
     } catch (error) {
@@ -120,9 +116,6 @@ export const useCleaningCrud = (
         prev.map(task => task.id === id ? { ...task, notes } : task)
       );
       
-      const updatedTasks = cleaningTasks.map(task => task.id === id ? { ...task, notes } : task);
-      saveCleaningTasks(updatedTasks);
-      
       toast.success("Note aggiornate");
     } catch (error) {
       console.error("Errore nell'aggiornamento delle note:", error);
@@ -154,9 +147,6 @@ export const useCleaningCrud = (
         prev.map(task => task.id === id ? { ...task, assignee: assignedTo } : task)
       );
       
-      const updatedTasks = cleaningTasks.map(task => task.id === id ? { ...task, assignee: assignedTo } : task);
-      saveCleaningTasks(updatedTasks);
-      
       toast.success("Assegnazione aggiornata");
     } catch (error) {
       console.error("Errore nell'aggiornamento dell'assegnazione:", error);
@@ -169,9 +159,6 @@ export const useCleaningCrud = (
       await supabaseService.cleaningTasks.delete(id);
       
       setCleaningTasks(prev => prev.filter(task => task.id !== id));
-      
-      const updatedTasks = cleaningTasks.filter(task => task.id !== id);
-      saveCleaningTasks(updatedTasks);
       
       toast.success("Attività eliminata");
     } catch (error) {

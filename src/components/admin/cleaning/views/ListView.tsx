@@ -3,10 +3,7 @@ import * as React from "react";
 import { useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { it } from "date-fns/locale";
-import { useCleaningManagement } from "@/hooks/useCleaningManagement";
-import { useReservations } from "@/hooks/useReservations";
+import { useCleaningContext } from "@/hooks/cleaning/useCleaningContext";
 import CleaningTaskCard from "../CleaningTaskCard";
 
 interface ListViewProps {
@@ -18,8 +15,7 @@ const ListView: React.FC<ListViewProps> = ({
   selectedApartment,
   isMobile
 }) => {
-  const { cleaningTasks } = useCleaningManagement();
-  const { apartments } = useReservations();
+  const { cleaningTasks } = useCleaningContext();
   
   // Filtra e ordina le attività
   const filteredAndSortedTasks = useMemo(() => {
