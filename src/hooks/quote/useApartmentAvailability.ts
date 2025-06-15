@@ -37,7 +37,13 @@ export function useApartmentAvailability(apartments: Apartment[], formValues: Fo
       return;
     }
     
-    console.log("🔍 Checking availability for dates:", formValues.checkIn, "to", formValues.checkOut);
+    // CORREZIONE DEL BUG: Usiamo direttamente le date originali invece di creare nuove Date()
+    const checkInDate = formValues.checkIn instanceof Date ? formValues.checkIn : new Date(formValues.checkIn);
+    const checkOutDate = formValues.checkOut instanceof Date ? formValues.checkOut : new Date(formValues.checkOut);
+    
+    console.log("🔍 Checking availability for dates:", checkInDate, "to", checkOutDate);
+    console.log("🔍 Date conversion check - original checkIn:", formValues.checkIn, "converted:", checkInDate);
+    console.log("🔍 Date conversion check - original checkOut:", formValues.checkOut, "converted:", checkOutDate);
     console.log("🔍 Current reservations count:", reservations.length);
     
     if (reservations.length > 0) {
@@ -52,10 +58,10 @@ export function useApartmentAvailability(apartments: Apartment[], formValues: Fo
     const filteredApartments = apartments.map(apartment => {
       console.log(`\n🏠 Checking apartment ${apartment.name} (${apartment.id}):`);
       
-      // Verify if the apartment is already booked for the selected dates
-      const isAvailable = getApartmentAvailability(apartment.id, new Date(formValues.checkIn), new Date(formValues.checkOut));
+      // CORREZIONE: Passiamo le date corrette alla funzione
+      const isAvailable = getApartmentAvailability(apartment.id, checkInDate, checkOutDate);
 
-      console.log(`🏠 Apartment ${apartment.name} (${apartment.id}): ${isAvailable ? '✅ AVAILABLE' : '❌ BOOKED'} for ${formValues.checkIn ? new Date(formValues.checkIn).toISOString().split('T')[0] : 'N/A'} to ${formValues.checkOut ? new Date(formValues.checkOut).toISOString().split('T')[0] : 'N/A'}`);
+      console.log(`🏠 Apartment ${apartment.name} (${apartment.id}): ${isAvailable ? '✅ AVAILABLE' : '❌ BOOKED'} for ${checkInDate.toISOString().split('T')[0]} to ${checkOutDate.toISOString().split('T')[0]}`);
 
       return {
         ...apartment,

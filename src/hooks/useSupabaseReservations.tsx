@@ -219,12 +219,18 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
   // Check if an apartment is available for the given date range
   // LOGICA CORRETTA: Le date di check-in e check-out sono giorni di transizione disponibili
   const getApartmentAvailability = useCallback((apartmentId: string, startDate: Date, endDate: Date): boolean => {
+    // CORREZIONE: Normalizziamo le date per confrontare solo giorni (senza ore)
+    const requestStartDate = new Date(startDate);
+    requestStartDate.setHours(0, 0, 0, 0);
+    const requestEndDate = new Date(endDate);
+    requestEndDate.setHours(0, 0, 0, 0);
+    
     // Convert dates to timestamps for easier comparison
-    const requestStart = startDate.getTime();
-    const requestEnd = endDate.getTime();
+    const requestStart = requestStartDate.getTime();
+    const requestEnd = requestEndDate.getTime();
     
     console.log(`\n🔍 DETAILED AVAILABILITY CHECK for apartment ${apartmentId}:`);
-    console.log(`   Request period: ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
+    console.log(`   Request period: ${requestStartDate.toISOString().split('T')[0]} to ${requestEndDate.toISOString().split('T')[0]}`);
     console.log(`   Request timestamps: ${requestStart} to ${requestEnd}`);
     
     // Check for conflicts with existing reservations
@@ -235,11 +241,18 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
         return false;
       }
       
-      const reservationStart = new Date(reservation.startDate).getTime();
-      const reservationEnd = new Date(reservation.endDate).getTime();
+      // CORREZIONE: Normalizziamo anche le date delle prenotazioni esistenti
+      const reservationStartDate = new Date(reservation.startDate);
+      reservationStartDate.setHours(0, 0, 0, 0);
+      const reservationEndDate = new Date(reservation.endDate);
+      reservationEndDate.setHours(0, 0, 0, 0);
+      
+      const reservationStart = reservationStartDate.getTime();
+      const reservationEnd = reservationEndDate.getTime();
       
       console.log(`   🔍 Comparing with reservation ${reservation.guestName}:`);
       console.log(`       Existing dates: ${reservation.startDate} to ${reservation.endDate}`);
+      console.log(`       Normalized dates: ${reservationStartDate.toISOString().split('T')[0]} to ${reservationEndDate.toISOString().split('T')[0]}`);
       console.log(`       Existing timestamps: ${reservationStart} to ${reservationEnd}`);
       
       // LOGICA CORRETTA: Una prenotazione è in conflitto solo se i periodi di soggiorno si sovrappongono
