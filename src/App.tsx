@@ -17,7 +17,6 @@ import NotFound from "./pages/NotFound";
 import { SettingsProvider } from "./hooks/useSettings";
 import { ActivityLogProvider } from "./hooks/useActivityLog";
 import { AuthProvider } from "./contexts/AuthContext";
-import ApiTestPage from './pages/api-test';
 
 console.log("🚀 App.tsx: Loading main App component");
 
@@ -54,7 +53,6 @@ function App() {
                   <Route path="/contatti" element={<ContactsPage />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                   <Route path="/cookie-policy" element={<CookiePolicyPage />} />
-                  <Route path="/api-test" element={<ApiTestPage />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

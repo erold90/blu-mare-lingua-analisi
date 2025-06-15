@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { useNavigate, Link, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,6 @@ import AdminLog from "@/components/admin/AdminLog";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminCalendar from "@/components/admin/calendar/AdminCalendar";
 import AdminCleaningManagement from "@/components/admin/cleaning/AdminCleaningManagement";
-import ApiTestPage from '../pages/api-test';
 
 const LoginForm = () => {
   const [username, setUsername] = React.useState("");
@@ -151,7 +151,6 @@ const ReservedAreaPage = () => {
         <Route path="/calendario" element={<AdminCalendar />} />
         <Route path="/log" element={<AdminLog />} />
         <Route path="/impostazioni" element={<AdminSettings />} />
-        <Route path="/api-test" element={<ApiTestPage />} />
         <Route path="*" element={<Navigate to="/area-riservata/dashboard" replace />} />
       </Routes>
     </AdminLayout>

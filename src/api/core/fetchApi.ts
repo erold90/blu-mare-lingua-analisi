@@ -6,10 +6,8 @@
 import { toast } from "sonner";
 import { ApiResponse, HttpMethod } from "../types";
 import { API_BASE_URL, apiConnectionFailed, setApiConnectionFailed, offlineMode, setOfflineMode } from "../config";
-import { handleMockDatabaseRequest } from "../utils/mockHandler";
 import { handleServerUnavailable, handleNonJsonResponse } from "../utils/errorHandlers";
 import { handleLocalStoragePersistence } from "../utils/persistence";
-import { MockDatabaseService } from "@/utils/mockDatabaseService";
 
 /**
  * Funzione generica per effettuare chiamate API con miglioramenti per la resilienza
@@ -20,14 +18,9 @@ export async function fetchApi<T>(
   body?: any,
   timeout: number = 15000
 ): Promise<ApiResponse<T>> {
-  // Se la modalità offline è attiva, usa solo il database simulato
+  // Se la modalità offline è attiva, usa solo dati locali
   if (offlineMode) {
-    return handleMockDatabaseRequest<T>(endpoint, method, body);
-  }
-
-  // Se la modalità mock è attiva e l'endpoint è rilevante, usa il database simulato
-  if (MockDatabaseService.isActive()) {
-    return handleMockDatabaseRequest<T>(endpoint, method, body);
+    return handleServerUnavailable<T>(endpoint, method);
   }
   
   try {
@@ -72,27 +65,6 @@ export async function fetchApi<T>(
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.indexOf("application/json") === -1) {
         console.warn(`Risposta non JSON ricevuta da ${url}. Tipo di contenuto: ${contentType}`);
-        
-        // Se l'endpoint è specifico per il database, per gli appartamenti o per i prezzi, 
-        // proviamo a usare il database simulato come fallback
-        if (endpoint.includes('/database') || endpoint.includes('/apartments') || endpoint.includes('/prices')) {
-          console.log('Tentativo di fallback al database simulato per:', endpoint);
-          
-          // Per gli endpoint specifici, proviamo a gestirli direttamente
-          if (endpoint === '/ping/database') {
-            // Se stiamo testando la connessione al database, restituiamo successo simulato
-            return {
-              success: true,
-              data: {
-                status: "ok",
-                message: "Database connection ready for Supabase integration"
-              } as any
-            };
-          }
-          
-          return handleMockDatabaseRequest<T>(endpoint, method, body);
-        }
-        
         return handleNonJsonResponse<T>(endpoint);
       }
       
@@ -119,12 +91,12 @@ export async function fetchApi<T>(
     } catch (fetchError) {
       clearTimeout(timeoutId);
       
-      console.log(`Server remoto ${API_BASE_URL} non raggiungibile, preparazione per integrazione Supabase`);
+      console.log(`Server remoto ${API_BASE_URL} non raggiungibile`);
       
       if (!apiConnectionFailed) {
         setApiConnectionFailed(true);
-        toast.info('Preparazione per integrazione Supabase', {
-          description: 'L\'app funzionerà con dati locali fino all\'integrazione con Supabase'
+        toast.info('Modalità offline attivata', {
+          description: 'L\'app funzionerà con dati locali'
         });
         setOfflineMode(true);
       }

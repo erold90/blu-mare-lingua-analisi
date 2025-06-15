@@ -5,9 +5,7 @@
  */
 
 // Export all API endpoints
-export { pingApi } from './endpoints/ping';
 export { reservationsApi } from './endpoints/reservations';
-export { cleaningApi } from './endpoints/cleaning';
 export { apartmentsApi } from './endpoints/apartments';
 export { pricesApi } from './endpoints/prices';
 export { syncApi } from './endpoints/sync';

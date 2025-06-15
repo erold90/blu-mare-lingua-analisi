@@ -4,7 +4,6 @@
  */
 
 import { fetchApi } from "../core/fetchApi";
-import { pingApi } from "./ping";
 import { syncApi } from "./sync";
 
 export const systemApi = {
@@ -13,16 +12,6 @@ export const systemApi = {
   },
   
   forceSyncAllData: async () => {
-    // Verifichiamo prima se il database è raggiungibile
-    const dbTest = await pingApi.testDatabaseConnection();
-    
-    if (!dbTest.success) {
-      return {
-        success: false,
-        error: 'Database non raggiungibile, impossibile sincronizzare'
-      };
-    }
-    
     try {
       // Prima proviamo con l'endpoint unificato se disponibile
       const syncResult = await fetchApi('/system/sync/all', 'POST');

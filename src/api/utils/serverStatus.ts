@@ -4,21 +4,24 @@
  */
 
 import { toast } from "sonner";
-import { pingApi } from "../endpoints/ping";
 import { getOfflineMode, setOfflineMode } from "../config";
 
 export const checkServerStatus = async () => {
   try {
-    const pingResult = await pingApi.check();
+    // Semplice test di connettività
+    const response = await fetch('/api/health', { 
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
     
-    if (pingResult.success && getOfflineMode()) {
+    if (response.ok && getOfflineMode()) {
       setOfflineMode(false);
       toast.success('Connessione al server ripristinata', {
         description: 'L\'app è tornata alla modalità online'
       });
     }
     
-    return pingResult;
+    return { success: true };
   } catch (error) {
     if (!getOfflineMode()) {
       setOfflineMode(true);
