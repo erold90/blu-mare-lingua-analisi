@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useReservations } from "@/hooks/useReservations";
-import { CleaningTask } from "./types";
+import { CleaningTask, CleaningContextType } from "../useCleaningManagement";
 import CleaningContext from "./CleaningContext";
 import { 
   generateTasksFromReservationsUtil,
@@ -53,7 +53,7 @@ export const CleaningProvider: React.FC<{children: React.ReactNode}> = ({ childr
   }, [cleaningTasks, isLoading]);
   
   // Add a new cleaning task
-  const addTask = (task: Omit<CleaningTask, "id">) => {
+  const addTask = (task: Omit<CleaningTask, "id" | "createdAt" | "updatedAt">) => {
     const newTask: CleaningTask = {
       ...task,
       id: crypto.randomUUID()
@@ -79,7 +79,7 @@ export const CleaningProvider: React.FC<{children: React.ReactNode}> = ({ childr
   // Assign a task to a person
   const updateTaskAssignment = (id: string, assignedTo: string) => {
     setCleaningTasks(prev => 
-      prev.map(task => task.id === id ? { ...task, assignedTo } : task)
+      prev.map(task => task.id === id ? { ...task, assignee: assignedTo } : task)
     );
   };
   
@@ -126,20 +126,22 @@ export const CleaningProvider: React.FC<{children: React.ReactNode}> = ({ childr
     return getTasksByApartmentIdUtil(cleaningTasks, apartmentId);
   };
   
+  const contextValue: CleaningContextType = {
+    cleaningTasks,
+    addTask,
+    updateTaskStatus,
+    updateTaskNotes,
+    updateTaskAssignment,
+    deleteTask,
+    generateTasksFromReservations,
+    getTasksByDate,
+    getTasksByApartmentId,
+    refreshTasks,
+    isLoading
+  };
+  
   return (
-    <CleaningContext.Provider value={{
-      cleaningTasks,
-      addTask,
-      updateTaskStatus,
-      updateTaskNotes,
-      updateTaskAssignment,
-      deleteTask,
-      generateTasksFromReservations,
-      getTasksByDate,
-      getTasksByApartmentId,
-      refreshTasks,
-      isLoading
-    }}>
+    <CleaningContext.Provider value={contextValue}>
       {children}
     </CleaningContext.Provider>
   );

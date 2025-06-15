@@ -1,5 +1,5 @@
 
-import { CleaningTask } from "../useCleaningManagementAdapter";
+import { CleaningTask } from "../useCleaningManagement";
 import { Reservation, Apartment } from "@/hooks/useReservations";
 
 // Generate tasks from reservations
@@ -7,8 +7,8 @@ export const generateTasksFromReservationsUtil = (
   reservations: Reservation[], 
   apartments: Apartment[], 
   cleaningTasks: CleaningTask[]
-): Omit<CleaningTask, "id">[] => {
-  const newTasks: Omit<CleaningTask, "id">[] = [];
+): Omit<CleaningTask, "id" | "createdAt" | "updatedAt">[] => {
+  const newTasks: Omit<CleaningTask, "id" | "createdAt" | "updatedAt">[] = [];
   
   // For each reservation, create a cleaning task for the checkout day
   reservations.forEach(reservation => {
@@ -24,8 +24,11 @@ export const generateTasksFromReservationsUtil = (
       newTasks.push({
         apartmentId,
         apartmentName: apartment.name,
-        date: checkoutDate.toISOString(),
+        taskDate: checkoutDate.toISOString().split('T')[0],
+        taskType: "checkout",
         status: "pending",
+        priority: "medium",
+        estimatedDuration: 90,
         notes: `Pulizia dopo il checkout di ${reservation.guestName}`
       });
     });
@@ -33,11 +36,11 @@ export const generateTasksFromReservationsUtil = (
   
   // Filter out tasks that already exist
   const existingDates = cleaningTasks.map(task => 
-    `${task.apartmentId}-${new Date(task.date).toISOString().split('T')[0]}`
+    `${task.apartmentId}-${task.taskDate}`
   );
   
   return newTasks.filter(task => {
-    const taskKey = `${task.apartmentId}-${new Date(task.date).toISOString().split('T')[0]}`;
+    const taskKey = `${task.apartmentId}-${task.taskDate}`;
     return !existingDates.includes(taskKey);
   });
 };
@@ -45,9 +48,7 @@ export const generateTasksFromReservationsUtil = (
 // Filter tasks by date
 export const getTasksByDateUtil = (cleaningTasks: CleaningTask[], date: Date): CleaningTask[] => {
   const dateStr = date.toISOString().split('T')[0];
-  return cleaningTasks.filter(task => 
-    new Date(task.date).toISOString().split('T')[0] === dateStr
-  );
+  return cleaningTasks.filter(task => task.taskDate === dateStr);
 };
 
 // Filter tasks by apartment ID
