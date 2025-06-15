@@ -3,13 +3,11 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useSupabaseCleaningManagement } from "@/hooks/useSupabaseCleaningManagement";
-import { format } from "date-fns";
-import { it } from "date-fns/locale";
+import { useCleaningManagement } from "@/hooks/useCleaningManagement";
+import { pingApi } from "@/api/apiClient";
 import { RefreshCw, Database, AlertCircle, CheckCircle, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { pingApi } from "@/api/apiClient";
 
 import CleaningHeader from "./CleaningHeader";
 import CalendarView from "./views/CalendarView";
@@ -23,8 +21,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-// Contenuto interno che usa il context
-const AdminCleaningManagementContent = () => {
+const AdminCleaningManagement = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [view, setView] = useState<"calendar" | "list" | "statistics">("calendar");
   const [selectedApartment, setSelectedApartment] = useState<string>("all");
@@ -32,7 +29,7 @@ const AdminCleaningManagementContent = () => {
   const [dbStatus, setDbStatus] = useState<boolean | null>(null);
   const [lastSyncTime, setLastSyncTime] = useState<string>("");
   const isMobile = useIsMobile();
-  const { refreshData, isLoading, syncCleaningTasks } = useSupabaseCleaningManagement();
+  const { refreshTasks, isLoading } = useCleaningManagement();
   
   // Controlla lo stato del database all'avvio
   useEffect(() => {
@@ -62,8 +59,7 @@ const AdminCleaningManagementContent = () => {
   
   const handleRefresh = async () => {
     try {
-      await syncCleaningTasks();
-      await refreshData();
+      await refreshTasks();
       
       // Aggiorna timestamp dell'ultima sincronizzazione
       const now = Date.now();
@@ -75,8 +71,11 @@ const AdminCleaningManagementContent = () => {
         .then(res => res.success)
         .catch(() => false);
       setDbStatus(isConnected);
+      
+      toast.success("Attività di pulizia sincronizzate");
     } catch (error) {
       console.error("Errore durante l'aggiornamento:", error);
+      toast.error("Errore nella sincronizzazione");
     }
   };
   
@@ -89,18 +88,14 @@ const AdminCleaningManagementContent = () => {
       setDbStatus(isConnected);
       
       if (isConnected) {
-        // Verifica se ci sono dati da sincronizzare
-        const localData = localStorage.getItem('persistent_cleaning_tasks');
-        if (localData) {
-          const tasks = JSON.parse(localData);
-          if (tasks && tasks.length > 0) {
-            toast.info(`${tasks.length} attività locali disponibili per la sincronizzazione`);
-          }
-        }
+        toast.success("Database connesso correttamente");
+      } else {
+        toast.error("Impossibile connettersi al database");
       }
     } catch (error) {
       console.error("Errore durante il test della connessione:", error);
       setDbStatus(false);
+      toast.error("Errore nel test della connessione");
     } finally {
       setIsTestingDb(false);
     }
@@ -117,7 +112,6 @@ const AdminCleaningManagementContent = () => {
         />
         
         <div className="flex gap-2 items-center">
-          {/* Stato database */}
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -134,7 +128,7 @@ const AdminCleaningManagementContent = () => {
                 <p>
                   {dbStatus 
                     ? "Database connesso" 
-                    : "Database non raggiungibile. I dati sono salvati solo localmente."}
+                    : "Database non raggiungibile"}
                 </p>
                 {lastSyncTime && (
                   <p className="text-xs mt-1">Ultima sincronizzazione: {lastSyncTime}</p>
@@ -165,12 +159,11 @@ const AdminCleaningManagementContent = () => {
         </div>
       </div>
       
-      {/* Messaggi informativi */}
       {dbStatus === false && (
         <div className="bg-amber-50 border border-amber-200 rounded-md p-3 flex items-center text-amber-800 mb-4">
           <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
           <p className="text-sm">
-            Database non connesso. I dati sono salvati solo localmente e non saranno visibili su altri dispositivi.
+            Database non connesso. Le modifiche potrebbero non essere salvate.
             {lastSyncTime && (
               <span className="block text-xs mt-1">Ultima sincronizzazione: {lastSyncTime}</span>
             )}
@@ -182,7 +175,7 @@ const AdminCleaningManagementContent = () => {
         <div className="flex justify-center py-8">
           <div className="flex items-center space-x-2">
             <RefreshCw className="h-5 w-5 animate-spin text-muted-foreground" />
-            <p className="text-muted-foreground">Sincronizzazione in corso...</p>
+            <p className="text-muted-foreground">Caricamento attività di pulizia...</p>
           </div>
         </div>
       )}
@@ -208,11 +201,6 @@ const AdminCleaningManagementContent = () => {
       )}
     </div>
   );
-};
-
-// Esporta il componente
-const AdminCleaningManagement = () => {
-  return <AdminCleaningManagementContent />;
 };
 
 export default AdminCleaningManagement;

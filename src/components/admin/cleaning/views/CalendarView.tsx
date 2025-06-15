@@ -1,11 +1,13 @@
 
 import * as React from "react";
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
+import { Calendar } from "@/components/ui/calendar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { format, isSameDay } from "date-fns";
 import { it } from "date-fns/locale";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar } from "@/components/ui/calendar";
-import { CleaningTask, useCleaningManagement } from "@/hooks/cleaning";
+import { useCleaningManagement } from "@/hooks/useCleaningManagement";
+import { useReservations } from "@/hooks/useReservations";
 import CleaningTaskCard from "../CleaningTaskCard";
 
 interface CalendarViewProps {
@@ -21,108 +23,88 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   selectedApartment,
   isMobile
 }) => {
-  const { 
-    cleaningTasks, 
-    updateTaskStatus,
-    updateTaskNotes,
-    updateTaskAssignment,
-    deleteTask,
-    getTasksByDate
-  } = useCleaningManagement();
+  const { cleaningTasks, getTasksByDate } = useCleaningManagement();
+  const { apartments } = useReservations();
   
-  // Filtra le attività di pulizia per appartamento e data
-  const filteredTasks = useMemo(() => {
-    let tasks = getTasksByDate(selectedDate);
+  // Calcola le attività per la data selezionata
+  const selectedDateTasks = useMemo(() => {
+    const tasks = getTasksByDate(selectedDate);
     
-    if (selectedApartment !== "all") {
-      tasks = tasks.filter(task => task.apartmentId === selectedApartment);
+    if (selectedApartment === "all") {
+      return tasks;
     }
     
-    return tasks;
+    return tasks.filter(task => task.apartmentId === selectedApartment);
   }, [selectedDate, selectedApartment, getTasksByDate]);
   
-  // Giorni con attività di pulizia per il calendario
-  const specialDays = useMemo(() => {
-    const days: Record<string, { tasks: CleaningTask[] }> = {};
+  // Calcola i giorni con attività per evidenziarli nel calendario
+  const daysWithTasks = useMemo(() => {
+    const days = new Set<string>();
     
     cleaningTasks.forEach(task => {
-      const dateKey = new Date(task.date).toISOString().split('T')[0];
-      
-      if (!days[dateKey]) {
-        days[dateKey] = { tasks: [] };
+      if (selectedApartment === "all" || task.apartmentId === selectedApartment) {
+        days.add(task.taskDate);
       }
-      
-      days[dateKey].tasks.push(task);
     });
     
     return days;
-  }, [cleaningTasks]);
-  
+  }, [cleaningTasks, selectedApartment]);
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      {/* Calendario */}
-      <Card className={isMobile ? "" : "md:col-span-1"}>
-        <CardContent className="pt-6">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Calendario principale */}
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle>Calendario Pulizie</CardTitle>
+          <CardDescription>
+            Clicca su una data per vedere le attività programmate
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={(date) => date && setSelectedDate(date)}
+            className="w-full"
             modifiers={{
-              hasCleaningTask: (date) => {
-                const dateKey = format(date, "yyyy-MM-dd");
-                const day = specialDays[dateKey];
-                
-                if (selectedApartment === "all") {
-                  return !!day;
-                }
-                
-                return !!day?.tasks.some(t => 
-                  t.apartmentId === selectedApartment
-                );
+              hasTasks: (date) => {
+                const dateString = format(date, "yyyy-MM-dd");
+                return daysWithTasks.has(dateString);
               }
             }}
-            modifiersClassNames={{
-              hasCleaningTask: "bg-accent text-accent-foreground"
+            modifiersStyles={{
+              hasTasks: { 
+                backgroundColor: "hsl(var(--primary))", 
+                color: "hsl(var(--primary-foreground))",
+                fontWeight: "bold"
+              }
             }}
-            classNames={{
-              day_today: "font-bold text-primary",
-              day_selected: "bg-primary text-primary-foreground"
-            }}
-            className="rounded-md border shadow-none"
           />
         </CardContent>
       </Card>
       
-      {/* Attività per la data selezionata */}
-      <Card className={isMobile ? "" : "md:col-span-2"}>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle>
-              Attività per {format(selectedDate, "EEEE d MMMM", { locale: it })}
-            </CardTitle>
-            <CardDescription>
-              {filteredTasks.length === 0
-                ? "Nessuna attività di pulizia per questa data"
-                : `${filteredTasks.length} attività di pulizia`}
-            </CardDescription>
-          </div>
+      {/* Dettaglio del giorno selezionato */}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {format(selectedDate, "EEEE d MMMM yyyy", { locale: it })}
+          </CardTitle>
+          <CardDescription>
+            {selectedDateTasks.length === 0
+              ? "Nessuna attività programmata"
+              : `${selectedDateTasks.length} attività programmate`}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className={`grid grid-cols-1 ${isMobile ? "" : "md:grid-cols-2"} gap-4`}>
-            {filteredTasks.map(task => (
-              <CleaningTaskCard 
-                key={task.id}
-                task={task}
-                onUpdateStatus={updateTaskStatus}
-                onUpdateNotes={updateTaskNotes}
-                onUpdateAssignment={updateTaskAssignment}
-                onDelete={deleteTask}
-              />
-            ))}
-            {filteredTasks.length === 0 && (
-              <div className="col-span-full p-8 text-center text-muted-foreground">
-                Nessuna attività di pulizia pianificata per questa data
+          <div className="space-y-3">
+            {selectedDateTasks.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground">
+                <p>Nessuna attività di pulizia programmata per oggi</p>
               </div>
+            ) : (
+              selectedDateTasks.map((task) => (
+                <CleaningTaskCard key={task.id} task={task} />
+              ))
             )}
           </div>
         </CardContent>
