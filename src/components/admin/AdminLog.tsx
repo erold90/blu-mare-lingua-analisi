@@ -24,6 +24,7 @@ import AdminLogDelete from "./AdminLogDelete";
 import { toast } from "sonner";
 
 const AdminLog = () => {
+  // All hooks must be called before any conditional returns
   const { quoteLogs, siteVisits, getVisitsCount, loading, refreshData } = useActivityLog();
   const { apartments: apartmentsFromContext } = useReservations();
   const isMobile = useIsMobile();
@@ -34,17 +35,6 @@ const AdminLog = () => {
   });
   
   const [selectedQuote, setSelectedQuote] = useState<any | null>(null);
-  
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Caricamento dati...</span>
-        </div>
-      </div>
-    );
-  }
   
   // Filter quotes based on date range
   const filteredQuotes = useMemo(() => {
@@ -89,6 +79,18 @@ const AdminLog = () => {
     
     return chartData;
   }, [siteVisits, dateRange]);
+
+  // Now handle loading state without early return
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-6 w-6 animate-spin" />
+          <span>Caricamento dati...</span>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">
