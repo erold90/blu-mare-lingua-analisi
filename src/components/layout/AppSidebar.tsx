@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { Home, User, Calculator, Building, Mail, Shield, Cookie } from "lucide-react";
@@ -20,56 +21,50 @@ import { useIsMobile } from "@/hooks/use-mobile";
 export const sidebarItems = [
   {
     title: "Dashboard",
-    path: "/dashboard",
-    icon: "layout-dashboard", // Home icon
+    path: "/area-riservata/dashboard",
+    icon: "layout-dashboard",
     submenu: false,
   },
   {
     title: "Prenotazioni",
-    path: "/admin/reservations",
-    icon: "calendar", // Calendar icon
+    path: "/area-riservata/prenotazioni",
+    icon: "calendar",
     submenu: false,
   },
   {
     title: "Pulizie",
-    path: "/admin/cleaning",
-    icon: "broom", // Brush icon
+    path: "/area-riservata/pulizie",
+    icon: "broom",
     submenu: false,
   },
   {
     title: "Appartamenti",
-    path: "/admin/apartments",
-    icon: "home", // Home icon
+    path: "/area-riservata/appartamenti",
+    icon: "home",
     submenu: false,
   },
   {
     title: "Prezzi",
-    path: "/admin/prices",
-    icon: "tag", // Tag icon
+    path: "/area-riservata/prezzi",
+    icon: "tag",
     submenu: false,
   },
   {
     title: "Calendario",
-    path: "/admin/calendar",
-    icon: "calendar-days", // Calendar icon
+    path: "/area-riservata/calendario",
+    icon: "calendar-days",
     submenu: false,
   },
   {
-    title: "Database",
-    path: "/database-test",
-    icon: "database", // Database icon
-    submenu: false,
-  },
-  {
-    title: "Test API",
-    path: "/api-test",
-    icon: "server", // Server icon
+    title: "Log",
+    path: "/area-riservata/log",
+    icon: "file-text",
     submenu: false,
   },
   {
     title: "Impostazioni",
-    path: "/admin/settings",
-    icon: "settings", // Settings icon
+    path: "/area-riservata/impostazioni",
+    icon: "settings",
     submenu: false,
   },
 ];

@@ -1,6 +1,7 @@
 
 import { CleaningTask } from "../useCleaningManagement";
 import { generateTasksFromReservationsUtil } from "./cleaningOperations";
+import { useCleaningValidation } from "../validation/useCleaningValidation";
 import { toast } from "sonner";
 
 export const useTaskGeneration = (
@@ -9,6 +10,8 @@ export const useTaskGeneration = (
   cleaningTasks: CleaningTask[],
   addTask: (task: Omit<CleaningTask, "id" | "createdAt" | "updatedAt">) => Promise<void>
 ) => {
+  const { validateBeforeCreate } = useCleaningValidation();
+
   const generateTasksFromReservations = async () => {
     console.log("Generazione attività dalle prenotazioni...", { 
       reservationsCount: reservations?.length || 0,
@@ -17,12 +20,7 @@ export const useTaskGeneration = (
     });
     
     if (!reservations || !apartments || reservations.length === 0 || apartments.length === 0) {
-      console.warn("Nessuna prenotazione o appartamento disponibile per la generazione delle attività", {
-        reservations: !!reservations,
-        reservationsLength: reservations?.length || 0,
-        apartments: !!apartments,
-        apartmentsLength: apartments?.length || 0
-      });
+      console.warn("Nessuna prenotazione o appartamento disponibile per la generazione delle attività");
       toast.error("Nessuna prenotazione o appartamento disponibile per generare attività");
       return;
     }
@@ -41,11 +39,21 @@ export const useTaskGeneration = (
     }
     
     try {
-      // Aggiungi le attività una per volta per gestire meglio gli errori
+      let addedCount = 0;
+      
       for (const task of newTasks) {
-        await addTask(task);
+        // Validate each task before adding
+        if (validateBeforeCreate(task, cleaningTasks)) {
+          await addTask(task);
+          addedCount++;
+        }
       }
-      toast.success(`Generate ${newTasks.length} nuove attività di pulizia`);
+      
+      if (addedCount > 0) {
+        toast.success(`Generate ${addedCount} nuove attività di pulizia validate`);
+      } else {
+        toast.warning("Nessuna attività è stata generata a causa di errori di validazione");
+      }
     } catch (error) {
       console.error("Errore nella generazione delle attività:", error);
       toast.error("Errore nella generazione delle attività");

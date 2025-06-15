@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useNavigate, Link, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,6 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const [isLoggingIn, setIsLoggingIn] = React.useState(false);
 
-  // Redirect if already authenticated
   React.useEffect(() => {
     if (isAuthenticated) {
       console.log("LoginForm - Already authenticated, redirecting to dashboard");
@@ -63,7 +61,6 @@ const LoginForm = () => {
     }
   };
 
-  // Don't show login form if user is authenticated
   if (isAuthenticated) {
     return <div className="p-8 text-center">Reindirizzamento in corso alla dashboard...</div>;
   }
@@ -125,40 +122,35 @@ const ReservedAreaPage = () => {
   console.log("ReservedAreaPage - Rendering with auth state:", isAuthenticated);
   console.log("ReservedAreaPage - Current location:", location.pathname);
   
-  // Check if we're at the root of the admin area
   const isAtAdminRoot = location.pathname === '/area-riservata' || location.pathname === '/area-riservata/';
   
-  // If authenticated and at admin root, redirect to dashboard
   if (isAuthenticated && isAtAdminRoot) {
     console.log("ReservedAreaPage - Redirecting authenticated user from root to dashboard");
     return <Navigate to="/area-riservata/dashboard" replace />;
   }
   
-  // If not authenticated and not at admin root, redirect to login
   if (!isAuthenticated && !isAtAdminRoot) {
     console.log("ReservedAreaPage - Redirecting unauthenticated user to login");
     return <Navigate to="/area-riservata" replace />;
   }
   
-  // Show login page at admin root for unauthenticated users
   if (!isAuthenticated && isAtAdminRoot) {
     console.log("ReservedAreaPage - Showing login form");
     return <LoginForm />;
   }
   
-  // Show admin layout for authenticated users in non-root paths
   console.log("ReservedAreaPage - Showing admin layout");
   return (
     <AdminLayout>
       <Routes>
         <Route path="/dashboard" element={<AdminDashboard />} />
         <Route path="/prenotazioni" element={<AdminReservations />} />
-        <Route path="/prezzi" element={<AdminPrices />} />
-        <Route path="/appartamenti" element={<AdminApartments />} />
-        <Route path="/impostazioni" element={<AdminSettings />} />
-        <Route path="/log" element={<AdminLog />} />
-        <Route path="/calendario" element={<AdminCalendar />} />
         <Route path="/pulizie" element={<AdminCleaningManagement />} />
+        <Route path="/appartamenti" element={<AdminApartments />} />
+        <Route path="/prezzi" element={<AdminPrices />} />
+        <Route path="/calendario" element={<AdminCalendar />} />
+        <Route path="/log" element={<AdminLog />} />
+        <Route path="/impostazioni" element={<AdminSettings />} />
         <Route path="/api-test" element={<ApiTestPage />} />
         <Route path="*" element={<Navigate to="/area-riservata/dashboard" replace />} />
       </Routes>

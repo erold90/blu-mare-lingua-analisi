@@ -5,13 +5,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { DateRange } from "react-day-picker";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, subDays, isWithinInterval, startOfDay, endOfDay, isSameDay } from "date-fns";
 import { it } from "date-fns/locale";
-import { useActivityLog } from "@/hooks/useActivityLog";
+import { useActivityLog } from "@/hooks/activity/useActivityLog";
 import { useReservations } from "@/hooks/useReservations";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CalendarIcon, Info, CalendarDays, Eye, Loader2 } from "lucide-react";
@@ -34,7 +33,6 @@ const AdminLog = () => {
   
   const [selectedQuote, setSelectedQuote] = useState<any | null>(null);
   
-  // Show loading state
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -62,7 +60,7 @@ const AdminLog = () => {
     });
   }, [quoteLogs, dateRange]);
   
-  // Prepare visits data for charts
+  // Prepare visits data for charts with better performance
   const visitChartData = useMemo(() => {
     if (!dateRange?.from) return [];
     
@@ -70,7 +68,12 @@ const AdminLog = () => {
     let currentDate = new Date(dateRange.from);
     const endDate = dateRange.to ? new Date(dateRange.to) : new Date(currentDate);
     
-    // Generate data for each day in the range
+    // Limit to 30 days for performance
+    const daysDiff = Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysDiff > 30) {
+      endDate.setDate(currentDate.getDate() + 30);
+    }
+    
     while (currentDate <= endDate) {
       const day = format(currentDate, 'dd/MM', { locale: it });
       const count = siteVisits.filter(visit => {
@@ -84,13 +87,6 @@ const AdminLog = () => {
     
     return chartData;
   }, [siteVisits, dateRange]);
-
-  const handleDeleteQuote = (quoteId: string) => {
-    // Qui dovrai implementare la logica per eliminare il log
-    // Per ora mostriamo solo un toast
-    console.log(`Eliminazione del preventivo con ID: ${quoteId}`);
-    toast.success("Log del preventivo eliminato");
-  };
   
   return (
     <div className="space-y-6">
@@ -108,13 +104,12 @@ const AdminLog = () => {
         </TabsList>
         
         <TabsContent value="visits" className="mt-6 space-y-6">
-          {/* Alert to show that the counter has been reset */}
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center gap-2">
               <Info className="h-5 w-5 text-green-600" />
               <div>
-                <p className="text-green-800 font-medium">Contatore visite azzerato</p>
-                <p className="text-green-700 text-sm">Il sistema ora utilizza i dati reali dal database. I contatori sono stati azzerati e partiranno da zero.</p>
+                <p className="text-green-800 font-medium">Sistema ottimizzato</p>
+                <p className="text-green-700 text-sm">Query ottimizzate per migliori performance. Limite di 500 visite caricate.</p>
               </div>
             </div>
           </div>
@@ -127,7 +122,7 @@ const AdminLog = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{getVisitsCount('day')}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Visite uniche al sito (esclusa area riservata)
+                  Visite uniche al sito
                 </p>
               </CardContent>
             </Card>
@@ -139,7 +134,7 @@ const AdminLog = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{getVisitsCount('month')}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Totale di {siteVisits.length} visite registrate
+                  Performance ottimizzata
                 </p>
               </CardContent>
             </Card>
@@ -151,7 +146,7 @@ const AdminLog = () => {
               <CardContent>
                 <div className="text-2xl font-bold">{getVisitsCount('year')}</div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Dati salvati nel database Supabase
+                  Database Supabase
                 </p>
               </CardContent>
             </Card>
@@ -163,7 +158,7 @@ const AdminLog = () => {
                 <div>
                   <CardTitle>Andamento visite</CardTitle>
                   <CardDescription>
-                    Visualizzazione delle visite nel periodo selezionato
+                    Visualizzazione ottimizzata (max 30 giorni)
                   </CardDescription>
                 </div>
                 
