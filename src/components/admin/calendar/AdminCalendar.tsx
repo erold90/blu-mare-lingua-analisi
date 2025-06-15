@@ -4,13 +4,14 @@ import { Calendar as CalendarIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useReservations, Reservation } from "@/hooks/useReservations";
-import { Button } from "@/components/ui/button";
 import { format, isSameDay } from "date-fns";
 import { it } from "date-fns/locale";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AdminFilters } from "../shared/AdminFilters";
+import { useAdminFilters } from "@/hooks/admin/useAdminFilters";
+import { getApartmentColor, formatDate } from "@/utils/admin/statusConfig";
 
 const AdminCalendar = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -18,9 +19,12 @@ const AdminCalendar = () => {
   const { reservations, apartments } = useReservations();
   const isMobile = useIsMobile();
   
+  // Filtri per il calendario
+  const { filters, setFilters, filteredData } = useAdminFilters(reservations);
+  
   // Funzione per trovare le prenotazioni per una data specifica
   const getReservationsForDate = (date: Date): Reservation[] => {
-    return reservations.filter(reservation => {
+    return filteredData.filter(reservation => {
       const startDate = new Date(reservation.startDate);
       const endDate = new Date(reservation.endDate);
       return date >= startDate && date <= endDate;
@@ -29,16 +33,10 @@ const AdminCalendar = () => {
 
   // Mappatura colori per gli appartamenti
   const apartmentColors = useMemo(() => {
-    const colors = [
-      "bg-blue-500", "bg-green-500", "bg-yellow-500", 
-      "bg-purple-500", "bg-pink-500", "bg-indigo-500"
-    ];
-    
     const colorMap: Record<string, string> = {};
     apartments.forEach((apt, index) => {
-      colorMap[apt.id] = colors[index % colors.length];
+      colorMap[apt.id] = getApartmentColor(index);
     });
-    
     return colorMap;
   }, [apartments]);
   
@@ -46,7 +44,7 @@ const AdminCalendar = () => {
   const specialDays = useMemo(() => {
     const days: Record<string, { reservations: Reservation[] }> = {};
     
-    reservations.forEach(reservation => {
+    filteredData.forEach(reservation => {
       const start = new Date(reservation.startDate);
       const end = new Date(reservation.endDate);
       
@@ -60,25 +58,12 @@ const AdminCalendar = () => {
     });
     
     return days;
-  }, [reservations]);
+  }, [filteredData]);
   
   // Calcola le prenotazioni per la data selezionata
   const selectedDateReservations = useMemo(() => {
     return getReservationsForDate(selectedDate);
-  }, [selectedDate, reservations]);
-  
-  // Filtra per appartamento
-  const [selectedApartment, setSelectedApartment] = useState<string>("all");
-  
-  const filteredReservations = useMemo(() => {
-    if (selectedApartment === "all") {
-      return selectedDateReservations;
-    }
-    
-    return selectedDateReservations.filter(reservation => 
-      reservation.apartmentIds.includes(selectedApartment)
-    );
-  }, [selectedDateReservations, selectedApartment]);
+  }, [selectedDate, filteredData]);
 
   return (
     <div className="space-y-6">
@@ -89,33 +74,27 @@ const AdminCalendar = () => {
             Visualizza e gestisci tutte le prenotazioni
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-          <Select 
-            value={selectedApartment} 
-            onValueChange={setSelectedApartment}
-          >
-            <SelectTrigger className="min-w-[180px]">
-              <SelectValue placeholder="Filtra per appartamento" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Tutti gli appartamenti</SelectItem>
-              {apartments.map((apt) => (
-                <SelectItem key={apt.id} value={apt.id}>
-                  {apt.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Tabs value={view} onValueChange={(v) => setView(v as "month" | "day" | "list")}>
-            <TabsList className="grid grid-cols-3 w-full sm:w-auto">
-              <TabsTrigger value="month">Mese</TabsTrigger>
-              <TabsTrigger value="day">Giorno</TabsTrigger>
-              <TabsTrigger value="list">Lista</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        
+        <Tabs value={view} onValueChange={(v) => setView(v as "month" | "day" | "list")}>
+          <TabsList className="grid grid-cols-3 w-full sm:w-auto">
+            <TabsTrigger value="month">Mese</TabsTrigger>
+            <TabsTrigger value="day">Giorno</TabsTrigger>
+            <TabsTrigger value="list">Lista</TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
+      
+      {/* Filtri */}
+      <AdminFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        apartments={apartments}
+        placeholder="Filtra prenotazioni..."
+        showPaymentStatus={true}
+        showDateRange={true}
+        showApartments={true}
+        showGuestName={true}
+      />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Calendario principale */}
@@ -132,15 +111,7 @@ const AdminCalendar = () => {
               modifiers={{
                 booked: (date) => {
                   const dateKey = format(date, "yyyy-MM-dd");
-                  const day = specialDays[dateKey];
-                  
-                  if (selectedApartment === "all") {
-                    return !!day;
-                  }
-                  
-                  return !!day?.reservations.some(r => 
-                    r.apartmentIds.includes(selectedApartment)
-                  );
+                  return !!specialDays[dateKey];
                 }
               }}
               classNames={{
@@ -159,21 +130,21 @@ const AdminCalendar = () => {
               {format(selectedDate, "EEEE d MMMM yyyy", { locale: it })}
             </CardTitle>
             <CardDescription>
-              {filteredReservations.length === 0
+              {selectedDateReservations.length === 0
                 ? "Nessuna prenotazione per questa data"
-                : `${filteredReservations.length} prenotazioni`}
+                : `${selectedDateReservations.length} prenotazioni`}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {filteredReservations.map((reservation) => (
+              {selectedDateReservations.map((reservation) => (
                 <div 
                   key={reservation.id} 
                   className="p-3 border rounded-md bg-card hover:bg-accent transition-colors"
                 >
                   <div className="font-medium">{reservation.guestName}</div>
                   <div className="text-sm text-muted-foreground">
-                    {format(new Date(reservation.startDate), "d MMM", { locale: it })} - {format(new Date(reservation.endDate), "d MMM", { locale: it })}
+                    {formatDate(reservation.startDate)} - {formatDate(reservation.endDate)}
                   </div>
                   <div className="flex flex-wrap gap-1 mt-2">
                     {reservation.apartmentIds.map((aptId) => {
@@ -190,7 +161,7 @@ const AdminCalendar = () => {
                   </div>
                 </div>
               ))}
-              {filteredReservations.length === 0 && (
+              {selectedDateReservations.length === 0 && (
                 <div className="p-8 text-center text-muted-foreground">
                   Nessuna prenotazione per {format(selectedDate, "d MMMM", { locale: it })}
                 </div>
@@ -330,7 +301,7 @@ const AdminCalendar = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {apartments.map(apartment => {
-                const apartmentReservations = filteredReservations.filter(
+                const apartmentReservations = selectedDateReservations.filter(
                   res => res.apartmentIds.includes(apartment.id)
                 );
                 
@@ -347,7 +318,7 @@ const AdminCalendar = () => {
                             <div key={res.id} className="p-3 bg-accent rounded-md">
                               <div className="font-medium">{res.guestName}</div>
                               <div className="text-sm text-muted-foreground">
-                                {format(new Date(res.startDate), "d MMM", { locale: it })} - {format(new Date(res.endDate), "d MMM", { locale: it })}
+                                {formatDate(res.startDate)} - {formatDate(res.endDate)}
                               </div>
                               <div className="flex gap-1 mt-2">
                                 {isCheckIn && (
@@ -387,28 +358,23 @@ const AdminCalendar = () => {
           <CardHeader>
             <CardTitle>Elenco Prenotazioni</CardTitle>
             <CardDescription>
-              Tutte le prenotazioni in ordine cronologico
+              {filteredData.length} prenotazioni filtrate
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {reservations.length === 0 ? (
+              {filteredData.length === 0 ? (
                 <div className="text-center p-8 text-muted-foreground">
-                  Nessuna prenotazione presente
+                  {reservations.length === 0 ? "Nessuna prenotazione presente" : "Nessuna prenotazione corrisponde ai filtri"}
                 </div>
               ) : (
-                reservations
+                filteredData
                   .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-                  .filter(res => {
-                    if (selectedApartment === "all") return true;
-                    return res.apartmentIds.includes(selectedApartment);
-                  })
                   .map(res => {
                     const startDate = new Date(res.startDate);
                     const endDate = new Date(res.endDate);
                     const isUpcoming = startDate > new Date();
                     const isActive = startDate <= new Date() && endDate >= new Date();
-                    const isPast = endDate < new Date();
                     
                     return (
                       <div 
@@ -429,6 +395,7 @@ const AdminCalendar = () => {
                                   <Badge 
                                     key={aptId} 
                                     variant="outline"
+                                    className={apartmentColors[aptId]}
                                   >
                                     {apt?.name || "Appartamento"}
                                   </Badge>
@@ -438,9 +405,9 @@ const AdminCalendar = () => {
                           </div>
                           <div className="text-sm">
                             <div className="flex flex-col items-start md:items-end gap-1">
-                              <span>{format(startDate, "EEEE d MMMM", { locale: it })}</span>
+                              <span>{formatDate(startDate)}</span>
                               <span>→</span>
-                              <span>{format(endDate, "EEEE d MMMM", { locale: it })}</span>
+                              <span>{formatDate(endDate)}</span>
                             </div>
                           </div>
                         </div>

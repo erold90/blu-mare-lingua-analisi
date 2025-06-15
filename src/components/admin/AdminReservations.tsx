@@ -13,6 +13,9 @@ import { ReservationFormDialog } from "./reservations/ReservationFormDialog";
 import { ReservationSummaryDialog } from "./reservations/ReservationSummaryDialog";
 import { DeleteConfirmationDialog } from "./reservations/DeleteConfirmationDialog";
 import { ReservationTable } from "./reservations/ReservationTable";
+import { AdminFilters } from "./shared/AdminFilters";
+import { useAdminFilters } from "@/hooks/admin/useAdminFilters";
+import { checkReservationConflicts } from "@/utils/admin/dateValidation";
 
 const AdminReservations = () => {
   const { 
@@ -24,6 +27,9 @@ const AdminReservations = () => {
     refreshData,
     isLoading
   } = useReservations();
+  
+  // Filtri
+  const { filters, setFilters, filteredData } = useAdminFilters(reservations);
   
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [editingId, setEditingId] = React.useState<string | null>(null);
@@ -46,7 +52,6 @@ const AdminReservations = () => {
     setRefreshing(true);
     try {
       await refreshData();
-      // Removed success toast notification
     } catch (error) {
       console.error("Error in manual refresh:", error);
       toast.error("Errore durante l'aggiornamento dei dati");
@@ -102,9 +107,28 @@ const AdminReservations = () => {
     setSelectedReservation(reservation);
   };
 
-  // Function to handle form submission
+  // Function to handle form submission with conflict validation
   const onSubmit = async (data: ReservationFormData) => {
     try {
+      // Verifica conflitti prima di salvare
+      const { hasConflict, conflictingReservations } = checkReservationConflicts(
+        {
+          apartmentIds: data.apartmentIds,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          id: editingId || undefined
+        },
+        reservations
+      );
+
+      if (hasConflict) {
+        const conflictMessages = conflictingReservations.map(res => 
+          `${res.guestName} (${res.startDate} - ${res.endDate})`
+        ).join(', ');
+        toast.error(`Conflitto rilevato con: ${conflictMessages}`);
+        return;
+      }
+
       setIsDialogOpen(false);
 
       if (editingId) {
@@ -191,8 +215,13 @@ const AdminReservations = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg md:text-xl font-bold">Gestione Prenotazioni</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-lg md:text-xl font-bold">Gestione Prenotazioni</h2>
+          <p className="text-sm text-muted-foreground">
+            {filteredData.length} di {reservations.length} prenotazioni
+          </p>
+        </div>
         <div className="flex space-x-2">
           <Button 
             onClick={handleRefresh} 
@@ -211,6 +240,18 @@ const AdminReservations = () => {
         </div>
       </div>
 
+      {/* Filtri */}
+      <AdminFilters
+        filters={filters}
+        onFiltersChange={setFilters}
+        apartments={apartments}
+        placeholder="Cerca per nome ospite..."
+        showPaymentStatus={true}
+        showDateRange={true}
+        showApartments={true}
+        showGuestName={false} // Già coperto dalla search
+      />
+
       {/* Loading indicator */}
       {(isLoading || refreshing) && (
         <div className="flex justify-center py-8">
@@ -224,12 +265,12 @@ const AdminReservations = () => {
       {/* Mobile view */}
       {!(isLoading || refreshing) && isMobile && (
         <div className="mt-4">
-          {reservations.length === 0 ? (
+          {filteredData.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              Nessuna prenotazione trovata
+              {reservations.length === 0 ? "Nessuna prenotazione trovata" : "Nessuna prenotazione corrisponde ai filtri"}
             </div>
           ) : (
-            reservations.map(reservation => (
+            filteredData.map(reservation => (
               <MobileReservationCard
                 key={reservation.id}
                 reservation={reservation}
@@ -255,7 +296,7 @@ const AdminReservations = () => {
       {/* Desktop view */}
       {!(isLoading || refreshing) && !isMobile && (
         <ReservationTable 
-          reservations={reservations}
+          reservations={filteredData}
           apartments={apartments}
           onEdit={handleEdit}
           onDelete={handleDelete}

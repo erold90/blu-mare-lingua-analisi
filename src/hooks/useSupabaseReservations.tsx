@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { apartments } from "@/data/apartments";
@@ -118,11 +119,6 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
         }
       });
       
-      console.log(`📊 LOADED RESERVATIONS (${sortedReservations.length} total):`);
-      sortedReservations.forEach((res, index) => {
-        console.log(`  ${index + 1}. ${res.guestName}: Apartments [${res.apartmentIds.join(', ')}], ${res.startDate} → ${res.endDate}`);
-      });
-      
       setReservations(sortedReservations);
     } catch (error) {
       console.error("Failed to load reservations:", error);
@@ -135,7 +131,6 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
   // Force a refresh of data from database
   const refreshData = useCallback(async () => {
     await loadReservations();
-    // Removed success toast notification
   }, [loadReservations]);
   
   // Load reservations on mount
@@ -229,15 +224,10 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
     const requestStart = requestStartDate.getTime();
     const requestEnd = requestEndDate.getTime();
     
-    console.log(`\n🔍 DETAILED AVAILABILITY CHECK for apartment ${apartmentId}:`);
-    console.log(`   Request period: ${requestStartDate.toISOString().split('T')[0]} to ${requestEndDate.toISOString().split('T')[0]}`);
-    console.log(`   Request timestamps: ${requestStart} to ${requestEnd}`);
-    
     // Check for conflicts with existing reservations
     const hasConflict = reservations.some(reservation => {
       // Skip if this reservation doesn't include the apartment
       if (!reservation.apartmentIds.includes(apartmentId)) {
-        console.log(`   ⏭️ Skipping reservation ${reservation.guestName} - doesn't include apartment ${apartmentId}`);
         return false;
       }
       
@@ -249,11 +239,6 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
       
       const reservationStart = reservationStartDate.getTime();
       const reservationEnd = reservationEndDate.getTime();
-      
-      console.log(`   🔍 Comparing with reservation ${reservation.guestName}:`);
-      console.log(`       Existing dates: ${reservation.startDate} to ${reservation.endDate}`);
-      console.log(`       Normalized dates: ${reservationStartDate.toISOString().split('T')[0]} to ${reservationEndDate.toISOString().split('T')[0]}`);
-      console.log(`       Existing timestamps: ${reservationStart} to ${reservationEnd}`);
       
       // LOGICA CORRETTA: Una prenotazione è in conflitto solo se i periodi di soggiorno si sovrappongono
       // ESCLUSI i giorni di transizione (check-in e check-out)
@@ -270,26 +255,12 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
       const hasOverlap = (requestStart < reservationEnd && requestEnd > reservationStart);
       const isTransitionDay = (requestStart === reservationEnd || requestEnd === reservationStart);
       
-      console.log(`       hasOverlap: ${hasOverlap} (${requestStart} < ${reservationEnd} && ${requestEnd} > ${reservationStart})`);
-      console.log(`       isTransitionDay: ${isTransitionDay} (${requestStart} === ${reservationEnd} || ${requestEnd} === ${reservationStart})`);
-      console.log(`       Check-in matches existing check-out: ${requestStart === reservationEnd}`);
-      console.log(`       Check-out matches existing check-in: ${requestEnd === reservationStart}`);
-      
       const conflict = hasOverlap && !isTransitionDay;
-      
-      if (conflict) {
-        console.log(`       ❌ CONFLICT DETECTED: Period overlap without valid transition`);
-      } else if (hasOverlap && isTransitionDay) {
-        console.log(`       ✅ TRANSITION DAY ALLOWED: Valid check-in/check-out overlap`);
-      } else {
-        console.log(`       ✅ NO OVERLAP: Periods don't conflict`);
-      }
       
       return conflict;
     });
     
     const isAvailable = !hasConflict;
-    console.log(`🎯 FINAL RESULT for apartment ${apartmentId}: ${isAvailable ? '✅ AVAILABLE' : '❌ NOT AVAILABLE'}`);
     
     return isAvailable;
   }, [reservations]);
