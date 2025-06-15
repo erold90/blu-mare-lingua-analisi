@@ -299,9 +299,19 @@ export const CleaningProvider: React.FC<{children: React.ReactNode}> = ({ childr
   
   // Generate tasks automatically from reservations
   const generateTasksFromReservations = () => {
-    console.log("Generating tasks from reservations...", { reservations, apartments, cleaningTasks });
+    console.log("Generating tasks from reservations...", { 
+      reservationsCount: reservations?.length || 0,
+      apartmentsCount: apartments?.length || 0,
+      cleaningTasksCount: cleaningTasks?.length || 0
+    });
     
     if (!reservations || !apartments || reservations.length === 0) {
+      console.warn("No reservations available for task generation", {
+        reservations: !!reservations,
+        reservationsLength: reservations?.length || 0,
+        apartments: !!apartments,
+        apartmentsLength: apartments?.length || 0
+      });
       toast.error("Nessuna prenotazione disponibile per generare attività");
       return;
     }
@@ -343,14 +353,164 @@ export const CleaningProvider: React.FC<{children: React.ReactNode}> = ({ childr
   const contextValue: CleaningContextType = {
     cleaningTasks,
     addTask,
-    updateTaskStatus,
-    updateTaskNotes,
-    updateTaskAssignment,
-    deleteTask,
+    updateTaskStatus: async (id: string, status: CleaningTask["status"]) => {
+      try {
+        const task = cleaningTasks.find(t => t.id === id);
+        if (!task) return;
+
+        const supabaseTask = {
+          apartment_id: task.apartmentId,
+          task_date: task.taskDate,
+          task_type: task.taskType,
+          status: status === "inProgress" ? "in_progress" : status,
+          priority: task.priority,
+          assignee: task.assignee,
+          notes: task.notes,
+          estimated_duration: task.estimatedDuration,
+          actual_duration: task.actualDuration,
+          device_id: task.deviceId || crypto.randomUUID()
+        };
+        
+        await supabaseService.cleaningTasks.update(id, supabaseTask);
+        
+        setCleaningTasks(prev => 
+          prev.map(task => task.id === id ? { ...task, status } : task)
+        );
+        
+        // Save to local storage as backup
+        const updatedTasks = cleaningTasks.map(task => task.id === id ? { ...task, status } : task);
+        saveCleaningTasks(updatedTasks);
+        
+        toast.success("Stato attività aggiornato");
+      } catch (error) {
+        console.error("Errore nell'aggiornamento dello stato:", error);
+        toast.error("Errore nell'aggiornare lo stato dell'attività");
+      }
+    },
+    updateTaskNotes: async (id: string, notes: string) => {
+      try {
+        const task = cleaningTasks.find(t => t.id === id);
+        if (!task) return;
+
+        const supabaseTask = {
+          apartment_id: task.apartmentId,
+          task_date: task.taskDate,
+          task_type: task.taskType,
+          status: task.status === "inProgress" ? "in_progress" : task.status,
+          priority: task.priority,
+          assignee: task.assignee,
+          notes: notes,
+          estimated_duration: task.estimatedDuration,
+          actual_duration: task.actualDuration,
+          device_id: task.deviceId || crypto.randomUUID()
+        };
+        
+        await supabaseService.cleaningTasks.update(id, supabaseTask);
+        
+        setCleaningTasks(prev => 
+          prev.map(task => task.id === id ? { ...task, notes } : task)
+        );
+        
+        // Save to local storage as backup
+        const updatedTasks = cleaningTasks.map(task => task.id === id ? { ...task, notes } : task);
+        saveCleaningTasks(updatedTasks);
+        
+        toast.success("Note aggiornate");
+      } catch (error) {
+        console.error("Errore nell'aggiornamento delle note:", error);
+        toast.error("Errore nell'aggiornare le note");
+      }
+    },
+    updateTaskAssignment: async (id: string, assignedTo: string) => {
+      try {
+        const task = cleaningTasks.find(t => t.id === id);
+        if (!task) return;
+
+        const supabaseTask = {
+          apartment_id: task.apartmentId,
+          task_date: task.taskDate,
+          task_type: task.taskType,
+          status: task.status === "inProgress" ? "in_progress" : task.status,
+          priority: task.priority,
+          assignee: assignedTo,
+          notes: task.notes,
+          estimated_duration: task.estimatedDuration,
+          actual_duration: task.actualDuration,
+          device_id: task.deviceId || crypto.randomUUID()
+        };
+        
+        await supabaseService.cleaningTasks.update(id, supabaseTask);
+        
+        setCleaningTasks(prev => 
+          prev.map(task => task.id === id ? { ...task, assignee: assignedTo } : task)
+        );
+        
+        // Save to local storage as backup
+        const updatedTasks = cleaningTasks.map(task => task.id === id ? { ...task, assignee: assignedTo } : task);
+        saveCleaningTasks(updatedTasks);
+        
+        toast.success("Assegnazione aggiornata");
+      } catch (error) {
+        console.error("Errore nell'aggiornamento dell'assegnazione:", error);
+        toast.error("Errore nell'aggiornare l'assegnazione");
+      }
+    },
+    deleteTask: async (id: string) => {
+      try {
+        await supabaseService.cleaningTasks.delete(id);
+        
+        setCleaningTasks(prev => prev.filter(task => task.id !== id));
+        
+        // Save to local storage as backup
+        const updatedTasks = cleaningTasks.filter(task => task.id !== id);
+        saveCleaningTasks(updatedTasks);
+        
+        toast.success("Attività eliminata");
+      } catch (error) {
+        console.error("Errore nell'eliminazione dell'attività:", error);
+        toast.error("Errore nell'eliminare l'attività");
+      }
+    },
     generateTasksFromReservations,
     getTasksByDate,
     getTasksByApartmentId,
-    refreshTasks,
+    refreshTasks: async () => {
+      setIsLoading(true);
+      try {
+        console.log("Refreshing cleaning tasks...");
+        await syncCleaningTasks();
+        
+        // Reload from Supabase
+        const data = await supabaseService.cleaningTasks.getAll();
+        const transformedTasks: CleaningTask[] = data.map(task => {
+          const apartment = apartments.find(apt => apt.id === task.apartment_id);
+          return {
+            id: task.id,
+            apartmentId: task.apartment_id,
+            apartmentName: apartment?.name || 'Appartamento sconosciuto',
+            taskDate: task.task_date,
+            taskType: task.task_type as CleaningTask["taskType"],
+            status: (task.status === "in_progress" ? "inProgress" : task.status) as CleaningTask["status"],
+            priority: task.priority as CleaningTask["priority"],
+            assignee: task.assignee || undefined,
+            notes: task.notes || undefined,
+            estimatedDuration: task.estimated_duration || 60,
+            actualDuration: task.actual_duration || undefined,
+            deviceId: task.device_id || undefined,
+            createdAt: task.created_at || undefined,
+            updatedAt: task.updated_at || undefined
+          };
+        });
+        
+        setCleaningTasks(transformedTasks);
+        toast.success("Attività di pulizia sincronizzate");
+      } catch (error) {
+        console.error("Errore nella sincronizzazione delle attività:", error);
+        toast.error("Errore nella sincronizzazione");
+      } finally {
+        setIsLoading(false);
+      }
+    },
     isLoading
   };
   

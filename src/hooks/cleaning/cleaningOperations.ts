@@ -10,11 +10,26 @@ export const generateTasksFromReservationsUtil = (
 ): Omit<CleaningTask, "id" | "createdAt" | "updatedAt">[] => {
   const newTasks: Omit<CleaningTask, "id" | "createdAt" | "updatedAt">[] = [];
   const today = new Date();
+  today.setHours(0, 0, 0, 0); // Normalizza l'ora per confronto date
+  
+  console.log('Generazione tasks - Dati di input:', {
+    reservationsCount: reservations.length,
+    apartmentsCount: apartments.length,
+    existingTasksCount: existingTasks.length
+  });
   
   reservations.forEach(reservation => {
     const checkOutDate = new Date(reservation.endDate);
+    checkOutDate.setHours(0, 0, 0, 0); // Normalizza l'ora
     
-    // Genera attività di pulizia solo per check-out futuri o di oggi
+    console.log(`Processando prenotazione ${reservation.guestName}:`, {
+      endDate: reservation.endDate,
+      checkOutDate: checkOutDate.toISOString(),
+      today: today.toISOString(),
+      isValidForCleaning: checkOutDate >= today
+    });
+    
+    // Genera attività di pulizia per check-out futuri o di oggi
     if (checkOutDate >= today) {
       reservation.apartmentIds.forEach(apartmentId => {
         const apartment = apartments.find(apt => apt.id === apartmentId);
@@ -26,23 +41,36 @@ export const generateTasksFromReservationsUtil = (
             task.taskType === "checkout"
           );
 
+          console.log(`Controllo appartamento ${apartment.name}:`, {
+            apartmentId,
+            taskDate: reservation.endDate,
+            existingTask: !!existingTask
+          });
+
           if (!existingTask) {
-            newTasks.push({
+            const newTask = {
               apartmentId: apartmentId,
               apartmentName: apartment.name,
               taskDate: reservation.endDate,
-              taskType: "checkout",
-              status: "pending",
-              priority: "medium",
+              taskType: "checkout" as const,
+              status: "pending" as const,
+              priority: "medium" as const,
               estimatedDuration: 90,
-              notes: `Pulizia post check-out - Ospite: ${reservation.guestName}`
-            });
+              notes: `Pulizia post check-out - Ospite: ${reservation.guestName}`,
+              deviceId: crypto.randomUUID()
+            };
+            
+            newTasks.push(newTask);
+            console.log('Nuovo task aggiunto:', newTask);
           }
+        } else {
+          console.warn(`Appartamento non trovato per ID: ${apartmentId}`);
         }
       });
     }
   });
 
+  console.log(`Generati ${newTasks.length} nuovi task di pulizia`);
   return newTasks;
 };
 
