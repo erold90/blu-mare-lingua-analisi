@@ -1,13 +1,12 @@
-
 import * as React from "react";
 import { useReservations } from "@/hooks/useReservations";
-import { useCleaningManagement } from "@/hooks/cleaning";
+import { useCleaningContext } from "@/hooks/cleaning";
 import { format, addDays, isWithinInterval } from "date-fns";
 import { it } from "date-fns/locale";
 
 export const useDashboardData = () => {
   const { reservations, apartments } = useReservations();
-  const { cleaningTasks } = useCleaningManagement();
+  const { cleaningTasks } = useCleaningContext();
   
   // Calcola il numero di prenotazioni future
   const futureReservations = React.useMemo(() => {
