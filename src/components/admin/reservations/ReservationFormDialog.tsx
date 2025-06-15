@@ -53,6 +53,14 @@ interface ReservationFormDialogProps {
   initialData?: Reservation | null;
 }
 
+// Helper function to format date for database (avoiding timezone issues)
+const formatDateForDatabase = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const ReservationFormDialog = ({ 
   isOpen, 
   onOpenChange, 
@@ -370,7 +378,7 @@ export const ReservationFormDialog = ({
                             </span>
                             <br />
                             <span className="text-xs text-muted-foreground">
-                              Seleziona prima check-in, poi check-out
+                              Check-in: {format(getCurrentDateRange()!.from!, "dd/MM/yyyy")} | Check-out: {format(getCurrentDateRange()!.to!, "dd/MM/yyyy")}
                             </span>
                           </>
                         ) : (
@@ -385,7 +393,7 @@ export const ReservationFormDialog = ({
                           onSelect={handleDateRangeChange}
                           numberOfMonths={1}
                           disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                          className="rounded-md max-w-full scale-90 origin-top"
+                          className="rounded-md max-w-full scale-90 origin-top pointer-events-auto"
                         />
                       </div>
                     </div>

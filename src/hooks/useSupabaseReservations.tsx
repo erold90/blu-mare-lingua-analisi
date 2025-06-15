@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { apartments } from "@/data/apartments";
@@ -30,6 +31,14 @@ export interface Reservation {
   syncId?: string; // ID per sincronizzazione
   deviceId?: string; // ID del dispositivo di origine
 }
+
+// Helper function to format date for database (avoiding timezone issues)
+const formatDateForDatabase = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 // Get apartments from the data file instead of hardcoded values
 const defaultApartments: Apartment[] = apartments.map(apt => ({
@@ -141,8 +150,8 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
         cribs: reservationData.cribs,
         has_pets: reservationData.hasPets,
         apartment_ids: reservationData.apartmentIds,
-        start_date: new Date(reservationData.startDate).toISOString().split('T')[0],
-        end_date: new Date(reservationData.endDate).toISOString().split('T')[0],
+        start_date: formatDateForDatabase(new Date(reservationData.startDate)),
+        end_date: formatDateForDatabase(new Date(reservationData.endDate)),
         final_price: reservationData.finalPrice,
         payment_method: reservationData.paymentMethod,
         payment_status: reservationData.paymentStatus,
@@ -171,8 +180,8 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
         cribs: updatedReservation.cribs,
         has_pets: updatedReservation.hasPets,
         apartment_ids: updatedReservation.apartmentIds,
-        start_date: new Date(updatedReservation.startDate).toISOString().split('T')[0],
-        end_date: new Date(updatedReservation.endDate).toISOString().split('T')[0],
+        start_date: formatDateForDatabase(new Date(updatedReservation.startDate)),
+        end_date: formatDateForDatabase(new Date(updatedReservation.endDate)),
         final_price: updatedReservation.finalPrice,
         payment_method: updatedReservation.paymentMethod,
         payment_status: updatedReservation.paymentStatus,
@@ -205,12 +214,15 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
   }, [loadReservations]);
   
   // Check if an apartment is available for the given date range
+  // MODIFICATO: Le date di check-in e check-out sono ora disponibili per altre prenotazioni
   const getApartmentAvailability = useCallback((apartmentId: string, startDate: Date, endDate: Date): boolean => {
     // Convert dates to timestamps for easier comparison
     const start = startDate.getTime();
     const end = endDate.getTime();
     
     // Check for conflicts with existing reservations
+    // IMPORTANTE: Una prenotazione si sovrappone solo se ci sono giorni di soggiorno in comune
+    // Le date di check-in e check-out sono giorni di transizione e sono disponibili
     return !reservations.some(reservation => {
       // Skip if this reservation doesn't include the apartment
       if (!reservation.apartmentIds.includes(apartmentId)) return false;
@@ -218,8 +230,11 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
       const reservationStart = new Date(reservation.startDate).getTime();
       const reservationEnd = new Date(reservation.endDate).getTime();
       
-      // Check for overlap
-      return (start < reservationEnd && end > reservationStart);
+      // Check for overlap: una prenotazione si sovrappone solo se i periodi di soggiorno si intersecano
+      // startDate < reservationEnd AND endDate > reservationStart
+      // Ma escludiamo i casi dove una finisce quando l'altra inizia (giorni di transizione)
+      return (start < reservationEnd && end > reservationStart) && 
+             !(start === reservationEnd || end === reservationStart);
     });
   }, [reservations]);
   
