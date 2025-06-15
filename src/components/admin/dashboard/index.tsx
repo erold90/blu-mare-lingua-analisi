@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { useSupabaseCleaningManagement } from "@/hooks/useSupabaseCleaningManagement";
+import { CleaningProvider } from "@/hooks/cleaning";
 import { useDashboardData } from "./useDashboardData";
 import { DashboardMetrics } from "./DashboardMetrics";
 import { ActiveReservations } from "./ActiveReservations";
@@ -73,9 +73,13 @@ const AdminDashboardContent = React.memo(() => {
 
 AdminDashboardContent.displayName = "AdminDashboardContent";
 
-// Componente di export
+// Componente di export wrappato nel CleaningProvider
 const AdminDashboard = () => {
-  return <AdminDashboardContent />;
+  return (
+    <CleaningProvider>
+      <AdminDashboardContent />
+    </CleaningProvider>
+  );
 };
 
 export default AdminDashboard;
