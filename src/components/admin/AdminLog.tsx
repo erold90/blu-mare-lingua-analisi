@@ -1,9 +1,11 @@
+
 import * as React from "react";
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { DateRange } from "react-day-picker";
 import { Calendar } from "@/components/ui/calendar";
@@ -296,7 +298,7 @@ const AdminLog = () => {
                     </TableHeader>
                     <TableBody>
                       {filteredQuotes.map((quote) => {
-                        const formValues = quote.formValues;
+                        const formValues = quote.form_values;
                         const price = calculateTotalPrice(formValues, apartments);
                         
                         return (
@@ -374,15 +376,15 @@ const AdminLog = () => {
                                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                                             <div>
                                               <p className="text-muted-foreground">Check-in</p>
-                                              <p>{selectedQuote.formValues.checkIn ? 
-                                                format(new Date(selectedQuote.formValues.checkIn), "dd/MM/yyyy", { locale: it }) : 
+                                              <p>{selectedQuote.form_values.checkIn ? 
+                                                format(new Date(selectedQuote.form_values.checkIn), "dd/MM/yyyy", { locale: it }) : 
                                                 "Non specificato"}
                                               </p>
                                             </div>
                                             <div>
                                               <p className="text-muted-foreground">Check-out</p>
-                                              <p>{selectedQuote.formValues.checkOut ? 
-                                                format(new Date(selectedQuote.formValues.checkOut), "dd/MM/yyyy", { locale: it }) : 
+                                              <p>{selectedQuote.form_values.checkOut ? 
+                                                format(new Date(selectedQuote.form_values.checkOut), "dd/MM/yyyy", { locale: it }) : 
                                                 "Non specificato"}
                                               </p>
                                             </div>
@@ -399,19 +401,19 @@ const AdminLog = () => {
                                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                                             <div>
                                               <p className="text-muted-foreground">Adulti</p>
-                                              <p>{selectedQuote.formValues.adults}</p>
+                                              <p>{selectedQuote.form_values.adults}</p>
                                             </div>
                                             <div>
                                               <p className="text-muted-foreground">Bambini</p>
-                                              <p>{selectedQuote.formValues.children || 0}</p>
+                                              <p>{selectedQuote.form_values.children || 0}</p>
                                             </div>
                                             <div>
                                               <p className="text-muted-foreground">Animali</p>
-                                              <p>{selectedQuote.formValues.hasPets ? "Sì" : "No"}</p>
+                                              <p>{selectedQuote.form_values.hasPets ? "Sì" : "No"}</p>
                                             </div>
                                             <div>
                                               <p className="text-muted-foreground">Totale ospiti</p>
-                                              <p>{selectedQuote.formValues.adults + (selectedQuote.formValues.children || 0)}</p>
+                                              <p>{selectedQuote.form_values.adults + (selectedQuote.form_values.children || 0)}</p>
                                             </div>
                                           </div>
                                         </div>
@@ -420,8 +422,8 @@ const AdminLog = () => {
                                         <div>
                                           <h3 className="font-medium mb-3">Appartamenti selezionati</h3>
                                           <div className="space-y-2">
-                                            {selectedQuote.formValues.selectedApartments ? 
-                                              selectedQuote.formValues.selectedApartments.map((aptId: string) => {
+                                            {selectedQuote.form_values.selectedApartments ? 
+                                              selectedQuote.form_values.selectedApartments.map((aptId: string) => {
                                                 const apt = apartments.find(a => a.id === aptId);
                                                 return apt ? (
                                                   <div key={aptId} className="flex items-center justify-between p-3 bg-muted rounded-lg">
@@ -433,10 +435,10 @@ const AdminLog = () => {
                                                   </div>
                                                 ) : null;
                                               }) :
-                                              selectedQuote.formValues.selectedApartment ? (
+                                              selectedQuote.form_values.selectedApartment ? (
                                                 <div className="p-3 bg-muted rounded-lg">
                                                   {(() => {
-                                                    const apt = apartments.find(a => a.id === selectedQuote.formValues.selectedApartment);
+                                                    const apt = apartments.find(a => a.id === selectedQuote.form_values.selectedApartment);
                                                     return apt ? (
                                                       <div className="flex items-center justify-between">
                                                         <div>
@@ -461,11 +463,11 @@ const AdminLog = () => {
                                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                                             <div>
                                               <p className="text-muted-foreground">Biancheria</p>
-                                              <p>{selectedQuote.formValues.linenOption || "Non specificato"}</p>
+                                              <p>{selectedQuote.form_values.linenOption || "Non specificato"}</p>
                                             </div>
                                             <div>
                                               <p className="text-muted-foreground">Lettini</p>
-                                              <p>{selectedQuote.formValues.cribs || 0}</p>
+                                              <p>{selectedQuote.form_values.cribs || 0}</p>
                                             </div>
                                           </div>
                                         </div>
@@ -512,11 +514,11 @@ const AdminLog = () => {
                                         </div>
 
                                         {/* Note */}
-                                        {selectedQuote.formValues.notes && (
+                                        {selectedQuote.form_values.notes && (
                                           <div>
                                             <h3 className="font-medium mb-3">Note</h3>
                                             <div className="bg-muted p-4 rounded-lg">
-                                              <p className="text-sm">{selectedQuote.formValues.notes}</p>
+                                              <p className="text-sm">{selectedQuote.form_values.notes}</p>
                                             </div>
                                           </div>
                                         )}
