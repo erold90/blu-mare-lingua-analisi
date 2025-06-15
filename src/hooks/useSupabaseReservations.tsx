@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { apartments } from "@/data/apartments";
@@ -214,28 +213,56 @@ export const SupabaseReservationsProvider: React.FC<{children: React.ReactNode}>
   }, [loadReservations]);
   
   // Check if an apartment is available for the given date range
-  // MODIFICATO: Le date di check-in e check-out sono ora disponibili per altre prenotazioni
+  // LOGICA CORRETTA: Le date di check-in e check-out sono giorni di transizione disponibili
   const getApartmentAvailability = useCallback((apartmentId: string, startDate: Date, endDate: Date): boolean => {
     // Convert dates to timestamps for easier comparison
-    const start = startDate.getTime();
-    const end = endDate.getTime();
+    const requestStart = startDate.getTime();
+    const requestEnd = endDate.getTime();
+    
+    console.log(`Checking availability for apartment ${apartmentId} from ${startDate.toISOString().split('T')[0]} to ${endDate.toISOString().split('T')[0]}`);
     
     // Check for conflicts with existing reservations
-    // IMPORTANTE: Una prenotazione si sovrappone solo se ci sono giorni di soggiorno in comune
-    // Le date di check-in e check-out sono giorni di transizione e sono disponibili
-    return !reservations.some(reservation => {
+    const hasConflict = reservations.some(reservation => {
       // Skip if this reservation doesn't include the apartment
       if (!reservation.apartmentIds.includes(apartmentId)) return false;
       
       const reservationStart = new Date(reservation.startDate).getTime();
       const reservationEnd = new Date(reservation.endDate).getTime();
       
-      // Check for overlap: una prenotazione si sovrappone solo se i periodi di soggiorno si intersecano
-      // startDate < reservationEnd AND endDate > reservationStart
-      // Ma escludiamo i casi dove una finisce quando l'altra inizia (giorni di transizione)
-      return (start < reservationEnd && end > reservationStart) && 
-             !(start === reservationEnd || end === reservationStart);
+      console.log(`  Comparing with reservation ${reservation.id}: ${reservation.startDate} to ${reservation.endDate}`);
+      
+      // LOGICA CORRETTA: Una prenotazione è in conflitto solo se i periodi di soggiorno si sovrappongono
+      // ESCLUSI i giorni di transizione (check-in e check-out)
+      // 
+      // Esempi:
+      // - Prenotazione A: 1 agosto (check-in) -> 8 agosto (check-out)
+      // - Prenotazione B: 8 agosto (check-in) -> 15 agosto (check-out) ✓ DISPONIBILE
+      // - Prenotazione C: 7 agosto (check-in) -> 10 agosto (check-out) ✗ CONFLITTO
+      //
+      // La logica è: c'è conflitto solo se:
+      // requestStart < reservationEnd AND requestEnd > reservationStart
+      // MA escludiamo i casi dove una termina esattamente quando l'altra inizia
+      
+      const hasOverlap = (requestStart < reservationEnd && requestEnd > reservationStart);
+      const isTransitionDay = (requestStart === reservationEnd || requestEnd === reservationStart);
+      
+      const conflict = hasOverlap && !isTransitionDay;
+      
+      if (conflict) {
+        console.log(`    ✗ CONFLICT: Overlap detected without transition day`);
+      } else if (hasOverlap && isTransitionDay) {
+        console.log(`    ✓ OK: Transition day overlap allowed`);
+      } else {
+        console.log(`    ✓ OK: No overlap`);
+      }
+      
+      return conflict;
     });
+    
+    const isAvailable = !hasConflict;
+    console.log(`Result for apartment ${apartmentId}: ${isAvailable ? 'AVAILABLE' : 'NOT AVAILABLE'}`);
+    
+    return isAvailable;
   }, [reservations]);
   
   return (

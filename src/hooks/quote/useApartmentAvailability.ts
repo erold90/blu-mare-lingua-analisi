@@ -25,10 +25,12 @@ export function useApartmentAvailability(apartments: Apartment[], formValues: Fo
   useEffect(() => {
     const filteredApartments = apartments.map(apartment => {
       // Verify if the apartment is already booked for the selected dates
-      // Con la nuova logica, le date di check-in e check-out sono disponibili per altre prenotazioni
+      // Con la logica corretta, le date di check-in e check-out sono disponibili per altre prenotazioni
       const isAvailable = formValues.checkIn && formValues.checkOut ? 
         getApartmentAvailability(apartment.id, new Date(formValues.checkIn), new Date(formValues.checkOut)) :
         true;
+
+      console.log(`Apartment ${apartment.name} (${apartment.id}): ${isAvailable ? 'AVAILABLE' : 'BOOKED'} for ${formValues.checkIn} to ${formValues.checkOut}`);
 
       return {
         ...apartment,
