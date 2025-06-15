@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { CleaningTask } from "../useCleaningManagement";
 import { supabaseService } from "@/services/supabaseService";
@@ -13,6 +12,14 @@ export const useCleaningCrud = (
   const addTask = async (task: Omit<CleaningTask, "id" | "createdAt" | "updatedAt">) => {
     try {
       console.log("Adding new cleaning task:", task);
+      
+      // Verifica che l'appartamento esista
+      const apartment = apartments.find(apt => apt.id === task.apartmentId);
+      if (!apartment) {
+        console.error(`Appartamento con ID ${task.apartmentId} non trovato`);
+        toast.error(`Appartamento non trovato: ${task.apartmentId}`);
+        return;
+      }
       
       const newTask = {
         id: crypto.randomUUID(),
@@ -33,7 +40,7 @@ export const useCleaningCrud = (
       const localTask: CleaningTask = {
         id: newTask.id,
         apartmentId: newTask.apartment_id,
-        apartmentName: apartments.find(apt => apt.id === newTask.apartment_id)?.name || 'Appartamento sconosciuto',
+        apartmentName: apartment.name,
         taskDate: newTask.task_date,
         taskType: newTask.task_type as CleaningTask["taskType"],
         status: (newTask.status === "in_progress" ? "inProgress" : newTask.status) as CleaningTask["status"],

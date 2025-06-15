@@ -15,7 +15,8 @@ export const generateTasksFromReservationsUtil = (
   console.log('Generazione tasks - Dati di input:', {
     reservationsCount: reservations.length,
     apartmentsCount: apartments.length,
-    existingTasksCount: existingTasks.length
+    existingTasksCount: existingTasks.length,
+    apartmentIds: apartments.map(apt => apt.id)
   });
   
   reservations.forEach(reservation => {
@@ -26,45 +27,48 @@ export const generateTasksFromReservationsUtil = (
       endDate: reservation.endDate,
       checkOutDate: checkOutDate.toISOString(),
       today: today.toISOString(),
-      isValidForCleaning: checkOutDate >= today
+      isValidForCleaning: checkOutDate >= today,
+      apartmentIds: reservation.apartmentIds
     });
     
     // Genera attività di pulizia per check-out futuri o di oggi
     if (checkOutDate >= today) {
       reservation.apartmentIds.forEach(apartmentId => {
+        // Verifica che l'appartamento esista
         const apartment = apartments.find(apt => apt.id === apartmentId);
-        if (apartment) {
-          // Verifica se esiste già un'attività per questo appartamento e data
-          const existingTask = existingTasks.find(task => 
-            task.apartmentId === apartmentId && 
-            task.taskDate === reservation.endDate &&
-            task.taskType === "checkout"
-          );
+        if (!apartment) {
+          console.warn(`Appartamento non trovato per ID: ${apartmentId}. Appartamenti disponibili:`, apartments.map(apt => apt.id));
+          return;
+        }
+        
+        // Verifica se esiste già un'attività per questo appartamento e data
+        const existingTask = existingTasks.find(task => 
+          task.apartmentId === apartmentId && 
+          task.taskDate === reservation.endDate &&
+          task.taskType === "checkout"
+        );
 
-          console.log(`Controllo appartamento ${apartment.name}:`, {
-            apartmentId,
+        console.log(`Controllo appartamento ${apartment.name}:`, {
+          apartmentId,
+          taskDate: reservation.endDate,
+          existingTask: !!existingTask
+        });
+
+        if (!existingTask) {
+          const newTask = {
+            apartmentId: apartmentId,
+            apartmentName: apartment.name,
             taskDate: reservation.endDate,
-            existingTask: !!existingTask
-          });
-
-          if (!existingTask) {
-            const newTask = {
-              apartmentId: apartmentId,
-              apartmentName: apartment.name,
-              taskDate: reservation.endDate,
-              taskType: "checkout" as const,
-              status: "pending" as const,
-              priority: "medium" as const,
-              estimatedDuration: 90,
-              notes: `Pulizia post check-out - Ospite: ${reservation.guestName}`,
-              deviceId: crypto.randomUUID()
-            };
-            
-            newTasks.push(newTask);
-            console.log('Nuovo task aggiunto:', newTask);
-          }
-        } else {
-          console.warn(`Appartamento non trovato per ID: ${apartmentId}`);
+            taskType: "checkout" as const,
+            status: "pending" as const,
+            priority: "medium" as const,
+            estimatedDuration: 90,
+            notes: `Pulizia post check-out - Ospite: ${reservation.guestName}`,
+            deviceId: crypto.randomUUID()
+          };
+          
+          newTasks.push(newTask);
+          console.log('Nuovo task aggiunto:', newTask);
         }
       });
     }

@@ -11,11 +11,13 @@ export const useCleaningData = (apartments: any[], reservationsLoading: boolean)
   const [isLoading, setIsLoading] = useState(false);
 
   const transformSupabaseTask = (task: any): CleaningTask => {
-    const apartment = apartments.find(apt => apt.id === task.apartment_id);
+    // Assicurati che apartments non sia vuoto prima di cercare
+    const apartment = apartments.length > 0 ? apartments.find(apt => apt.id === task.apartment_id) : null;
+    
     return {
       id: task.id,
       apartmentId: task.apartment_id,
-      apartmentName: apartment?.name || 'Appartamento sconosciuto',
+      apartmentName: apartment?.name || `Appartamento ${task.apartment_id}`,
       taskDate: task.task_date,
       taskType: task.task_type as CleaningTask["taskType"],
       status: (task.status === "in_progress" ? "inProgress" : task.status) as CleaningTask["status"],
@@ -31,7 +33,10 @@ export const useCleaningData = (apartments: any[], reservationsLoading: boolean)
   };
 
   const fetchTasks = async () => {
-    if (reservationsLoading) return;
+    if (reservationsLoading || apartments.length === 0) {
+      console.log("Skipping task fetch - waiting for apartments to load");
+      return;
+    }
     
     setIsLoading(true);
     try {
@@ -58,6 +63,11 @@ export const useCleaningData = (apartments: any[], reservationsLoading: boolean)
   };
 
   const refreshTasks = async () => {
+    if (apartments.length === 0) {
+      console.log("Cannot refresh tasks - apartments not loaded yet");
+      return;
+    }
+    
     setIsLoading(true);
     try {
       console.log("Refreshing cleaning tasks...");
@@ -77,19 +87,21 @@ export const useCleaningData = (apartments: any[], reservationsLoading: boolean)
   };
 
   useEffect(() => {
-    if (apartments.length > 0) {
+    if (apartments.length > 0 && !reservationsLoading) {
       fetchTasks();
     }
     
     const unsubscribe = externalStorage.subscribe(DataType.CLEANING_TASKS, async () => {
       console.log("Cleaning tasks updated externally, reloading");
-      fetchTasks();
+      if (apartments.length > 0) {
+        fetchTasks();
+      }
     });
     
     return () => {
       unsubscribe();
     };
-  }, [apartments, reservationsLoading]);
+  }, [apartments.length, reservationsLoading]);
 
   return {
     cleaningTasks,
