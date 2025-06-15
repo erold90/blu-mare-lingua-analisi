@@ -3,7 +3,6 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useCleaningManagement } from "@/hooks/useCleaningManagement";
 import { pingApi } from "@/api/apiClient";
 import { RefreshCw, Database, AlertCircle, CheckCircle, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,8 +19,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { CleaningProvider } from "@/hooks/cleaning/CleaningProvider";
+import { useCleaningContext } from "@/hooks/cleaning/useCleaningContext";
 
-const AdminCleaningManagement = () => {
+const CleaningManagementContent = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [view, setView] = useState<"calendar" | "list" | "statistics">("calendar");
   const [selectedApartment, setSelectedApartment] = useState<string>("all");
@@ -29,9 +30,9 @@ const AdminCleaningManagement = () => {
   const [dbStatus, setDbStatus] = useState<boolean | null>(null);
   const [lastSyncTime, setLastSyncTime] = useState<string>("");
   const isMobile = useIsMobile();
-  const { refreshTasks, isLoading } = useCleaningManagement();
+  const { refreshTasks, isLoading } = useCleaningContext();
   
-  // Controlla lo stato del database all'avvio
+  // Check database status on startup
   useEffect(() => {
     const checkDbStatus = async () => {
       try {
@@ -40,16 +41,16 @@ const AdminCleaningManagement = () => {
           .catch(() => false);
         
         setDbStatus(isConnected);
-        console.log("Stato database iniziale:", isConnected ? "connesso" : "non connesso");
+        console.log("Initial database status:", isConnected ? "connected" : "disconnected");
       } catch (error) {
-        console.error("Errore nel controllo iniziale del database:", error);
+        console.error("Error checking initial database status:", error);
         setDbStatus(false);
       }
     };
     
     checkDbStatus();
     
-    // Recupera l'ultima sincronizzazione
+    // Get last sync time
     const lastSync = localStorage.getItem('last_sync_CLEANING_TASKS');
     if (lastSync) {
       const date = new Date(parseInt(lastSync));
@@ -59,14 +60,15 @@ const AdminCleaningManagement = () => {
   
   const handleRefresh = async () => {
     try {
+      console.log("Manual refresh triggered");
       await refreshTasks();
       
-      // Aggiorna timestamp dell'ultima sincronizzazione
+      // Update sync timestamp
       const now = Date.now();
       localStorage.setItem('last_sync_CLEANING_TASKS', now.toString());
       setLastSyncTime(new Date(now).toLocaleString());
       
-      // Verifica lo stato del database
+      // Check database status
       const isConnected = await pingApi.testDatabaseConnection()
         .then(res => res.success)
         .catch(() => false);
@@ -74,7 +76,7 @@ const AdminCleaningManagement = () => {
       
       toast.success("Attività di pulizia sincronizzate");
     } catch (error) {
-      console.error("Errore durante l'aggiornamento:", error);
+      console.error("Error during refresh:", error);
       toast.error("Errore nella sincronizzazione");
     }
   };
@@ -82,6 +84,7 @@ const AdminCleaningManagement = () => {
   const handleTestConnection = async () => {
     setIsTestingDb(true);
     try {
+      console.log("Testing database connection...");
       const isConnected = await pingApi.testDatabaseConnection()
         .then(res => res.success)
         .catch(() => false);
@@ -93,7 +96,7 @@ const AdminCleaningManagement = () => {
         toast.error("Impossibile connettersi al database");
       }
     } catch (error) {
-      console.error("Errore durante il test della connessione:", error);
+      console.error("Error during connection test:", error);
       setDbStatus(false);
       toast.error("Errore nel test della connessione");
     } finally {
@@ -200,6 +203,14 @@ const AdminCleaningManagement = () => {
         <StatisticsView />
       )}
     </div>
+  );
+};
+
+const AdminCleaningManagement = () => {
+  return (
+    <CleaningProvider>
+      <CleaningManagementContent />
+    </CleaningProvider>
   );
 };
 

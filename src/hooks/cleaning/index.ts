@@ -1,7 +1,12 @@
 
-// Re-export from the adapter that maintains compatibility
-export { useCleaningManagementAdapter as useCleaningManagement } from '../useCleaningManagementAdapter';
-export type { CleaningTask } from '../useCleaningManagementAdapter';
+// Main export for cleaning functionality
+export { CleaningProvider } from './CleaningProvider';
+export { useCleaningContext } from './useCleaningContext';
+export type { CleaningTask, CleaningContextType } from '../useCleaningManagement';
 
-// Also re-export the context type for compatibility
-export type { CleaningContextType } from './types';
+// Also export utility functions
+export { 
+  generateTasksFromReservationsUtil,
+  getTasksByDateUtil,
+  getTasksByApartmentIdUtil 
+} from './cleaningOperations';

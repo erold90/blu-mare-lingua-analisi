@@ -3,10 +3,9 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { toast } from "sonner";
 import NewTaskDialog from "./NewTaskDialog";
 import { useReservations } from "@/hooks/useReservations";
-import { useCleaningManagement } from "@/hooks/useCleaningManagement";
+import { useCleaningContext } from "@/hooks/cleaning/useCleaningContext";
 
 interface CleaningHeaderProps {
   view: "calendar" | "list" | "statistics";
@@ -22,9 +21,10 @@ const CleaningHeader: React.FC<CleaningHeaderProps> = ({
   setSelectedApartment
 }) => {
   const { apartments } = useReservations();
-  const { addTask, generateTasksFromReservations } = useCleaningManagement();
+  const { addTask, generateTasksFromReservations } = useCleaningContext();
   
   const handleGenerateTasks = () => {
+    console.log("Generate tasks button clicked");
     generateTasksFromReservations();
   };
 

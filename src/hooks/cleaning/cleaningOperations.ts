@@ -9,40 +9,69 @@ export const generateTasksFromReservationsUtil = (
   cleaningTasks: CleaningTask[]
 ): Omit<CleaningTask, "id" | "createdAt" | "updatedAt">[] => {
   const newTasks: Omit<CleaningTask, "id" | "createdAt" | "updatedAt">[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  console.log("Analyzing reservations for cleaning tasks generation...");
+  console.log("Current reservations:", reservations);
+  console.log("Available apartments:", apartments);
+  console.log("Existing cleaning tasks:", cleaningTasks);
   
   // For each reservation, create a cleaning task for the checkout day
   reservations.forEach(reservation => {
-    const checkoutDate = new Date(reservation.endDate);
+    console.log("Processing reservation:", reservation);
     
-    // For each apartment in the reservation
-    reservation.apartmentIds.forEach(apartmentId => {
-      // Find the apartment name
-      const apartment = apartments.find(apt => apt.id === apartmentId);
-      if (!apartment) return;
+    const checkoutDate = new Date(reservation.endDate);
+    checkoutDate.setHours(0, 0, 0, 0);
+    
+    // Generate cleaning tasks only for future checkouts or today
+    if (checkoutDate >= today) {
+      console.log(`Checkout date ${reservation.endDate} is valid for task generation`);
       
-      // Create the cleaning task
-      newTasks.push({
-        apartmentId,
-        apartmentName: apartment.name,
-        taskDate: checkoutDate.toISOString().split('T')[0],
-        taskType: "checkout",
-        status: "pending",
-        priority: "medium",
-        estimatedDuration: 90,
-        notes: `Pulizia dopo il checkout di ${reservation.guestName}`
+      // For each apartment in the reservation
+      reservation.apartmentIds.forEach(apartmentId => {
+        // Find the apartment name
+        const apartment = apartments.find(apt => apt.id === apartmentId);
+        if (!apartment) {
+          console.warn(`Apartment with ID ${apartmentId} not found`);
+          return;
+        }
+        
+        // Check if a task already exists for this apartment and date
+        const taskKey = `${apartmentId}-${reservation.endDate}-checkout`;
+        const existingTask = cleaningTasks.find(task => 
+          task.apartmentId === apartmentId && 
+          task.taskDate === reservation.endDate &&
+          task.taskType === "checkout"
+        );
+        
+        if (existingTask) {
+          console.log(`Task already exists for apartment ${apartment.name} on ${reservation.endDate}`);
+          return;
+        }
+        
+        console.log(`Creating new cleaning task for apartment ${apartment.name} on ${reservation.endDate}`);
+        
+        // Create the cleaning task
+        newTasks.push({
+          apartmentId,
+          apartmentName: apartment.name,
+          taskDate: reservation.endDate,
+          taskType: "checkout",
+          status: "pending",
+          priority: "medium",
+          estimatedDuration: 90,
+          notes: `Pulizia dopo il checkout di ${reservation.guestName}`,
+          deviceId: crypto.randomUUID()
+        });
       });
-    });
+    } else {
+      console.log(`Checkout date ${reservation.endDate} is in the past, skipping`);
+    }
   });
   
-  // Filter out tasks that already exist
-  const existingDates = cleaningTasks.map(task => 
-    `${task.apartmentId}-${task.taskDate}`
-  );
-  
-  return newTasks.filter(task => {
-    const taskKey = `${task.apartmentId}-${task.taskDate}`;
-    return !existingDates.includes(taskKey);
-  });
+  console.log(`Generated ${newTasks.length} new cleaning tasks`);
+  return newTasks;
 };
 
 // Filter tasks by date
