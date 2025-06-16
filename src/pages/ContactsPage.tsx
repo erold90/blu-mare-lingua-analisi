@@ -11,6 +11,19 @@ import SEOHead from "@/components/seo/SEOHead";
 import { getBreadcrumbSchema } from "@/components/seo/StructuredData";
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
 
+// Funzione per tracciare conversioni Google Ads
+const trackGoogleAdsConversion = () => {
+  // Questo codice verrà sostituito con il pixel di conversione Google Ads
+  if (typeof window !== 'undefined' && (window as any).gtag) {
+    (window as any).gtag('event', 'conversion', {
+      'send_to': 'AW-CONVERSION_ID/CONVERSION_LABEL', // Da sostituire con i tuoi valori
+      'value': 1.0,
+      'currency': 'EUR'
+    });
+    console.log('Google Ads conversion tracked: Form submission');
+  }
+};
+
 const ContactsPage = () => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const formRef = React.useRef<HTMLFormElement>(null);
@@ -44,6 +57,9 @@ const ContactsPage = () => {
       console.log("Risultato invio email:", result);
 
       if (result.text === "OK") {
+        // Traccia la conversione Google Ads SOLO se l'email è stata inviata con successo
+        trackGoogleAdsConversion();
+        
         toast.success("Messaggio inviato con successo! Ti risponderemo al più presto.");
         formRef.current?.reset();
       } else {
