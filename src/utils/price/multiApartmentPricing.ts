@@ -1,7 +1,7 @@
-
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "./types";
+import { calculatePetsCost } from "./extrasCalculator";
 
 /**
  * Calculate individual apartment prices with discount
@@ -33,18 +33,6 @@ export const calculateMultiApartmentPricing = (
   selectedApartments.forEach(apartment => {
     const baseApartmentPrice = apartmentPrices[apartment.id] || 0;
     
-    // Determine if this apartment has pets
-    const hasPets = formValues.petsInApartment?.[apartment.id] || 
-                   (formValues.hasPets && selectedApartments.length === 1);
-    const petCost = hasPets ? 50 : 0;
-    
-    // Calculate people count for this apartment
-    const peopleCount = formValues.personsPerApartment?.[apartment.id] || 
-                       ((formValues.adults || 0) + (formValues.children || 0));
-                       
-    // Calculate linen cost for this apartment
-    const linenCost = formValues.needsLinen ? peopleCount * 15 : 0;
-    
     // Calculate apartment subtotal with extras
     const apartmentSubtotal = baseApartmentPrice;
     
@@ -61,15 +49,10 @@ export const calculateMultiApartmentPricing = (
   // Calculate extras separately - don't include them in the apartment prices
   let totalExtras = 0;
   
-  // Calculate total pets cost
+  // Calculate total pets cost using the corrected function
   if (formValues.hasPets) {
-    if (selectedApartments.length === 1) {
-      totalExtras += 50; // Single apartment with pets
-    } else if (formValues.petsInApartment) {
-      // Count apartments with pets
-      const apartmentsWithPets = Object.values(formValues.petsInApartment).filter(Boolean).length;
-      totalExtras += apartmentsWithPets * 50;
-    }
+    const petsCost = calculatePetsCost(formValues, selectedApartments);
+    totalExtras += petsCost;
   }
   
   // Calculate total linen cost

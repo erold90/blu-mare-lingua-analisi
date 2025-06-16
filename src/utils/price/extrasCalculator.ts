@@ -1,4 +1,3 @@
-
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
@@ -24,7 +23,7 @@ export const calculateExtras = (
   const linenCost = calculateLinenCost(formValues);
   
   // Calculate pet costs
-  const petsCost = calculatePetsCost(formValues);
+  const petsCost = calculatePetsCost(formValues, selectedApartments);
   
   // Calculate cleaning fee (fixed at 50€ per apartment) - FOR DISPLAY ONLY
   const cleaningFee = calculateCleaningFee(selectedApartments);
@@ -81,27 +80,28 @@ export function calculateLinenCost(formValues: FormValues): number {
 }
 
 /**
- * Calculate the cost for pets
+ * Calculate the cost for pets - CORRECTED to count per apartment
  */
-export function calculatePetsCost(formValues: FormValues): number {
+export function calculatePetsCost(formValues: FormValues, selectedApartments?: Apartment[]): number {
   if (!formValues.hasPets) {
     return 0;
   }
   
   let petsCost = 0;
   
-  if (!formValues.selectedApartments || formValues.selectedApartments.length <= 1) {
-    // Fixed price of 50€ for a single apartment
+  if (!selectedApartments || selectedApartments.length <= 1) {
+    // Single apartment - fixed price of 50€
     petsCost = 50;
   } else if (formValues.petsInApartment) {
-    // 50€ for each apartment with pets
+    // Multiple apartments - 50€ for each apartment with pets
     const apartmentsWithPets = Object.entries(formValues.petsInApartment)
       .filter(([_, hasPet]) => hasPet)
       .length;
     
     petsCost = apartmentsWithPets * 50;
+    console.log(`Calculating pets cost: ${apartmentsWithPets} apartments with pets × 50€ = ${petsCost}€`);
   } else {
-    // Default if not specified which apartment has pets
+    // Default if not specified which apartment has pets - assume one apartment
     petsCost = 50;
   }
   

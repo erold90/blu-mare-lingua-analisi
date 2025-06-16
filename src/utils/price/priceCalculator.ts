@@ -1,4 +1,3 @@
-
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { emptyPriceCalculation, PriceCalculation } from "./types";
@@ -122,13 +121,13 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   const extraOptions = {
     hasPets: formValues.hasPets || false,
     petsCount: formValues.petsCount || 0,
-    needsLinen: formValues.needsLinen || false, // Updated from linenOption to needsLinen
+    needsLinen: formValues.needsLinen || false,
     adults: formValues.adults || 0,
     children: formValues.children || 0,
     petsInApartment: formValues.petsInApartment || {}
   };
   
-  // Calculate extras separately
+  // Calculate extras separately - pass selectedApartments for correct pets calculation
   const { extrasCost, cleaningFee, touristTax } = calculateExtras(formValues, selectedApartments, nights);
   console.log(`Extras: ${extrasCost}€, Cleaning: ${cleaningFee}€, Tax: ${touristTax}€`);
   

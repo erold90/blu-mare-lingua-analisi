@@ -1,4 +1,3 @@
-
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { calculateTotalPrice } from "./priceCalculator";
@@ -97,12 +96,21 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     });
     message += `\n`;
     
-    // Services - CORRETTO
+    // Services - CORRECTED
     message += `*Servizi richiesti:*\n`;
     message += `Biancheria: ${formValues.needsLinen ? "Richiesta (15€ a persona)" : "Non richiesta"}\n`;
     
     if (formValues.hasPets) {
-      message += `Animali domestici: Sì (${formValues.petsCount || 1})\n`;
+      // Count apartments with pets correctly
+      let apartmentsWithPets = 0;
+      if (selectedApartments.length === 1) {
+        apartmentsWithPets = 1;
+      } else if (formValues.petsInApartment) {
+        apartmentsWithPets = Object.values(formValues.petsInApartment).filter(Boolean).length;
+      }
+      
+      message += `Animali domestici: Sì (${apartmentsWithPets} ${apartmentsWithPets === 1 ? 'appartamento' : 'appartamenti'})\n`;
+      
       if (formValues.petSize) {
         message += `Taglia animale: ${
           formValues.petSize === "small" ? "Piccola" :
@@ -122,19 +130,29 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     }
     message += `\n`;
     
-    // Cost summary - MIGLIORATO
+    // Cost summary - IMPROVED
     message += `*Riepilogo costi:*\n`;
     message += `Costo appartamenti: ${priceInfo.basePrice}€\n`;
     
     // Dettaglio servizi extra se presenti
     if (priceInfo.extras > 0) {
       const extraDetails = [];
+      
       if (formValues.needsLinen) {
-        const linenCost = priceInfo.extras - (formValues.hasPets ? 50 : 0);
-        if (linenCost > 0) extraDetails.push(`Biancheria ${linenCost}€`);
+        const totalPeople = (formValues.adults || 0) + (formValues.children || 0);
+        const linenCost = totalPeople * 15;
+        extraDetails.push(`Biancheria ${linenCost}€`);
       }
+      
       if (formValues.hasPets) {
-        extraDetails.push(`Animali 50€`);
+        let apartmentsWithPets = 0;
+        if (selectedApartments.length === 1) {
+          apartmentsWithPets = 1;
+        } else if (formValues.petsInApartment) {
+          apartmentsWithPets = Object.values(formValues.petsInApartment).filter(Boolean).length;
+        }
+        const animalsCost = apartmentsWithPets * 50;
+        extraDetails.push(`Animali ${animalsCost}€`);
       }
       
       message += `Servizi extra: ${priceInfo.extras}€`;
