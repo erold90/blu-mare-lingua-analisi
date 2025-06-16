@@ -4,6 +4,7 @@ import { AppHeader } from "./AppHeader";
 import { AppSidebar } from "./AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { CookieConsent } from "@/components/CookieConsent";
+import WhatsAppButton from "./WhatsAppButton";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export function AppLayout() {
@@ -26,6 +27,7 @@ export function AppLayout() {
           </SidebarInset>
         </div>
         <CookieConsent />
+        {!isReservedArea && <WhatsAppButton />}
       </div>
     </SidebarProvider>
   );
