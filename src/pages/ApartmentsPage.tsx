@@ -79,7 +79,7 @@ const ApartmentsPage = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="h-4 w-4 text-primary" />
-                  <span>{apartment.maxGuests} ospiti</span>
+                  <span>{apartment.capacity} ospiti</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Bed className="h-4 w-4 text-primary" />
@@ -87,7 +87,7 @@ const ApartmentsPage = () => {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Bath className="h-4 w-4 text-primary" />
-                  <span>{apartment.bathrooms} bagni</span>
+                  <span>1 bagno</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-2xl">🏊‍♂️</span>
@@ -122,7 +122,7 @@ const ApartmentsPage = () => {
               <div className="flex items-center justify-between pt-4 border-t">
                 <div>
                   <p className="text-sm text-muted-foreground">A partire da</p>
-                  <p className="text-2xl font-bold text-primary">€{apartment.basePrice}</p>
+                  <p className="text-2xl font-bold text-primary">€{apartment.price}</p>
                   <p className="text-sm text-muted-foreground">per notte</p>
                 </div>
                 <Link to="/preventivo">
