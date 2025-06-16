@@ -28,8 +28,8 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     const formattedCheckIn = format(formValues.checkIn, "dd/MM/yyyy");
     const formattedCheckOut = format(formValues.checkOut, "dd/MM/yyyy");
     
-    // Create message
-    let message = `*Richiesta Preventivo* 📝\n\n`;
+    // Create message - Utilizziamo un'emoticon che funziona meglio
+    let message = `*Richiesta Preventivo* 📋\n\n`;
     
     // Stay details
     message += `*Date soggiorno:*\n`;
