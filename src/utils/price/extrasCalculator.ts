@@ -7,6 +7,8 @@ interface ExtrasResult {
   extrasCost: number;
   cleaningFee: number;
   touristTax: number;
+  linenCost: number; // Aggiunto per chiarezza
+  petsCost: number;  // Aggiunto per chiarezza
 }
 
 /**
@@ -36,7 +38,9 @@ export const calculateExtras = (
   return {
     extrasCost,
     cleaningFee,
-    touristTax
+    touristTax,
+    linenCost,
+    petsCost
   };
 };
 
@@ -44,13 +48,13 @@ export const calculateExtras = (
  * Calculate the cost of linen service based on guests
  */
 export function calculateLinenCost(formValues: FormValues): number {
-  // Skip if not using extra linen service
-  if (formValues.linenOption !== "extra" && formValues.linenOption !== "deluxe") {
+  // Skip if not requesting linen service
+  if (!formValues.needsLinen) {
     return 0;
   }
   
   let totalLinenCost = 0;
-  const pricePerPerson = formValues.linenOption === "deluxe" ? 25 : 15; // 25€ for deluxe, 15€ for extra
+  const pricePerPerson = 15; // 15€ per persona per tutto il soggiorno
   
   if (formValues.selectedApartments?.length === 1 || !formValues.personsPerApartment) {
     // If there's just one apartment or persons per apartment is not specified
@@ -62,7 +66,7 @@ export function calculateLinenCost(formValues: FormValues): number {
       !child.sleepsWithParents && !child.sleepsInCrib
     ).length;
     
-    // Total people needing linen service
+    // Total people needing linen service (those who occupy a bed)
     const totalPeople = adults + independentChildren;
     
     totalLinenCost = totalPeople * pricePerPerson;

@@ -134,7 +134,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
             type="button" 
             onClick={nextStep}
             disabled={
-              form.watch("linenOption") === "extra" && 
+              form.watch("needsLinen") && 
               multipleApartments && 
               (totalAssignedPersons || 0) !== totalPeopleForLinen
             }

@@ -37,11 +37,9 @@ export const apartmentSchema = z.object({
   selectedApartments: z.array(z.string()).optional(),
 });
 
-// Schema dello step 4: Servizi extra
+// Schema dello step 4: Servizi extra - CORRETTO
 export const extrasSchema = z.object({
-  linenOption: z.enum(["standard", "extra", "deluxe"], {
-    required_error: "Seleziona un'opzione per la biancheria",
-  }),
+  needsLinen: z.boolean().default(false), // Cambiato da linenOption a needsLinen
   hasPets: z.boolean().default(false),
   petsCount: z.number().optional(),
   petSize: z.enum(["small", "medium", "large"]).optional(),

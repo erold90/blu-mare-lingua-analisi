@@ -19,7 +19,7 @@ export function useQuoteForm() {
     adults: 2,
     children: 0,
     childrenDetails: [],
-    linenOption: "standard" as const,
+    needsLinen: false, // Cambiato da linenOption a needsLinen
     hasPets: false,
     petsCount: 0,
     isGroupBooking: false,

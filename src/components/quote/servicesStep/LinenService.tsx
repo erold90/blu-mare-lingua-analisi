@@ -59,25 +59,23 @@ const LinenService: React.FC<LinenServiceProps> = ({
       
       <FormField
         control={form.control}
-        name="linenOption"
+        name="needsLinen"
         render={({ field }) => (
           <FormItem className="space-y-3">
             <div className="flex items-center space-x-2">
               <FormControl>
                 <Checkbox 
-                  checked={field.value === "extra"} 
-                  onCheckedChange={(checked) => {
-                    form.setValue("linenOption", checked ? "extra" : "standard");
-                  }}
-                  id="linen-extra"
+                  checked={field.value} 
+                  onCheckedChange={field.onChange}
+                  id="linen-needed"
                 />
               </FormControl>
-              <Label htmlFor="linen-extra" className="cursor-pointer">
+              <Label htmlFor="linen-needed" className="cursor-pointer">
                 Richiedo servizio biancheria - 15€ a persona per tutto il soggiorno
               </Label>
             </div>
             
-            {field.value === "extra" && (
+            {field.value && (
               <div className="pl-6 mt-2">
                 {!multipleApartments ? (
                   <p className="text-sm text-muted-foreground">

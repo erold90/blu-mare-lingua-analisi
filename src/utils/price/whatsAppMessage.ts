@@ -97,13 +97,9 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     });
     message += `\n`;
     
-    // Services
+    // Services - CORRETTO
     message += `*Servizi richiesti:*\n`;
-    message += `Biancheria: ${
-      formValues.linenOption === "standard" ? "Standard inclusa" : 
-      formValues.linenOption === "extra" ? "Supplemento extra" : 
-      formValues.linenOption === "deluxe" ? "Deluxe" : "Non specificata"
-    }\n`;
+    message += `Biancheria: ${formValues.needsLinen ? "Richiesta (15€ a persona)" : "Non richiesta"}\n`;
     
     if (formValues.hasPets) {
       message += `Animali domestici: Sì (${formValues.petsCount || 1})\n`;
@@ -126,12 +122,26 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     }
     message += `\n`;
     
-    // Cost summary
+    // Cost summary - MIGLIORATO
     message += `*Riepilogo costi:*\n`;
     message += `Costo appartamenti: ${priceInfo.basePrice}€\n`;
     
+    // Dettaglio servizi extra se presenti
     if (priceInfo.extras > 0) {
-      message += `Servizi extra: ${priceInfo.extras}€\n`;
+      const extraDetails = [];
+      if (formValues.needsLinen) {
+        const linenCost = priceInfo.extras - (formValues.hasPets ? 50 : 0);
+        if (linenCost > 0) extraDetails.push(`Biancheria ${linenCost}€`);
+      }
+      if (formValues.hasPets) {
+        extraDetails.push(`Animali 50€`);
+      }
+      
+      message += `Servizi extra: ${priceInfo.extras}€`;
+      if (extraDetails.length > 0) {
+        message += ` (${extraDetails.join(", ")})`;
+      }
+      message += `\n`;
     }
     
     message += `Pulizia finale: Inclusa\n`;
@@ -158,4 +168,3 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     return null;
   }
 };
-
