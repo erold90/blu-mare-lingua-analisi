@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -28,10 +27,10 @@ const ContactsPage = () => {
     setIsSubmitting(true);
 
     try {
-      // EmailJS configuration - Sostituisci questi valori con i tuoi da EmailJS
-      const serviceId = "YOUR_SERVICE_ID"; // Da sostituire con il tuo Service ID
-      const templateId = "YOUR_TEMPLATE_ID"; // Da sostituire con il tuo Template ID  
-      const publicKey = "YOUR_PUBLIC_KEY"; // Da sostituire con la tua Public Key
+      // EmailJS configuration
+      const serviceId = "service_ul8o9ys";
+      const templateId = "template_1x33ckb";
+      const publicKey = "F6q-jHsB19AHMtNwW";
 
       console.log("Invio email tramite EmailJS...");
       
