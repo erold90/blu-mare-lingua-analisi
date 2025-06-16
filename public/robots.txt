@@ -1,8 +1,11 @@
+
 User-agent: Googlebot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Bingbot
 Allow: /
+Crawl-delay: 1
 
 User-agent: Twitterbot
 Allow: /
@@ -12,3 +15,19 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /area-riservata/
+Disallow: /admin/
+
+# Sitemap location
+Sitemap: https://www.villamareblu.it/sitemap.xml
+
+# Additional crawling directives for vacation rental sites
+User-agent: *
+Allow: /preventivo
+Allow: /appartamenti
+Allow: /servizi
+Allow: /contatti
+
+# SEO enhancements for villa vacation rentals
+# villa salento mare, appartamenti vacanze puglia, casa vacanza torre vado
+# affitto vacanze salento, villa mareblu salento, casa vacanze santa maria di leuca

@@ -1,9 +1,13 @@
+
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { useQuoteForm } from "@/hooks/useQuoteForm";
 import { usePageVisitTracker } from "@/hooks/usePageVisitTracker";
 import { apartments } from "@/data/apartments";
+import SEOHead from "@/components/seo/SEOHead";
+import { getBreadcrumbSchema } from "@/components/seo/StructuredData";
+import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
 
 // Import step components
 import GuestInfoStep from "@/components/quote/GuestInfoStep";
@@ -22,6 +26,13 @@ const RequestQuotePage = () => {
   
   // Track page visits
   usePageVisitTracker();
+
+  const breadcrumbItems = [
+    { name: "Home", url: "/" },
+    { name: "Preventivo", url: "/preventivo" }
+  ];
+
+  const structuredData = [getBreadcrumbSchema(breadcrumbItems)];
   
   try {
     const {
@@ -144,6 +155,16 @@ const RequestQuotePage = () => {
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 relative overflow-hidden">
+        <SEOHead
+          title="Preventivo Villa MareBlu - Vacanze Estate Salento | Alternativa Airbnb Salento"
+          description="Calcola il preventivo per Villa MareBlu: vacanze estate Salento, casa vacanze agosto Puglia. Miglior alternativa Airbnb Salento con piscina privata. Preventivo gratuito e immediato!"
+          keywords={getPageSpecificKeywords('quote')}
+          canonicalUrl="/preventivo"
+          structuredData={structuredData}
+          ogTitle="Preventivo Gratuito Villa MareBlu - Vacanze Estate Salento"
+          ogDescription="Calcola subito il tuo preventivo per Villa MareBlu: la migliore alternativa ad Airbnb nel Salento con piscina privata"
+        />
+
         {/* Background decorative elements */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-200 rounded-full blur-3xl animate-pulse" />
@@ -172,7 +193,7 @@ const RequestQuotePage = () => {
             <div className="text-center mb-12 animate-fade-in">
               <h1 className="text-5xl md:text-6xl font-serif font-semibold mb-6 leading-tight">
                 <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-700 bg-clip-text text-transparent">
-                  Calcola Preventivo
+                  Calcola Preventivo Vacanze Salento
                 </span>
               </h1>
               
@@ -184,9 +205,9 @@ const RequestQuotePage = () => {
               </div>
               
               <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-light">
-                Crea il tuo preventivo personalizzato per una 
-                <span className="font-medium text-primary"> vacanza indimenticabile</span> 
-                nel cuore del Salento
+                Crea il tuo preventivo personalizzato per <strong>vacanze estate Salento</strong> nella nostra
+                <span className="font-medium text-primary"> villa di lusso sul mare</span> - 
+                la migliore <strong>alternativa Airbnb Salento</strong>
               </p>
             </div>
             

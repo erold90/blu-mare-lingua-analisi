@@ -8,10 +8,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { MapPin, Mail, Phone } from "lucide-react";
 import emailjs from 'emailjs-com';
+import SEOHead from "@/components/seo/SEOHead";
+import { getBreadcrumbSchema } from "@/components/seo/StructuredData";
+import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
 
 const ContactsPage = () => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const formRef = React.useRef<HTMLFormElement>(null);
+
+  const breadcrumbItems = [
+    { name: "Home", url: "/" },
+    { name: "Contatti", url: "/contatti" }
+  ];
+
+  const structuredData = [getBreadcrumbSchema(breadcrumbItems)];
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -47,49 +57,68 @@ const ContactsPage = () => {
 
   return (
     <div className="container px-4 py-8 md:py-12">
-      <h1 className="text-3xl md:text-4xl font-bold mb-6">Contatti</h1>
+      <SEOHead
+        title="Contatti Villa MareBlu Salento - Affitto Settimanale Puglia | Weekend Romantico Salento"
+        description="Contatta Villa MareBlu per il tuo affitto settimanale Puglia o weekend romantico Salento. Info, prenotazioni e disponibilità villa lusso Torre Vado. Tel: +39 3937767749"
+        keywords={getPageSpecificKeywords('contact')}
+        canonicalUrl="/contatti"
+        structuredData={structuredData}
+        ogTitle="Contatti Villa MareBlu - Prenota la Tua Vacanza in Salento"
+        ogDescription="Contattaci per prenotare la tua villa di lusso in Salento. Affitto settimanale e weekend romantici nel cuore della Puglia"
+      />
+
+      <h1 className="text-3xl md:text-4xl font-bold mb-6">Contatti Villa MareBlu</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Informazioni di contatto */}
         <div>
-          <h2 className="text-2xl font-semibold mb-4">Come raggiungerci</h2>
+          <h2 className="text-2xl font-semibold mb-4">Come Raggiungerci per il Tuo Soggiorno</h2>
           
           <div className="flex flex-col space-y-6">
             <div className="flex items-start gap-4">
               <MapPin className="h-6 w-6 text-primary shrink-0 mt-1" />
               <div>
-                <h3 className="font-medium">Indirizzo</h3>
-                <p className="text-muted-foreground">Via Marco Polo 112<br />73053 Patù (LE)<br />Salento, Puglia</p>
+                <h3 className="font-medium">Indirizzo Villa MareBlu</h3>
+                <p className="text-muted-foreground">Via Marco Polo 112<br />73053 Patù (LE)<br />Salento, Puglia<br /><em>Villa lusso Salento mare</em></p>
               </div>
             </div>
             
             <div className="flex items-start gap-4">
               <Mail className="h-6 w-6 text-primary shrink-0 mt-1" />
               <div>
-                <h3 className="font-medium">Email</h3>
+                <h3 className="font-medium">Email per Prenotazioni</h3>
                 <p className="text-muted-foreground">macchiaforcato@gmail.com</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  <em>Risposta garantita entro 2 ore per affitto settimanale Puglia</em>
+                </p>
               </div>
             </div>
             
             <div className="flex items-start gap-4">
               <Phone className="h-6 w-6 text-primary shrink-0 mt-1" />
               <div>
-                <h3 className="font-medium">Telefono</h3>
+                <h3 className="font-medium">Telefono Villa MareBlu</h3>
                 <p className="text-muted-foreground">+39 3937767749</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  <em>Disponibile 7/7 per weekend romantico Salento</em>
+                </p>
               </div>
             </div>
           </div>
           
           <div className="mt-8">
-            <h3 className="text-xl font-semibold mb-4">Orari</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <div>Lunedì - Venerdì:</div>
+            <h3 className="text-xl font-semibold mb-4">Orari di Contatto</h3>
+            <div className="grid grid-cols-2 gap-2 bg-primary/5 p-4 rounded-lg">
+              <div className="font-medium">Lunedì - Venerdì:</div>
               <div>9:00 - 18:00</div>
-              <div>Sabato:</div>
+              <div className="font-medium">Sabato:</div>
               <div>9:00 - 13:00</div>
-              <div>Domenica:</div>
-              <div>Chiuso</div>
+              <div className="font-medium">Domenica:</div>
+              <div>Su appuntamento</div>
             </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              <em>Per emergenze durante il soggiorno, siamo sempre reperibili</em>
+            </p>
           </div>
           
           <div className="mt-8 h-64 md:h-80 bg-muted rounded-lg">
@@ -102,22 +131,23 @@ const ContactsPage = () => {
               loading="lazy" 
               referrerPolicy="no-referrer-when-downgrade"
               className="rounded-lg"
-              title="Mappa Villa Mare Blu"
+              title="Mappa Villa MareBlu Salento - Via Marco Polo 112, Patù (LE)"
             ></iframe>
           </div>
         </div>
         
         {/* Form di contatto */}
         <div>
-          <h2 className="text-2xl font-semibold mb-4">Scrivici</h2>
+          <h2 className="text-2xl font-semibold mb-4">Richiedi Informazioni per la Tua Vacanza</h2>
           <p className="text-muted-foreground mb-6">
-            Compila il modulo sottostante per inviarci un messaggio. Ti risponderemo al più presto.
+            Compila il modulo per ricevere informazioni dettagliate sul nostro <strong>affitto settimanale Puglia</strong> 
+            o per organizzare il tuo <strong>weekend romantico Salento</strong>. Ti risponderemo entro 2 ore!
           </p>
           
           <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">Nome</Label>
+                <Label htmlFor="firstName">Nome *</Label>
                 <Input 
                   id="firstName" 
                   name="firstName"
@@ -126,7 +156,7 @@ const ContactsPage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Cognome</Label>
+                <Label htmlFor="lastName">Cognome *</Label>
                 <Input 
                   id="lastName" 
                   name="lastName"
@@ -137,7 +167,7 @@ const ContactsPage = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input 
                 id="email" 
                 name="email"
@@ -158,21 +188,21 @@ const ContactsPage = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="subject">Oggetto</Label>
+              <Label htmlFor="subject">Oggetto *</Label>
               <Input 
                 id="subject" 
                 name="subject"
-                placeholder="Oggetto del messaggio" 
+                placeholder="Es: Preventivo weekend romantico Salento" 
                 required 
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="message">Messaggio</Label>
+              <Label htmlFor="message">Messaggio *</Label>
               <Textarea 
                 id="message" 
                 name="message"
-                placeholder="Scrivi qui il tuo messaggio..." 
+                placeholder="Descrivi la tua richiesta: date preferite, numero ospiti, servizi desiderati..." 
                 rows={5}
                 required
               />
@@ -181,16 +211,48 @@ const ContactsPage = () => {
             <Button 
               type="submit" 
               size="lg" 
-              className="w-full"
+              className="w-full bg-primary hover:bg-primary/90"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Invio in corso..." : "Invia Messaggio"}
+              {isSubmitting ? "Invio in corso..." : "Invia Richiesta di Prenotazione"}
             </Button>
             
             <p className="text-xs text-muted-foreground mt-2">
               Inviando questo modulo, accetti la nostra <Link to="/privacy-policy" className="text-primary underline">Privacy Policy</Link>.
+              <br />
+              <em>Garantiamo risposta entro 2 ore per tutte le richieste di affitto settimanale Puglia.</em>
             </p>
           </form>
+        </div>
+      </div>
+
+      {/* Sezione info aggiuntive */}
+      <div className="mt-16 bg-gradient-to-r from-blue-50 to-blue-100 p-8 rounded-lg">
+        <h2 className="text-2xl font-semibold mb-4 text-center text-primary">
+          Perché Prenotare Direttamente con Noi
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center">
+            <div className="text-3xl mb-3">💰</div>
+            <h3 className="font-semibold mb-2">Miglior Prezzo Garantito</h3>
+            <p className="text-sm text-muted-foreground">
+              Nessuna commissione aggiuntiva per il tuo affitto settimanale Puglia
+            </p>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl mb-3">🎯</div>
+            <h3 className="font-semibold mb-2">Servizio Personalizzato</h3>
+            <p className="text-sm text-muted-foreground">
+              Assistenza dedicata per il tuo weekend romantico Salento
+            </p>
+          </div>
+          <div className="text-center">
+            <div className="text-3xl mb-3">⚡</div>
+            <h3 className="font-semibold mb-2">Risposta Rapida</h3>
+            <p className="text-sm text-muted-foreground">
+              Conferma disponibilità entro 2 ore dalla richiesta
+            </p>
+          </div>
         </div>
       </div>
     </div>

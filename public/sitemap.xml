@@ -1,0 +1,69 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://www.villamareblu.it/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <lastmod>2024-01-01</lastmod>
+    <image:image>
+      <image:loc>https://www.villamareblu.it/images/hero/hero.jpg</image:loc>
+      <image:title>Villa MareBlu Salento - Appartamenti Vacanze Lusso Sul Mare</image:title>
+      <image:caption>Villa MareBlu: villa lusso Salento mare con piscina privata e vista panoramica</image:caption>
+    </image:image>
+  </url>
+  
+  <url>
+    <loc>https://www.villamareblu.it/appartamenti</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <lastmod>2024-01-01</lastmod>
+    <image:image>
+      <image:loc>https://www.villamareblu.it/images/apartments/appartamento-1/image1.jpg</image:loc>
+      <image:title>Appartamenti Vacanze Salento - Villa MareBlu Torre Vado</image:title>
+      <image:caption>Appartamenti ammobiliati Puglia con vista mare e tutti i comfort</image:caption>
+    </image:image>
+  </url>
+  
+  <url>
+    <loc>https://www.villamareblu.it/servizi</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2024-01-01</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://www.villamareblu.it/la-villa</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2024-01-01</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://www.villamareblu.it/contatti</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <lastmod>2024-01-01</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://www.villamareblu.it/preventivo</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+    <lastmod>2024-01-01</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://www.villamareblu.it/privacy-policy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <lastmod>2024-01-01</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://www.villamareblu.it/cookie-policy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+    <lastmod>2024-01-01</lastmod>
+  </url>
+</urlset>
