@@ -43,7 +43,7 @@ export const calculateMultiApartmentPricing = (
                        ((formValues.adults || 0) + (formValues.children || 0));
                        
     // Calculate linen cost for this apartment
-    const linenCost = formValues.linenOption === "extra" ? peopleCount * 15 : 0;
+    const linenCost = formValues.needsLinen ? peopleCount * 15 : 0;
     
     // Calculate apartment subtotal with extras
     const apartmentSubtotal = baseApartmentPrice;
@@ -73,7 +73,7 @@ export const calculateMultiApartmentPricing = (
   }
   
   // Calculate total linen cost
-  if (formValues.linenOption === "extra") {
+  if (formValues.needsLinen) {
     const totalPeople = formValues.adults + (formValues.children || 0);
     totalExtras += totalPeople * 15;
   }

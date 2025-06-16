@@ -33,7 +33,7 @@ const generateCacheKey = (formValues: FormValues, apartments: Apartment[]): stri
     formValues.adults,
     formValues.children,
     formValues.hasPets ? '1' : '0',
-    formValues.linenOption || 'none',
+    formValues.needsLinen ? '1' : '0', // Updated from linenOption to needsLinen
     // Include any other values that affect the price
     JSON.stringify(formValues.personsPerApartment || {}),
     JSON.stringify(formValues.petsInApartment || {})
@@ -122,7 +122,7 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   const extraOptions = {
     hasPets: formValues.hasPets || false,
     petsCount: formValues.petsCount || 0,
-    linenOption: formValues.linenOption || "standard",
+    needsLinen: formValues.needsLinen || false, // Updated from linenOption to needsLinen
     adults: formValues.adults || 0,
     children: formValues.children || 0,
     petsInApartment: formValues.petsInApartment || {}

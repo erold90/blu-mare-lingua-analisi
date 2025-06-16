@@ -18,20 +18,16 @@ export const generateCostsTable = (doc: jsPDF, priceCalculation: PriceCalculatio
   // Base apartment cost
   tableBody.push(["Costo base appartamento", `${priceCalculation.nights} notti`, `€ ${priceCalculation.basePrice.toFixed(2)}`]);
   
-  // Selected extras
-  if (formData.linenOption && priceCalculation.extras > 0) {
-    let linenText;
-    switch(formData.linenOption) {
-      case "extra":
-        linenText = "Biancheria Extra";
-        break;
-      case "deluxe":
-        linenText = "Biancheria Deluxe";
-        break;
-      default:
-        linenText = "Biancheria Standard";
-    }
-    tableBody.push([linenText, "", `€ ${priceCalculation.extras.toFixed(2)}`]);
+  // Selected extras - linen service
+  if (formData.needsLinen && priceCalculation.extras > 0) {
+    const totalPeople = (formData.adults || 0) + (formData.children || 0);
+    const linenCost = totalPeople * 15;
+    tableBody.push(["Biancheria (15€ a persona)", `${totalPeople} persone`, `€ ${linenCost.toFixed(2)}`]);
+  }
+  
+  // Pets fee if applicable
+  if (formData.hasPets && formData.petsCount && formData.petsCount > 0) {
+    tableBody.push(["Supplemento animali", `${formData.petsCount} animali`, `€ ${(formData.petsCount * 50).toFixed(2)}`]);
   }
   
   // Final cleaning
@@ -42,11 +38,6 @@ export const generateCostsTable = (doc: jsPDF, priceCalculation: PriceCalculatio
   const taxPerPerson = priceCalculation.touristTaxPerPerson || 2.0;
   const touristTaxDetails = `${taxPerPerson.toFixed(2)}€ x ${formData.adults} persone x ${priceCalculation.nights} notti`;
   tableBody.push(["Tassa di soggiorno", touristTaxDetails, `€ ${priceCalculation.touristTax.toFixed(2)}`]);
-  
-  // Pets fee if applicable
-  if (formData.hasPets && formData.petsCount && formData.petsCount > 0) {
-    tableBody.push(["Supplemento animali", `${formData.petsCount} animali`, `€ ${(formData.petsCount * 30).toFixed(2)}`]);
-  }
   
   // Subtotal
   tableBody.push(["Subtotale", "", `€ ${priceCalculation.subtotal.toFixed(2)}`]);

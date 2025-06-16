@@ -1,4 +1,3 @@
-
 import { FormValues } from "@/utils/quoteFormSchema";
 import { PriceCalculation } from "@/utils/price/types";
 import { Apartment } from "@/data/apartments";
@@ -130,52 +129,22 @@ export const createExtrasRows = (
   }]);
   
   // Calculate linen cost with more details
-  if (formData.linenOption) {
+  if (formData.needsLinen) {
     const totalPeople = (formData.adults || 0) + (formData.children || 0);
-    let linenCost = 0;
-    let linenLabel = "";
-    let pricePerPerson = 0;
+    const linenCost = totalPeople * 15;
     
-    switch (formData.linenOption) {
-      case "extra":
-        pricePerPerson = 15;
-        linenCost = totalPeople * pricePerPerson;
-        linenLabel = "Biancheria extra";
-        break;
-      case "deluxe":
-        pricePerPerson = 25;
-        linenCost = totalPeople * pricePerPerson;
-        linenLabel = "Biancheria deluxe";
-        break;
-      default:
-        linenCost = 0;
-        linenLabel = "Biancheria standard";
-        pricePerPerson = 0;
-    }
-    
-    // Add linen fee with detailed description
-    if (linenCost > 0) {
-      rows.push([
-        `${linenLabel} (${totalPeople} persone x € ${pricePerPerson})`,
-        {
-          content: `€ ${linenCost}`,
-          styles: { halign: 'right' }
-        }
-      ]);
-    } else {
-      rows.push([
-        linenLabel,
-        {
-          content: "Inclusa",
-          styles: { halign: 'right', textColor: [0, 128, 0] }
-        }
-      ]);
-    }
+    rows.push([
+      `Biancheria (${totalPeople} persone x € 15)`,
+      {
+        content: `€ ${linenCost}`,
+        styles: { halign: 'right' }
+      }
+    ]);
   }
   
   // Calculate pet cost with details
   if (formData.hasPets && formData.petsCount && formData.petsCount > 0) {
-    const petCostPerAnimal = 30;
+    const petCostPerAnimal = 50;
     const petCost = formData.petsCount * petCostPerAnimal;
     rows.push([
       `Supplemento animali (${formData.petsCount} ${formData.petsCount > 1 ? 'animali' : 'animale'} x € ${petCostPerAnimal})`,

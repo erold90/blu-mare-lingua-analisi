@@ -50,11 +50,11 @@ const ApartmentList: React.FC<ApartmentListProps> = ({
               <span>Posti letto: {apt.beds}</span>
             </li>
             
-            {/* Display included services */}
-            {formValues.linenOption === "extra" && (
+            {/* Display linen service if requested */}
+            {formValues.needsLinen && (
               <li className="flex items-center gap-2">
                 <Check className="h-4 w-4 text-green-500" />
-                <span>Biancheria extra: €30</span>
+                <span>Biancheria: €15 a persona</span>
               </li>
             )}
             
