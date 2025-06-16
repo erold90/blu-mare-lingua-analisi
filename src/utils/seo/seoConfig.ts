@@ -3,7 +3,7 @@ export const seoKeywords = {
   primary: [
     "villa salento mare",
     "appartamenti vacanze puglia", 
-    "casa vacanza torre vado",
+    "casa vacanza vista mare",
     "affitto vacanze salento",
     "villa mareblu salento"
   ],
@@ -14,7 +14,7 @@ export const seoKeywords = {
     "affitto casa puglia mare",
     "vacanze salento appartamenti",
     "casa vacanze sul mare",
-    "villa con piscina puglia",
+    "villa fronte mare puglia",
     "appartamenti vista mare",
     "vacanze famiglia puglia",
     "affitto vacanze estate"
@@ -44,6 +44,31 @@ export const seoKeywords = {
     "alternativa airbnb salento",
     "booking villa puglia",
     "vrbo salento appartamenti"
+  ],
+  // Nuovi titoli ottimizzati per Google Ads (max 30 caratteri)
+  adTitles: [
+    "Villa MareBlu Vista Mare",      // 25 caratteri
+    "Appartamenti Mare Salento",     // 25 caratteri
+    "Casa Vacanze Sul Mare",         // 21 caratteri
+    "Affitto Villa Salento",         // 21 caratteri
+    "Villa Fronte Mare Puglia",      // 26 caratteri
+    "Vacanze Lusso Salento",         // 21 caratteri
+    "Appartamenti Vista Mare",       // 23 caratteri
+    "Casa Mare Puglia",              // 16 caratteri
+    "Villa Sul Mare",                // 14 caratteri
+    "Vacanze Salento Mare",          // 20 caratteri
+    "Lusso Vista Mare",              // 17 caratteri
+    "Villa Vacanze Puglia",          // 21 caratteri
+    "Casa Fronte Mare",              // 17 caratteri
+    "Appartamenti Lusso",            // 19 caratteri
+    "Salento Villa Mare"             // 19 caratteri
+  ],
+  // Descrizioni ottimizzate per Google Ads (max 90 caratteri)
+  adDescriptions: [
+    "Appartamenti vacanze lusso con vista mare Salento. A 100m dalla spiaggia. Prenota ora!", // 89 caratteri
+    "Villa MareBlu: casa vacanze fronte mare Puglia. Vista panoramica mozzafiato sul mare!", // 87 caratteri
+    "Vacanze da sogno in Salento! Appartamenti vista mare, giardino, tutti i comfort inclusi.", // 89 caratteri
+    "La tua villa fronte mare in Puglia ti aspetta. Lusso, comfort e vista mare indimenticabile!" // 90 caratteri
   ]
 };
 
@@ -70,4 +95,14 @@ export const getPageSpecificKeywords = (page: string): string => {
     default:
       return baseKeywords.join(", ");
   }
+};
+
+// Funzione per ottenere i titoli Google Ads
+export const getGoogleAdsTitles = (): string[] => {
+  return seoKeywords.adTitles;
+};
+
+// Funzione per ottenere le descrizioni Google Ads
+export const getGoogleAdsDescriptions = (): string[] => {
+  return seoKeywords.adDescriptions;
 };

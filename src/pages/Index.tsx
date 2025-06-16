@@ -32,13 +32,13 @@ const Index = () => {
   return (
     <div className="flex flex-col relative overflow-hidden">
       <SEOHead
-        title="Villa MareBlu Salento - Appartamenti Vacanze Lusso Sul Mare Puglia | Torre Vado"
-        description="Villa MareBlu: appartamenti vacanze di lusso sul mare in Salento, Puglia. Case vacanze Torre Vado, Santa Maria di Leuca con piscina privata, vista mare, giardino. Affitto settimanale 4-8 persone. Prenota ora la tua vacanza da sogno!"
+        title="Villa MareBlu Vista Mare Salento - Appartamenti Vacanze Lusso Puglia | Casa Vacanze Sul Mare"
+        description="Villa MareBlu: appartamenti vacanze lusso con vista mare in Salento, Puglia. Casa vacanze fronte mare a 100m dalla spiaggia. Villa sul mare con giardino, tutti i comfort. Prenota ora la tua vacanza da sogno!"
         keywords={getPageSpecificKeywords('home')}
         canonicalUrl="/"
         structuredData={structuredData}
-        ogTitle="Villa MareBlu Salento - Appartamenti Vacanze Lusso Sul Mare"
-        ogDescription="Scopri Villa MareBlu: appartamenti vacanze di lusso in Salento con piscina privata e vista mare. La tua vacanza da sogno in Puglia ti aspetta!"
+        ogTitle="Villa MareBlu Vista Mare - Appartamenti Vacanze Lusso Salento"
+        ogDescription="Scopri Villa MareBlu: appartamenti vacanze lusso con vista mare in Salento. La tua casa vacanze fronte mare in Puglia ti aspetta!"
       />
 
       {/* Parallax background elements */}

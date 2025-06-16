@@ -24,21 +24,21 @@ const ApartmentsPage = () => {
   return (
     <div className="container px-4 py-8 md:py-12">
       <SEOHead
-        title="Appartamenti Vacanze Salento - Villa MareBlu Torre Vado | Case Vacanze Sul Mare Puglia"
-        description="Scopri i nostri appartamenti vacanze di lusso in Salento: villa con piscina, vista mare, 4-8 persone. Appartamenti ammobiliati Torre Vado, Santa Maria di Leuca. Prenota ora!"
+        title="Appartamenti Vacanze Vista Mare Salento - Villa MareBlu Puglia | Casa Vacanze Sul Mare"
+        description="Scopri i nostri appartamenti vacanze lusso con vista mare in Salento: villa fronte mare, giardino, 4-8 persone. Appartamenti ammobiliati Puglia, Santa Maria di Leuca. Prenota ora!"
         keywords={getPageSpecificKeywords('apartments')}
         canonicalUrl="/appartamenti"
         structuredData={structuredData}
-        ogTitle="Appartamenti Vacanze Salento - Villa MareBlu Torre Vado"
-        ogDescription="Appartamenti vacanze di lusso in Salento con piscina privata e vista mare. La tua casa vacanze ideale in Puglia!"
+        ogTitle="Appartamenti Vacanze Vista Mare Salento - Villa MareBlu"
+        ogDescription="Appartamenti vacanze lusso con vista mare in Salento. La tua casa vacanze fronte mare ideale in Puglia!"
       />
 
       <div className="text-center mb-12">
         <h1 className="text-4xl md:text-5xl font-serif font-semibold mb-6 text-primary">
-          Appartamenti Vacanze Salento
+          Appartamenti Vacanze Vista Mare Salento
         </h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-          Scopri i nostri eleganti appartamenti sul mare in Salento, Puglia. Ogni appartamento è stato progettato 
+          Scopri i nostri eleganti appartamenti con vista mare in Salento, Puglia. Ogni appartamento è stato progettato 
           per offrirti il massimo comfort e una vista mozzafiato sul mare cristallino.
         </p>
       </div>
