@@ -28,18 +28,21 @@ const ContactsPage = () => {
     setIsSubmitting(true);
 
     try {
-      // Replace these with your actual EmailJS service ID, template ID, and user ID
-      // You'll need to create an EmailJS account and set up a template
-      const serviceId = "service_id"; // Replace with your service ID
-      const templateId = "template_id"; // Replace with your template ID
-      const userId = "user_id"; // Replace with your user ID
+      // EmailJS configuration - Sostituisci questi valori con i tuoi da EmailJS
+      const serviceId = "YOUR_SERVICE_ID"; // Da sostituire con il tuo Service ID
+      const templateId = "YOUR_TEMPLATE_ID"; // Da sostituire con il tuo Template ID  
+      const publicKey = "YOUR_PUBLIC_KEY"; // Da sostituire con la tua Public Key
 
+      console.log("Invio email tramite EmailJS...");
+      
       const result = await emailjs.sendForm(
         serviceId,
         templateId,
         event.currentTarget,
-        userId
+        publicKey
       );
+
+      console.log("Risultato invio email:", result);
 
       if (result.text === "OK") {
         toast.success("Messaggio inviato con successo! Ti risponderemo al più presto.");
@@ -48,8 +51,8 @@ const ContactsPage = () => {
         throw new Error("Errore nell'invio del messaggio");
       }
     } catch (error) {
-      console.error("Email error:", error);
-      toast.error("Si è verificato un errore. Riprova più tardi o contattaci direttamente.");
+      console.error("Errore invio email:", error);
+      toast.error("Si è verificato un errore. Puoi contattarci direttamente a macchiaforcato@gmail.com o al +39 3937767749");
     } finally {
       setIsSubmitting(false);
     }
