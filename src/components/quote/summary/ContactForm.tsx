@@ -2,6 +2,8 @@
 import React from "react";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { UseFormReturn } from "react-hook-form";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 interface ContactFormProps {
   formValues: FormValues;
@@ -14,8 +16,8 @@ const ContactForm: React.FC<ContactFormProps> = ({ formValues, form }) => {
       <h3 className="text-lg font-semibold mb-3">I tuoi dati di contatto</h3>
       <div className="grid md:grid-cols-2 gap-5">
         <div>
-          <label htmlFor="name" className="text-sm font-medium mb-1 block">Nome</label>
-          <input
+          <Label htmlFor="name" className="text-sm font-medium mb-1 block">Nome</Label>
+          <Input
             id="name"
             type="text"
             className="w-full p-2 border rounded-md"
@@ -25,8 +27,8 @@ const ContactForm: React.FC<ContactFormProps> = ({ formValues, form }) => {
           />
         </div>
         <div>
-          <label htmlFor="email" className="text-sm font-medium mb-1 block">Email</label>
-          <input
+          <Label htmlFor="email" className="text-sm font-medium mb-1 block">Email</Label>
+          <Input
             id="email"
             type="email"
             className="w-full p-2 border rounded-md"
@@ -36,8 +38,8 @@ const ContactForm: React.FC<ContactFormProps> = ({ formValues, form }) => {
           />
         </div>
         <div>
-          <label htmlFor="phone" className="text-sm font-medium mb-1 block">Telefono</label>
-          <input
+          <Label htmlFor="phone" className="text-sm font-medium mb-1 block">Telefono</Label>
+          <Input
             id="phone"
             type="tel"
             className="w-full p-2 border rounded-md"
@@ -47,7 +49,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ formValues, form }) => {
           />
         </div>
         <div>
-          <label htmlFor="notes" className="text-sm font-medium mb-1 block">Note</label>
+          <Label htmlFor="notes" className="text-sm font-medium mb-1 block">Note</Label>
           <textarea
             id="notes"
             className="w-full p-2 border rounded-md"

@@ -13,12 +13,9 @@ import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
 
 // Funzione per tracciare conversioni Google Ads
 const trackGoogleAdsConversion = () => {
-  // Questo codice verrà sostituito con il pixel di conversione Google Ads
   if (typeof window !== 'undefined' && (window as any).gtag) {
     (window as any).gtag('event', 'conversion', {
-      'send_to': 'AW-CONVERSION_ID/CONVERSION_LABEL', // Da sostituire con i tuoi valori
-      'value': 1.0,
-      'currency': 'EUR'
+      'send_to': 'AW-1009072951/CONVERSION_LABEL' // Dovrai sostituire CONVERSION_LABEL con il valore specifico
     });
     console.log('Google Ads conversion tracked: Form submission');
   }
