@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
 const trackGoogleAdsConversion = () => {
   if (typeof window !== 'undefined' && (window as any).gtag) {
     (window as any).gtag('event', 'conversion', {
-      'send_to': 'AW-1009072951/CONVERSION_LABEL' // Dovrai sostituire CONVERSION_LABEL con il valore specifico
+      'send_to': 'AW-1009072951/hjPlCKOwnJnuAELfJ1GEP'
     });
     console.log('Google Ads conversion tracked: Form submission');
   }

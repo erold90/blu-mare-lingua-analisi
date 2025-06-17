@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { UseFormReturn } from "react-hook-form";
 import { FormValues } from "@/utils/quoteFormSchema";
@@ -9,7 +8,7 @@ import { createWhatsAppMessage } from "@/utils/price/whatsAppMessage";
 const trackQuoteConversion = () => {
   if (typeof window !== 'undefined' && (window as any).gtag) {
     (window as any).gtag('event', 'conversion', {
-      'send_to': 'AW-1009072951/QUOTE_CONVERSION_LABEL' // Sostituisci con il label specifico per i preventivi
+      'send_to': 'AW-1009072951/hjPlCKOwnJnuAELfJ1GEP'
     });
     console.log('Google Ads conversion tracked: Quote request');
   }
