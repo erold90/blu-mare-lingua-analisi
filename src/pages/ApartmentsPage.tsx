@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -177,13 +176,8 @@ const ApartmentsPage = () => {
                   </div>
                 </div>
 
-                {/* Price and actions */}
+                {/* Actions */}
                 <div className="flex items-center justify-between pt-4 border-t">
-                  <div>
-                    <p className="text-sm text-muted-foreground">A partire da</p>
-                    <p className="text-2xl font-bold text-primary">€{apartment.price}</p>
-                    <p className="text-sm text-muted-foreground">per notte</p>
-                  </div>
                   <div className="flex gap-2">
                     <Button 
                       variant="outline"
@@ -199,20 +193,20 @@ const ApartmentsPage = () => {
                   </div>
                 </div>
               </CardContent>
-
-              {/* Apartment Modal */}
-              {selectedApartmentForModal === apartment.id && (
-                <ApartmentDialog
-                  apartment={apartment}
-                  isSelected={false}
-                  onToggle={() => {}}
-                  onClose={() => setSelectedApartmentForModal(null)}
-                />
-              )}
             </Card>
           );
         })}
       </div>
+
+      {/* Apartment Modal - Rendered conditionally outside the cards */}
+      {selectedApartmentForModal && (
+        <ApartmentDialog
+          apartment={apartments.find(apt => apt.id === selectedApartmentForModal)!}
+          isSelected={false}
+          onToggle={() => {}}
+          onClose={() => setSelectedApartmentForModal(null)}
+        />
+      )}
 
       {/* Additional information section */}
       <div className="mt-16 bg-primary/5 p-8 rounded-lg">
