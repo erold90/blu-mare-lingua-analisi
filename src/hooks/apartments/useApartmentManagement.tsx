@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { apartments as apartmentsData, Apartment } from "@/data/apartments";
 import { discoveryStorage, DISCOVERY_STORAGE_KEYS } from "@/services/discoveryStorage";
 
@@ -23,15 +23,27 @@ export const useApartmentManagement = () => {
   const [apartmentImages, setApartmentImages] = useState<{ [key: string]: string[] }>({});
   const [coverImage, setCoverImage] = useState<{ [key: string]: number }>({});
 
+  // Use refs to track if we're in the middle of an update to prevent loops
+  const isUpdatingRef = useRef(false);
+  const lastUpdateRef = useRef<string>('');
+
   // Load saved images and cover image indices from discovery storage on component mount
   useEffect(() => {
     const loadImagesFromStorage = () => {
+      if (isUpdatingRef.current) return; // Prevent loops
+      
       const savedImages = discoveryStorage.getItem<{ [key: string]: string[] }>(DISCOVERY_STORAGE_KEYS.APARTMENT_IMAGES);
       const savedCovers = discoveryStorage.getItem<{ [key: string]: number }>(DISCOVERY_STORAGE_KEYS.APARTMENT_COVERS);
       
       if (savedImages) {
         try {
-          setApartmentImages(savedImages);
+          setApartmentImages(prev => {
+            const newImages = savedImages;
+            if (JSON.stringify(prev) !== JSON.stringify(newImages)) {
+              return newImages;
+            }
+            return prev;
+          });
         } catch (error) {
           console.error("Failed to parse saved apartment images:", error);
         }
@@ -39,7 +51,13 @@ export const useApartmentManagement = () => {
       
       if (savedCovers) {
         try {
-          setCoverImage(savedCovers);
+          setCoverImage(prev => {
+            const newCovers = savedCovers;
+            if (JSON.stringify(prev) !== JSON.stringify(newCovers)) {
+              return newCovers;
+            }
+            return prev;
+          });
         } catch (error) {
           console.error("Failed to parse saved cover image indices:", error);
         }
@@ -59,7 +77,12 @@ export const useApartmentManagement = () => {
         loadImagesFromStorage();
         const updatedApartments = discoveryStorage.getItem<Apartment[]>(DISCOVERY_STORAGE_KEYS.APARTMENTS);
         if (updatedApartments) {
-          setApartments(updatedApartments);
+          setApartments(prev => {
+            if (JSON.stringify(prev) !== JSON.stringify(updatedApartments)) {
+              return updatedApartments;
+            }
+            return prev;
+          });
         }
       }
     };
@@ -81,8 +104,10 @@ export const useApartmentManagement = () => {
     }
   }, [apartments, selectedApartment]);
   
-  // Save apartments to discovery storage whenever they change
+  // Save apartments to discovery storage whenever they change (with loop prevention)
   useEffect(() => {
+    if (isUpdatingRef.current) return;
+    
     // Update each apartment's images array with the cover image
     const updatedApartments = apartments.map(apt => {
       const images = apartmentImages[apt.id] || [];
@@ -94,25 +119,49 @@ export const useApartmentManagement = () => {
       };
     });
     
-    discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.APARTMENTS, updatedApartments);
+    const updateKey = JSON.stringify({ apartments, apartmentImages, coverImage });
+    if (lastUpdateRef.current !== updateKey) {
+      isUpdatingRef.current = true;
+      lastUpdateRef.current = updateKey;
+      
+      try {
+        discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.APARTMENTS, updatedApartments);
+      } finally {
+        // Reset the flag after a short delay to allow the update to complete
+        setTimeout(() => {
+          isUpdatingRef.current = false;
+        }, 100);
+      }
+    }
   }, [apartments, apartmentImages, coverImage]);
   
-  // Save images and cover image indices to discovery storage whenever they change
+  // Save images and cover image indices to discovery storage whenever they change (with loop prevention)
   useEffect(() => {
-    discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.APARTMENT_IMAGES, apartmentImages);
-    discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.APARTMENT_COVERS, coverImage);
+    if (isUpdatingRef.current) return;
     
-    // Also update the gallery images in discovery storage for the GalleryPage
-    const allImages: string[] = [];
-    Object.values(apartmentImages).forEach(images => {
-      allImages.push(...images);
-    });
+    isUpdatingRef.current = true;
     
-    discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.GALLERY_IMAGES, allImages);
-    
-    // Dispatch a custom event to notify other components that images have been updated
-    const event = new CustomEvent("apartmentImagesUpdated");
-    window.dispatchEvent(event);
+    try {
+      discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.APARTMENT_IMAGES, apartmentImages);
+      discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.APARTMENT_COVERS, coverImage);
+      
+      // Also update the gallery images in discovery storage for the GalleryPage
+      const allImages: string[] = [];
+      Object.values(apartmentImages).forEach(images => {
+        allImages.push(...images);
+      });
+      
+      discoveryStorage.setItem(DISCOVERY_STORAGE_KEYS.GALLERY_IMAGES, allImages);
+      
+      // Dispatch a custom event to notify other components that images have been updated
+      const event = new CustomEvent("apartmentImagesUpdated");
+      window.dispatchEvent(event);
+    } finally {
+      // Reset the flag after a short delay
+      setTimeout(() => {
+        isUpdatingRef.current = false;
+      }, 100);
+    }
   }, [apartmentImages, coverImage]);
 
   const updateApartmentImages = (apartmentId: string, images: string[]) => {
