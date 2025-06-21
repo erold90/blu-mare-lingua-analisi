@@ -9,6 +9,7 @@ export const usePageVisitTracker = () => {
 
   useEffect(() => {
     // Track page visit when location changes
+    console.log("Page visit detected:", location.pathname);
     addSiteVisit(location.pathname);
   }, [location.pathname, addSiteVisit]);
 };

@@ -15,17 +15,20 @@ export function useSiteVisits() {
   const loadSiteVisits = async () => {
     try {
       setLoading(true);
+      console.log("Loading site visits from database...");
+      
       const { data, error } = await supabase
         .from('site_visits')
         .select('*')
         .order('timestamp', { ascending: false })
-        .limit(500); // Reduced limit for performance
+        .limit(1000); // Increased limit to get more data
       
       if (error) {
         console.error('Error loading site visits:', error);
         return;
       }
       
+      console.log("Site visits loaded:", data?.length || 0);
       setSiteVisits(data || []);
     } catch (error) {
       console.error('Error loading site visits:', error);
@@ -35,11 +38,15 @@ export function useSiteVisits() {
   };
 
   const addSiteVisit = async (page: string) => {
+    // Don't log admin area visits
     if (page.includes("/area-riservata")) {
-      return; // Don't log admin area visits
+      console.log("Skipping admin area visit:", page);
+      return;
     }
 
     try {
+      console.log("Adding site visit for page:", page);
+      
       const visitData = {
         id: Math.random().toString(36).substring(2, 11),
         page,
@@ -55,7 +62,10 @@ export function useSiteVisits() {
         return;
       }
 
-      setSiteVisits(prev => [visitData, ...prev.slice(0, 499)]);
+      console.log("Site visit saved successfully:", visitData);
+      
+      // Update local state immediately
+      setSiteVisits(prev => [visitData, ...prev.slice(0, 999)]);
     } catch (error) {
       console.error('Error saving site visit:', error);
     }
@@ -64,7 +74,7 @@ export function useSiteVisits() {
   const getVisitsCount = (period: 'day' | 'month' | 'year'): number => {
     const now = new Date();
     
-    return siteVisits.filter(visit => {
+    const filteredVisits = siteVisits.filter(visit => {
       const visitDate = new Date(visit.timestamp);
       
       if (period === 'day') {
@@ -83,7 +93,10 @@ export function useSiteVisits() {
       }
       
       return false;
-    }).length;
+    });
+
+    console.log(`Visits for ${period}:`, filteredVisits.length);
+    return filteredVisits.length;
   };
 
   useEffect(() => {

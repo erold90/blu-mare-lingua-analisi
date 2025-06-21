@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -35,6 +34,20 @@ const AdminLog = () => {
   });
   
   const [selectedQuote, setSelectedQuote] = useState<any | null>(null);
+  
+  // Debug logging
+  React.useEffect(() => {
+    console.log("AdminLog - Site visits data:", siteVisits.length);
+    console.log("AdminLog - Today visits:", getVisitsCount('day'));
+    console.log("AdminLog - Month visits:", getVisitsCount('month'));
+    console.log("AdminLog - Year visits:", getVisitsCount('year'));
+  }, [siteVisits, getVisitsCount]);
+  
+  // Force refresh on component mount
+  React.useEffect(() => {
+    console.log("AdminLog mounted, refreshing data...");
+    refreshData();
+  }, [refreshData]);
   
   // Filter quotes based on date range
   const filteredQuotes = useMemo(() => {
@@ -96,7 +109,10 @@ const AdminLog = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Log delle Attività</h2>
-        <Button onClick={refreshData} variant="outline" size="sm">
+        <Button onClick={() => {
+          console.log("Manual refresh triggered");
+          refreshData();
+        }} variant="outline" size="sm">
           Aggiorna Dati
         </Button>
       </div>
@@ -112,8 +128,10 @@ const AdminLog = () => {
             <div className="flex items-center gap-2">
               <Info className="h-5 w-5 text-green-600" />
               <div>
-                <p className="text-green-800 font-medium">Sistema ottimizzato</p>
-                <p className="text-green-700 text-sm">Query ottimizzate per migliori performance. Limite di 500 visite caricate.</p>
+                <p className="text-green-800 font-medium">Sistema di tracciamento attivo</p>
+                <p className="text-green-700 text-sm">
+                  Totale visite caricate: {siteVisits.length}. Le visite vengono tracciate automaticamente.
+                </p>
               </div>
             </div>
           </div>
