@@ -26,7 +26,6 @@ export function AppLayout() {
             </main>
           </SidebarInset>
         </div>
-        <CookieConsent />
         {!isReservedArea && <WhatsAppButton />}
       </div>
     </SidebarProvider>
