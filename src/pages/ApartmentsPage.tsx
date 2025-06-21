@@ -4,7 +4,6 @@ import { apartments } from "@/data/apartments";
 import SEOHead from "@/components/seo/SEOHead";
 import { getApartmentSchema, getBreadcrumbSchema } from "@/components/seo/StructuredData";
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
-import { ApartmentDialog } from "@/components/quote/ApartmentDialog";
 import { useApartmentImages } from "@/hooks/apartments/useApartmentImages";
 import { ApartmentPageHeader } from "@/components/apartments/ApartmentPageHeader";
 import { ApartmentGrid } from "@/components/apartments/ApartmentGrid";
@@ -12,7 +11,6 @@ import { WhyChooseSection } from "@/components/apartments/WhyChooseSection";
 
 const ApartmentsPage = () => {
   const { apartmentImages, isLoading } = useApartmentImages();
-  const [selectedApartmentForModal, setSelectedApartmentForModal] = useState<string | null>(null);
 
   // Prepare data for structured data
   const apartmentsWithImages = apartments.map(apt => ({
@@ -31,7 +29,7 @@ const ApartmentsPage = () => {
   ];
 
   const handleApartmentDetailsClick = (apartmentId: string) => {
-    setSelectedApartmentForModal(apartmentId);
+    console.log(`Details clicked for apartment: ${apartmentId}`);
   };
 
   if (isLoading) {
@@ -62,16 +60,6 @@ const ApartmentsPage = () => {
         apartmentImages={apartmentImages}
         onApartmentDetailsClick={handleApartmentDetailsClick}
       />
-
-      {/* Apartment Modal - Rendered conditionally outside the cards */}
-      {selectedApartmentForModal && (
-        <ApartmentDialog
-          apartment={apartments.find(apt => apt.id === selectedApartmentForModal)!}
-          isSelected={false}
-          onToggle={() => {}}
-          onClose={() => setSelectedApartmentForModal(null)}
-        />
-      )}
 
       <WhyChooseSection />
     </div>

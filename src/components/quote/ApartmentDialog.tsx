@@ -8,7 +8,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Bed, Home, ArrowRight, ArrowLeft, Sun, ThermometerSun } from "lucide-react";
@@ -20,13 +19,15 @@ interface ApartmentDialogProps {
   isSelected: boolean;
   onToggle: () => void;
   onClose?: () => void;
+  isOpen?: boolean;
 }
 
 export const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
   apartment,
   isSelected,
   onToggle,
-  onClose
+  onClose,
+  isOpen = false
 }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [apartmentImages, setApartmentImages] = useState<string[]>([]);
@@ -74,16 +75,14 @@ export const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
   const currentImage = apartmentImages.length > 0 ? apartmentImages[currentImageIndex] : "/placeholder.svg";
 
   return (
-    <Dialog onOpenChange={(open) => {
-      if (!open && onClose) {
-        onClose();
-      }
-    }}>
-      <DialogTrigger asChild>
-        <Button variant="outline">
-          Dettagli
-        </Button>
-      </DialogTrigger>
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={(open) => {
+        if (!open && onClose) {
+          onClose();
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl sm:text-2xl">{apartment.name}</DialogTitle>
