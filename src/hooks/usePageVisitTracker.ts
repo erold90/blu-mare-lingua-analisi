@@ -8,7 +8,14 @@ export const usePageVisitTracker = () => {
   const { addSiteVisit } = useActivityLog();
 
   useEffect(() => {
-    // Track page visit when location changes
+    // Skip tracking for admin area and API routes
+    if (location.pathname.includes("/area-riservata") || 
+        location.pathname.includes("/api/") ||
+        location.pathname.includes("/admin/")) {
+      console.log("Skipping tracking for protected/admin area:", location.pathname);
+      return;
+    }
+
     console.log("Page visit detected:", location.pathname);
     addSiteVisit(location.pathname);
   }, [location.pathname, addSiteVisit]);
