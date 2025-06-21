@@ -24,16 +24,18 @@ const AppWithTracking = () => {
   
   return (
     <Routes>
-      <Route path="/" element={<AppLayout><Index /></AppLayout>} />
-      <Route path="/appartamenti" element={<AppLayout><ApartmentsPage /></AppLayout>} />
-      <Route path="/servizi" element={<AppLayout><ServicesPage /></AppLayout>} />
-      <Route path="/contatti" element={<AppLayout><ContactsPage /></AppLayout>} />
-      <Route path="/chi-siamo" element={<AppLayout><AboutPage /></AppLayout>} />
-      <Route path="/richiedi-preventivo" element={<AppLayout><RequestQuotePage /></AppLayout>} />
-      <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicyPage /></AppLayout>} />
-      <Route path="/cookie-policy" element={<AppLayout><CookiePolicyPage /></AppLayout>} />
+      <Route path="/" element={<AppLayout />}>
+        <Route index element={<Index />} />
+        <Route path="appartamenti" element={<ApartmentsPage />} />
+        <Route path="servizi" element={<ServicesPage />} />
+        <Route path="contatti" element={<ContactsPage />} />
+        <Route path="chi-siamo" element={<AboutPage />} />
+        <Route path="richiedi-preventivo" element={<RequestQuotePage />} />
+        <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="cookie-policy" element={<CookiePolicyPage />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
       <Route path="/area-riservata/*" element={<ReservedAreaPage />} />
-      <Route path="*" element={<AppLayout><NotFound /></AppLayout>} />
     </Routes>
   );
 };
