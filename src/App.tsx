@@ -6,7 +6,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ActivityLogProvider } from "@/hooks/useActivityLog";
 import { usePageVisitTracker } from "@/hooks/usePageVisitTracker";
-import AppLayout from "@/components/layout/AppLayout";
+import { AppLayout } from "@/components/layout/AppLayout";
 import Index from "@/pages/Index";
 import ApartmentsPage from "@/pages/ApartmentsPage";
 import ServicesPage from "@/pages/ServicesPage";
@@ -17,7 +17,7 @@ import ReservedAreaPage from "@/pages/ReservedAreaPage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import CookiePolicyPage from "@/pages/CookiePolicyPage";
 import NotFound from "@/pages/NotFound";
-import CookieConsent from "@/components/CookieConsent";
+import { CookieConsent } from "@/components/CookieConsent";
 
 const AppWithTracking = () => {
   usePageVisitTracker();
