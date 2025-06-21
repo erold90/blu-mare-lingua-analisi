@@ -1,7 +1,6 @@
-
 import * as React from "react";
 import { toast } from "sonner";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReservations, Reservation } from "@/hooks/useReservations";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -16,6 +15,7 @@ import { ReservationTable } from "./reservations/ReservationTable";
 import { AdminFilters } from "./shared/AdminFilters";
 import { useAdminFilters } from "@/hooks/admin/useAdminFilters";
 import { checkReservationConflicts } from "@/utils/admin/dateValidation";
+import { generateReservationsPdf } from "@/utils/pdf/reservationsPdf";
 
 const AdminReservations = () => {
   const { 
@@ -57,6 +57,17 @@ const AdminReservations = () => {
       toast.error("Errore durante l'aggiornamento dei dati");
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  // Handle PDF generation
+  const handleGeneratePdf = () => {
+    try {
+      generateReservationsPdf(reservations, apartments);
+      toast.success("PDF generato con successo!");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Errore nella generazione del PDF");
     }
   };
 
@@ -223,6 +234,15 @@ const AdminReservations = () => {
           </p>
         </div>
         <div className="flex space-x-2">
+          <Button 
+            onClick={handleGeneratePdf} 
+            size="sm" 
+            variant="outline"
+            disabled={reservations.length === 0}
+          >
+            <FileText className="h-4 w-4" />
+            {!isMobile && <span className="ml-2">Esporta PDF</span>}
+          </Button>
           <Button 
             onClick={handleRefresh} 
             size="sm" 
