@@ -19,20 +19,27 @@ interface AdminLogAnalyticsProps {
 }
 
 export const AdminLogAnalytics = ({ siteVisits, getVisitsCount, dateRange }: AdminLogAnalyticsProps) => {
+  // Memoize expensive calculations
+  const visitStats = React.useMemo(() => ({
+    day: getVisitsCount('day'),
+    month: getVisitsCount('month'),
+    year: getVisitsCount('year')
+  }), [getVisitsCount, siteVisits.length]); // Only recalculate when visits count changes
+
   const visitChartData = React.useMemo(() => {
-    if (!dateRange?.from) return [];
+    if (!dateRange?.from || siteVisits.length === 0) return [];
     
     const chartData = [];
     let currentDate = new Date(dateRange.from);
     const endDate = dateRange.to ? new Date(dateRange.to) : new Date(currentDate);
     
-    // Limit to 30 days for performance
+    // Limit to 14 days for better performance
     const daysDiff = Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
-    if (daysDiff > 30) {
-      endDate.setDate(currentDate.getDate() + 30);
+    if (daysDiff > 14) {
+      endDate.setDate(currentDate.getDate() + 14);
     }
     
-    while (currentDate <= endDate) {
+    while (currentDate <= endDate && chartData.length < 14) {
       const day = format(currentDate, 'dd/MM', { locale: it });
       const count = siteVisits.filter(visit => {
         const visitDate = new Date(visit.timestamp);
@@ -44,7 +51,7 @@ export const AdminLogAnalytics = ({ siteVisits, getVisitsCount, dateRange }: Adm
     }
     
     return chartData;
-  }, [siteVisits, dateRange]);
+  }, [siteVisits, dateRange?.from, dateRange?.to]);
 
   return (
     <>
@@ -54,7 +61,7 @@ export const AdminLogAnalytics = ({ siteVisits, getVisitsCount, dateRange }: Adm
             <CardTitle className="text-sm font-medium">Visite oggi</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{getVisitsCount('day')}</div>
+            <div className="text-2xl font-bold">{visitStats.day}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Visite uniche al sito
             </p>
@@ -66,7 +73,7 @@ export const AdminLogAnalytics = ({ siteVisits, getVisitsCount, dateRange }: Adm
             <CardTitle className="text-sm font-medium">Visite questo mese</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{getVisitsCount('month')}</div>
+            <div className="text-2xl font-bold">{visitStats.month}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Performance ottimizzata
             </p>
@@ -78,7 +85,7 @@ export const AdminLogAnalytics = ({ siteVisits, getVisitsCount, dateRange }: Adm
             <CardTitle className="text-sm font-medium">Visite quest'anno</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{getVisitsCount('year')}</div>
+            <div className="text-2xl font-bold">{visitStats.year}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Database Supabase
             </p>
@@ -91,7 +98,7 @@ export const AdminLogAnalytics = ({ siteVisits, getVisitsCount, dateRange }: Adm
           <CardTitle>Andamento visite</CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline">Ottimizzato per performance</Badge>
-            <Badge variant="secondary">Max 30 giorni</Badge>
+            <Badge variant="secondary">Max 14 giorni</Badge>
           </div>
         </CardHeader>
         <CardContent>

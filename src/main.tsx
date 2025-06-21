@@ -8,18 +8,25 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import App from "./App.tsx";
 import "./index.css";
 
-// Import the new Supabase providers
+// Import the Supabase providers
 import { SupabaseReservationsProvider } from "@/hooks/useSupabaseReservations";
 import { SupabasePricesProvider } from "@/hooks/useSupabasePrices";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1, // Reduce retries to prevent timeout loops
+      staleTime: 5 * 60 * 1000, // 5 minutes cache
+      gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+    },
+  },
+});
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          {/* Removed BrowserRouter from here since it's already in App.tsx */}
           <SupabaseReservationsProvider>
             <SupabasePricesProvider>
               <App />

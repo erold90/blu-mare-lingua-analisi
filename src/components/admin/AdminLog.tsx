@@ -24,19 +24,17 @@ const AdminLog = () => {
     to: new Date(),
   });
   
-  // Debug logging
+  // Debug logging - reduced frequency
   React.useEffect(() => {
     console.log("AdminLog - Site visits data:", siteVisits.length);
-    console.log("AdminLog - Today visits:", getVisitsCount('day'));
-    console.log("AdminLog - Month visits:", getVisitsCount('month'));
-    console.log("AdminLog - Year visits:", getVisitsCount('year'));
-  }, [siteVisits, getVisitsCount]);
+    console.log("AdminLog - Quote logs:", quoteLogs.length);
+  }, [siteVisits.length, quoteLogs.length]); // Only log when counts change
   
-  // Force refresh on component mount
+  // Single mount effect - no auto refresh to prevent loops
   React.useEffect(() => {
-    console.log("AdminLog mounted, refreshing data...");
-    refreshData();
-  }, [refreshData]);
+    console.log("AdminLog mounted");
+    // Don't auto-refresh on mount to prevent loops
+  }, []);
   
   if (loading) {
     return (

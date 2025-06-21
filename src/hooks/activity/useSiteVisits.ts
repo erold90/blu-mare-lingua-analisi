@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface SiteVisit {
@@ -12,19 +12,23 @@ export function useSiteVisits() {
   const [siteVisits, setSiteVisits] = useState<SiteVisit[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const loadSiteVisits = async () => {
+  const loadSiteVisits = useCallback(async () => {
     try {
       setLoading(true);
       console.log("Loading site visits from database...");
       
+      // Optimize query: load only recent visits and limit results
       const { data, error } = await supabase
         .from('site_visits')
         .select('*')
         .order('timestamp', { ascending: false })
-        .limit(1000); // Increased limit to get more data
+        .limit(500) // Reduced limit for better performance
+        .gte('timestamp', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()); // Last 30 days only
       
       if (error) {
         console.error('Error loading site visits:', error);
+        // Don't throw, just log and continue with empty data
+        setSiteVisits([]);
         return;
       }
       
@@ -32,12 +36,13 @@ export function useSiteVisits() {
       setSiteVisits(data || []);
     } catch (error) {
       console.error('Error loading site visits:', error);
+      setSiteVisits([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const addSiteVisit = async (page: string) => {
+  const addSiteVisit = useCallback(async (page: string) => {
     // Don't log admin area visits
     if (page.includes("/area-riservata")) {
       console.log("Skipping admin area visit:", page);
@@ -64,14 +69,14 @@ export function useSiteVisits() {
 
       console.log("Site visit saved successfully:", visitData);
       
-      // Update local state immediately
-      setSiteVisits(prev => [visitData, ...prev.slice(0, 999)]);
+      // Update local state immediately but don't exceed limit
+      setSiteVisits(prev => [visitData, ...prev.slice(0, 499)]);
     } catch (error) {
       console.error('Error saving site visit:', error);
     }
-  };
+  }, []);
 
-  const getVisitsCount = (period: 'day' | 'month' | 'year'): number => {
+  const getVisitsCount = useCallback((period: 'day' | 'month' | 'year'): number => {
     const now = new Date();
     
     const filteredVisits = siteVisits.filter(visit => {
@@ -95,13 +100,13 @@ export function useSiteVisits() {
       return false;
     });
 
-    console.log(`Visits for ${period}:`, filteredVisits.length);
     return filteredVisits.length;
-  };
+  }, [siteVisits]);
 
+  // Load data only once on mount
   useEffect(() => {
     loadSiteVisits();
-  }, []);
+  }, []); // Empty dependency array to prevent loops
 
   return {
     siteVisits,
