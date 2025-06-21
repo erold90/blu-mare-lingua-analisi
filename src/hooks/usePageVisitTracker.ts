@@ -1,7 +1,7 @@
 
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useActivityLog } from './useActivityLog';
+import { useActivityLog } from '@/hooks/activity/useActivityLog';
 
 export const usePageVisitTracker = () => {
   const location = useLocation();

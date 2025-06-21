@@ -4,7 +4,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { Toaster as UIToaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { ActivityLogProvider } from "@/hooks/useActivityLog";
 import { usePageVisitTracker } from "@/hooks/usePageVisitTracker";
 import { AppLayout } from "@/components/layout/AppLayout";
 import Index from "@/pages/Index";
@@ -44,14 +43,12 @@ function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <AuthProvider>
-        <ActivityLogProvider>
-          <Router>
-            <AppWithTracking />
-            <CookieConsent />
-            <Toaster />
-            <UIToaster />
-          </Router>
-        </ActivityLogProvider>
+        <Router>
+          <AppWithTracking />
+          <CookieConsent />
+          <Toaster />
+          <UIToaster />
+        </Router>
       </AuthProvider>
     </ThemeProvider>
   );

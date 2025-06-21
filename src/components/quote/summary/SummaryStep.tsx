@@ -6,7 +6,7 @@ import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/price/priceCalculator";
 import { refreshPricesCache } from "@/utils/price/weeklyPrice";
 import { v4 as uuidv4 } from "uuid";
-import { useActivityLog } from "@/hooks/useActivityLog";
+import { useActivityLog } from "@/hooks/activity/useActivityLog";
 
 // Import refactored components
 import SummaryLayout from "./SummaryLayout";

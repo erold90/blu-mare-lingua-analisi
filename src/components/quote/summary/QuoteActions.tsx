@@ -5,7 +5,7 @@ import { MessageSquare } from "lucide-react";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { PriceCalculation } from "@/utils/price/types";
-import { useActivityLog } from "@/hooks/useActivityLog";
+import { useActivityLog } from "@/hooks/activity/useActivityLog";
 import { v4 as uuidv4 } from "uuid";
 
 interface QuoteActionsProps {

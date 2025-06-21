@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { useActivityLog } from "@/hooks/useActivityLog";
+import { useActivityLog } from "@/hooks/activity/useActivityLog";
 import { toast } from "sonner";
 import {
   AlertDialog,
