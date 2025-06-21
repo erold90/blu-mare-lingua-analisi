@@ -1,18 +1,61 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { apartments } from "@/data/apartments";
-import { Users, Bed, Bath, MapPin, Star, Wifi, Car, UtensilsCrossed } from "lucide-react";
+import { Users, Bed, Bath, MapPin, Wifi, Car, UtensilsCrossed } from "lucide-react";
 import SEOHead from "@/components/seo/SEOHead";
 import { getApartmentSchema, getBreadcrumbSchema } from "@/components/seo/StructuredData";
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
-import { useApartmentManagement } from "@/hooks/apartments/useApartmentManagement";
+import { imageService } from "@/services/imageService";
 
 const ApartmentsPage = () => {
-  const { apartments: managedApartments } = useApartmentManagement();
+  const [apartmentImages, setApartmentImages] = useState<{ [key: string]: string[] }>({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Carica le immagini per ogni appartamento
+  useEffect(() => {
+    const loadApartmentImages = async () => {
+      console.log("🏠 Loading apartment images...");
+      try {
+        const imagesMap: { [key: string]: string[] } = {};
+        
+        for (const apartment of apartments) {
+          try {
+            const images = await imageService.getImages(apartment.id);
+            console.log(`📸 Loaded ${images.length} images for ${apartment.name}:`, images);
+            
+            if (images && images.length > 0) {
+              imagesMap[apartment.id] = images;
+            } else {
+              console.log(`⚠️ No images found for ${apartment.name}, using placeholder`);
+              imagesMap[apartment.id] = ["/placeholder.svg"];
+            }
+          } catch (error) {
+            console.error(`❌ Error loading images for ${apartment.name}:`, error);
+            imagesMap[apartment.id] = ["/placeholder.svg"];
+          }
+        }
+        
+        setApartmentImages(imagesMap);
+        console.log("✅ All apartment images loaded:", imagesMap);
+      } catch (error) {
+        console.error("❌ Error loading apartment images:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadApartmentImages();
+  }, []);
+
+  // Prepara i dati per lo structured data
+  const apartmentsWithImages = apartments.map(apt => ({
+    ...apt,
+    images: apartmentImages[apt.id] || ["/placeholder.svg"]
+  }));
 
   const breadcrumbItems = [
     { name: "Home", url: "/" },
@@ -21,8 +64,18 @@ const ApartmentsPage = () => {
 
   const structuredData = [
     getBreadcrumbSchema(breadcrumbItems),
-    ...managedApartments.map(apt => getApartmentSchema(apt))
+    ...apartmentsWithImages.map(apt => getApartmentSchema(apt))
   ];
+
+  if (isLoading) {
+    return (
+      <div className="container px-4 py-8 md:py-12">
+        <div className="text-center">
+          <div className="text-xl">Caricamento appartamenti...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container px-4 py-8 md:py-12">
@@ -47,99 +100,98 @@ const ApartmentsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {managedApartments.map((apartment) => (
-          <Card key={apartment.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
-            <div className="relative h-64 md:h-80">
-              <img
-                src={apartment.images && apartment.images.length > 0 ? apartment.images[0] : "/placeholder.svg"}
-                alt={`${apartment.name} - Appartamento vacanze Salento con vista mare`}
-                className="w-full h-full object-cover"
-                loading="lazy"
-                onError={(e) => {
-                  e.currentTarget.src = "/placeholder.svg";
-                }}
-              />
-              <div className="absolute top-4 left-4">
-                <Badge className="bg-primary text-white">
-                  <Star className="h-3 w-3 mr-1" />
-                  Lusso
-                </Badge>
-              </div>
-              <div className="absolute top-4 right-4">
-                <Badge variant="secondary">
-                  <MapPin className="h-3 w-3 mr-1" />
-                  Torre Vado
-                </Badge>
-              </div>
-            </div>
-            
-            <CardHeader>
-              <CardTitle className="text-2xl">{apartment.name}</CardTitle>
-              <CardDescription className="text-base leading-relaxed">
-                {apartment.description}
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent className="space-y-6">
-              {/* Caratteristiche principali */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <Users className="h-4 w-4 text-primary" />
-                  <span>{apartment.capacity} ospiti</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Bed className="h-4 w-4 text-primary" />
-                  <span>{apartment.bedrooms} camere</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Bath className="h-4 w-4 text-primary" />
-                  <span>1 bagno</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-2xl">🏊‍♂️</span>
-                  <span>Piscina</span>
+        {apartments.map((apartment) => {
+          const images = apartmentImages[apartment.id] || ["/placeholder.svg"];
+          const mainImage = images[0] || "/placeholder.svg";
+          
+          return (
+            <Card key={apartment.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+              <div className="relative h-64 md:h-80">
+                <img
+                  src={mainImage}
+                  alt={`${apartment.name} - Appartamento vacanze Salento con vista mare`}
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                  onError={(e) => {
+                    console.log(`🖼️ Image failed to load for ${apartment.name}, using placeholder`);
+                    e.currentTarget.src = "/placeholder.svg";
+                  }}
+                  onLoad={() => {
+                    console.log(`✅ Image loaded successfully for ${apartment.name}`);
+                  }}
+                />
+                <div className="absolute top-4 right-4">
+                  <Badge variant="secondary">
+                    <MapPin className="h-3 w-3 mr-1" />
+                    Torre Vado
+                  </Badge>
                 </div>
               </div>
+              
+              <CardHeader>
+                <CardTitle className="text-2xl">{apartment.name}</CardTitle>
+                <CardDescription className="text-base leading-relaxed">
+                  {apartment.description}
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent className="space-y-6">
+                {/* Caratteristiche principali */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Users className="h-4 w-4 text-primary" />
+                    <span>{apartment.capacity} ospiti</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Bed className="h-4 w-4 text-primary" />
+                    <span>{apartment.bedrooms} camere</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Bath className="h-4 w-4 text-primary" />
+                    <span>1 bagno</span>
+                  </div>
+                </div>
 
-              {/* Servizi inclusi */}
-              <div>
-                <h4 className="font-semibold mb-3">Servizi inclusi:</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Wifi className="h-4 w-4 text-green-600" />
-                    <span>Wi-Fi gratuito</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Car className="h-4 w-4 text-green-600" />
-                    <span>Parcheggio privato</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <UtensilsCrossed className="h-4 w-4 text-green-600" />
-                    <span>Cucina attrezzata</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-green-600">❄️</span>
-                    <span>Aria condizionata</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Prezzo e azione */}
-              <div className="flex items-center justify-between pt-4 border-t">
+                {/* Servizi inclusi */}
                 <div>
-                  <p className="text-sm text-muted-foreground">A partire da</p>
-                  <p className="text-2xl font-bold text-primary">€{apartment.price}</p>
-                  <p className="text-sm text-muted-foreground">per notte</p>
+                  <h4 className="font-semibold mb-3">Servizi inclusi:</h4>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <Wifi className="h-4 w-4 text-green-600" />
+                      <span>Wi-Fi gratuito</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Car className="h-4 w-4 text-green-600" />
+                      <span>Parcheggio privato</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <UtensilsCrossed className="h-4 w-4 text-green-600" />
+                      <span>Cucina attrezzata</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-green-600">❄️</span>
+                      <span>Aria condizionata</span>
+                    </div>
+                  </div>
                 </div>
-                <Link to="/preventivo">
-                  <Button size="lg" className="bg-primary hover:bg-primary/90">
-                    Richiedi Preventivo
-                  </Button>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+
+                {/* Prezzo e azione */}
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div>
+                    <p className="text-sm text-muted-foreground">A partire da</p>
+                    <p className="text-2xl font-bold text-primary">€{apartment.price}</p>
+                    <p className="text-sm text-muted-foreground">per notte</p>
+                  </div>
+                  <Link to="/preventivo">
+                    <Button size="lg" className="bg-primary hover:bg-primary/90">
+                      Richiedi Preventivo
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Sezione informazioni aggiuntive */}
@@ -157,9 +209,9 @@ const ApartmentsPage = () => {
           </div>
           <div className="text-center">
             <div className="text-4xl mb-4">🌟</div>
-            <h3 className="text-xl font-semibold mb-3">Servizi di Lusso</h3>
+            <h3 className="text-xl font-semibold mb-3">Servizi di Qualità</h3>
             <p className="text-muted-foreground">
-              Piscina privata, giardino mediterraneo e tutti i comfort per una vacanza perfetta
+              Giardino mediterraneo e tutti i comfort per una vacanza perfetta
             </p>
           </div>
           <div className="text-center">
