@@ -15,7 +15,7 @@ const ApartmentsPage = () => {
   const [apartmentImages, setApartmentImages] = useState<{ [key: string]: string[] }>({});
   const [isLoading, setIsLoading] = useState(true);
 
-  // Carica le immagini per ogni appartamento
+  // Load images for each apartment
   useEffect(() => {
     const loadApartmentImages = async () => {
       console.log("🏠 Loading apartment images...");
@@ -24,7 +24,7 @@ const ApartmentsPage = () => {
         
         for (const apartment of apartments) {
           try {
-            const images = await imageService.getImages(apartment.id);
+            const images = await imageService.scanApartmentImages(apartment.id);
             console.log(`📸 Loaded ${images.length} images for ${apartment.name}:`, images);
             
             if (images && images.length > 0) {
@@ -51,7 +51,7 @@ const ApartmentsPage = () => {
     loadApartmentImages();
   }, []);
 
-  // Prepara i dati per lo structured data
+  // Prepare data for structured data
   const apartmentsWithImages = apartments.map(apt => ({
     ...apt,
     images: apartmentImages[apt.id] || ["/placeholder.svg"]
@@ -81,12 +81,12 @@ const ApartmentsPage = () => {
     <div className="container px-4 py-8 md:py-12">
       <SEOHead
         title="Appartamenti Vacanze Vista Mare Salento - Villa MareBlu Puglia | Casa Vacanze Sul Mare"
-        description="Scopri i nostri appartamenti vacanze lusso con vista mare in Salento: villa fronte mare, giardino, 4-8 persone. Appartamenti ammobiliati Puglia, Santa Maria di Leuca. Prenota ora!"
+        description="Scopri i nostri appartamenti vacanze con vista mare in Salento: villa fronte mare, giardino, 4-8 persone. Appartamenti ammobiliati Puglia, Santa Maria di Leuca. Prenota ora!"
         keywords={getPageSpecificKeywords('apartments')}
         canonicalUrl="/appartamenti"
         structuredData={structuredData}
         ogTitle="Appartamenti Vacanze Vista Mare Salento - Villa MareBlu"
-        ogDescription="Appartamenti vacanze lusso con vista mare in Salento. La tua casa vacanze fronte mare ideale in Puglia!"
+        ogDescription="Appartamenti vacanze con vista mare in Salento. La tua casa vacanze fronte mare ideale in Puglia!"
       />
 
       <div className="text-center mb-12">
@@ -136,7 +136,7 @@ const ApartmentsPage = () => {
               </CardHeader>
               
               <CardContent className="space-y-6">
-                {/* Caratteristiche principali */}
+                {/* Main features */}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div className="flex items-center gap-2 text-sm">
                     <Users className="h-4 w-4 text-primary" />
@@ -152,7 +152,7 @@ const ApartmentsPage = () => {
                   </div>
                 </div>
 
-                {/* Servizi inclusi */}
+                {/* Included services */}
                 <div>
                   <h4 className="font-semibold mb-3">Servizi inclusi:</h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
@@ -175,7 +175,7 @@ const ApartmentsPage = () => {
                   </div>
                 </div>
 
-                {/* Prezzo e azione */}
+                {/* Price and action */}
                 <div className="flex items-center justify-between pt-4 border-t">
                   <div>
                     <p className="text-sm text-muted-foreground">A partire da</p>
@@ -194,7 +194,7 @@ const ApartmentsPage = () => {
         })}
       </div>
 
-      {/* Sezione informazioni aggiuntive */}
+      {/* Additional information section */}
       <div className="mt-16 bg-primary/5 p-8 rounded-lg">
         <h2 className="text-3xl font-serif font-semibold mb-6 text-center text-primary">
           Perché Scegliere Villa MareBlu
