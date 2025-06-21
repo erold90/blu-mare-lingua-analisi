@@ -9,8 +9,11 @@ import { Users, Bed, Bath, MapPin, Star, Wifi, Car, UtensilsCrossed } from "luci
 import SEOHead from "@/components/seo/SEOHead";
 import { getApartmentSchema, getBreadcrumbSchema } from "@/components/seo/StructuredData";
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
+import { useApartmentManagement } from "@/hooks/apartments/useApartmentManagement";
 
 const ApartmentsPage = () => {
+  const { apartments: managedApartments } = useApartmentManagement();
+
   const breadcrumbItems = [
     { name: "Home", url: "/" },
     { name: "Appartamenti", url: "/appartamenti" }
@@ -18,7 +21,7 @@ const ApartmentsPage = () => {
 
   const structuredData = [
     getBreadcrumbSchema(breadcrumbItems),
-    ...apartments.map(apt => getApartmentSchema(apt))
+    ...managedApartments.map(apt => getApartmentSchema(apt))
   ];
 
   return (
@@ -44,14 +47,17 @@ const ApartmentsPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {apartments.map((apartment) => (
+        {managedApartments.map((apartment) => (
           <Card key={apartment.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
             <div className="relative h-64 md:h-80">
               <img
-                src={apartment.images[0]}
+                src={apartment.images && apartment.images.length > 0 ? apartment.images[0] : "/placeholder.svg"}
                 alt={`${apartment.name} - Appartamento vacanze Salento con vista mare`}
                 className="w-full h-full object-cover"
                 loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.src = "/placeholder.svg";
+                }}
               />
               <div className="absolute top-4 left-4">
                 <Badge className="bg-primary text-white">
