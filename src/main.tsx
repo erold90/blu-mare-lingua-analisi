@@ -2,7 +2,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,15 +19,13 @@ createRoot(document.getElementById("root")!).render(
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <BrowserRouter>
-            {/* Use only the new Supabase providers */}
-            <SupabaseReservationsProvider>
-              <SupabasePricesProvider>
-                <App />
-                <Toaster />
-              </SupabasePricesProvider>
-            </SupabaseReservationsProvider>
-          </BrowserRouter>
+          {/* Removed BrowserRouter from here since it's already in App.tsx */}
+          <SupabaseReservationsProvider>
+            <SupabasePricesProvider>
+              <App />
+              <Toaster />
+            </SupabasePricesProvider>
+          </SupabaseReservationsProvider>
         </TooltipProvider>
       </QueryClientProvider>
     </HelmetProvider>
