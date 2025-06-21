@@ -93,7 +93,7 @@ export const ApartmentCard: React.FC<ApartmentCardProps> = ({
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-green-600">❄️</span>
-                <span>Aria condizionata</span>
+                <span>{apartment.hasAirConditioning ? "Aria condizionata" : "Naturalmente fresco"}</span>
               </div>
             </div>
           </div>
