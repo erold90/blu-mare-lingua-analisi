@@ -10,10 +10,12 @@ import SEOHead from "@/components/seo/SEOHead";
 import { getApartmentSchema, getBreadcrumbSchema } from "@/components/seo/StructuredData";
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
 import { imageService } from "@/utils/image";
+import { ApartmentDialog } from "@/components/quote/ApartmentDialog";
 
 const ApartmentsPage = () => {
   const [apartmentImages, setApartmentImages] = useState<{ [key: string]: string[] }>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedApartmentForModal, setSelectedApartmentForModal] = useState<string | null>(null);
 
   // Load images for each apartment
   useEffect(() => {
@@ -121,9 +123,9 @@ const ApartmentsPage = () => {
                   }}
                 />
                 <div className="absolute top-4 right-4">
-                  <Badge variant="secondary">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    Torre Vado
+                  <Badge variant="secondary" className="bg-primary text-white">
+                    <Bed className="h-3 w-3 mr-1" />
+                    {apartment.beds || apartment.capacity} posti letto
                   </Badge>
                 </div>
               </div>
@@ -175,20 +177,38 @@ const ApartmentsPage = () => {
                   </div>
                 </div>
 
-                {/* Price and action */}
+                {/* Price and actions */}
                 <div className="flex items-center justify-between pt-4 border-t">
                   <div>
                     <p className="text-sm text-muted-foreground">A partire da</p>
                     <p className="text-2xl font-bold text-primary">€{apartment.price}</p>
                     <p className="text-sm text-muted-foreground">per notte</p>
                   </div>
-                  <Link to="/preventivo">
-                    <Button size="lg" className="bg-primary hover:bg-primary/90">
-                      Richiedi Preventivo
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline"
+                      onClick={() => setSelectedApartmentForModal(apartment.id)}
+                    >
+                      Dettagli
                     </Button>
-                  </Link>
+                    <Link to="/preventivo">
+                      <Button size="lg" className="bg-primary hover:bg-primary/90">
+                        Richiedi Preventivo
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               </CardContent>
+
+              {/* Apartment Modal */}
+              {selectedApartmentForModal === apartment.id && (
+                <ApartmentDialog
+                  apartment={apartment}
+                  isSelected={false}
+                  onToggle={() => {}}
+                  onClose={() => setSelectedApartmentForModal(null)}
+                />
+              )}
             </Card>
           );
         })}
