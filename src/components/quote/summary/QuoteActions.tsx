@@ -34,7 +34,7 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
       addQuoteLog({
         id: logId,
         timestamp,
-        formValues,
+        form_values: formValues, // Changed from formValues to form_values
         step: 5,
         completed: true
       });

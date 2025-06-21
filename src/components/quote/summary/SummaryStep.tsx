@@ -58,7 +58,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
     addQuoteLog({
       id: quoteLogId,
       timestamp: new Date().toISOString(),
-      formValues: formValues,
+      form_values: formValues, // Changed from formValues to form_values
       step: 5, // We're on step 5
       completed: true // Now marking as completed since this is the final step
     });
