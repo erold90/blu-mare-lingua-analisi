@@ -9,7 +9,7 @@ import { Users, Bed, Bath, MapPin, Wifi, Car, UtensilsCrossed } from "lucide-rea
 import SEOHead from "@/components/seo/SEOHead";
 import { getApartmentSchema, getBreadcrumbSchema } from "@/components/seo/StructuredData";
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
-import { imageService } from "@/services/imageService";
+import { imageService } from "@/utils/image";
 
 const ApartmentsPage = () => {
   const [apartmentImages, setApartmentImages] = useState<{ [key: string]: string[] }>({});
