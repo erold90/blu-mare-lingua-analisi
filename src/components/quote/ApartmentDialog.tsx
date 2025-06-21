@@ -181,15 +181,6 @@ export const ApartmentDialog: React.FC<ApartmentDialogProps> = ({
             ))}
           </ul>
         </div>
-        
-        <div className="flex justify-center mt-6 gap-4">
-          <Button 
-            variant={isSelected ? "default" : "outline"}
-            onClick={onToggle}
-          >
-            {isSelected ? "Selezionato" : "Seleziona"}
-          </Button>
-        </div>
       </DialogContent>
     </Dialog>
   );
