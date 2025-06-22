@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { Toaster as UIToaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "next-themes";
@@ -30,6 +30,7 @@ const AppWithTracking = () => {
         <Route path="contatti" element={<ContactsPage />} />
         <Route path="chi-siamo" element={<AboutPage />} />
         <Route path="richiedi-preventivo" element={<RequestQuotePage />} />
+        <Route path="preventivo" element={<Navigate to="/richiedi-preventivo" replace />} />
         <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="cookie-policy" element={<CookiePolicyPage />} />
         <Route path="*" element={<NotFound />} />
