@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
@@ -26,41 +26,69 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
   prevStep,
   sendWhatsApp
 }) => {
-  const formValues = form.getValues();
-  const selectedApartmentIds = formValues.selectedApartments || [formValues.selectedApartment];
-  const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
   const { addQuoteLog } = useActivityLog();
   
   const [priceInfo, setPriceInfo] = useState<PriceCalculation>(emptyPriceCalculation);
   const [isLoadingPrices, setIsLoadingPrices] = useState(true);
+  const [calculationKey, setCalculationKey] = useState(0);
   
-  // Calcola i prezzi usando il sistema unificato
+  // Memoizza i valori del form per evitare ricreazioni continue
+  const formValues = useMemo(() => form.getValues(), [form]);
+  
+  // Memoizza gli ID degli appartamenti selezionati
+  const selectedApartmentIds = useMemo(() => {
+    return formValues.selectedApartments || 
+      (formValues.selectedApartment ? [formValues.selectedApartment] : []);
+  }, [formValues.selectedApartments, formValues.selectedApartment]);
+  
+  // Memoizza gli appartamenti selezionati
+  const selectedApartments = useMemo(() => {
+    return apartments.filter(apt => selectedApartmentIds.includes(apt.id));
+  }, [apartments, selectedApartmentIds]);
+  
+  // Funzione per calcolare i prezzi con gestione degli errori
+  const calculatePrices = useCallback(async () => {
+    if (selectedApartments.length === 0 || !formValues.checkIn || !formValues.checkOut) {
+      console.log("Missing required data for price calculation");
+      setPriceInfo(emptyPriceCalculation);
+      setIsLoadingPrices(false);
+      return;
+    }
+    
+    setIsLoadingPrices(true);
+    
+    try {
+      console.log("Starting price calculation...");
+      console.log("Form values:", formValues);
+      console.log("Selected apartments:", selectedApartments.map(apt => apt.id));
+      
+      const calculatedPrices = await calculateTotalPriceUnified(formValues, apartments);
+      console.log("Price calculation completed:", calculatedPrices);
+      
+      setPriceInfo(calculatedPrices);
+    } catch (error) {
+      console.error("Error calculating prices:", error);
+      setPriceInfo(emptyPriceCalculation);
+    } finally {
+      setIsLoadingPrices(false);
+    }
+  }, [formValues, apartments, selectedApartments]);
+  
+  // Effect per calcolare i prezzi quando cambiano i dati rilevanti
   useEffect(() => {
-    const calculatePrices = async () => {
-      setIsLoadingPrices(true);
-      try {
-        console.log("Calculating prices with unified system...");
-        const calculatedPrices = await calculateTotalPriceUnified(formValues, apartments);
-        setPriceInfo(calculatedPrices);
-      } catch (error) {
-        console.error("Error calculating prices:", error);
-        setPriceInfo(emptyPriceCalculation);
-      } finally {
-        setIsLoadingPrices(false);
-      }
-    };
-
+    console.log("Price calculation effect triggered");
     calculatePrices();
-  }, [formValues, apartments]);
+  }, [calculatePrices]);
   
-  // Se c'è solo un appartamento selezionato, assicurati che sia il selectedApartment principale
+  // Effect per sincronizzare selectedApartment quando c'è solo un appartamento
   useEffect(() => {
     if (selectedApartmentIds.length === 1 && formValues.selectedApartment !== selectedApartmentIds[0]) {
+      console.log("Syncing selectedApartment:", selectedApartmentIds[0]);
       form.setValue("selectedApartment", selectedApartmentIds[0]);
     }
   }, [selectedApartmentIds, form, formValues.selectedApartment]);
   
-  // Log del preventivo quando il componente si monta
+  // Effect per il log del preventivo (solo una volta)
   useEffect(() => {
     const quoteLogId = localStorage.getItem('currentQuoteLogId') || uuidv4();
     
@@ -73,10 +101,10 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
     });
     
     localStorage.setItem('currentQuoteLogId', quoteLogId);
-  }, [addQuoteLog, formValues]);
+  }, []); // Dipendenze vuote per eseguire solo al mount
   
   // Render delle azioni footer
-  const footerActions = (
+  const footerActions = useMemo(() => (
     <QuoteActions 
       prevStep={prevStep} 
       sendWhatsApp={sendWhatsApp}
@@ -84,13 +112,17 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
       apartments={apartments}
       priceInfo={priceInfo}
     />
-  );
+  ), [prevStep, sendWhatsApp, formValues, apartments, priceInfo]);
   
   if (isLoadingPrices) {
     return (
       <SummaryLayout footer={footerActions}>
         <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
           <div className="text-lg">Calcolo prezzi in corso...</div>
+          <div className="text-sm text-muted-foreground mt-2">
+            Attendere prego...
+          </div>
         </div>
       </SummaryLayout>
     );
