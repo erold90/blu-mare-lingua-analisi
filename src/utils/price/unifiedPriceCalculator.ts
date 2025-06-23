@@ -1,4 +1,3 @@
-
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { emptyPriceCalculation, PriceCalculation } from "./types";
@@ -75,29 +74,30 @@ function getPriceForWeekSync(apartmentId: string, weekStart: Date): number {
 }
 
 /**
- * Calcola il numero corretto di settimane per un soggiorno
+ * Calcola le settimane che copre un soggiorno
  */
-function calculateWeeksForStay(checkIn: Date, checkOut: Date, nights: number): Date[] {
+function getWeeksForStay(checkIn: Date, checkOut: Date): Date[] {
   const weeks: Date[] = [];
+  const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
   
-  // Inizia dalla settimana del check-in
-  let currentWeekStart = new Date(checkIn);
+  console.log(`📅 Calculating weeks for stay: ${checkIn.toDateString()} to ${checkOut.toDateString()}`);
+  console.log(`📅 Total nights: ${nights}`);
   
-  // Trova il lunedì della settimana del check-in
-  const dayOfWeek = currentWeekStart.getDay();
-  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Domenica = 6 giorni indietro
-  currentWeekStart.setDate(currentWeekStart.getDate() - daysToMonday);
+  // Inizia dalla settimana che contiene il check-in
+  let currentWeek = new Date(checkIn);
   
-  console.log(`📅 Check-in: ${checkIn.toDateString()}`);
-  console.log(`📅 Check-out: ${checkOut.toDateString()}`);
-  console.log(`📅 Nights: ${nights}`);
-  console.log(`📅 First week starts: ${currentWeekStart.toDateString()}`);
+  // Trova il lunedì di quella settimana
+  const dayOfWeek = currentWeek.getDay(); // 0 = domenica, 1 = lunedì, etc.
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Se domenica, torna 6 giorni indietro
+  currentWeek.setDate(currentWeek.getDate() - daysToMonday);
   
-  // Aggiungi settimane fino a coprire tutto il soggiorno
-  while (currentWeekStart < checkOut) {
-    weeks.push(new Date(currentWeekStart));
-    console.log(`📅 Adding week: ${currentWeekStart.toDateString()}`);
-    currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+  console.log(`📅 First Monday: ${currentWeek.toDateString()}`);
+  
+  // Aggiungi settimane finché non copriamo tutto il soggiorno
+  while (currentWeek < checkOut) {
+    weeks.push(new Date(currentWeek));
+    console.log(`📅 Added week starting: ${currentWeek.toDateString()}`);
+    currentWeek.setDate(currentWeek.getDate() + 7);
   }
   
   console.log(`📊 Total weeks needed: ${weeks.length}`);
@@ -108,8 +108,7 @@ function calculateWeeksForStay(checkIn: Date, checkOut: Date, nights: number): D
  * Pre-carica TUTTI i prezzi necessari per il calcolo
  */
 async function preloadPrices(apartmentIds: string[], checkIn: Date, checkOut: Date): Promise<boolean> {
-  const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-  const weeks = calculateWeeksForStay(checkIn, checkOut, nights);
+  const weeks = getWeeksForStay(checkIn, checkOut);
   
   console.log(`📋 Preloading prices for ${apartmentIds.length} apartments, ${weeks.length} weeks`);
   
@@ -135,10 +134,12 @@ async function preloadPrices(apartmentIds: string[], checkIn: Date, checkOut: Da
 
 /**
  * Calcola il prezzo totale usando il sistema unificato con validazione completa
+ * Ora accetta una funzione getPriceForWeek opzionale per usare prezzi già caricati
  */
 export async function calculateTotalPriceUnified(
   formValues: FormValues, 
-  apartments: Apartment[]
+  apartments: Apartment[],
+  externalGetPriceForWeek?: (apartmentId: string, weekStart: Date | string) => number
 ): Promise<PriceCalculation> {
   console.log("🔍 Starting unified price calculation...");
   
@@ -165,13 +166,6 @@ export async function calculateTotalPriceUnified(
   }
   
   try {
-    // Pre-carica i prezzi e verifica il successo
-    const pricesLoaded = await preloadPrices(selectedApartmentIds, formValues.checkIn, formValues.checkOut);
-    
-    if (!pricesLoaded) {
-      console.warn("⚠️ No prices could be loaded from database");
-    }
-    
     const nights = calculateNights(formValues.checkIn, formValues.checkOut);
     console.log(`📅 Stay duration: ${nights} nights`);
     
@@ -180,19 +174,38 @@ export async function calculateTotalPriceUnified(
       return emptyPriceCalculation;
     }
     
+    // Se non abbiamo la funzione esterna, usa il preloading standard
+    if (!externalGetPriceForWeek) {
+      const pricesLoaded = await preloadPrices(selectedApartmentIds, formValues.checkIn, formValues.checkOut);
+      
+      if (!pricesLoaded) {
+        console.warn("⚠️ No prices could be loaded from database");
+      }
+    }
+    
     const apartmentPrices: Record<string, number> = {};
     let basePrice = 0;
     
-    // Calcola il prezzo per ogni appartamento utilizzando le settimane corrette
+    // Calcola il prezzo per ogni appartamento
     for (const apartment of selectedApartments) {
       let totalApartmentPrice = 0;
-      const weeks = calculateWeeksForStay(formValues.checkIn, formValues.checkOut, nights);
+      const weeks = getWeeksForStay(formValues.checkIn, formValues.checkOut);
       
       console.log(`💰 Calculating price for ${apartment.id} across ${weeks.length} weeks`);
       
       for (let i = 0; i < weeks.length; i++) {
         const weekStart = weeks[i];
-        let weeklyPrice = getPriceForWeekSync(apartment.id, weekStart);
+        let weeklyPrice = 0;
+        
+        if (externalGetPriceForWeek) {
+          // Usa la funzione esterna (dai prezzi già caricati)
+          weeklyPrice = externalGetPriceForWeek(apartment.id, weekStart);
+          console.log(`💰 External price for ${apartment.id}, week ${i+1}: ${weeklyPrice}€`);
+        } else {
+          // Usa la funzione interna con cache
+          weeklyPrice = getPriceForWeekSync(apartment.id, weekStart);
+          console.log(`💰 Cached price for ${apartment.id}, week ${i+1}: ${weeklyPrice}€`);
+        }
         
         if (weeklyPrice === 0) {
           // Fallback al prezzo di default dell'appartamento
@@ -201,15 +214,16 @@ export async function calculateTotalPriceUnified(
           weeklyPrice = defaultPrice;
         }
         
-        console.log(`💰 Week ${i+1} (${weekStart.toDateString()}) price for ${apartment.id}: ${weeklyPrice}€`);
         totalApartmentPrice += weeklyPrice;
       }
       
-      // Proporziona il prezzo in base ai giorni effettivi se necessario
-      if (nights < weeks.length * 7) {
-        const proportion = nights / (weeks.length * 7);
-        totalApartmentPrice = Math.round(totalApartmentPrice * proportion);
-        console.log(`⚖️ Proportional adjustment for ${nights} nights: ${totalApartmentPrice}€`);
+      // Proporziona il prezzo in base ai giorni effettivi
+      const totalWeekDays = weeks.length * 7;
+      if (nights < totalWeekDays) {
+        const proportion = nights / totalWeekDays;
+        const proportionalPrice = Math.round(totalApartmentPrice * proportion);
+        console.log(`⚖️ Proportional adjustment: ${totalApartmentPrice}€ * ${proportion.toFixed(2)} = ${proportionalPrice}€`);
+        totalApartmentPrice = proportionalPrice;
       }
       
       apartmentPrices[apartment.id] = totalApartmentPrice;

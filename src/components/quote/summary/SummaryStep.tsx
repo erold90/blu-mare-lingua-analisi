@@ -7,6 +7,7 @@ import { calculateTotalPriceUnified, refreshApartmentPrices } from "@/utils/pric
 import { PriceCalculation, emptyPriceCalculation } from "@/utils/price/types";
 import { v4 as uuidv4 } from "uuid";
 import { useActivityLog } from "@/hooks/activity/useActivityLog";
+import { useUnifiedPrices } from "@/hooks/useUnifiedPrices";
 
 // Import refactored components
 import SummaryLayout from "./SummaryLayout";
@@ -27,6 +28,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
   sendWhatsApp
 }) => {
   const { addQuoteLog } = useActivityLog();
+  const { prices, getPriceForWeek, refreshPrices } = useUnifiedPrices();
   
   const [priceInfo, setPriceInfo] = useState<PriceCalculation>(emptyPriceCalculation);
   const [isLoadingPrices, setIsLoadingPrices] = useState(true);
@@ -97,7 +99,8 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
     setCalculationError(null);
     
     try {
-      console.log("🔍 Starting price calculation...");
+      console.log("🔍 Starting price calculation with unified prices...");
+      console.log("📋 Available prices count:", prices.length);
       console.log("📋 Form values:", {
         apartments: selectedApartmentIds,
         checkIn: formValues.checkIn,
@@ -106,7 +109,16 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
         children: formValues.children
       });
       
-      const calculatedPrices = await calculateTotalPriceUnified(formValues, apartments);
+      // Prima verifica se abbiamo prezzi per le date richieste
+      const testPrice = getPriceForWeek(selectedApartmentIds[0], formValues.checkIn);
+      console.log("🧪 Test price for first week:", testPrice);
+      
+      if (testPrice === 0 && prices.length === 0) {
+        console.log("⚠️ No prices available, refreshing...");
+        await refreshPrices();
+      }
+      
+      const calculatedPrices = await calculateTotalPriceUnified(formValues, apartments, getPriceForWeek);
       
       // Verifica se il calcolo ha prodotto risultati validi
       if (calculatedPrices.totalPrice === 0 && calculatedPrices.basePrice === 0) {
@@ -120,7 +132,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
         }
         
         // Riprova il calcolo
-        const recalculatedPrices = await calculateTotalPriceUnified(formValues, apartments);
+        const recalculatedPrices = await calculateTotalPriceUnified(formValues, apartments, getPriceForWeek);
         setPriceInfo(recalculatedPrices);
         
         if (recalculatedPrices.totalPrice > 0) {
@@ -139,7 +151,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
       setIsLoadingPrices(false);
       calculationInProgress.current = false;
     }
-  }, [formValues, apartments, selectedApartments, selectedApartmentIds]);
+  }, [formValues, apartments, selectedApartments, selectedApartmentIds, prices, getPriceForWeek, refreshPrices]);
   
   // Effect per calcolare i prezzi quando cambiano i dati rilevanti
   useEffect(() => {
