@@ -7,6 +7,7 @@ import { it } from 'date-fns/locale';
 
 /**
  * Creates a WhatsApp message with quote details
+ * Completely rewritten to ensure perfect alignment with the summary
  */
 export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartment[]): string | null => {
   // Check if we have necessary data
@@ -15,7 +16,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
   }
   
   try {
-    // Calculate prices
+    // Calculate prices using the same function as the summary
     const priceInfo = calculateTotalPrice(formValues, apartments);
     
     // Get selected apartments
@@ -30,23 +31,34 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     const formattedCheckIn = format(formValues.checkIn, "EEEE d MMMM yyyy", { locale: it });
     const formattedCheckOut = format(formValues.checkOut, "EEEE d MMMM yyyy", { locale: it });
     
-    // Calculate price breakdowns
+    // Calculate duration details
     const nights = priceInfo.nights || 0;
     const weeks = Math.ceil(nights / 7);
+    
+    // Get EXACT values from price calculation
     const basePrice = priceInfo.basePrice;
+    const subtotal = priceInfo.totalBeforeDiscount;
+    const discount = priceInfo.discount;
+    const totalFinal = priceInfo.totalAfterDiscount;
+    const deposit = priceInfo.deposit;
+    const balance = totalFinal - deposit;
+    const cleaningFee = priceInfo.cleaningFee;
+    const touristTax = priceInfo.touristTax;
+    
+    // Calculate per-night and per-week prices
     const pricePerNight = nights > 0 ? Math.round(basePrice / nights) : 0;
     const pricePerWeek = weeks > 0 ? Math.round(basePrice / weeks) : 0;
     
-    // Create message with WhatsApp-compatible emojis
+    // Build WhatsApp message with compatible emojis
     let message = `*Richiesta Preventivo Villa MareBlu* 🏖\n\n`;
     
-    // Stay details
+    // Stay dates section
     message += `*📅 Date soggiorno:*\n`;
     message += `Check-in: ${formattedCheckIn}\n`;
     message += `Check-out: ${formattedCheckOut}\n`;
     message += `Durata: *${nights} notti* (${weeks} ${weeks === 1 ? 'settimana' : 'settimane'})\n\n`;
     
-    // Guest details
+    // Guest information
     message += `*👥 Ospiti:*\n`;
     message += `Adulti: ${formValues.adults}\n`;
     message += `Bambini: ${formValues.children || 0}\n`;
@@ -76,9 +88,10 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
       message += "\n";
     }
     
-    // Apartments
+    // Selected apartments with EXACT prices
     message += `*🏠 Appartamenti selezionati:*\n`;
     selectedApartments.forEach(apartment => {
+      // Use the exact price from calculation, not a separate lookup
       const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || basePrice;
       message += `• ${apartment.name}: ${apartmentPrice}€\n`;
       
@@ -106,7 +119,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
         apartmentsWithPets = Object.values(formValues.petsInApartment).filter(Boolean).length;
       }
       
-      message += `Animali domestici: ✅ Sì (${apartmentsWithPets} ${apartmentsWithPets === 1 ? 'appartamento' : 'appartamenti'})\n`;
+      message += `Animali domestici: ✅ Si (${apartmentsWithPets} ${apartmentsWithPets === 1 ? 'appartamento' : 'appartamenti'})\n`;
       
       if (formValues.petSize) {
         const sizeText = formValues.petSize === "small" ? "Piccola" : 
@@ -128,14 +141,14 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     }
     message += `\n`;
     
-    // Price breakdown with EXACT values from calculation
+    // Price breakdown section - USE EXACT VALUES
     message += `*💰 Dettaglio prezzi:*\n`;
     message += `Prezzo base appartamento: *${basePrice}€*\n`;
     message += `• Prezzo per notte: ~${pricePerNight}€\n`;
     message += `• Prezzo per settimana: ~${pricePerWeek}€\n`;
     message += `• ${nights} notti (${weeks} ${weeks === 1 ? 'settimana' : 'settimane'}): ${basePrice}€\n\n`;
     
-    // Extra services breakdown if any
+    // Extra services if any
     if (priceInfo.extras > 0) {
       const extraDetails = [];
       
@@ -163,29 +176,30 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
       message += `\n`;
     }
     
-    message += `Subtotale soggiorno: ${priceInfo.totalBeforeDiscount}€\n\n`;
+    // Subtotal - USE EXACT VALUE
+    message += `Subtotale soggiorno: ${subtotal}€\n\n`;
     
-    // Services included
+    // Services included in price
     message += `*✅ Servizi inclusi nel prezzo:*\n`;
-    message += `• Pulizia finale: Inclusa (+${priceInfo.cleaningFee}€)\n`;
-    message += `• Tassa di soggiorno: Inclusa (+${priceInfo.touristTax}€)\n`;
+    message += `• Pulizia finale: Inclusa (+${cleaningFee}€)\n`;
+    message += `• Tassa di soggiorno: Inclusa (+${touristTax}€)\n`;
     if (totalCribs > 0) {
       message += `• Culle per bambini (${totalCribs}): Gratuite\n`;
     }
     message += `\n`;
     
-    // Discount if any - CRITICAL: Show discount correctly
-    if (priceInfo.discount > 0) {
-      message += `💚 *Sconto applicato: -${priceInfo.discount}€*\n\n`;
+    // Discount if any - SHOW EXACT DISCOUNT VALUE
+    if (discount > 0) {
+      message += `💚 *Sconto applicato: -${discount}€*\n\n`;
     }
     
-    // Final total - USE EXACT VALUE FROM CALCULATION
-    message += `🎯 *TOTALE FINALE: ${priceInfo.totalAfterDiscount}€*\n\n`;
+    // Final total - USE EXACT FINAL VALUE
+    message += `🎯 *TOTALE FINALE: ${totalFinal}€*\n\n`;
     
-    // Payment breakdown - USE EXACT VALUES FROM CALCULATION
+    // Payment breakdown - USE EXACT CALCULATED VALUES
     message += `*💳 Modalità di pagamento:*\n`;
-    message += `📅 Alla prenotazione (30%): *${priceInfo.deposit}€*\n`;
-    message += `🏠 All'arrivo (saldo): *${priceInfo.totalAfterDiscount - priceInfo.deposit}€*\n`;
+    message += `📅 Alla prenotazione (30%): *${deposit}€*\n`;
+    message += `🏠 All'arrivo (saldo): *${balance}€*\n`;
     message += `🛡 Cauzione (restituibile): *200€*\n\n`;
     
     // Additional notes
