@@ -7,7 +7,7 @@ import { it } from 'date-fns/locale';
 
 /**
  * Creates a WhatsApp message with quote details
- * Using only universally compatible emojis from your provided list
+ * Using only the most basic and universally supported symbols
  */
 export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartment[]): string | null => {
   // Check if we have necessary data
@@ -49,17 +49,17 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     const pricePerNight = nights > 0 ? Math.round(basePrice / nights) : 0;
     const pricePerWeek = weeks > 0 ? Math.round(basePrice / weeks) : 0;
     
-    // Build WhatsApp message with universally compatible emojis
-    let message = `*Richiesta Preventivo Villa MareBlu* 🌊\n\n`;
+    // Build WhatsApp message with only the most basic symbols
+    let message = `*Richiesta Preventivo Villa MareBlu*\n\n`;
     
     // Stay dates section
-    message += `*📅 Date soggiorno:*\n`;
+    message += `*[CALENDARIO] Date soggiorno:*\n`;
     message += `Check-in: ${formattedCheckIn}\n`;
     message += `Check-out: ${formattedCheckOut}\n`;
     message += `Durata: *${nights} notti* (${weeks} ${weeks === 1 ? 'settimana' : 'settimane'})\n\n`;
     
     // Guest information
-    message += `*👥 Ospiti:*\n`;
+    message += `*[PERSONE] Ospiti:*\n`;
     message += `Adulti: ${formValues.adults}\n`;
     message += `Bambini: ${formValues.children || 0}\n`;
     
@@ -79,7 +79,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     
     // Group details if it's a group booking
     if (formValues.isGroupBooking && formValues.familyGroups && formValues.familyGroups.length > 0) {
-      message += `*👨‍👩‍👧‍👦 Dettagli gruppo:*\n`;
+      message += `*[GRUPPO] Dettagli gruppo:*\n`;
       message += `Tipo: ${formValues.groupType === 'families' ? 'Famiglie' : 'Coppie'}\n`;
       
       formValues.familyGroups.forEach((group, index) => {
@@ -89,7 +89,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     }
     
     // Selected apartments with EXACT prices from calculation
-    message += `*🏠 Appartamenti selezionati:*\n`;
+    message += `*[CASA] Appartamenti selezionati:*\n`;
     selectedApartments.forEach(apartment => {
       // Use the exact price from calculation
       const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
@@ -97,19 +97,19 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
       
       // Persons assignment if available
       if (formValues.personsPerApartment && formValues.personsPerApartment[apartment.id]) {
-        message += `  👥 Persone assegnate: ${formValues.personsPerApartment[apartment.id]}\n`;
+        message += `  > Persone assegnate: ${formValues.personsPerApartment[apartment.id]}\n`;
       }
       
       // Pets if any
       if (formValues.petsInApartment && formValues.petsInApartment[apartment.id]) {
-        message += `  🐕 Con animali domestici\n`;
+        message += `  > Con animali domestici\n`;
       }
     });
     message += `\n`;
     
-    // Services requested - using basic emojis from your list
-    message += `*🔔 Servizi richiesti:*\n`;
-    message += `Biancheria: ${formValues.needsLinen ? "✅ Richiesta" : "❌ Non richiesta"}\n`;
+    // Services requested - using text labels instead of emoji
+    message += `*[SERVIZI] Servizi richiesti:*\n`;
+    message += `Biancheria: ${formValues.needsLinen ? "SI - Richiesta" : "NO - Non richiesta"}\n`;
     
     if (formValues.hasPets) {
       let apartmentsWithPets = 0;
@@ -119,7 +119,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
         apartmentsWithPets = Object.values(formValues.petsInApartment).filter(Boolean).length;
       }
       
-      message += `Animali domestici: ✅ Si (${apartmentsWithPets} ${apartmentsWithPets === 1 ? 'appartamento' : 'appartamenti'})\n`;
+      message += `Animali domestici: SI (${apartmentsWithPets} ${apartmentsWithPets === 1 ? 'appartamento' : 'appartamenti'})\n`;
       
       if (formValues.petSize) {
         const sizeText = formValues.petSize === "small" ? "Piccola" : 
@@ -127,7 +127,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
         message += `Taglia: ${sizeText}\n`;
       }
     } else {
-      message += `Animali domestici: ❌ Nessuno\n`;
+      message += `Animali domestici: NO - Nessuno\n`;
     }
     
     // Cribs if needed
@@ -142,7 +142,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     message += `\n`;
     
     // Price breakdown section - USE EXACT VALUES
-    message += `*💰 Dettaglio prezzi:*\n`;
+    message += `*[EURO] Dettaglio prezzi:*\n`;
     
     // Show individual apartment breakdown if multiple apartments
     if (selectedApartments.length > 1) {
@@ -196,7 +196,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     message += `Subtotale soggiorno: ${subtotal}€\n\n`;
     
     // Services included in price
-    message += `*✅ Servizi inclusi nel prezzo:*\n`;
+    message += `*[CHECK] Servizi inclusi nel prezzo:*\n`;
     message += `• Pulizia finale: (inclusa) +${cleaningFee}€\n`;
     message += `• Tassa di soggiorno: (inclusa) +${touristTax}€\n`;
     if (totalCribs > 0) {
@@ -206,26 +206,26 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     
     // Discount if any - SHOW EXACT DISCOUNT VALUE
     if (discount > 0) {
-      message += `💚 *Sconto applicato: -${discount}€*\n\n`;
+      message += `[SCONTO] *Sconto applicato: -${discount}€*\n\n`;
     }
     
     // Final total - USE EXACT FINAL VALUE
-    message += `🎯 *TOTALE FINALE: ${totalFinal}€*\n\n`;
+    message += `[TOTALE] *TOTALE FINALE: ${totalFinal}€*\n\n`;
     
     // Payment breakdown - USE EXACT CALCULATED VALUES
-    message += `*💳 Modalità di pagamento:*\n`;
-    message += `📅 Alla prenotazione (30%): *${deposit}€*\n`;
-    message += `🏠 All'arrivo (saldo): *${balance}€*\n`;
-    message += `🔒 Cauzione (restituibile): *200€*\n\n`;
+    message += `*[PAGAMENTO] Modalità di pagamento:*\n`;
+    message += `> Alla prenotazione (30%): *${deposit}€*\n`;
+    message += `> All'arrivo (saldo): *${balance}€*\n`;
+    message += `> Cauzione (restituibile): *200€*\n\n`;
     
     // Additional notes
     if (formValues.notes) {
-      message += `*📝 Note aggiuntive:*\n${formValues.notes}\n\n`;
+      message += `*[NOTE] Note aggiuntive:*\n${formValues.notes}\n\n`;
     }
     
     // Call to action
-    message += `📞 Per confermare la disponibilità e procedere con la prenotazione, rispondete a questo messaggio!\n\n`;
-    message += `🌊 *Villa MareBlu - La vostra vacanza da sogno nel Salento*`;
+    message += `[TELEFONO] Per confermare la disponibilità e procedere con la prenotazione, rispondete a questo messaggio!\n\n`;
+    message += `*Villa MareBlu - La vostra vacanza da sogno nel Salento*`;
     
     return message;
   } catch (error) {
