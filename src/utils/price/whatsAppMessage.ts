@@ -50,7 +50,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     const pricePerWeek = weeks > 0 ? Math.round(basePrice / weeks) : 0;
     
     // Build WhatsApp message with compatible emojis
-    let message = `*Richiesta Preventivo Villa MareBlu* 🏖\n\n`;
+    let message = `*Richiesta Preventivo Villa MareBlu* 🏖️\n\n`;
     
     // Stay dates section
     message += `*📅 Date soggiorno:*\n`;
@@ -88,11 +88,11 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
       message += "\n";
     }
     
-    // Selected apartments with EXACT prices
+    // Selected apartments with EXACT prices from calculation
     message += `*🏠 Appartamenti selezionati:*\n`;
     selectedApartments.forEach(apartment => {
-      // Use the exact price from calculation, not a separate lookup
-      const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || basePrice;
+      // Use the exact price from calculation
+      const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
       message += `• ${apartment.name}: ${apartmentPrice}€\n`;
       
       // Persons assignment if available
@@ -108,7 +108,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     message += `\n`;
     
     // Services requested
-    message += `*🛎 Servizi richiesti:*\n`;
+    message += `*🛎️ Servizi richiesti:*\n`;
     message += `Biancheria: ${formValues.needsLinen ? "✅ Richiesta" : "❌ Non richiesta"}\n`;
     
     if (formValues.hasPets) {
@@ -143,10 +143,26 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     
     // Price breakdown section - USE EXACT VALUES
     message += `*💰 Dettaglio prezzi:*\n`;
-    message += `Prezzo base appartamento: *${basePrice}€*\n`;
-    message += `• Prezzo per notte: ~${pricePerNight}€\n`;
-    message += `• Prezzo per settimana: ~${pricePerWeek}€\n`;
-    message += `• ${nights} notti (${weeks} ${weeks === 1 ? 'settimana' : 'settimane'}): ${basePrice}€\n\n`;
+    
+    // Show individual apartment breakdown if multiple apartments
+    if (selectedApartments.length > 1) {
+      message += `Prezzo base appartamenti: *${basePrice}€*\n`;
+      
+      // Show individual apartment prices
+      selectedApartments.forEach(apartment => {
+        const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
+        message += `• ${apartment.name}: ${apartmentPrice}€\n`;
+      });
+      
+      message += `• Prezzo per notte: ~${pricePerNight}€\n`;
+      message += `• Prezzo per settimana: ~${pricePerWeek}€\n`;
+      message += `• ${nights} notti (${weeks} ${weeks === 1 ? 'settimana' : 'settimane'}): ${basePrice}€\n\n`;
+    } else {
+      message += `Prezzo base appartamento: *${basePrice}€*\n`;
+      message += `• Prezzo per notte: ~${pricePerNight}€\n`;
+      message += `• Prezzo per settimana: ~${pricePerWeek}€\n`;
+      message += `• ${nights} notti (${weeks} ${weeks === 1 ? 'settimana' : 'settimane'}): ${basePrice}€\n\n`;
+    }
     
     // Extra services if any
     if (priceInfo.extras > 0) {
@@ -181,8 +197,8 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     
     // Services included in price
     message += `*✅ Servizi inclusi nel prezzo:*\n`;
-    message += `• Pulizia finale: Inclusa (+${cleaningFee}€)\n`;
-    message += `• Tassa di soggiorno: Inclusa (+${touristTax}€)\n`;
+    message += `• Pulizia finale: (inclusa) +${cleaningFee}€\n`;
+    message += `• Tassa di soggiorno: (inclusa) +${touristTax}€\n`;
     if (totalCribs > 0) {
       message += `• Culle per bambini (${totalCribs}): Gratuite\n`;
     }
@@ -200,7 +216,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     message += `*💳 Modalità di pagamento:*\n`;
     message += `📅 Alla prenotazione (30%): *${deposit}€*\n`;
     message += `🏠 All'arrivo (saldo): *${balance}€*\n`;
-    message += `🛡 Cauzione (restituibile): *200€*\n\n`;
+    message += `🛡️ Cauzione (restituibile): *200€*\n\n`;
     
     // Additional notes
     if (formValues.notes) {
@@ -209,7 +225,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     
     // Call to action
     message += `📞 Per confermare la disponibilità e procedere con la prenotazione, rispondete a questo messaggio!\n\n`;
-    message += `🏖 *Villa MareBlu - La vostra vacanza da sogno nel Salento*`;
+    message += `🏖️ *Villa MareBlu - La vostra vacanza da sogno nel Salento*`;
     
     return message;
   } catch (error) {
