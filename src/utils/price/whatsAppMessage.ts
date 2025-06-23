@@ -7,7 +7,7 @@ import { it } from 'date-fns/locale';
 
 /**
  * Creates a WhatsApp message with quote details
- * Using only basic emojis compatible with all WhatsApp clients
+ * Using only universally compatible emojis from your provided list
  */
 export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartment[]): string | null => {
   // Check if we have necessary data
@@ -49,7 +49,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     const pricePerNight = nights > 0 ? Math.round(basePrice / nights) : 0;
     const pricePerWeek = weeks > 0 ? Math.round(basePrice / weeks) : 0;
     
-    // Build WhatsApp message with basic compatible emojis
+    // Build WhatsApp message with universally compatible emojis
     let message = `*Richiesta Preventivo Villa MareBlu* 🌊\n\n`;
     
     // Stay dates section
@@ -107,8 +107,8 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     });
     message += `\n`;
     
-    // Services requested
-    message += `*🛎 Servizi richiesti:*\n`;
+    // Services requested - using basic emojis from your list
+    message += `*🔔 Servizi richiesti:*\n`;
     message += `Biancheria: ${formValues.needsLinen ? "✅ Richiesta" : "❌ Non richiesta"}\n`;
     
     if (formValues.hasPets) {
@@ -216,7 +216,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     message += `*💳 Modalità di pagamento:*\n`;
     message += `📅 Alla prenotazione (30%): *${deposit}€*\n`;
     message += `🏠 All'arrivo (saldo): *${balance}€*\n`;
-    message += `🛡 Cauzione (restituibile): *200€*\n\n`;
+    message += `🔒 Cauzione (restituibile): *200€*\n\n`;
     
     // Additional notes
     if (formValues.notes) {
