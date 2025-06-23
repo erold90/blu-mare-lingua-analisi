@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -69,17 +68,36 @@ const AvailableWeeksSummary = () => {
           const resStart = new Date(reservation.startDate);
           const resEnd = new Date(reservation.endDate);
           
-          // Normalizza le date
+          // Normalizza le date delle prenotazioni
           resStart.setHours(0, 0, 0, 0);
           resEnd.setHours(0, 0, 0, 0);
           
+          // La settimana va da sabato a venerdì
           const weekStart = new Date(week.start);
-          const weekEnd = addDays(weekStart, 6); // Fine settimana (venerdì)
+          const weekEnd = new Date(week.end); // Venerdì
           weekStart.setHours(0, 0, 0, 0);
           weekEnd.setHours(23, 59, 59, 999);
 
-          // Verifica sovrapposizione
-          return resStart <= weekEnd && resEnd >= weekStart;
+          // Verifica sovrapposizione: c'è conflitto se i periodi si sovrappongono
+          // ESCLUDENDO i giorni di transizione (check-in/check-out)
+          // Una settimana è occupata se:
+          // - la prenotazione inizia durante la settimana (resStart >= weekStart && resStart <= weekEnd)
+          // - la prenotazione finisce durante la settimana (resEnd >= weekStart && resEnd <= weekEnd)  
+          // - la prenotazione copre completamente la settimana (resStart <= weekStart && resEnd >= weekEnd)  
+          
+          const reservationStartsDuringWeek = resStart >= weekStart && resStart <= weekEnd;
+          const reservationEndsDuringWeek = resEnd >= weekStart && resEnd <= weekEnd;
+          const reservationCoversWeek = resStart <= weekStart && resEnd >= weekEnd;
+          
+          // Se la prenotazione ha check-out sabato (inizio settimana) o check-in venerdì (fine settimana),
+          // consideriamo la settimana libera (giorni di transizione)
+          const isCheckoutOnWeekStart = resEnd.getTime() === weekStart.getTime();
+          const isCheckinOnWeekEnd = resStart.getTime() === weekEnd.getTime();
+          
+          const hasConflict = (reservationStartsDuringWeek || reservationEndsDuringWeek || reservationCoversWeek) 
+                            && !isCheckoutOnWeekStart && !isCheckinOnWeekEnd;
+
+          return hasConflict;
         });
 
         return !isOccupied;
