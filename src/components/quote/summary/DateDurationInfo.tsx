@@ -54,7 +54,7 @@ const DateDurationInfo: React.FC<DateDurationInfoProps> = ({ checkIn, checkOut, 
         </div>
         <div className="flex justify-between items-center text-sm text-muted-foreground">
           <span>Equivalenti a:</span>
-          <span>{weeks} settimana{weeks > 1 ? 'e' : ''}</span>
+          <span>{weeks} {weeks === 1 ? 'settimana' : 'settimane'}</span>
         </div>
       </div>
       
@@ -69,7 +69,7 @@ const DateDurationInfo: React.FC<DateDurationInfoProps> = ({ checkIn, checkOut, 
           
           {isCheckInSaturday && (
             <div>
-              <span className="text-sm text-muted-foreground">Cambio:</span>
+              <span className="text-sm text-muted-foreground">Check-in:</span>
               <p className="text-emerald-600 font-medium">Sabato</p>
             </div>
           )}
