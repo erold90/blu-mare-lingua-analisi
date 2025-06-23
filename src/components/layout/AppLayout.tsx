@@ -1,33 +1,43 @@
+import React, { useState, useEffect } from "react";
+import AppHeader from "./AppHeader";
+import WhatsAppButton from "../WhatsAppButton";
+import CookieConsent from "@/components/CookieConsent";
+import { useLocation } from "react-router-dom";
+import { usePageVisitTracker } from "@/hooks/usePageVisitTracker";
 
-import { Outlet, useLocation } from "react-router-dom";
-import { AppHeader } from "./AppHeader";
-import { AppSidebar } from "./AppSidebar";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { CookieConsent } from "@/components/CookieConsent";
-import WhatsAppButton from "./WhatsAppButton";
-import { useIsMobile } from "@/hooks/use-mobile";
-
-export function AppLayout() {
-  const isMobile = useIsMobile();
-  const location = useLocation();
-  
-  // Check if we're in the reserved area
-  const isReservedArea = location.pathname.includes('/area-riservata');
-  
-  return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full flex-col">
-        {!isReservedArea && <AppHeader />}
-        <div className="flex flex-1">
-          {!isReservedArea && <AppSidebar />}
-          <SidebarInset className="flex-1 w-full transition-all duration-300">
-            <main className="flex-1">
-              <Outlet />
-            </main>
-          </SidebarInset>
-        </div>
-        {!isReservedArea && <WhatsAppButton />}
-      </div>
-    </SidebarProvider>
-  );
+interface AppLayoutProps {
+  children: React.ReactNode;
 }
+
+import { AnalyticsProvider } from "./AnalyticsProvider";
+
+const AppLayout = ({ children }: AppLayoutProps) => {
+  const location = useLocation();
+  usePageVisitTracker();
+  const [showCookieConsent, setShowCookieConsent] = useState(false);
+
+  useEffect(() => {
+    const hasAcceptedCookies = localStorage.getItem("cookieConsent");
+    setShowCookieConsent(!hasAcceptedCookies);
+  }, []);
+
+  const handleAcceptCookies = () => {
+    localStorage.setItem("cookieConsent", "true");
+    setShowCookieConsent(false);
+  };
+
+  return (
+    <AnalyticsProvider>
+      <div className="min-h-screen bg-background">
+        <AppHeader />
+        <main className="flex-1">
+          {children}
+        </main>
+        <WhatsAppButton />
+        <CookieConsent />
+      </div>
+    </AnalyticsProvider>
+  );
+};
+
+export default AppLayout;

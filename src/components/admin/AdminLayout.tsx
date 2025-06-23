@@ -1,235 +1,361 @@
 import * as React from "react";
-import { NavLink, useLocation, Link, useNavigate } from "react-router-dom";
-import { 
-  Calendar, 
-  LayoutDashboard, 
-  Image, 
-  Settings, 
-  EuroIcon, 
-  History, 
-  Home, 
-  Menu, 
-  Brush,
-  Server 
+import { useState } from "react";
+import AdminDashboard from "./AdminDashboardNew";
+import AdminReservations from "./AdminReservations";
+import AdminApartments from "./AdminApartments";
+import AdminPrices from "./AdminPrices";
+import AdminCleaningManagement from "./cleaning/AdminCleaningManagement";
+import SiteImageManager from "./images/SiteImageManager";
+import AdminLog from "./AdminLog";
+import AdminSettings from "./AdminSettings";
+import {
+  Users,
+  Calendar,
+  Building,
+  Euro,
+  Sparkles,
+  Images,
+  FileText,
+  TrendingUp,
+  Settings,
+  Menu,
+  X
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { 
-  Sheet,
-  SheetContent,
-  SheetTrigger
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import AdminAdvancedLog from "./AdminAdvancedLog";
 
-interface AdminLayoutProps {
-  children: React.ReactNode;
-}
+const AdminLayout = () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("dashboard");
 
-const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
-  const { logout } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const [menuOpen, setMenuOpen] = React.useState(false);
-  
-  const isActive = (path: string) => {
-    return location.pathname.includes(path);
-  };
-
-  const handleLogout = React.useCallback(() => {
-    logout();
-    toast.success("Logout effettuato con successo");
-    
-    console.log("AdminLayout - Logout: reindirizzamento tra 300ms");
-    
-    // Chiude il menu mobile se aperto
-    setMenuOpen(false);
-    
-    // Reindirizza all'area login
-    setTimeout(() => {
-      navigate("/area-riservata", { replace: true });
-    }, 300);
-  }, [logout, navigate]);
-
-  const NavItems = () => (
-    <nav className="space-y-1">
-      <NavLink
-        to="/area-riservata/dashboard"
-        className={({ isActive }) =>
-          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
-            isActive ? "bg-accent font-medium" : "hover:bg-muted"
-          }`
-        }
-        onClick={() => setMenuOpen(false)}
-      >
-        <LayoutDashboard className="h-5 w-5" />
-        <span>Dashboard</span>
-      </NavLink>
-      <NavLink
-        to="/area-riservata/calendario"
-        className={({ isActive }) =>
-          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
-            isActive ? "bg-accent font-medium" : "hover:bg-muted"
-          }`
-        }
-        onClick={() => setMenuOpen(false)}
-      >
-        <Calendar className="h-5 w-5" />
-        <span>Calendario</span>
-      </NavLink>
-      <NavLink
-        to="/area-riservata/prenotazioni"
-        className={({ isActive }) =>
-          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
-            isActive ? "bg-accent font-medium" : "hover:bg-muted"
-          }`
-        }
-        onClick={() => setMenuOpen(false)}
-      >
-        <Calendar className="h-5 w-5" />
-        <span>Prenotazioni</span>
-      </NavLink>
-      <NavLink
-        to="/area-riservata/pulizie"
-        className={({ isActive }) =>
-          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
-            isActive ? "bg-accent font-medium" : "hover:bg-muted"
-          }`
-        }
-        onClick={() => setMenuOpen(false)}
-      >
-        <Brush className="h-5 w-5" />
-        <span>Pulizie</span>
-      </NavLink>
-      <NavLink
-        to="/area-riservata/prezzi"
-        className={({ isActive }) =>
-          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
-            isActive ? "bg-accent font-medium" : "hover:bg-muted"
-          }`
-        }
-        onClick={() => setMenuOpen(false)}
-      >
-        <EuroIcon className="h-5 w-5" />
-        <span>Prezzi</span>
-      </NavLink>
-      <NavLink
-        to="/area-riservata/appartamenti"
-        className={({ isActive }) =>
-          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
-            isActive ? "bg-accent font-medium" : "hover:bg-muted"
-          }`
-        }
-        onClick={() => setMenuOpen(false)}
-      >
-        <Image className="h-5 w-5" />
-        <span>Appartamenti</span>
-      </NavLink>
-      <NavLink
-        to="/area-riservata/api-test"
-        className={({ isActive }) =>
-          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
-            isActive ? "bg-accent font-medium" : "hover:bg-muted"
-          }`
-        }
-        onClick={() => setMenuOpen(false)}
-      >
-        <Server className="h-5 w-5" />
-        <span>Test API</span>
-      </NavLink>
-      <NavLink
-        to="/area-riservata/impostazioni"
-        className={({ isActive }) =>
-          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
-            isActive ? "bg-accent font-medium" : "hover:bg-muted"
-          }`
-        }
-        onClick={() => setMenuOpen(false)}
-      >
-        <Settings className="h-5 w-5" />
-        <span>Impostazioni</span>
-      </NavLink>
-      <NavLink
-        to="/area-riservata/log"
-        className={({ isActive }) =>
-          `flex items-center space-x-3 py-2.5 px-3 rounded-lg transition-colors ${
-            isActive ? "bg-accent font-medium" : "hover:bg-muted"
-          }`
-        }
-        onClick={() => setMenuOpen(false)}
-      >
-        <History className="h-5 w-5" />
-        <span>Log</span>
-      </NavLink>
-      <div className="mt-4 md:hidden px-3">
-        <Button variant="outline" className="w-full" onClick={handleLogout}>
-          Logout
-        </Button>
-      </div>
-    </nav>
-  );
+  const navigation = [
+    { name: 'Dashboard', href: '#', icon: Users, current: true },
+    { name: 'Team', href: '#', icon: Calendar, current: false },
+    { name: 'Projects', href: '#', icon: Building, current: false },
+    { name: 'Calendar', href: '#', icon: Euro, current: false },
+    { name: 'Documents', href: '#', icon: Sparkles, current: false },
+    { name: 'Reports', href: '#', icon: Images, current: false },
+  ];
 
   return (
-    <div className="flex flex-col h-full min-h-screen">
-      <div className="flex items-center justify-between py-3 px-3 mb-0 md:mb-4 bg-white shadow-sm z-10 sticky top-0">
-        <div className="flex items-center space-x-3">
-          {isMobile && (
-            <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-64 pt-8">
-                <div className="py-2">
-                  <h2 className="text-lg font-medium mx-3 mb-4">Menu</h2>
-                  <NavItems />
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
-          <div>
-            <h1 className="text-xl font-bold">Area Amministrazione</h1>
-            <p className="text-muted-foreground text-xs hidden sm:block">
-              {isActive('dashboard') ? 'Statistiche e metriche' : 
-               isActive('calendario') ? 'Calendario unificato' :
-               isActive('prenotazioni') ? 'Gestione prenotazioni' : 
-               isActive('pulizie') ? 'Gestione pulizie' :
-               isActive('prezzi') ? 'Gestione prezzi stagionali' :
-               isActive('appartamenti') ? 'Gestione appartamenti' :
-               isActive('impostazioni') ? 'Impostazioni generali' :
-               isActive('log') ? 'Log attività' : ''}
-            </p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="lg:hidden">
+        <button
+          type="button"
+          className="bg-gray-50 p-4 inline-flex items-center justify-center rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+          onClick={() => setSidebarOpen(true)}
+        >
+          <span className="sr-only">Open sidebar</span>
+          <Menu className="h-6 w-6" aria-hidden="true" />
+        </button>
+      </div>
+
+      {/* Sidebar (hidden on mobile) */}
+      <div
+        className={`fixed inset-0 z-40 flex lg:static ${
+          sidebarOpen ? "block" : "hidden"
+        }`}
+      >
+        {/* Mobile menu overlay */}
+        <div
+          className="fixed inset-0 bg-gray-600 bg-opacity-75"
+          aria-hidden="true"
+          onClick={() => setSidebarOpen(false)}
+        />
+
+        {/* Mobile menu sidebar */}
+        <div
+          className={`relative flex-1 flex flex-col max-w-xs w-full bg-blue-800`}
+        >
+          {/* Close button (mobile only) */}
+          <div className="absolute top-0 right-0 -mr-12 pt-2">
+            <button
+              type="button"
+              className="ml-1 flex items-center justify-center h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="sr-only">Close sidebar</span>
+              <X className="h-6 w-6 text-white" aria-hidden="true" />
+            </button>
           </div>
-        </div>
-        
-        <div className="flex space-x-2">
-          <Link to="/" className="text-black hover:underline">
-            <Home className="h-5 w-5" />
-            <span className="sr-only">Home</span>
-          </Link>
-          {!isMobile && (
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              Logout
-            </Button>
-          )}
+
+          {/* Sidebar content */}
+          <div className="flex-1 flex flex-col pt-5 pb-4">
+            <div className="flex items-center flex-shrink-0 px-4">
+              <h1 className="text-white text-lg font-semibold">
+                Villa Mareblu - Admin
+              </h1>
+            </div>
+            <nav
+              className="mt-5 flex-1 px-2 bg-blue-800 space-y-1"
+              aria-label="Sidebar"
+            >
+              {/* Dashboard */}
+              <button
+                onClick={() => setActiveTab("dashboard")}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                  activeTab === "dashboard"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                <Users className="h-5 w-5" />
+                Dashboard
+              </button>
+
+              {/* Reservations */}
+              <button
+                onClick={() => setActiveTab("reservations")}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                  activeTab === "reservations"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                <Calendar className="h-5 w-5" />
+                Prenotazioni
+              </button>
+
+              {/* Apartments */}
+              <button
+                onClick={() => setActiveTab("apartments")}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                  activeTab === "apartments"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                <Building className="h-5 w-5" />
+                Appartamenti
+              </button>
+
+              {/* Prices */}
+              <button
+                onClick={() => setActiveTab("prices")}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                  activeTab === "prices"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                <Euro className="h-5 w-5" />
+                Prezzi
+              </button>
+
+              {/* Cleaning */}
+              <button
+                onClick={() => setActiveTab("cleaning")}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                  activeTab === "cleaning"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                <Sparkles className="h-5 w-5" />
+                Pulizie
+              </button>
+
+              {/* Images */}
+              <button
+                onClick={() => setActiveTab("images")}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                  activeTab === "images"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                <Images className="h-5 w-5" />
+                Immagini
+              </button>
+
+              {/* Log */}
+              <button
+                onClick={() => setActiveTab("log")}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                  activeTab === "log"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                <FileText className="h-5 w-5" />
+                Log
+              </button>
+
+              {/* Nel menu della sidebar, tra log e settings */}
+              <button
+                onClick={() => setActiveTab("analytics")}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                  activeTab === "analytics"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                <TrendingUp className="h-5 w-5" />
+                Analytics Avanzati
+              </button>
+
+              {/* Settings */}
+              <button
+                onClick={() => setActiveTab("settings")}
+                className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                  activeTab === "settings"
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-300 hover:bg-gray-700"
+                }`}
+              >
+                <Settings className="h-5 w-5" />
+                Impostazioni
+              </button>
+            </nav>
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-1">
-        {!isMobile && (
-          <aside className="w-56 shrink-0 border-r h-[calc(100vh-70px)] sticky top-[60px] pt-5 px-2">
-            <NavItems />
-          </aside>
-        )}
-        <main className="flex-1 p-3 md:p-6">
-          <div className="border rounded-lg h-full p-3 md:p-6 overflow-auto">
-            {children}
+      {/* Static sidebar for desktop */}
+      <div className="hidden lg:flex lg:w-64 lg:fixed lg:inset-y-0 lg:z-50 lg:flex-col">
+        {/* Sidebar component, swap this element with another sidebar if you like */}
+        <div className="flex flex-col flex-grow bg-blue-800 pt-5 pb-4">
+          <div className="flex items-center flex-shrink-0 px-4">
+            <h1 className="text-white text-lg font-semibold">
+              Villa Mareblu - Admin
+            </h1>
           </div>
-        </main>
+          <nav
+            className="mt-5 flex-1 flex flex-col bg-blue-800 space-y-1"
+            aria-label="Sidebar"
+          >
+            {/* Dashboard */}
+            <button
+              onClick={() => setActiveTab("dashboard")}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                activeTab === "dashboard"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              <Users className="h-5 w-5" />
+              Dashboard
+            </button>
+
+            {/* Reservations */}
+            <button
+              onClick={() => setActiveTab("reservations")}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                activeTab === "reservations"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              <Calendar className="h-5 w-5" />
+              Prenotazioni
+            </button>
+
+            {/* Apartments */}
+            <button
+              onClick={() => setActiveTab("apartments")}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                activeTab === "apartments"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              <Building className="h-5 w-5" />
+              Appartamenti
+            </button>
+
+            {/* Prices */}
+            <button
+              onClick={() => setActiveTab("prices")}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                activeTab === "prices"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              <Euro className="h-5 w-5" />
+              Prezzi
+            </button>
+
+            {/* Cleaning */}
+            <button
+              onClick={() => setActiveTab("cleaning")}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                activeTab === "cleaning"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              <Sparkles className="h-5 w-5" />
+              Pulizie
+            </button>
+
+            {/* Images */}
+            <button
+              onClick={() => setActiveTab("images")}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                activeTab === "images"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              <Images className="h-5 w-5" />
+              Immagini
+            </button>
+
+            {/* Log */}
+            <button
+              onClick={() => setActiveTab("log")}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                activeTab === "log"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              <FileText className="h-5 w-5" />
+              Log
+            </button>
+
+            {/* Nel menu della sidebar, tra log e settings */}
+            <button
+              onClick={() => setActiveTab("analytics")}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                activeTab === "analytics"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              <TrendingUp className="h-5 w-5" />
+              Analytics Avanzati
+            </button>
+
+            {/* Settings */}
+            <button
+              onClick={() => setActiveTab("settings")}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
+                activeTab === "settings"
+                  ? "bg-blue-600 text-white"
+                  : "text-gray-300 hover:bg-gray-700"
+              }`}
+            >
+              <Settings className="h-5 w-5" />
+              Impostazioni
+            </button>
+          </nav>
+        </div>
       </div>
+      
+      <main className="lg:pl-64">
+        <div className="p-6">
+          {activeTab === "dashboard" && <AdminDashboard />}
+          {activeTab === "reservations" && <AdminReservations />}
+          {activeTab === "apartments" && <AdminApartments />}
+          {activeTab === "prices" && <AdminPrices />}
+          {activeTab === "cleaning" && <AdminCleaningManagement />}
+          {activeTab === "images" && <SiteImageManager />}
+          {activeTab === "log" && <AdminLog />}
+          {activeTab === "analytics" && <AdminAdvancedLog />}
+          {activeTab === "settings" && <AdminSettings />}
+        </div>
+      </main>
     </div>
   );
 };

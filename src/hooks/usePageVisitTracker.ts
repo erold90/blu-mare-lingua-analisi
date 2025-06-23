@@ -1,22 +1,14 @@
 
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useActivityLog } from '@/hooks/activity/useActivityLog';
 
+// Questo hook è ora deprecato in favore di useAdvancedTracking
+// Manteniamo solo per compatibilità ma non fa più tracking
 export const usePageVisitTracker = () => {
   const location = useLocation();
-  const { addSiteVisit } = useActivityLog();
 
   useEffect(() => {
-    // Skip tracking for admin area and API routes
-    if (location.pathname.includes("/area-riservata") || 
-        location.pathname.includes("/api/") ||
-        location.pathname.includes("/admin/")) {
-      console.log("Skipping tracking for protected/admin area:", location.pathname);
-      return;
-    }
-
-    console.log("Page visit detected:", location.pathname);
-    addSiteVisit(location.pathname);
-  }, [location.pathname, addSiteVisit]);
+    // Il tracking è ora gestito da useAdvancedTracking in AnalyticsProvider
+    console.log("Page visit (legacy tracker):", location.pathname);
+  }, [location.pathname]);
 };
