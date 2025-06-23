@@ -1,10 +1,10 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Apartment } from "@/data/apartments";
 import { FormValues } from "@/utils/quoteFormSchema";
-import { calculateTotalPrice } from "@/utils/price/priceCalculator";
-import { refreshPricesCache } from "@/utils/price/weeklyPrice";
+import { calculateTotalPriceUnified } from "@/utils/price/unifiedPriceCalculator";
+import { PriceCalculation, emptyPriceCalculation } from "@/utils/price/types";
 import { v4 as uuidv4 } from "uuid";
 import { useActivityLog } from "@/hooks/activity/useActivityLog";
 
@@ -31,43 +31,51 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
   const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
   const { addQuoteLog } = useActivityLog();
   
-  // Refresh prices cache when component mounts to ensure we have latest prices
+  const [priceInfo, setPriceInfo] = useState<PriceCalculation>(emptyPriceCalculation);
+  const [isLoadingPrices, setIsLoadingPrices] = useState(true);
+  
+  // Calcola i prezzi usando il sistema unificato
   useEffect(() => {
-    refreshPricesCache().then(() => {
-      console.log("Prices cache refreshed for quote calculation");
-    }).catch(err => {
-      console.error("Error refreshing prices cache:", err);
-    });
-  }, []);
+    const calculatePrices = async () => {
+      setIsLoadingPrices(true);
+      try {
+        console.log("Calculating prices with unified system...");
+        const calculatedPrices = await calculateTotalPriceUnified(formValues, apartments);
+        setPriceInfo(calculatedPrices);
+      } catch (error) {
+        console.error("Error calculating prices:", error);
+        setPriceInfo(emptyPriceCalculation);
+      } finally {
+        setIsLoadingPrices(false);
+      }
+    };
+
+    calculatePrices();
+  }, [formValues, apartments]);
   
-  // Calculate prices after cache refresh
-  const priceInfo = calculateTotalPrice(formValues, apartments);
-  
-  // If only one apartment is selected, make sure it's the main selectedApartment
+  // Se c'è solo un appartamento selezionato, assicurati che sia il selectedApartment principale
   useEffect(() => {
     if (selectedApartmentIds.length === 1 && formValues.selectedApartment !== selectedApartmentIds[0]) {
       form.setValue("selectedApartment", selectedApartmentIds[0]);
     }
   }, [selectedApartmentIds, form, formValues.selectedApartment]);
   
-  // Log the quote when this component mounts
+  // Log del preventivo quando il componente si monta
   useEffect(() => {
     const quoteLogId = localStorage.getItem('currentQuoteLogId') || uuidv4();
     
-    // Save the quote log
     addQuoteLog({
       id: quoteLogId,
       timestamp: new Date().toISOString(),
-      form_values: formValues, // Changed from formValues to form_values
-      step: 5, // We're on step 5
-      completed: true // Now marking as completed since this is the final step
+      form_values: formValues,
+      step: 5,
+      completed: true
     });
     
-    // Save the ID for later use
     localStorage.setItem('currentQuoteLogId', quoteLogId);
   }, [addQuoteLog, formValues]);
   
-  // Render the footer actions separately for the SummaryLayout
+  // Render delle azioni footer
   const footerActions = (
     <QuoteActions 
       prevStep={prevStep} 
@@ -77,6 +85,16 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
       priceInfo={priceInfo}
     />
   );
+  
+  if (isLoadingPrices) {
+    return (
+      <SummaryLayout footer={footerActions}>
+        <div className="text-center py-8">
+          <div className="text-lg">Calcolo prezzi in corso...</div>
+        </div>
+      </SummaryLayout>
+    );
+  }
   
   return (
     <SummaryLayout footer={footerActions}>
