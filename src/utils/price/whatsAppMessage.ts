@@ -37,7 +37,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     const pricePerNight = nights > 0 ? Math.round(basePrice / nights) : 0;
     const pricePerWeek = weeks > 0 ? Math.round(basePrice / weeks) : 0;
     
-    // Create message
+    // Create message with WhatsApp-compatible emoticons
     let message = `*Richiesta Preventivo Villa MareBlu* 🏖️\n\n`;
     
     // Stay details with improved formatting
@@ -79,7 +79,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     // Apartments with better formatting
     message += `*🏠 Appartamenti selezionati:*\n`;
     selectedApartments.forEach(apartment => {
-      const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
+      const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || basePrice;
       message += `• ${apartment.name}: ${apartmentPrice}€\n`;
       
       // Persons assignment if available
