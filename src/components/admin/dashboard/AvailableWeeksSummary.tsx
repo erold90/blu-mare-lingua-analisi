@@ -5,11 +5,41 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useReservations } from "@/hooks/useReservations";
 import { usePrices } from "@/hooks/usePrices";
-import { getWeeksForYear } from "@/utils/price/dateUtils";
 import { format, addDays, startOfWeek } from "date-fns";
 import { it } from "date-fns/locale";
 import { Copy, Calendar } from "lucide-react";
 import { toast } from "sonner";
+
+// Get summer season weeks (Saturday to Friday) for a specific year
+const getSummerWeeksForYear = (year: number): { start: Date; end: Date }[] => {
+  const weeks: { start: Date; end: Date }[] = [];
+  
+  // Start from first Saturday of June
+  let currentDate = new Date(year, 5, 1); // June 1st
+  while (currentDate.getDay() !== 6) { // Find first Saturday
+    currentDate = addDays(currentDate, 1);
+  }
+  
+  // End at last week of September that includes October 5th
+  const endDate = new Date(year, 9, 5); // October 5th
+  
+  while (currentDate <= endDate) {
+    const weekStart = new Date(currentDate);
+    const weekEnd = addDays(currentDate, 6); // End on Friday
+    
+    // Only add if week starts before or on September 29
+    if (weekStart.getMonth() <= 8 || (weekStart.getMonth() === 8 && weekStart.getDate() <= 29)) {
+      weeks.push({
+        start: weekStart,
+        end: weekEnd
+      });
+    }
+    
+    currentDate = addDays(currentDate, 7); // Next Saturday
+  }
+  
+  return weeks;
+};
 
 const AvailableWeeksSummary = () => {
   const { reservations, apartments } = useReservations();
@@ -17,12 +47,13 @@ const AvailableWeeksSummary = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [generatedText, setGeneratedText] = useState("");
 
-  // Genera il testo con le settimane disponibili
+  // Genera il testo con le settimane disponibili della stagione estiva
   const generateAvailabilityText = useMemo(() => {
     if (!apartments || apartments.length === 0) return "";
 
-    const weeks = getWeeksForYear(selectedYear);
-    let text = `SETTIMANE DISPONIBILI ${selectedYear} - VILLA MAREBLU\n`;
+    const weeks = getSummerWeeksForYear(selectedYear);
+    let text = `RIEPILOGO STAGIONE ESTIVA ${selectedYear} - VILLA MAREBLU\n`;
+    text += `Periodo: 2 Giugno - 5 Ottobre\n`;
     text += `${"=".repeat(50)}\n\n`;
 
     apartments.forEach(apartment => {
@@ -54,7 +85,7 @@ const AvailableWeeksSummary = () => {
       });
 
       if (availableWeeks.length === 0) {
-        text += `Nessuna settimana disponibile\n\n`;
+        text += `Nessuna settimana disponibile nella stagione estiva\n\n`;
       } else {
         availableWeeks.forEach(week => {
           const weekStart = startOfWeek(week.start, { weekStartsOn: 6 }); // Sabato
@@ -78,7 +109,7 @@ const AvailableWeeksSummary = () => {
 
   const handleGenerate = () => {
     setGeneratedText(generateAvailabilityText);
-    toast.success("Testo generato con successo!");
+    toast.success("Riepilogo stagione estiva generato con successo!");
   };
 
   const handleCopy = async () => {
@@ -98,8 +129,11 @@ const AvailableWeeksSummary = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
-          Riepilogo Settimane Disponibili
+          Riepilogo Stagione Estiva
         </CardTitle>
+        <p className="text-sm text-muted-foreground">
+          Settimane disponibili dal 2 Giugno al 5 Ottobre per l'anno selezionato
+        </p>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center gap-4">
@@ -123,7 +157,7 @@ const AvailableWeeksSummary = () => {
           
           <Button onClick={handleGenerate} className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            Genera Riepilogo
+            Genera Riepilogo Estivo
           </Button>
         </div>
 
@@ -131,7 +165,7 @@ const AvailableWeeksSummary = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium">
-                Testo generato (pronto per copiare):
+                Riepilogo stagione estiva (pronto per copiare):
               </label>
               <Button
                 onClick={handleCopy}
@@ -149,7 +183,7 @@ const AvailableWeeksSummary = () => {
               readOnly
               rows={20}
               className="font-mono text-sm resize-none"
-              placeholder="Il testo generato apparirà qui..."
+              placeholder="Il riepilogo della stagione estiva apparirà qui..."
             />
           </div>
         )}
