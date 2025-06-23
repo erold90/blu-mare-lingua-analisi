@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { PriceCalculation } from "@/utils/price/types";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
-import { Euro, Percent, ReceiptText, Sparkles, PawPrint, BadgeEuro, Minus, AlertCircle } from "lucide-react";
+import { Euro, Percent, ReceiptText, Sparkles, PawPrint, BadgeEuro, Minus, AlertCircle, Calendar } from "lucide-react";
 
 interface PriceSummaryProps {
   priceInfo: PriceCalculation;
@@ -65,12 +65,33 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
     }
   };
 
+  // Debug: Log calculation details
+  console.log("📊 PriceSummary Debug Info:", {
+    nights,
+    weeks,
+    basePrice,
+    pricesAreValid,
+    checkIn: formValues.checkIn,
+    checkOut: formValues.checkOut,
+    apartmentPrices: priceInfo.apartmentPrices
+  });
+
   return (
     <div className="border rounded-md p-4 space-y-4">
       <h3 className="font-medium flex items-center gap-2">
         <Euro className="h-4 w-4" /> 
         Dettagli prezzo
       </h3>
+      
+      {/* Debug info in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="text-xs bg-gray-100 p-2 rounded">
+          <strong>Debug:</strong> Base: {basePrice}€, Notti: {nights}, Settimane: {weeks}
+          {priceInfo.apartmentPrices && (
+            <div>Prezzi singoli: {JSON.stringify(priceInfo.apartmentPrices)}</div>
+          )}
+        </div>
+      )}
       
       {/* Warning se i prezzi non sono validi */}
       {!pricesAreValid && (
@@ -82,6 +103,15 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         </div>
       )}
       
+      {/* Date range display for clarity */}
+      <div className="flex items-center gap-2 text-sm text-muted-foreground p-2 bg-blue-50 rounded">
+        <Calendar className="h-4 w-4" />
+        <span>
+          {formValues.checkIn?.toLocaleDateString('it-IT')} - {formValues.checkOut?.toLocaleDateString('it-IT')}
+          ({nights} notti, {weeks} settimane)
+        </span>
+      </div>
+      
       <div className="space-y-2">
         {/* Apartment cost - base price */}
         <div className="flex justify-between text-sm">
@@ -92,6 +122,18 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
             {pricesAreValid ? `${basePrice}€` : 'N/A'}
           </span>
         </div>
+        
+        {/* Show individual apartment prices if multiple apartments */}
+        {hasMultipleApartments && priceInfo.apartmentPrices && pricesAreValid && (
+          <div className="ml-4 space-y-1">
+            {Object.entries(priceInfo.apartmentPrices).map(([apartmentId, price]) => (
+              <div key={apartmentId} className="flex justify-between text-xs text-muted-foreground">
+                <span>{apartmentId}:</span>
+                <span>{price}€</span>
+              </div>
+            ))}
+          </div>
+        )}
         
         {/* Extra services (if any) */}
         {showExtraServices && (
