@@ -35,6 +35,22 @@ const AdminDashboard = () => {
            (endDate >= today && endDate <= weekFromNow);
   });
 
+  // Calculate dashboard metrics
+  const futureReservations = reservations.filter(res => {
+    const startDate = new Date(res.startDate);
+    return startDate > today;
+  }).length;
+
+  const pendingCleanings = 0; // This would need to be calculated from cleaning tasks
+  
+  const totalGuests = reservations.reduce((total, res) => {
+    return total + (res.adults || 0) + (res.children || 0);
+  }, 0);
+
+  const totalRevenue = reservations.reduce((total, res) => {
+    return total + (res.finalPrice || 0);
+  }, 0);
+
   return (
     <div className="space-y-8 p-6">
       <div>
@@ -45,9 +61,10 @@ const AdminDashboard = () => {
       </div>
 
       <DashboardMetrics 
-        reservations={reservations}
-        apartments={apartments}
-        activeReservations={activeReservations}
+        futureReservations={futureReservations}
+        pendingCleanings={pendingCleanings}
+        totalGuests={totalGuests}
+        totalRevenue={totalRevenue}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
