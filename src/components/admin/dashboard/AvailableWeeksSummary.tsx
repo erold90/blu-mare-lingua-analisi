@@ -9,26 +9,27 @@ import { format, addDays, startOfWeek } from "date-fns";
 import { it } from "date-fns/locale";
 import { Copy, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import { getPriceForWeekSync } from "@/utils/price/weeklyPrice";
 
 // Get summer season weeks (Saturday to Friday) for a specific year
 const getSummerWeeksForYear = (year: number): { start: Date; end: Date }[] => {
   const weeks: { start: Date; end: Date }[] = [];
   
-  // Start from first Saturday of June
+  // Start from first Saturday of June (approximately June 2-8)
   let currentDate = new Date(year, 5, 1); // June 1st
   while (currentDate.getDay() !== 6) { // Find first Saturday
     currentDate = addDays(currentDate, 1);
   }
   
-  // End at last week of September that includes October 5th
+  // End at the week that includes October 5th
   const endDate = new Date(year, 9, 5); // October 5th
   
   while (currentDate <= endDate) {
     const weekStart = new Date(currentDate);
     const weekEnd = addDays(currentDate, 6); // End on Friday
     
-    // Only add if week starts before or on September 29
-    if (weekStart.getMonth() <= 8 || (weekStart.getMonth() === 8 && weekStart.getDate() <= 29)) {
+    // Only add if the week end is before or on October 5th
+    if (weekEnd <= endDate) {
       weeks.push({
         start: weekStart,
         end: weekEnd
@@ -43,7 +44,7 @@ const getSummerWeeksForYear = (year: number): { start: Date; end: Date }[] => {
 
 const AvailableWeeksSummary = () => {
   const { reservations, apartments } = useReservations();
-  const { prices, getPriceForWeek } = usePrices();
+  const { prices } = usePrices();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [generatedText, setGeneratedText] = useState("");
 
@@ -91,13 +92,31 @@ const AvailableWeeksSummary = () => {
           const weekStart = startOfWeek(week.start, { weekStartsOn: 6 }); // Sabato
           const weekEnd = addDays(weekStart, 6); // Venerdì
           
-          // Usa la funzione getPriceForWeek dal hook usePrices
-          const price = getPriceForWeek ? getPriceForWeek(apartment.id, weekStart) : 0;
+          // Usa la funzione sincrona per ottenere il prezzo
+          let price = 0;
+          
+          // Prima prova a cercare il prezzo nei dati caricati
+          if (prices && prices.length > 0) {
+            const searchDateStr = weekStart.toISOString().split('T')[0];
+            const priceRecord = prices.find(
+              (p: any) => p.apartment_id === apartment.id && p.week_start === searchDateStr
+            );
+            
+            if (priceRecord) {
+              price = Number(priceRecord.price);
+            } else {
+              // Fallback alla funzione sincrona che cerca in localStorage
+              price = getPriceForWeekSync(apartment.id, weekStart);
+            }
+          } else {
+            // Se non ci sono prezzi caricati, usa la funzione sincrona
+            price = getPriceForWeekSync(apartment.id, weekStart);
+          }
           
           const startFormatted = format(weekStart, "d MMM", { locale: it });
           const endFormatted = format(weekEnd, "d MMM", { locale: it });
           
-          text += `• ${startFormatted} - ${endFormatted}: €${price || 'N/D'}\n`;
+          text += `• ${startFormatted} - ${endFormatted}: €${price > 0 ? price : 'N/D'}\n`;
         });
         text += `\n`;
       }
@@ -107,7 +126,7 @@ const AvailableWeeksSummary = () => {
     text += `Villa MareBlu - Marina di Pescoluse`;
 
     return text;
-  }, [apartments, reservations, selectedYear, getPriceForWeek]);
+  }, [apartments, reservations, selectedYear, prices]);
 
   const handleGenerate = () => {
     setGeneratedText(generateAvailabilityText);
