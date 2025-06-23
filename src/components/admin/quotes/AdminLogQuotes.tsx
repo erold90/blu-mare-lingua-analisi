@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { format, isWithinInterval, startOfDay, endOfDay, isSameDay } from "date-fns";
 import { it } from "date-fns/locale";
-import { CalendarDays, Eye } from "lucide-react";
+import { CalendarDays, Eye, Users, MapPin, Calendar, Euro } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
 import { apartments } from "@/data/apartments";
@@ -118,7 +119,7 @@ export const AdminLogQuotes = ({ quoteLogs, dateRange }: AdminLogQuotesProps) =>
                             </DialogTrigger>
                             <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
                               <DialogHeader>
-                                <DialogTitle>Log completo del preventivo</DialogTitle>
+                                <DialogTitle>Dettagli preventivo completo</DialogTitle>
                               </DialogHeader>
                               
                               {selectedQuote && (
@@ -154,29 +155,202 @@ export const AdminLogQuotes = ({ quoteLogs, dateRange }: AdminLogQuotesProps) =>
 };
 
 const QuoteDetails = ({ quote }: { quote: any }) => {
+  const formValues = quote.form_values;
+  const selectedApartments = formValues.selectedApartments || [];
+  
   return (
     <div className="space-y-6 py-4">
-      {/* Informazioni generali */}
-      <div className="bg-muted p-4 rounded-lg">
-        <h3 className="font-medium mb-3">Informazioni del log</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <div>
-            <p className="text-muted-foreground">ID Log</p>
-            <p className="font-mono text-xs">{quote.id}</p>
+      {/* Informazioni generali del log */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Informazioni del log
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <p className="text-muted-foreground">ID Log</p>
+              <p className="font-mono text-xs">{quote.id}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Timestamp</p>
+              <p>{format(new Date(quote.timestamp), "dd/MM/yyyy HH:mm:ss", { locale: it })}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Step completato</p>
+              <div className="flex items-center gap-2">
+                <Badge variant={quote.completed ? "default" : "secondary"}>
+                  {quote.step}/5
+                </Badge>
+                {quote.completed && <Badge variant="outline">Completato</Badge>}
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-muted-foreground">Timestamp</p>
-            <p>{format(new Date(quote.timestamp), "dd/MM/yyyy HH:mm:ss", { locale: it })}</p>
-          </div>
-          <div>
-            <p className="text-muted-foreground">Step completato</p>
-            <p>{quote.step}/5</p>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Altri dettagli del preventivo */}
-      {/* ... resto dei dettagli come nel codice originale ... */}
+      {/* Dettagli del cliente */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Dettagli cliente
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Nome</p>
+              <p className="font-medium">{formValues.name || "Non specificato"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Email</p>
+              <p className="font-medium">{formValues.email || "Non specificata"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Telefono</p>
+              <p className="font-medium">{formValues.phone || "Non specificato"}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Persone totali</p>
+              <p className="font-medium">
+                {formValues.adults || 0} adulti
+                {(formValues.children || 0) > 0 && `, ${formValues.children} bambini`}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Date soggiorno */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Periodo soggiorno
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Check-in</p>
+              <p className="font-medium">
+                {formValues.checkIn ? format(new Date(formValues.checkIn), "dd/MM/yyyy", { locale: it }) : "Non specificato"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Check-out</p>
+              <p className="font-medium">
+                {formValues.checkOut ? format(new Date(formValues.checkOut), "dd/MM/yyyy", { locale: it }) : "Non specificato"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Notti</p>
+              <p className="font-medium">
+                {formValues.checkIn && formValues.checkOut
+                  ? Math.ceil((new Date(formValues.checkOut).getTime() - new Date(formValues.checkIn).getTime()) / (1000 * 60 * 60 * 24))
+                  : "Non calcolabile"}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Appartamenti selezionati */}
+      {selectedApartments.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Appartamenti selezionati
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {selectedApartments.map((aptId: string) => {
+                const apartment = apartments.find(apt => apt.id === aptId);
+                return (
+                  <div key={aptId} className="flex items-center justify-between p-2 bg-muted rounded">
+                    <span className="font-medium">{apartment?.name || `Appartamento ${aptId}`}</span>
+                    <Badge variant="outline">{apartment?.beds} posti letto</Badge>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Servizi aggiuntivi */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Servizi aggiuntivi</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span>Biancheria</span>
+              <Badge variant={formValues.needsLinen ? "default" : "secondary"}>
+                {formValues.needsLinen ? "Richiesta" : "Non richiesta"}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>Animali domestici</span>
+              <Badge variant={formValues.hasPets ? "default" : "secondary"}>
+                {formValues.hasPets ? "Sì" : "No"}
+              </Badge>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Riepilogo prezzi */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Euro className="h-5 w-5" />
+            Riepilogo prezzi
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span>Prezzo base</span>
+              <span className="font-medium">€{quote.price?.basePrice || 0}</span>
+            </div>
+            {quote.price?.linens > 0 && (
+              <div className="flex justify-between">
+                <span>Biancheria</span>
+                <span className="font-medium">€{quote.price.linens}</span>
+              </div>
+            )}
+            {quote.price?.pets > 0 && (
+              <div className="flex justify-between">
+                <span>Animali</span>
+                <span className="font-medium">€{quote.price.pets}</span>
+              </div>
+            )}
+            <div className="border-t pt-2 flex justify-between font-bold">
+              <span>Totale</span>
+              <span>€{quote.price?.totalPrice || 0}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Note aggiuntive */}
+      {formValues.notes && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Note</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm">{formValues.notes}</p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };

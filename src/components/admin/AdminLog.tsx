@@ -9,11 +9,12 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, subDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { useActivityLog } from "@/hooks/activity/useActivityLog";
-import { CalendarIcon, Info, Loader2 } from "lucide-react";
+import { CalendarIcon, Info, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminLogAnalytics } from "./analytics/AdminLogAnalytics";
 import { AdminLogQuotes } from "./quotes/AdminLogQuotes";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const AdminLog = () => {
   const { quoteLogs, siteVisits, getVisitsCount, loading, refreshData } = useActivityLog();
@@ -23,18 +24,18 @@ const AdminLog = () => {
     from: subDays(new Date(), 7),
     to: new Date(),
   });
+  const [refreshing, setRefreshing] = useState(false);
   
-  // Debug logging - reduced frequency
-  React.useEffect(() => {
-    console.log("AdminLog - Site visits data:", siteVisits.length);
-    console.log("AdminLog - Quote logs:", quoteLogs.length);
-  }, [siteVisits.length, quoteLogs.length]); // Only log when counts change
-  
-  // Single mount effect - no auto refresh to prevent loops
-  React.useEffect(() => {
-    console.log("AdminLog mounted");
-    // Don't auto-refresh on mount to prevent loops
-  }, []);
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshData();
+    } catch (error) {
+      console.error("Errore durante il refresh dei dati:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
   
   if (loading) {
     return (
@@ -89,10 +90,15 @@ const AdminLog = () => {
               />
             </PopoverContent>
           </Popover>
-          <Button onClick={() => {
-            console.log("Manual refresh triggered");
-            refreshData();
-          }} variant="outline" size="sm">
+          <Button 
+            onClick={handleRefresh} 
+            variant="outline" 
+            size="sm"
+            disabled={refreshing}
+          >
+            {refreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : null}
             Aggiorna Dati
           </Button>
         </div>
@@ -100,22 +106,22 @@ const AdminLog = () => {
       
       <Tabs defaultValue="visits">
         <TabsList>
-          <TabsTrigger value="visits">Visite</TabsTrigger>
-          <TabsTrigger value="quotes">Preventivi</TabsTrigger>
+          <TabsTrigger value="visits">
+            Visite ({siteVisits.length})
+          </TabsTrigger>
+          <TabsTrigger value="quotes">
+            Preventivi ({quoteLogs.length})
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="visits" className="mt-6 space-y-6">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <div className="flex items-center gap-2">
-              <Info className="h-5 w-5 text-green-600" />
-              <div>
-                <p className="text-green-800 font-medium">Sistema di tracciamento attivo</p>
-                <p className="text-green-700 text-sm">
-                  Totale visite caricate: {siteVisits.length}. Le visite vengono tracciate automaticamente.
-                </p>
-              </div>
-            </div>
-          </div>
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Sistema di tracciamento attivo. Totale visite caricate: {siteVisits.length}. 
+              Le visite vengono tracciate automaticamente quando gli utenti navigano sul sito.
+            </AlertDescription>
+          </Alert>
           
           <AdminLogAnalytics 
             siteVisits={siteVisits} 
@@ -125,6 +131,22 @@ const AdminLog = () => {
         </TabsContent>
         
         <TabsContent value="quotes" className="mt-6 space-y-6">
+          {quoteLogs.length === 0 ? (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Nessun preventivo trovato nel database. I preventivi vengono salvati automaticamente quando gli utenti completano il form di richiesta.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Trovati {quoteLogs.length} preventivi nel database. Utilizza il filtro date per visualizzare periodi specifici.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <AdminLogQuotes 
             quoteLogs={quoteLogs} 
             dateRange={dateRange}
