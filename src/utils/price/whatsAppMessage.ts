@@ -17,7 +17,7 @@ import {
 
 /**
  * Creates a WhatsApp message with quote details
- * Using only text labels for maximum compatibility
+ * Using emojis for better visual appeal and compatibility
  */
 export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartment[]): string | null => {
   // Check if we have necessary data
@@ -56,7 +56,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     const totalCribs = formValues.childrenDetails?.filter(child => child.sleepsInCrib)?.length || 0;
     
     // Build WhatsApp message sections
-    let message = `*Richiesta Preventivo Villa MareBlu*\n\n`;
+    let message = `*🏖️ Richiesta Preventivo Villa MareBlu*\n\n`;
     
     // Add all sections
     message += formatDateSection(formValues.checkIn, formValues.checkOut, nights, weeks);
@@ -70,23 +70,23 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     
     // Discount if any
     if (discount > 0) {
-      message += `[SCONTO] *Sconto applicato: -${discount}€*\n\n`;
+      message += `💸 *Sconto applicato: -${discount}€*\n\n`;
     }
     
     // Final total
-    message += `[TOTALE] *TOTALE FINALE: ${totalFinal}€*\n\n`;
+    message += `🎯 *TOTALE FINALE: ${totalFinal}€*\n\n`;
     
     // Payment breakdown
     message += formatPaymentSection(deposit, balance);
     
     // Additional notes
     if (formValues.notes) {
-      message += `*[NOTE] Note aggiuntive:*\n${formValues.notes}\n\n`;
+      message += `*📝 Note aggiuntive:*\n${formValues.notes}\n\n`;
     }
     
     // Call to action
-    message += `[TELEFONO] Per confermare la disponibilità e procedere con la prenotazione, rispondete a questo messaggio!\n\n`;
-    message += `*Villa MareBlu - La vostra vacanza da sogno nel Salento*`;
+    message += `📞 Per confermare la disponibilità e procedere con la prenotazione, rispondete a questo messaggio!\n\n`;
+    message += `*🏖️ Villa MareBlu - La vostra vacanza da sogno nel Salento*`;
     
     return message;
   } catch (error) {
