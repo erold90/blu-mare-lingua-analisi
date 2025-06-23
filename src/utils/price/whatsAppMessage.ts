@@ -37,10 +37,10 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     const pricePerNight = nights > 0 ? Math.round(basePrice / nights) : 0;
     const pricePerWeek = weeks > 0 ? Math.round(basePrice / weeks) : 0;
     
-    // Create message with WhatsApp-compatible emoticons
-    let message = `*Richiesta Preventivo Villa MareBlu* 🏖️\n\n`;
+    // Create message with WhatsApp-compatible emojis
+    let message = `*Richiesta Preventivo Villa MareBlu* 🏖\n\n`;
     
-    // Stay details with improved formatting
+    // Stay details
     message += `*📅 Date soggiorno:*\n`;
     message += `Check-in: ${formattedCheckIn}\n`;
     message += `Check-out: ${formattedCheckOut}\n`;
@@ -76,7 +76,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
       message += "\n";
     }
     
-    // Apartments with better formatting
+    // Apartments
     message += `*🏠 Appartamenti selezionati:*\n`;
     selectedApartments.forEach(apartment => {
       const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || basePrice;
@@ -95,7 +95,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     message += `\n`;
     
     // Services requested
-    message += `*🛎️ Servizi richiesti:*\n`;
+    message += `*🛎 Servizi richiesti:*\n`;
     message += `Biancheria: ${formValues.needsLinen ? "✅ Richiesta" : "❌ Non richiesta"}\n`;
     
     if (formValues.hasPets) {
@@ -128,11 +128,9 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     }
     message += `\n`;
     
-    // IMPROVED Cost breakdown with detailed pricing
+    // Price breakdown with EXACT values from calculation
     message += `*💰 Dettaglio prezzi:*\n`;
-    message += `Prezzo base appartamenti: *${basePrice}€*\n`;
-    
-    // Add price breakdown like in the summary
+    message += `Prezzo base appartamento: *${basePrice}€*\n`;
     message += `• Prezzo per notte: ~${pricePerNight}€\n`;
     message += `• Prezzo per settimana: ~${pricePerWeek}€\n`;
     message += `• ${nights} notti (${weeks} ${weeks === 1 ? 'settimana' : 'settimane'}): ${basePrice}€\n\n`;
@@ -167,7 +165,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     
     message += `Subtotale soggiorno: ${priceInfo.totalBeforeDiscount}€\n\n`;
     
-    // Services included (like in the summary)
+    // Services included
     message += `*✅ Servizi inclusi nel prezzo:*\n`;
     message += `• Pulizia finale: Inclusa (+${priceInfo.cleaningFee}€)\n`;
     message += `• Tassa di soggiorno: Inclusa (+${priceInfo.touristTax}€)\n`;
@@ -176,19 +174,19 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     }
     message += `\n`;
     
-    // Discount if any
+    // Discount if any - CRITICAL: Show discount correctly
     if (priceInfo.discount > 0) {
       message += `💚 *Sconto applicato: -${priceInfo.discount}€*\n\n`;
     }
     
-    // Final total - more prominent
+    // Final total - USE EXACT VALUE FROM CALCULATION
     message += `🎯 *TOTALE FINALE: ${priceInfo.totalAfterDiscount}€*\n\n`;
     
-    // Payment breakdown - clear and structured
+    // Payment breakdown - USE EXACT VALUES FROM CALCULATION
     message += `*💳 Modalità di pagamento:*\n`;
     message += `📅 Alla prenotazione (30%): *${priceInfo.deposit}€*\n`;
     message += `🏠 All'arrivo (saldo): *${priceInfo.totalAfterDiscount - priceInfo.deposit}€*\n`;
-    message += `🛡️ Cauzione (restituibile): *200€*\n\n`;
+    message += `🛡 Cauzione (restituibile): *200€*\n\n`;
     
     // Additional notes
     if (formValues.notes) {
@@ -197,7 +195,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     
     // Call to action
     message += `📞 Per confermare la disponibilità e procedere con la prenotazione, rispondete a questo messaggio!\n\n`;
-    message += `🏖️ *Villa MareBlu - La vostra vacanza da sogno nel Salento*`;
+    message += `🏖 *Villa MareBlu - La vostra vacanza da sogno nel Salento*`;
     
     return message;
   } catch (error) {
