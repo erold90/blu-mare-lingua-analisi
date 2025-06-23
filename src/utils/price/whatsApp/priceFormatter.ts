@@ -16,7 +16,7 @@ export const formatPriceSection = (
   const pricePerNight = nights > 0 ? Math.round(basePrice / nights) : 0;
   const pricePerWeek = weeks > 0 ? Math.round(basePrice / weeks) : 0;
   
-  let section = `*💰 Dettaglio prezzi:*\n`;
+  let section = `*Dettaglio prezzi:*\n`;
   
   // Show individual apartment breakdown if multiple apartments
   if (selectedApartments.length > 1) {
@@ -87,7 +87,7 @@ export const formatIncludedServicesSection = (
   touristTax: number, 
   totalCribs: number
 ): string => {
-  let section = `*✅ Servizi inclusi nel prezzo:*\n`;
+  let section = `*Servizi inclusi nel prezzo:*\n`;
   section += `• Pulizia finale: (inclusa) +${cleaningFee}€\n`;
   section += `• Tassa di soggiorno: (inclusa) +${touristTax}€\n`;
   if (totalCribs > 0) {

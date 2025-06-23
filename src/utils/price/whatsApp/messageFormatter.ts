@@ -7,7 +7,7 @@ import { PriceCalculation } from "../types";
  * Formats the guest information section of the WhatsApp message
  */
 export const formatGuestSection = (formValues: FormValues): string => {
-  let section = `*👥 Ospiti:*\n`;
+  let section = `*Ospiti:*\n`;
   section += `Adulti: ${formValues.adults}\n`;
   section += `Bambini: ${formValues.children || 0}\n`;
   
@@ -27,7 +27,7 @@ export const formatGuestSection = (formValues: FormValues): string => {
   
   // Group details if it's a group booking
   if (formValues.isGroupBooking && formValues.familyGroups && formValues.familyGroups.length > 0) {
-    section += `*👨‍👩‍👧‍👦 Dettagli gruppo:*\n`;
+    section += `*Dettagli gruppo:*\n`;
     section += `Tipo: ${formValues.groupType === 'families' ? 'Famiglie' : 'Coppie'}\n`;
     
     formValues.familyGroups.forEach((group, index) => {
@@ -47,7 +47,7 @@ export const formatApartmentsSection = (
   formValues: FormValues, 
   priceInfo: PriceCalculation
 ): string => {
-  let section = `*🏠 Appartamenti selezionati:*\n`;
+  let section = `*Appartamenti selezionati:*\n`;
   
   selectedApartments.forEach(apartment => {
     const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
@@ -71,7 +71,7 @@ export const formatApartmentsSection = (
  * Formats the services section of the WhatsApp message
  */
 export const formatServicesSection = (formValues: FormValues, selectedApartments: Apartment[]): string => {
-  let section = `*🛎️ Servizi richiesti:*\n`;
+  let section = `*Servizi richiesti:*\n`;
   section += `Biancheria: ${formValues.needsLinen ? "SI - Richiesta" : "NO - Non richiesta"}\n`;
   
   if (formValues.hasPets) {
@@ -110,7 +110,7 @@ export const formatServicesSection = (formValues: FormValues, selectedApartments
  * Formats the payment section of the WhatsApp message
  */
 export const formatPaymentSection = (deposit: number, balance: number): string => {
-  let section = `*💳 Modalità di pagamento:*\n`;
+  let section = `*Modalità di pagamento:*\n`;
   section += `> Alla prenotazione (30%): *${deposit}€*\n`;
   section += `> All'arrivo (saldo): *${balance}€*\n`;
   section += `> Cauzione (restituibile): *200€*\n\n`;
