@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from "react";
-import AppHeader from "./AppHeader";
-import WhatsAppButton from "../WhatsAppButton";
-import CookieConsent from "@/components/CookieConsent";
+import { AppHeader } from "./AppHeader";
+import WhatsAppButton from "./WhatsAppButton";
+import { CookieConsent } from "@/components/CookieConsent";
 import { useLocation } from "react-router-dom";
 import { usePageVisitTracker } from "@/hooks/usePageVisitTracker";
 

@@ -120,19 +120,17 @@ export function useAdvancedTracking() {
       const deviceInfo = getDeviceInfo();
       const utmParams = getUtmParameters();
       
-      const sessionData: Partial<VisitorSession> = {
+      const sessionData = {
         session_id: sessionId,
         referrer: document.referrer || undefined,
+        last_activity: new Date().toISOString(),
         ...deviceInfo,
         ...utmParams,
       };
 
       const { error } = await supabase
         .from('visitor_sessions')
-        .upsert({
-          ...sessionData,
-          last_activity: new Date().toISOString(),
-        });
+        .upsert(sessionData);
 
       if (error) {
         console.error('Error saving visitor session:', error);
@@ -149,7 +147,7 @@ export function useAdvancedTracking() {
     try {
       const sessionId = getSessionId();
       
-      const pageViewData: Partial<PageView> = {
+      const pageViewData = {
         session_id: sessionId,
         page_url: location.pathname + location.search,
         page_title: document.title,

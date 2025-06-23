@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format, subDays } from "date-fns";
@@ -63,44 +62,53 @@ export const AdvancedAnalyticsDashboard = () => {
     await refreshData();
   };
 
-  // Calcola metriche principali
-  const totalVisitors = visitorSessions.length;
-  const totalPageViews = pageViews.length;
-  const totalInteractions = interactions.length;
-  const avgSessionDuration = visitorSessions.reduce((acc, session) => acc + (session.session_duration || 0), 0) / Math.max(visitorSessions.length, 1);
-  const bounceRate = (visitorSessions.filter(s => s.is_bounce).length / Math.max(visitorSessions.length, 1)) * 100;
+  // Calcola metriche principali con type guards
+  const totalVisitors = visitorSessions?.length || 0;
+  const totalPageViews = pageViews?.length || 0;
+  const totalInteractions = interactions?.length || 0;
+  
+  const avgSessionDuration = visitorSessions?.length 
+    ? visitorSessions.reduce((acc, session) => {
+        const duration = Number(session.session_duration) || 0;
+        return acc + duration;
+      }, 0) / visitorSessions.length
+    : 0;
+    
+  const bounceRate = visitorSessions?.length 
+    ? (visitorSessions.filter(s => Boolean(s.is_bounce)).length / visitorSessions.length) * 100
+    : 0;
 
-  // Prepara dati per i grafici
-  const dailyVisitorsData = dailyAnalytics.map(day => ({
+  // Prepara dati per i grafici con type safety
+  const dailyVisitorsData = dailyAnalytics?.map(day => ({
     date: format(new Date(day.date), 'dd/MM', { locale: it }),
-    visitors: day.unique_visitors,
-    pageViews: day.total_page_views,
-  }));
+    visitors: Number(day.unique_visitors) || 0,
+    pageViews: Number(day.total_page_views) || 0,
+  })) || [];
 
-  const deviceData = visitorSessions.reduce((acc, session) => {
-    const device = session.device_type || 'Unknown';
+  const deviceData = visitorSessions?.reduce((acc, session) => {
+    const device = String(session.device_type || 'Unknown');
     acc[device] = (acc[device] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<string, number>) || {};
 
   const deviceChartData = Object.entries(deviceData).map(([name, value]) => ({ name, value }));
 
-  const countryData = visitorSessions.reduce((acc, session) => {
-    const country = session.country || 'Unknown';
+  const countryData = visitorSessions?.reduce((acc, session) => {
+    const country = String(session.country || 'Unknown');
     acc[country] = (acc[country] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<string, number>) || {};
 
   const topCountries = Object.entries(countryData)
     .sort(([,a], [,b]) => b - a)
     .slice(0, 5)
     .map(([name, value]) => ({ name, value }));
 
-  const topPages = pageViews.reduce((acc, view) => {
-    const page = view.page_url || 'Unknown';
+  const topPages = pageViews?.reduce((acc, view) => {
+    const page = String(view.page_url || 'Unknown');
     acc[page] = (acc[page] || 0) + 1;
     return acc;
-  }, {} as Record<string, number>);
+  }, {} as Record<string, number>) || {};
 
   const topPagesData = Object.entries(topPages)
     .sort(([,a], [,b]) => b - a)
@@ -163,7 +171,7 @@ export const AdvancedAnalyticsDashboard = () => {
                 initialFocus
                 mode="range"
                 defaultMonth={dateRange?.from}
-                selected={dateRange}
+                selected={dateRange?.from && dateRange?.to ? { from: dateRange.from, to: dateRange.to } : undefined}
                 onSelect={handleDateRangeChange}
                 locale={it}
                 numberOfMonths={isMobile ? 1 : 2}
@@ -360,15 +368,15 @@ export const AdvancedAnalyticsDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                {interactions.slice(0, 20).map((interaction) => (
+                {interactions?.slice(0, 20).map((interaction) => (
                   <div key={interaction.id} className="flex items-center justify-between p-2 bg-muted rounded">
                     <div className="flex items-center gap-2">
                       <MousePointer className="h-4 w-4" />
                       <div>
-                        <span className="text-sm font-medium">{interaction.interaction_type}</span>
+                        <span className="text-sm font-medium">{String(interaction.interaction_type)}</span>
                         {interaction.element_text && (
                           <p className="text-xs text-muted-foreground truncate max-w-[200px]">
-                            {interaction.element_text}
+                            {String(interaction.element_text)}
                           </p>
                         )}
                       </div>
@@ -377,7 +385,7 @@ export const AdvancedAnalyticsDashboard = () => {
                       {format(new Date(interaction.timestamp), 'HH:mm dd/MM', { locale: it })}
                     </span>
                   </div>
-                ))}
+                )) || []}
               </div>
             </CardContent>
           </Card>
@@ -392,11 +400,11 @@ export const AdvancedAnalyticsDashboard = () => {
               <CardContent>
                 <div className="space-y-2">
                   {Object.entries(
-                    visitorSessions.reduce((acc, session) => {
-                      const browser = session.browser || 'Unknown';
+                    visitorSessions?.reduce((acc, session) => {
+                      const browser = String(session.browser || 'Unknown');
                       acc[browser] = (acc[browser] || 0) + 1;
                       return acc;
-                    }, {} as Record<string, number>)
+                    }, {} as Record<string, number>) || {}
                   )
                     .sort(([,a], [,b]) => b - a)
                     .slice(0, 6)
@@ -420,11 +428,11 @@ export const AdvancedAnalyticsDashboard = () => {
               <CardContent>
                 <div className="space-y-2">
                   {Object.entries(
-                    visitorSessions.reduce((acc, session) => {
-                      const os = session.operating_system || 'Unknown';
+                    visitorSessions?.reduce((acc, session) => {
+                      const os = String(session.operating_system || 'Unknown');
                       acc[os] = (acc[os] || 0) + 1;
                       return acc;
-                    }, {} as Record<string, number>)
+                    }, {} as Record<string, number>) || {}
                   )
                     .sort(([,a], [,b]) => b - a)
                     .slice(0, 6)

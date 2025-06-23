@@ -1,9 +1,10 @@
+
 import { useState, useCallback } from "react";
 import { useFormContext } from "react-hook-form";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
 import { apartments } from "@/data/apartments";
-import { useSupabaseActivityLog } from "@/hooks/activity/useActivityLog";
+import { useSupabaseActivityLog } from "@/hooks/useSupabaseActivityLog";
 import { v4 as uuidv4 } from 'uuid';
 import { useAdvancedTracking } from '@/hooks/analytics/useAdvancedTracking';
 
