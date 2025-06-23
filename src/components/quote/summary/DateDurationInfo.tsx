@@ -10,6 +10,32 @@ interface DateDurationInfoProps {
   nights: number;
 }
 
+/**
+ * Calcola settimane e notti extra da un numero totale di notti
+ */
+const calculateWeeksAndExtraNights = (totalNights: number): { weeks: number; extraNights: number } => {
+  const weeks = Math.floor(totalNights / 7);
+  const extraNights = totalNights % 7;
+  return { weeks, extraNights };
+};
+
+/**
+ * Formatta la durata del soggiorno con settimane e notti extra
+ */
+const formatDuration = (totalNights: number): string => {
+  const { weeks, extraNights } = calculateWeeksAndExtraNights(totalNights);
+  
+  if (weeks === 0) {
+    return `${totalNights} ${totalNights === 1 ? 'notte' : 'notti'}`;
+  }
+  
+  if (extraNights === 0) {
+    return `${weeks} ${weeks === 1 ? 'settimana' : 'settimane'}`;
+  }
+  
+  return `${weeks} ${weeks === 1 ? 'settimana' : 'settimane'} + ${extraNights} ${extraNights === 1 ? 'notte' : 'notti'}`;
+};
+
 const DateDurationInfo: React.FC<DateDurationInfoProps> = ({ checkIn, checkOut, nights }) => {
   // Check if reservation is during high season (June-September)
   const isHighSeason = checkIn ? 
@@ -17,9 +43,6 @@ const DateDurationInfo: React.FC<DateDurationInfoProps> = ({ checkIn, checkOut, 
   
   // Check if check-in is on Saturday
   const isCheckInSaturday = checkIn ? checkIn.getDay() === 6 : false;
-  
-  // Calculate weeks
-  const weeks = Math.ceil(nights / 7);
   
   return (
     <div className="space-y-4 bg-white p-4 rounded-lg border">
@@ -54,7 +77,7 @@ const DateDurationInfo: React.FC<DateDurationInfoProps> = ({ checkIn, checkOut, 
         </div>
         <div className="flex justify-between items-center text-sm text-muted-foreground">
           <span>Equivalenti a:</span>
-          <span>{weeks} {weeks === 1 ? 'settimana' : 'settimane'}</span>
+          <span>{formatDuration(nights)}</span>
         </div>
       </div>
       
