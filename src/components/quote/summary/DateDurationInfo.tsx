@@ -18,6 +18,9 @@ const DateDurationInfo: React.FC<DateDurationInfoProps> = ({ checkIn, checkOut, 
   // Check if check-in is on Saturday
   const isCheckInSaturday = checkIn ? checkIn.getDay() === 6 : false;
   
+  // Calculate weeks
+  const weeks = Math.ceil(nights / 7);
+  
   return (
     <div className="space-y-4 bg-white p-4 rounded-lg border">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -28,6 +31,7 @@ const DateDurationInfo: React.FC<DateDurationInfoProps> = ({ checkIn, checkOut, 
           <div>
             <div className="text-sm text-muted-foreground">Check-in:</div>
             <div className="font-medium">{checkIn ? format(checkIn, "EEEE d MMMM yyyy", { locale: it }) : "-"}</div>
+            <div className="text-xs text-muted-foreground">Ore 15:00-19:00</div>
           </div>
         </div>
         
@@ -37,14 +41,21 @@ const DateDurationInfo: React.FC<DateDurationInfoProps> = ({ checkIn, checkOut, 
           </div>
           <div>
             <div className="text-sm text-muted-foreground">Check-out:</div>
-            <div className="font-medium">{checkOut ? format(checkOut, "dd/MM/yyyy", { locale: it }) : "-"}</div>
+            <div className="font-medium">{checkOut ? format(checkOut, "EEEE d MMMM yyyy", { locale: it }) : "-"}</div>
+            <div className="text-xs text-muted-foreground">Entro le ore 10:00</div>
           </div>
         </div>
       </div>
       
-      <div className="pt-3 border-t flex justify-between items-center">
-        <span className="font-medium">Durata:</span>
-        <span className="text-primary font-serif font-semibold text-xl">{nights} notti</span>
+      <div className="pt-3 border-t">
+        <div className="flex justify-between items-center mb-2">
+          <span className="font-medium">Durata:</span>
+          <span className="text-primary font-serif font-semibold text-xl">{nights} notti</span>
+        </div>
+        <div className="flex justify-between items-center text-sm text-muted-foreground">
+          <span>Equivalenti a:</span>
+          <span>{weeks} settimana{weeks > 1 ? 'e' : ''}</span>
+        </div>
       </div>
       
       {(isHighSeason || isCheckInSaturday) && (
@@ -58,7 +69,7 @@ const DateDurationInfo: React.FC<DateDurationInfoProps> = ({ checkIn, checkOut, 
           
           {isCheckInSaturday && (
             <div>
-              <span className="text-sm text-muted-foreground">Giorno check-in:</span>
+              <span className="text-sm text-muted-foreground">Cambio:</span>
               <p className="text-emerald-600 font-medium">Sabato</p>
             </div>
           )}

@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { PriceCalculation } from "@/utils/price/types";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
-import { Euro, Percent, ReceiptText, Sparkles, PawPrint, BadgeEuro, Minus, AlertCircle, Calendar } from "lucide-react";
+import { Euro, Percent, ReceiptText, Sparkles, PawPrint, BadgeEuro, Minus, AlertCircle, Calendar, Calculator } from "lucide-react";
 
 interface PriceSummaryProps {
   priceInfo: PriceCalculation;
@@ -27,6 +27,10 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   
   // Base price is the cost of apartments without extras
   const basePrice = priceInfo.basePrice;
+  
+  // Calculate price per night
+  const pricePerNight = nights > 0 ? Math.round(basePrice / nights) : 0;
+  const pricePerWeek = weeks > 0 ? Math.round(basePrice / weeks) : 0;
   
   // Calculate extra services (animals and extra linen)
   const extraServices = priceInfo.extras;
@@ -51,30 +55,11 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   // Helper to format the apartment cost text
   const formatApartmentCostText = () => {
     if (hasMultipleApartments) {
-      if (weeks > 1) {
-        return `Prezzo base appartamenti (${weeks} settimane, ${nights} notti):`;
-      } else {
-        return `Prezzo base appartamenti (${nights} notti):`;
-      }
+      return `Prezzo base appartamenti:`;
     } else {
-      if (weeks > 1) {
-        return `Prezzo base appartamento (${weeks} settimane, ${nights} notti):`;
-      } else {
-        return `Prezzo base appartamento (${nights} notti):`;
-      }
+      return `Prezzo base appartamento:`;
     }
   };
-
-  // Debug: Log calculation details
-  console.log("📊 PriceSummary Debug Info:", {
-    nights,
-    weeks,
-    basePrice,
-    pricesAreValid,
-    checkIn: formValues.checkIn,
-    checkOut: formValues.checkOut,
-    apartmentPrices: priceInfo.apartmentPrices
-  });
 
   return (
     <div className="border rounded-md p-4 space-y-4">
@@ -82,16 +67,6 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         <Euro className="h-4 w-4" /> 
         Dettagli prezzo
       </h3>
-      
-      {/* Debug info in development */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="text-xs bg-gray-100 p-2 rounded">
-          <strong>Debug:</strong> Base: {basePrice}€, Notti: {nights}, Settimane: {weeks}
-          {priceInfo.apartmentPrices && (
-            <div>Prezzi singoli: {JSON.stringify(priceInfo.apartmentPrices)}</div>
-          )}
-        </div>
-      )}
       
       {/* Warning se i prezzi non sono validi */}
       {!pricesAreValid && (
@@ -103,33 +78,53 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         </div>
       )}
       
-      {/* Date range display for clarity */}
+      {/* Periodo e durata per chiarezza */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground p-2 bg-blue-50 rounded">
         <Calendar className="h-4 w-4" />
         <span>
           {formValues.checkIn?.toLocaleDateString('it-IT')} - {formValues.checkOut?.toLocaleDateString('it-IT')}
-          ({nights} notti, {weeks} settimane)
         </span>
       </div>
       
-      <div className="space-y-2">
-        {/* Apartment cost - base price */}
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">
-            {formatApartmentCostText()}
-          </span>
-          <span className="font-medium">
-            {pricesAreValid ? `${basePrice}€` : 'N/A'}
-          </span>
+      <div className="space-y-3">
+        {/* Apartment cost - base price con breakdown */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">
+              {formatApartmentCostText()}
+            </span>
+            <span className="font-medium">
+              {pricesAreValid ? `${basePrice}€` : 'N/A'}
+            </span>
+          </div>
+          
+          {/* Breakdown prezzo per notte e settimana */}
+          {pricesAreValid && (
+            <div className="ml-4 space-y-1 text-xs text-muted-foreground">
+              <div className="flex justify-between">
+                <span>• Prezzo per notte:</span>
+                <span>~{pricePerNight}€</span>
+              </div>
+              <div className="flex justify-between">
+                <span>• Prezzo per settimana:</span>
+                <span>~{pricePerWeek}€</span>
+              </div>
+              <div className="flex justify-between font-medium">
+                <span>• {nights} notti ({weeks} settimane):</span>
+                <span>{basePrice}€</span>
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Show individual apartment prices if multiple apartments */}
         {hasMultipleApartments && priceInfo.apartmentPrices && pricesAreValid && (
-          <div className="ml-4 space-y-1">
+          <div className="ml-4 space-y-2 p-2 bg-gray-50 rounded">
+            <div className="text-xs font-medium text-muted-foreground">Dettaglio per appartamento:</div>
             {Object.entries(priceInfo.apartmentPrices).map(([apartmentId, price]) => (
-              <div key={apartmentId} className="flex justify-between text-xs text-muted-foreground">
-                <span>{apartmentId}:</span>
-                <span>{price}€</span>
+              <div key={apartmentId} className="flex justify-between text-xs">
+                <span className="capitalize">{apartmentId.replace('-', ' ')}:</span>
+                <span className="font-medium">{price}€</span>
               </div>
             ))}
           </div>
@@ -138,82 +133,97 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         {/* Extra services (if any) */}
         {showExtraServices && (
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Extra:</span>
+            <span className="text-muted-foreground">Servizi extra:</span>
             <span className="font-medium">{extraServices}€</span>
           </div>
         )}
         
-        {/* Cleaning fee */}
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground flex items-center gap-1">
-            <Sparkles className="h-3 w-3" /> 
-            Pulizia finale:
-          </span>
-          <div className="flex items-center">
-            <span className="text-green-500">(inclusa)</span>
-            <del className="font-medium ml-1">{cleaningFee}€</del>
-          </div>
-        </div>
-        
-        {/* Display free cribs if any */}
-        {sleepingInCribs > 0 && (
-          <div className="flex justify-between text-sm text-green-500">
-            <span>Culle per bambini ({sleepingInCribs}):</span>
-            <span>Gratuito</span>
-          </div>
-        )}
-        
-        {/* Tourist tax */}
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground flex items-center gap-1">
-            <ReceiptText className="h-3 w-3" /> 
-            Tassa di soggiorno:
-          </span>
-          <div className="flex items-center">
-            <span className="text-green-500">(inclusa)</span>
-            <del className="font-medium ml-1">{touristTax}€</del>
-          </div>
-        </div>
-        
         <Separator className="my-2" />
         
-        {/* Subtotal before discount */}
-        <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Subtotale:</span>
-          <span className="font-medium">
+        {/* Subtotal before services */}
+        <div className="flex justify-between text-sm font-medium">
+          <span>Subtotale soggiorno:</span>
+          <span>
             {pricesAreValid ? `${subtotal}€` : 'N/A'}
           </span>
         </div>
         
+        {/* Services inclusi */}
+        <div className="space-y-2 ml-4">
+          {/* Cleaning fee */}
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground flex items-center gap-1">
+              <Sparkles className="h-3 w-3" /> 
+              Pulizia finale:
+            </span>
+            <div className="flex items-center">
+              <span className="text-green-600 text-xs">(inclusa)</span>
+              <span className="text-muted-foreground ml-1">+{cleaningFee}€</span>
+            </div>
+          </div>
+          
+          {/* Tourist tax */}
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground flex items-center gap-1">
+              <ReceiptText className="h-3 w-3" /> 
+              Tassa di soggiorno:
+            </span>
+            <div className="flex items-center">
+              <span className="text-green-600 text-xs">(inclusa)</span>
+              <span className="text-muted-foreground ml-1">+{touristTax}€</span>
+            </div>
+          </div>
+          
+          {/* Display free cribs if any */}
+          {sleepingInCribs > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Culle per bambini ({sleepingInCribs}):</span>
+              <span className="text-green-600 text-xs">Gratuito</span>
+            </div>
+          )}
+        </div>
+        
+        <Separator className="my-2" />
+        
         {/* Discount (if any) */}
         {discount > 0 && pricesAreValid && (
-          <div className="flex justify-between text-sm text-green-500">
-            <span>Sconto:</span>
-            <span className="flex items-center">
+          <div className="flex justify-between text-sm text-green-600">
+            <span className="flex items-center gap-1">
+              <Percent className="h-3 w-3" />
+              Sconto applicato:
+            </span>
+            <span className="flex items-center font-medium">
               <Minus className="h-3 w-3 mr-0.5" />-{discount}€
             </span>
           </div>
         )}
         
         {/* Final total to pay */}
-        <div className="flex justify-between font-bold text-lg">
-          <span>Totale:</span>
-          <span className={pricesAreValid ? "" : "text-muted-foreground"}>
+        <div className="flex justify-between font-bold text-lg pt-2 border-t">
+          <span>Totale da pagare:</span>
+          <span className={pricesAreValid ? "text-primary" : "text-muted-foreground"}>
             {pricesAreValid ? `${totalToPay}€` : 'Da calcolare'}
           </span>
         </div>
         
-        {/* Deposit and security deposit */}
+        {/* Payment breakdown */}
         {pricesAreValid && (
-          <div className="space-y-2 mt-2">
+          <div className="space-y-2 mt-3 p-3 bg-gray-50 rounded">
+            <div className="text-xs font-medium text-muted-foreground mb-2">Modalità di pagamento:</div>
+            
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Caparra (30%):</span>
-              <span className="font-medium">{deposit}€</span>
+              <span className="text-muted-foreground">📅 Alla prenotazione (30%):</span>
+              <span className="font-medium text-primary">{deposit}€</span>
             </div>
             
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Cauzione:</span>
-              <span className="font-medium">200€ (restituibile)</span>
+              <span className="text-muted-foreground">🏠 All'arrivo (saldo):</span>
+              <span className="font-medium">{totalToPay - deposit}€</span>
+            </div>
+            
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">🛡️ Cauzione (restituibile):</span>
+              <span className="font-medium">200€</span>
             </div>
           </div>
         )}
