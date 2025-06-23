@@ -43,7 +43,7 @@ const getSummerWeeksForYear = (year: number): { start: Date; end: Date }[] => {
 
 const AvailableWeeksSummary = () => {
   const { reservations, apartments } = useReservations();
-  const { getPriceForWeek } = usePrices();
+  const { prices, getPriceForWeek } = usePrices();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [generatedText, setGeneratedText] = useState("");
 
@@ -90,7 +90,9 @@ const AvailableWeeksSummary = () => {
         availableWeeks.forEach(week => {
           const weekStart = startOfWeek(week.start, { weekStartsOn: 6 }); // Sabato
           const weekEnd = addDays(weekStart, 6); // Venerdì
-          const price = getPriceForWeek(apartment.id, weekStart);
+          
+          // Usa la funzione getPriceForWeek dal hook usePrices
+          const price = getPriceForWeek ? getPriceForWeek(apartment.id, weekStart) : 0;
           
           const startFormatted = format(weekStart, "d MMM", { locale: it });
           const endFormatted = format(weekEnd, "d MMM", { locale: it });
