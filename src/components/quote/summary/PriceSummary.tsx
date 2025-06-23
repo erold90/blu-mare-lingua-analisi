@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { PriceCalculation } from "@/utils/price/types";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
-import { Euro, Percent, ReceiptText, Sparkles, PawPrint, BadgeEuro, Minus } from "lucide-react";
+import { Euro, Percent, ReceiptText, Sparkles, PawPrint, BadgeEuro, Minus, AlertCircle } from "lucide-react";
 
 interface PriceSummaryProps {
   priceInfo: PriceCalculation;
@@ -21,6 +21,9 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
     formValues.selectedApartments && 
     formValues.selectedApartments.length > 1
   );
+  
+  // Verifica se i prezzi sono validi
+  const pricesAreValid = priceInfo.totalPrice > 0 && priceInfo.basePrice > 0;
   
   // Base price is the cost of apartments without extras
   const basePrice = priceInfo.basePrice;
@@ -69,13 +72,25 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         Dettagli prezzo
       </h3>
       
+      {/* Warning se i prezzi non sono validi */}
+      {!pricesAreValid && (
+        <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+          <AlertCircle className="h-4 w-4 text-yellow-600" />
+          <span className="text-sm text-yellow-800">
+            I prezzi potrebbero non essere aggiornati. Verifica nell'area riservata.
+          </span>
+        </div>
+      )}
+      
       <div className="space-y-2">
         {/* Apartment cost - base price */}
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">
             {formatApartmentCostText()}
           </span>
-          <span className="font-medium">{basePrice}€</span>
+          <span className="font-medium">
+            {pricesAreValid ? `${basePrice}€` : 'N/A'}
+          </span>
         </div>
         
         {/* Extra services (if any) */}
@@ -123,35 +138,51 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         {/* Subtotal before discount */}
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Subtotale:</span>
-          <span className="font-medium">{subtotal}€</span>
+          <span className="font-medium">
+            {pricesAreValid ? `${subtotal}€` : 'N/A'}
+          </span>
         </div>
         
         {/* Discount (if any) */}
-        {discount > 0 && (
+        {discount > 0 && pricesAreValid && (
           <div className="flex justify-between text-sm text-green-500">
             <span>Sconto:</span>
-            <span className="flex items-center"><Minus className="h-3 w-3 mr-0.5" />-{discount}€</span>
+            <span className="flex items-center">
+              <Minus className="h-3 w-3 mr-0.5" />-{discount}€
+            </span>
           </div>
         )}
         
         {/* Final total to pay */}
         <div className="flex justify-between font-bold text-lg">
           <span>Totale:</span>
-          <span>{totalToPay}€</span>
+          <span className={pricesAreValid ? "" : "text-muted-foreground"}>
+            {pricesAreValid ? `${totalToPay}€` : 'Da calcolare'}
+          </span>
         </div>
         
         {/* Deposit and security deposit */}
-        <div className="space-y-2 mt-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Caparra (30%):</span>
-            <span className="font-medium">{deposit}€</span>
+        {pricesAreValid && (
+          <div className="space-y-2 mt-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Caparra (30%):</span>
+              <span className="font-medium">{deposit}€</span>
+            </div>
+            
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Cauzione:</span>
+              <span className="font-medium">200€ (restituibile)</span>
+            </div>
           </div>
-          
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Cauzione:</span>
-            <span className="font-medium">200€ (restituibile)</span>
+        )}
+        
+        {/* Note sui prezzi se non validi */}
+        {!pricesAreValid && (
+          <div className="text-xs text-muted-foreground mt-2 p-2 bg-gray-50 rounded">
+            <strong>Nota:</strong> I prezzi verranno calcolati in base alle tariffe configurate nell'area riservata. 
+            Contattaci per un preventivo dettagliato.
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
