@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
@@ -191,7 +192,7 @@ const RequestQuotePage = () => {
             <div className="text-center mb-12 animate-fade-in">
               <h1 className="text-5xl md:text-6xl font-serif font-semibold mb-6 leading-tight">
                 <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-700 bg-clip-text text-transparent">
-                  Calcola Preventivo Vacanze Salento
+                  Calcola Preventivo
                 </span>
               </h1>
               
@@ -203,9 +204,8 @@ const RequestQuotePage = () => {
               </div>
               
               <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-light">
-                Crea il tuo preventivo personalizzato per <strong>vacanze estate Salento</strong> nella nostra
-                <span className="font-medium text-primary"> villa di lusso sul mare</span> - 
-                la migliore <strong>alternativa Airbnb Salento</strong>
+                Crea il tuo preventivo personalizzato - <span className="font-medium text-primary">nessun impegno</span> - 
+                <span className="font-medium text-primary"> prezzi trasparenti e immediati</span>
               </p>
             </div>
             
