@@ -1,3 +1,4 @@
+
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
@@ -121,14 +122,40 @@ export function calculateCleaningFee(selectedApartments: Apartment[]): number {
 
 /**
  * Calculate tourist tax (1€ per adult per night, children under 12 exempt)
+ * CORRECTED: Now properly excludes children under 12 years old
  */
 export function calculateTouristTax(formValues: FormValues, nights: number): number {
-  // Get effective guest count
-  const guestCountInfo = getEffectiveGuestCount(formValues);
+  console.log("🏛️ Calculating tourist tax...");
+  console.log("📊 Form values:", {
+    adults: formValues.adults,
+    children: formValues.children,
+    childrenDetails: formValues.childrenDetails,
+    nights
+  });
   
-  // Count only adults and children aged 12 or over for tourist tax
-  const adultEquivalents = guestCountInfo.totalGuests - guestCountInfo.sleepingInCribs - guestCountInfo.sleepingWithParents;
+  const adults = formValues.adults || 0;
+  const childrenDetails = formValues.childrenDetails || [];
   
-  // Calculate tax: 1€ per person per night
-  return adultEquivalents * nights * 1;
+  // Count children who are 12 years old or older
+  const childrenOver12 = childrenDetails.filter(child => {
+    const age = child.age || 0;
+    console.log(`👶 Child age: ${age}, over 12: ${age >= 12}`);
+    return age >= 12;
+  }).length;
+  
+  // Total people subject to tourist tax (adults + children 12+)
+  const taxableGuests = adults + childrenOver12;
+  
+  console.log(`🏛️ Tourist tax calculation:
+    - Adults: ${adults}
+    - Children over 12: ${childrenOver12}
+    - Total taxable guests: ${taxableGuests}
+    - Nights: ${nights}
+    - Rate: 1€ per person per night
+    - Total tax: ${taxableGuests * nights * 1}€`);
+  
+  // Calculate tax: 1€ per taxable person per night
+  const totalTax = taxableGuests * nights * 1;
+  
+  return totalTax;
 }
