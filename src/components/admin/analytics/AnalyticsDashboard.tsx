@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { format, subDays } from "date-fns";
 import { it } from "date-fns/locale";
-import { useUnifiedAnalytics, AnalyticsFilters } from "@/hooks/analytics/useUnifiedAnalytics";
+import { useAdvancedAnalytics, AnalyticsFilters } from "@/hooks/analytics/useAdvancedAnalytics";
 import { CalendarIcon, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -45,7 +45,7 @@ export const AnalyticsDashboard = () => {
     error,
     refreshData,
     aggregateDailyAnalytics
-  } = useUnifiedAnalytics(filters);
+  } = useAdvancedAnalytics(filters);
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
     if (range) {

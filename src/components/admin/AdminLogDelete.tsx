@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
+import { useAnalytics } from "@/hooks/analytics/useAnalytics";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -22,7 +22,7 @@ interface AdminLogDeleteProps {
 }
 
 const AdminLogDelete: React.FC<AdminLogDeleteProps> = ({ quoteId, customerName }) => {
-  const { deleteQuoteLog } = useUnifiedAnalytics();
+  const { deleteQuoteLog } = useAnalytics();
 
   const handleDeleteQuote = () => {
     deleteQuoteLog(quoteId);

@@ -4,14 +4,14 @@ import { useFormContext } from "react-hook-form";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
 import { apartments } from "@/data/apartments";
-import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
+import { useAnalytics } from "@/hooks/analytics/useAnalytics";
 import { v4 as uuidv4 } from 'uuid';
 import { useAdvancedTracking } from '@/hooks/analytics/useAdvancedTracking';
 
 export function useQuoteActions() {
   const { getValues, setValue } = useFormContext<FormValues>();
   const [step, setStep] = useState(1);
-  const { addQuoteLog } = useUnifiedAnalytics();
+  const { addQuoteLog } = useAnalytics();
   
   const { trackInteraction } = useAdvancedTracking();
 
@@ -42,7 +42,7 @@ export function useQuoteActions() {
       const quoteId = uuidv4();
       const totalPrice = calculateTotalPrice(formValues, apartments).totalPrice;
 
-      // Save quote log using unified system
+      // Save quote log using analytics system
       await addQuoteLog({
         id: quoteId,
         form_values: formValues,
