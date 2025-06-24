@@ -7,6 +7,7 @@ import { useAnalytics } from "@/hooks/analytics/useAnalytics";
 import { v4 as uuidv4 } from 'uuid';
 import { useAdvancedTracking } from '@/hooks/analytics/useAdvancedTracking';
 import { UseFormReturn } from "react-hook-form";
+import { createWhatsAppMessage } from "@/utils/price/whatsAppMessage";
 
 export function useQuoteActions(form?: UseFormReturn<FormValues>) {
   const [step, setStep] = useState(1);
@@ -85,9 +86,35 @@ export function useQuoteActions(form?: UseFormReturn<FormValues>) {
     }
     
     const formValues = form.getValues();
-    // Logic for sending WhatsApp message
-    console.log("Sending WhatsApp message with form values:", formValues);
-  }, [form]);
+    console.log("🔍 Sending WhatsApp message with form values:", formValues);
+    
+    // Create WhatsApp message
+    const message = createWhatsAppMessage(formValues, apartments);
+    
+    if (!message) {
+      console.error("❌ Could not create WhatsApp message");
+      alert("Errore nella creazione del messaggio WhatsApp. Verifica che tutti i campi siano compilati.");
+      return;
+    }
+    
+    // Encode message for URL
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/393299943297?text=${encodedMessage}`;
+    
+    console.log("✅ Opening WhatsApp with message length:", message.length);
+    
+    // Open WhatsApp
+    window.open(whatsappUrl, '_blank');
+    
+    // Track WhatsApp action
+    trackInteraction({
+      interaction_type: 'whatsapp_sent',
+      additional_data: {
+        message_length: message.length,
+        apartments_count: formValues.selectedApartments?.length || 0,
+      }
+    });
+  }, [form, trackInteraction]);
 
   // Simplified submit handler - no wrapper needed
   const onSubmitHandler = useCallback((data: FormValues) => {

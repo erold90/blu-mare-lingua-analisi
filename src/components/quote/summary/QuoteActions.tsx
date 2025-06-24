@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, ArrowLeft } from "lucide-react";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { PriceCalculation } from "@/utils/price/types";
@@ -25,7 +25,14 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
 }) => {
   const { addQuoteLog } = useAnalytics();
 
+  const handleBackClick = () => {
+    console.log("🔍 Back button clicked");
+    prevStep();
+  };
+
   const handleWhatsAppClick = () => {
+    console.log("🔍 WhatsApp button clicked");
+    
     // Salva il log del riepilogo per l'area riservata prima di inviare WhatsApp
     if (formValues && priceInfo) {
       const logId = uuidv4();
@@ -39,7 +46,7 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
         completed: true
       });
 
-      console.log("Riepilogo salvato nel log dell'area riservata:", {
+      console.log("✅ Riepilogo salvato nel log dell'area riservata:", {
         id: logId,
         timestamp,
         totalPrice: priceInfo.totalAfterDiscount,
@@ -53,13 +60,19 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
 
   return (
     <div className="flex flex-col md:flex-row gap-4 justify-between pt-3 pb-6">
-      <Button type="button" variant="outline" onClick={prevStep}>
+      <Button 
+        type="button" 
+        variant="outline" 
+        onClick={handleBackClick}
+        className="flex items-center gap-2"
+      >
+        <ArrowLeft className="h-4 w-4" />
         Indietro
       </Button>
       
       <Button
         type="button"
-        className="w-full md:w-auto"
+        className="w-full md:w-auto bg-green-600 hover:bg-green-700"
         onClick={handleWhatsAppClick}
       >
         <MessageSquare className="mr-2 h-4 w-4" />
