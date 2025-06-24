@@ -18,59 +18,8 @@ import {
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-export const sidebarItems = [
-  {
-    title: "Dashboard",
-    path: "/area-riservata/dashboard",
-    icon: "layout-dashboard",
-    submenu: false,
-  },
-  {
-    title: "Prenotazioni",
-    path: "/area-riservata/prenotazioni",
-    icon: "calendar",
-    submenu: false,
-  },
-  {
-    title: "Pulizie",
-    path: "/area-riservata/pulizie",
-    icon: "broom",
-    submenu: false,
-  },
-  {
-    title: "Appartamenti",
-    path: "/area-riservata/appartamenti",
-    icon: "home",
-    submenu: false,
-  },
-  {
-    title: "Prezzi",
-    path: "/area-riservata/prezzi",
-    icon: "tag",
-    submenu: false,
-  },
-  {
-    title: "Calendario",
-    path: "/area-riservata/calendario",
-    icon: "calendar-days",
-    submenu: false,
-  },
-  {
-    title: "Log",
-    path: "/area-riservata/log",
-    icon: "file-text",
-    submenu: false,
-  },
-  {
-    title: "Impostazioni",
-    path: "/area-riservata/impostazioni",
-    icon: "settings",
-    submenu: false,
-  },
-];
-
 export function AppSidebar() {
-  const { setOpenMobile, open, setOpen } = useSidebar();
+  const { setOpenMobile, setOpen } = useSidebar();
   const isMobile = useIsMobile();
   
   // Function to close sidebar when a link is clicked

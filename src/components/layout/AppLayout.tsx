@@ -5,6 +5,8 @@ import WhatsAppButton from "./WhatsAppButton";
 import { CookieConsent } from "@/components/CookieConsent";
 import { useLocation } from "react-router-dom";
 import { usePageTracking } from "@/hooks/analytics/usePageTracking";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "./AppSidebar";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -29,14 +31,19 @@ const AppLayout = ({ children }: AppLayoutProps) => {
 
   return (
     <AnalyticsProvider>
-      <div className="min-h-screen bg-background">
-        <AppHeader />
-        <main className="flex-1">
-          {children}
-        </main>
-        <WhatsAppButton />
-        <CookieConsent />
-      </div>
+      <SidebarProvider defaultOpen={false}>
+        <div className="min-h-screen bg-background flex w-full">
+          <AppSidebar />
+          <SidebarInset className="flex-1">
+            <AppHeader />
+            <main className="flex-1 p-4">
+              {children}
+            </main>
+          </SidebarInset>
+          <WhatsAppButton />
+          <CookieConsent />
+        </div>
+      </SidebarProvider>
     </AnalyticsProvider>
   );
 };
