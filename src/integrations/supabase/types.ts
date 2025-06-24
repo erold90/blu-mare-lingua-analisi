@@ -132,6 +132,13 @@ export type Database = {
             referencedRelation: "apartments"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_cleaning_tasks_apartment"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          },
         ]
       }
       daily_analytics: {

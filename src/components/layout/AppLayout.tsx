@@ -7,12 +7,11 @@ import { useLocation } from "react-router-dom";
 import { usePageTracking } from "@/hooks/analytics/usePageTracking";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
+import { AnalyticsProvider } from "./AnalyticsProvider";
 
 interface AppLayoutProps {
   children: React.ReactNode;
 }
-
-import { AnalyticsProvider } from "./AnalyticsProvider";
 
 const AppLayout = ({ children }: AppLayoutProps) => {
   const location = useLocation();
@@ -38,7 +37,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
         <div className="min-h-screen bg-background">
           {children}
           <WhatsAppButton />
-          <CookieConsent />
+          {showCookieConsent && (
+            <CookieConsent onAccept={handleAcceptCookies} />
+          )}
         </div>
       </AnalyticsProvider>
     );
@@ -56,7 +57,9 @@ const AppLayout = ({ children }: AppLayoutProps) => {
             </main>
           </SidebarInset>
           <WhatsAppButton />
-          <CookieConsent />
+          {showCookieConsent && (
+            <CookieConsent onAccept={handleAcceptCookies} />
+          )}
         </div>
       </SidebarProvider>
     </AnalyticsProvider>

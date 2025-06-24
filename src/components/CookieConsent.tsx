@@ -1,66 +1,28 @@
 
-import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Cookie } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-export function CookieConsent() {
-  const [showConsent, setShowConsent] = useState(false);
+interface CookieConsentProps {
+  onAccept: () => void;
+}
 
-  useEffect(() => {
-    // Check if user has already consented
-    const hasConsented = localStorage.getItem('cookieConsent');
-    
-    // Only show the banner if user hasn't consented yet
-    if (!hasConsented) {
-      // Small delay to prevent banner from showing immediately on page load
-      const timer = setTimeout(() => {
-        setShowConsent(true);
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  const handleAccept = () => {
-    // Save consent in localStorage
-    localStorage.setItem('cookieConsent', 'accepted');
-    setShowConsent(false);
-  };
-
-  const handleDecline = () => {
-    // Even when declining, we save a preference to not show the banner again
-    localStorage.setItem('cookieConsent', 'declined');
-    setShowConsent(false);
-  };
-
-  if (!showConsent) {
-    return null;
-  }
-
+export const CookieConsent: React.FC<CookieConsentProps> = ({ onAccept }) => {
   return (
-    <div className={cn(
-      "fixed bottom-0 left-0 right-0 p-4 bg-white dark:bg-slate-900 border-t z-50",
-      "transform transition-transform duration-300 ease-in-out"
-    )}>
-      <div className="container mx-auto flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <Cookie className="h-5 w-5 text-primary flex-shrink-0" />
-          <p className="text-sm">
-            Questo sito utilizza cookie per migliorare la tua esperienza. 
-            Leggi la nostra <Link to="/cookie-policy" className="text-primary underline">Cookie Policy</Link> per saperne di più.
-          </p>
-        </div>
-        <div className="flex gap-2 shrink-0">
-          <Button variant="outline" size="sm" onClick={handleDecline}>
-            Solo essenziali
+    <div className="fixed bottom-4 left-4 right-4 z-50 md:left-auto md:right-4 md:max-w-md">
+      <Card className="shadow-lg border-2">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">Utilizzo dei Cookie</CardTitle>
+          <CardDescription className="text-sm">
+            Utilizziamo cookie per migliorare la tua esperienza di navigazione e per analizzare il traffico del sito.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <Button onClick={onAccept} className="w-full">
+            Accetta
           </Button>
-          <Button size="sm" onClick={handleAccept} className="bg-slate-900 text-white dark:bg-white dark:text-slate-900">
-            Accetta tutti
-          </Button>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
