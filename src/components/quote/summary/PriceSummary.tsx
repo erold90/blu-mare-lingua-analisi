@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { PriceCalculation } from "@/utils/price/types";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
-import { Euro, Percent, Minus } from "lucide-react";
+import { Euro, Percent, Minus, Info } from "lucide-react";
 
 // Import refactored components
 import PriceValidityWarning from "./pricing/PriceValidityWarning";
@@ -56,17 +56,17 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   const deposit = priceInfo.deposit;
 
   return (
-    <div className="border rounded-md p-4 space-y-4">
-      <h3 className="font-medium flex items-center gap-2">
-        <Euro className="h-4 w-4" /> 
-        Dettagli prezzo
-      </h3>
+    <div className="border rounded-lg p-4 md:p-6 space-y-6 bg-white shadow-sm">
+      <div className="flex items-center gap-2 pb-2">
+        <Euro className="h-5 w-5 text-primary" /> 
+        <h3 className="text-lg font-semibold text-primary">Dettagli prezzo</h3>
+      </div>
       
       <PriceValidityWarning pricesAreValid={pricesAreValid} />
       
       <PeriodInfo checkIn={formValues.checkIn} checkOut={formValues.checkOut} />
       
-      <div className="space-y-3">
+      <div className="space-y-4">
         <ApartmentPricing 
           basePrice={basePrice}
           nights={nights}
@@ -80,68 +80,78 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
           showExtraServices={showExtraServices}
         />
         
-        <Separator className="my-2" />
+        <Separator className="my-4" />
         
         {/* Subtotal before mandatory services */}
-        <div className="flex justify-between text-sm font-medium">
-          <span>Subtotale alloggio:</span>
-          <span>
+        <div className="flex justify-between items-center py-2">
+          <span className="font-medium">Subtotale servizi:</span>
+          <span className="font-semibold text-lg">
             {pricesAreValid ? `${subtotal}€` : 'N/A'}
           </span>
         </div>
         
-        {/* Mandatory additional costs */}
-        <div className="ml-4 space-y-2 text-xs text-muted-foreground bg-blue-50 p-3 rounded">
-          <div className="font-medium text-primary mb-2">💡 Costi aggiuntivi obbligatori:</div>
-          
-          <div className="flex justify-between">
-            <span>• Pulizia finale ({hasMultipleApartments ? 'per appartamento' : ''}):</span>
-            <span className="font-medium text-primary">
-              {pricesAreValid ? `${cleaningFee}€` : 'N/A'}
-            </span>
+        {/* Mandatory additional costs - More compact version */}
+        <div className="bg-blue-50 rounded-lg p-4 space-y-3">
+          <div className="flex items-center gap-2 text-primary font-medium">
+            <Info className="h-4 w-4" />
+            <span className="text-sm">Costi inclusi nel totale</span>
           </div>
           
-          <div className="flex justify-between">
-            <span>• Tassa di soggiorno ({formValues.adults || 0} adulti × {nights} notti):</span>
-            <span className="font-medium text-primary">
-              {pricesAreValid ? `${touristTax}€` : 'N/A'}
-            </span>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">• Pulizia finale</span>
+              <span className="font-medium">
+                {pricesAreValid ? `${cleaningFee}€` : 'N/A'}
+              </span>
+            </div>
+            
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">• Tassa di soggiorno</span>
+              <span className="font-medium">
+                {pricesAreValid ? `${touristTax}€` : 'N/A'}
+              </span>
+            </div>
           </div>
-          
-          <div className="text-xs text-muted-foreground mt-2 italic">
-            * Questi costi sono già inclusi nel totale finale
-          </div>
-        </div>
-        
-        <Separator className="my-2" />
-        
-        {/* Pre-discount total */}
-        <div className="flex justify-between text-sm">
-          <span>Totale prima sconti:</span>
-          <span className="font-medium">
-            {pricesAreValid ? `${subtotal + cleaningFee + touristTax}€` : 'N/A'}
-          </span>
         </div>
         
         {/* Discount (if any) */}
         {discount > 0 && pricesAreValid && (
-          <div className="flex justify-between text-sm text-green-600">
-            <span className="flex items-center gap-1">
-              <Percent className="h-3 w-3" />
-              Sconto applicato:
+          <div className="flex justify-between items-center py-2 text-green-600">
+            <span className="flex items-center gap-2 font-medium">
+              <Percent className="h-4 w-4" />
+              Sconto applicato
             </span>
-            <span className="flex items-center font-medium">
-              <Minus className="h-3 w-3 mr-0.5" />-{discount}€
+            <span className="flex items-center font-semibold text-lg">
+              <Minus className="h-4 w-4 mr-1" />
+              {discount}€
             </span>
           </div>
         )}
         
-        {/* Final total to pay */}
-        <div className="flex justify-between font-bold text-xl pt-3 border-t-2 border-primary/20 bg-primary/5 p-3 rounded">
-          <span>TOTALE DA PAGARE:</span>
-          <span className={pricesAreValid ? "text-primary text-2xl" : "text-muted-foreground"}>
-            {pricesAreValid ? `${totalToPay}€` : 'Da calcolare'}
-          </span>
+        <Separator className="my-4" />
+        
+        {/* Final total to pay - More prominent */}
+        <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-4 md:p-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <div className="text-sm text-muted-foreground uppercase tracking-wide">
+                Totale da pagare
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {nights} notti • {formValues.adults} adulti
+              </div>
+            </div>
+            <div className="text-right">
+              <div className={`text-2xl md:text-3xl font-bold ${pricesAreValid ? "text-primary" : "text-muted-foreground"}`}>
+                {pricesAreValid ? `${totalToPay}€` : 'Da calcolare'}
+              </div>
+              {pricesAreValid && (
+                <div className="text-xs text-muted-foreground">
+                  ~{Math.round(totalToPay / nights)}€ per notte
+                </div>
+              )}
+            </div>
+          </div>
         </div>
         
         <PaymentBreakdown 

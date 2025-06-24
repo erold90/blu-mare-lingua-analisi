@@ -27,12 +27,12 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
 }) => {
   return (
     <div className="space-y-6">
-      {/* Desktop layout: two columns */}
-      <div className="grid md:grid-cols-2 gap-6">
+      {/* Mobile: single column layout with better spacing */}
+      <div className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
           {/* Date info section */}
           <div>
-            <h3 className="font-serif text-lg font-semibold mb-3 text-primary">Date del soggiorno</h3>
+            <h3 className="font-serif text-lg font-semibold mb-4 text-primary">Date del soggiorno</h3>
             <DateDurationInfo 
               checkIn={formValues.checkIn}
               checkOut={formValues.checkOut}
@@ -42,17 +42,32 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
           
           {/* Guest info section */}
           <div>
-            <h3 className="font-serif text-lg font-semibold mb-3 text-primary">Informazioni ospiti</h3>
+            <h3 className="font-serif text-lg font-semibold mb-4 text-primary">Informazioni ospiti</h3>
             <GuestInfo formValues={formValues} />
+          </div>
+          
+          {/* Apartments section - moved here for better mobile flow */}
+          <div className="lg:hidden">
+            <h3 className="font-serif text-lg font-semibold mb-4 text-primary">Appartamenti selezionati</h3>
+            <Card className="overflow-hidden border bg-white shadow-sm">
+              <CardContent className="p-0">
+                <ApartmentList
+                  apartments={apartments}
+                  selectedApartments={selectedApartments}
+                  formValues={formValues}
+                  priceInfo={priceInfo}
+                />
+              </CardContent>
+            </Card>
           </div>
         </div>
         
-        {/* Right column: Apartments and pricing */}
+        {/* Right column: Apartments (desktop) and pricing */}
         <div className="space-y-6">
-          {/* Apartments section */}
-          <div>
-            <h3 className="font-serif text-lg font-semibold mb-3 text-primary">Appartamenti selezionati</h3>
-            <Card className="overflow-hidden border bg-white">
+          {/* Apartments section - desktop only */}
+          <div className="hidden lg:block">
+            <h3 className="font-serif text-lg font-semibold mb-4 text-primary">Appartamenti selezionati</h3>
+            <Card className="overflow-hidden border bg-white shadow-sm">
               <CardContent className="p-0">
                 <ApartmentList
                   apartments={apartments}
@@ -66,15 +81,11 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
           
           {/* Price summary section */}
           <div>
-            <h3 className="font-serif text-lg font-semibold mb-3 text-primary">Riepilogo prezzi</h3>
-            <Card className="overflow-hidden border bg-white shadow-sm">
-              <CardContent className="p-4">
-                <PriceSummary 
-                  priceInfo={priceInfo}
-                  formValues={formValues}
-                />
-              </CardContent>
-            </Card>
+            <h3 className="font-serif text-lg font-semibold mb-4 text-primary">Riepilogo prezzi</h3>
+            <PriceSummary 
+              priceInfo={priceInfo}
+              formValues={formValues}
+            />
           </div>
         </div>
       </div>
