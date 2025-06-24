@@ -1,11 +1,11 @@
 
 import * as React from "react";
-import { AdvancedAnalyticsDashboard } from "./analytics/AdvancedAnalyticsDashboard";
+import { AnalyticsDashboard } from "./analytics/AnalyticsDashboard";
 
 const AdminAdvancedLog = () => {
   return (
     <div className="space-y-6">
-      <AdvancedAnalyticsDashboard />
+      <AnalyticsDashboard />
     </div>
   );
 };

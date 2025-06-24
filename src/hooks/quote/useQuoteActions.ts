@@ -4,14 +4,14 @@ import { useFormContext } from "react-hook-form";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
 import { apartments } from "@/data/apartments";
-import { useSupabaseActivityLog } from "@/hooks/useSupabaseActivityLog";
+import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
 import { v4 as uuidv4 } from 'uuid';
 import { useAdvancedTracking } from '@/hooks/analytics/useAdvancedTracking';
 
 export function useQuoteActions() {
   const { getValues, setValue } = useFormContext<FormValues>();
   const [step, setStep] = useState(1);
-  const { addQuoteLog } = useSupabaseActivityLog();
+  const { addQuoteLog } = useUnifiedAnalytics();
   
   const { trackInteraction } = useAdvancedTracking();
 
@@ -19,7 +19,7 @@ export function useQuoteActions() {
     if (step < 5) {
       setStep(step + 1);
       
-      // Traccia progresso nel form
+      // Track form progress
       trackInteraction({
         interaction_type: 'quote_progress',
         additional_data: {
@@ -42,7 +42,7 @@ export function useQuoteActions() {
       const quoteId = uuidv4();
       const totalPrice = calculateTotalPrice(formValues, apartments).totalPrice;
 
-      // Save quote log
+      // Save quote log using unified system
       await addQuoteLog({
         id: quoteId,
         form_values: formValues,
@@ -50,7 +50,7 @@ export function useQuoteActions() {
         completed: true,
       });
       
-      // Traccia completamento preventivo
+      // Track quote completion
       trackInteraction({
         interaction_type: 'quote_completed',
         additional_data: {

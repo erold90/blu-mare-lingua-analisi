@@ -1,14 +1,14 @@
 
 import * as React from "react";
-import { useAdvancedTracking } from "@/hooks/analytics/useAdvancedTracking";
+import { usePageTracking } from "@/hooks/analytics/usePageTracking";
 
 interface AnalyticsProviderProps {
   children: React.ReactNode;
 }
 
 export const AnalyticsProvider = ({ children }: AnalyticsProviderProps) => {
-  // Il hook si occupa automaticamente del tracking
-  useAdvancedTracking();
+  // Use unified page tracking
+  usePageTracking();
 
   return <>{children}</>;
 };

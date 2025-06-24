@@ -8,7 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, subDays } from "date-fns";
 import { it } from "date-fns/locale";
-import { useActivityLog } from "@/hooks/activity/useActivityLog";
+import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
 import { CalendarIcon, Info, Loader2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -17,7 +17,7 @@ import { AdminLogQuotes } from "./quotes/AdminLogQuotes";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const AdminLog = () => {
-  const { quoteLogs, siteVisits, getVisitsCount, loading, refreshData } = useActivityLog();
+  const { quoteLogs, siteVisits, getVisitsCount, loading, refreshData } = useUnifiedAnalytics();
   const isMobile = useIsMobile();
   
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
