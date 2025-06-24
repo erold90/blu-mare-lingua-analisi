@@ -74,6 +74,21 @@ export function useQuoteActions() {
     }
   };
 
+  const sendWhatsApp = useCallback(() => {
+    const formValues = getValues();
+    // Logic for sending WhatsApp message
+    console.log("Sending WhatsApp message with form values:", formValues);
+  }, [getValues]);
+
+  const onSubmitHandler = useCallback((data: FormValues) => {
+    console.log("Form submitted with data:", data);
+    handleSubmit();
+  }, []);
+
+  const handleSubmitWrapper = useCallback(() => {
+    return onSubmitHandler;
+  }, [onSubmitHandler]);
+
   const getStepName = (stepNumber: number) => {
     const stepNames = {
       1: 'guest_info',
@@ -89,6 +104,9 @@ export function useQuoteActions() {
     step,
     handleNext,
     handlePrevious,
-    handleSubmit
+    handleSubmit,
+    sendWhatsApp,
+    onSubmitHandler,
+    handleSubmitWrapper
   };
 }

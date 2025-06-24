@@ -60,11 +60,7 @@ export function useQuoteForm() {
     setFamilyGroups 
   } = useGroupManagement(form, setChildrenArray);
   
-  const { 
-    sendWhatsApp, 
-    onSubmitHandler, 
-    handleSubmitWrapper
-  } = useQuoteActions(form);
+  const quoteActions = useQuoteActions();
   
   // Setup effect hooks
   useChildEffects(form, childrenArray, setChildrenArray);
@@ -96,8 +92,8 @@ export function useQuoteForm() {
     openGroupDialog,
     closeGroupDialog,
     setFamilyGroups,
-    sendWhatsApp,
-    onSubmitHandler,
-    handleSubmitWrapper
+    sendWhatsApp: quoteActions.sendWhatsApp,
+    onSubmitHandler: quoteActions.onSubmitHandler,
+    handleSubmitWrapper: quoteActions.handleSubmitWrapper
   };
 }

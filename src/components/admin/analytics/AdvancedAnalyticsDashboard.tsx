@@ -62,14 +62,14 @@ export const AdvancedAnalyticsDashboard = () => {
     await refreshData();
   };
 
-  // Calcola metriche principali con type guards
+  // Calcola metriche principali con type guards e safe operations
   const totalVisitors = visitorSessions?.length || 0;
   const totalPageViews = pageViews?.length || 0;
   const totalInteractions = interactions?.length || 0;
   
   const avgSessionDuration = visitorSessions?.length 
     ? visitorSessions.reduce((acc, session) => {
-        const duration = Number(session.session_duration) || 0;
+        const duration = typeof session.session_duration === 'number' ? session.session_duration : 0;
         return acc + duration;
       }, 0) / visitorSessions.length
     : 0;
@@ -81,8 +81,8 @@ export const AdvancedAnalyticsDashboard = () => {
   // Prepara dati per i grafici con type safety
   const dailyVisitorsData = dailyAnalytics?.map(day => ({
     date: format(new Date(day.date), 'dd/MM', { locale: it }),
-    visitors: Number(day.unique_visitors) || 0,
-    pageViews: Number(day.total_page_views) || 0,
+    visitors: typeof day.unique_visitors === 'number' ? day.unique_visitors : 0,
+    pageViews: typeof day.total_page_views === 'number' ? day.total_page_views : 0,
   })) || [];
 
   const deviceData = visitorSessions?.reduce((acc, session) => {
@@ -331,7 +331,7 @@ export const AdvancedAnalyticsDashboard = () => {
                     <div key={country.name} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Globe className="h-4 w-4" />
-                        <span>{country.name}</span>
+                        <span>{String(country.name)}</span>
                       </div>
                       <Badge variant="outline">{country.value}</Badge>
                     </div>
@@ -350,7 +350,7 @@ export const AdvancedAnalyticsDashboard = () => {
                     <div key={page.name} className="flex items-center justify-between">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <Eye className="h-4 w-4 flex-shrink-0" />
-                        <span className="text-sm truncate">{page.name}</span>
+                        <span className="text-sm truncate">{String(page.name)}</span>
                       </div>
                       <Badge variant="outline">{page.value}</Badge>
                     </div>
@@ -406,15 +406,15 @@ export const AdvancedAnalyticsDashboard = () => {
                       return acc;
                     }, {} as Record<string, number>) || {}
                   )
-                    .sort(([,a], [,b]) => b - a)
+                    .sort(([,a], [,b]) => (typeof b === 'number' ? b : 0) - (typeof a === 'number' ? a : 0))
                     .slice(0, 6)
                     .map(([browser, count]) => (
                       <div key={browser} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Monitor className="h-4 w-4" />
-                          <span>{browser}</span>
+                          <span>{String(browser)}</span>
                         </div>
-                        <Badge variant="outline">{count}</Badge>
+                        <Badge variant="outline">{typeof count === 'number' ? count : 0}</Badge>
                       </div>
                     ))}
                 </div>
@@ -434,15 +434,15 @@ export const AdvancedAnalyticsDashboard = () => {
                       return acc;
                     }, {} as Record<string, number>) || {}
                   )
-                    .sort(([,a], [,b]) => b - a)
+                    .sort(([,a], [,b]) => (typeof b === 'number' ? b : 0) - (typeof a === 'number' ? a : 0))
                     .slice(0, 6)
                     .map(([os, count]) => (
                       <div key={os} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Smartphone className="h-4 w-4" />
-                          <span>{os}</span>
+                          <span>{String(os)}</span>
                         </div>
-                        <Badge variant="outline">{count}</Badge>
+                        <Badge variant="outline">{typeof count === 'number' ? count : 0}</Badge>
                       </div>
                     ))}
                 </div>

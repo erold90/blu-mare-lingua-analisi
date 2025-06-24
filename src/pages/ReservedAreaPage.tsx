@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useNavigate, Link, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -140,21 +139,7 @@ const ReservedAreaPage = () => {
   }
   
   console.log("ReservedAreaPage - Showing admin layout");
-  return (
-    <AdminLayout>
-      <Routes>
-        <Route path="/dashboard" element={<AdminDashboard />} />
-        <Route path="/prenotazioni" element={<AdminReservations />} />
-        <Route path="/pulizie" element={<AdminCleaningManagement />} />
-        <Route path="/appartamenti" element={<AdminApartments />} />
-        <Route path="/prezzi" element={<AdminPrices />} />
-        <Route path="/calendario" element={<AdminCalendar />} />
-        <Route path="/log" element={<AdminLog />} />
-        <Route path="/impostazioni" element={<AdminSettings />} />
-        <Route path="*" element={<Navigate to="/area-riservata/dashboard" replace />} />
-      </Routes>
-    </AdminLayout>
-  );
+  return <AdminLayout />;
 };
 
 export default ReservedAreaPage;
