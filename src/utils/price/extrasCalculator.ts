@@ -122,7 +122,7 @@ export function calculateCleaningFee(selectedApartments: Apartment[]): number {
 
 /**
  * Calculate tourist tax (1€ per adult per night, children under 12 exempt)
- * CORRECTED: Now properly excludes children under 12 years old
+ * CORRECTED: Now properly excludes children under 12 years old using isUnder12 flag
  */
 export function calculateTouristTax(formValues: FormValues, nights: number): number {
   console.log("🏛️ Calculating tourist tax...");
@@ -136,11 +136,11 @@ export function calculateTouristTax(formValues: FormValues, nights: number): num
   const adults = formValues.adults || 0;
   const childrenDetails = formValues.childrenDetails || [];
   
-  // Count children who are 12 years old or older
+  // Count children who are 12 years old or older (those who are NOT under 12)
   const childrenOver12 = childrenDetails.filter(child => {
-    const age = child.age || 0;
-    console.log(`👶 Child age: ${age}, over 12: ${age >= 12}`);
-    return age >= 12;
+    const isUnder12 = child.isUnder12 || false;
+    console.log(`👶 Child isUnder12: ${isUnder12}, taxable: ${!isUnder12}`);
+    return !isUnder12; // Children who are NOT under 12 are taxable
   }).length;
   
   // Total people subject to tourist tax (adults + children 12+)
