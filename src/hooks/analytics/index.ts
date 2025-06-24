@@ -3,9 +3,8 @@
 export { useAnalytics } from './useAnalytics';
 export { useAdvancedAnalytics } from './useAdvancedAnalytics';
 export { useTracking } from './useTracking';
-
-// Legacy unified hook for backward compatibility
-export { useUnifiedAnalytics } from './useUnifiedAnalytics';
+export { usePageTracking } from './usePageTracking';
+export { useAdvancedTracking } from './useAdvancedTracking';
 
 // Types
 export type { QuoteLog, SiteVisit } from './useAnalytics';

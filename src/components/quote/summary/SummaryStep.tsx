@@ -5,7 +5,7 @@ import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPriceUnified, refreshApartmentPrices } from "@/utils/price/unifiedPriceCalculator";
 import { PriceCalculation, emptyPriceCalculation } from "@/utils/price/types";
 import { v4 as uuidv4 } from "uuid";
-import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
+import { useAnalytics } from "@/hooks/analytics/useAnalytics";
 import { useUnifiedPrices } from "@/hooks/useUnifiedPrices";
 
 // Import refactored components
@@ -26,7 +26,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
   prevStep,
   sendWhatsApp
 }) => {
-  const { addQuoteLog } = useUnifiedAnalytics();
+  const { addQuoteLog } = useAnalytics();
   const { prices, getPriceForWeek, refreshPrices } = useUnifiedPrices();
   
   const [priceInfo, setPriceInfo] = useState<PriceCalculation>(emptyPriceCalculation);

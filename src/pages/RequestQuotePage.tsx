@@ -1,9 +1,8 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { useQuoteForm } from "@/hooks/useQuoteForm";
-import { usePageVisitTracker } from "@/hooks/usePageVisitTracker";
+import { usePageTracking } from "@/hooks/analytics/usePageTracking";
 import { apartments } from "@/data/apartments";
 import SEOHead from "@/components/seo/SEOHead";
 import { getBreadcrumbSchema } from "@/components/seo/StructuredData";
@@ -25,7 +24,7 @@ const RequestQuotePage = () => {
   console.log("🔍 RequestQuotePage: Loading quote form page");
   
   // Track page visits
-  usePageVisitTracker();
+  usePageTracking();
 
   const breadcrumbItems = [
     { name: "Home", url: "/" },
