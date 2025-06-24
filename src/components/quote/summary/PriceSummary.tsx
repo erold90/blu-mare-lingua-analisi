@@ -40,6 +40,12 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   const cleaningFee = priceInfo.cleaningFee;
   const touristTax = priceInfo.touristTax;
   
+  // Calculate taxable guests for tourist tax display
+  const adults = formValues.adults || 0;
+  const childrenDetails = formValues.childrenDetails || [];
+  const childrenOver12 = childrenDetails.filter(child => !child.isUnder12).length;
+  const taxableGuests = adults + childrenOver12;
+  
   // Subtotal includes base price plus extras (BUT NOT cleaning fee or tourist tax)
   const subtotal = priceInfo.totalBeforeDiscount;
 
@@ -162,7 +168,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
             </div>
           </div>
           
-          {/* Tourist tax */}
+          {/* Tourist tax with proper calculation display */}
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground flex items-center gap-1">
               <ReceiptText className="h-3 w-3" /> 
@@ -173,6 +179,18 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
               <span className="text-muted-foreground ml-1">+{touristTax}€</span>
             </div>
           </div>
+          
+          {/* Detailed tourist tax calculation for clarity */}
+          {pricesAreValid && taxableGuests > 0 && (
+            <div className="ml-6 text-xs text-muted-foreground">
+              <span>• {taxableGuests} persone × {nights} notti × 1€ = {touristTax}€</span>
+              {childrenDetails.filter(child => child.isUnder12).length > 0 && (
+                <div className="text-green-600">
+                  • Bambini sotto 12 anni: esenti
+                </div>
+              )}
+            </div>
+          )}
           
           {/* Display free cribs if any */}
           {sleepingInCribs > 0 && (

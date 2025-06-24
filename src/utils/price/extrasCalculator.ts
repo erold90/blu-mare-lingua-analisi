@@ -122,7 +122,7 @@ export function calculateCleaningFee(selectedApartments: Apartment[]): number {
 
 /**
  * Calculate tourist tax (1€ per adult per night, children under 12 exempt)
- * CORRECTED: Now properly excludes children under 12 years old using isUnder12 flag
+ * CORRECTED: Now properly calculates total taxable guests regardless of apartment distribution
  */
 export function calculateTouristTax(formValues: FormValues, nights: number): number {
   console.log("🏛️ Calculating tourist tax...");
@@ -155,6 +155,7 @@ export function calculateTouristTax(formValues: FormValues, nights: number): num
     - Total tax: ${taxableGuests * nights * 1}€`);
   
   // Calculate tax: 1€ per taxable person per night
+  // This is the TOTAL tax for all guests, not per apartment
   const totalTax = taxableGuests * nights * 1;
   
   return totalTax;
