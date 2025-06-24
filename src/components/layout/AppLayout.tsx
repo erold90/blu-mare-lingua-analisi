@@ -29,6 +29,21 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     setShowCookieConsent(false);
   };
 
+  // Se siamo nell'area riservata, non usiamo il sidebar principale
+  const isReservedArea = location.pathname.startsWith('/area-riservata');
+
+  if (isReservedArea) {
+    return (
+      <AnalyticsProvider>
+        <div className="min-h-screen bg-background">
+          {children}
+          <WhatsAppButton />
+          <CookieConsent />
+        </div>
+      </AnalyticsProvider>
+    );
+  }
+
   return (
     <AnalyticsProvider>
       <SidebarProvider defaultOpen={false}>
