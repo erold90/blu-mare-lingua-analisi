@@ -1,4 +1,3 @@
-
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
@@ -60,9 +59,14 @@ export function calculateLinenCost(formValues: FormValues): number {
   
   // Use getEffectiveGuestCount to get the correct count of people needing linen
   const guestCounts = getEffectiveGuestCount(formValues);
-  const totalPeopleForLinen = guestCounts.totalPeopleForLinen;
+  
+  // People needing linen = total guests - children sleeping with parents - children sleeping in cribs
+  const totalPeopleForLinen = guestCounts.totalGuests - guestCounts.sleepingWithParents - guestCounts.sleepingInCribs;
   
   console.log("🔍 Linen calculation:", {
+    totalGuests: guestCounts.totalGuests,
+    sleepingWithParents: guestCounts.sleepingWithParents,
+    sleepingInCribs: guestCounts.sleepingInCribs,
     totalPeopleForLinen,
     pricePerPerson,
     totalCost: totalPeopleForLinen * pricePerPerson
