@@ -5,7 +5,7 @@ import { MessageSquare } from "lucide-react";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { PriceCalculation } from "@/utils/price/types";
-import { useActivityLog } from "@/hooks/activity/useActivityLog";
+import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
 import { v4 as uuidv4 } from "uuid";
 
 interface QuoteActionsProps {
@@ -23,7 +23,7 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
   apartments,
   priceInfo
 }) => {
-  const { addQuoteLog } = useActivityLog();
+  const { addQuoteLog } = useUnifiedAnalytics();
 
   const handleWhatsAppClick = () => {
     // Salva il log del riepilogo per l'area riservata prima di inviare WhatsApp

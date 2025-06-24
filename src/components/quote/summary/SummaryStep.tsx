@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Apartment } from "@/data/apartments";
@@ -6,7 +5,7 @@ import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPriceUnified, refreshApartmentPrices } from "@/utils/price/unifiedPriceCalculator";
 import { PriceCalculation, emptyPriceCalculation } from "@/utils/price/types";
 import { v4 as uuidv4 } from "uuid";
-import { useActivityLog } from "@/hooks/activity/useActivityLog";
+import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
 import { useUnifiedPrices } from "@/hooks/useUnifiedPrices";
 
 // Import refactored components
@@ -27,7 +26,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
   prevStep,
   sendWhatsApp
 }) => {
-  const { addQuoteLog } = useActivityLog();
+  const { addQuoteLog } = useUnifiedAnalytics();
   const { prices, getPriceForWeek, refreshPrices } = useUnifiedPrices();
   
   const [priceInfo, setPriceInfo] = useState<PriceCalculation>(emptyPriceCalculation);

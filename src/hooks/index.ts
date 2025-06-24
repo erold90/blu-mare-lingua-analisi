@@ -7,6 +7,7 @@ export type { PriceData, UnifiedPricesContextType } from './useUnifiedPrices';
 export { useSupabasePrices } from './useSupabasePrices';
 export { useCompactPrices } from './prices/useCompactPrices';
 
-// Export di altri hook
-export { useActivityLog } from './activity/useActivityLog';
-export { useSiteVisits } from './activity/useSiteVisits';
+// Export dei nuovi hook analytics unificati
+export { useUnifiedAnalytics } from './analytics/useUnifiedAnalytics';
+export { usePageTracking } from './analytics/usePageTracking';
+export { useAdvancedTracking } from './analytics/useAdvancedTracking';
