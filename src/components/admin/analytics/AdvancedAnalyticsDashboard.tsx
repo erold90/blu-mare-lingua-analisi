@@ -23,6 +23,23 @@ interface DateRange {
 
 const COLORS = ['#8b87f5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
+// Helper function to safely convert to number
+const toNumber = (value: unknown): number => {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  return 0;
+};
+
+// Helper function to safely convert to string
+const toString = (value: unknown): string => {
+  if (typeof value === 'string') return value;
+  if (value === null || value === undefined) return '';
+  return String(value);
+};
+
 export const AdvancedAnalyticsDashboard = () => {
   const isMobile = useIsMobile();
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -69,7 +86,7 @@ export const AdvancedAnalyticsDashboard = () => {
   
   const avgSessionDuration = visitorSessions?.length 
     ? visitorSessions.reduce((acc, session) => {
-        const duration = typeof session.session_duration === 'number' ? session.session_duration : 0;
+        const duration = toNumber(session.session_duration);
         return acc + duration;
       }, 0) / visitorSessions.length
     : 0;
@@ -81,12 +98,12 @@ export const AdvancedAnalyticsDashboard = () => {
   // Prepara dati per i grafici con type safety
   const dailyVisitorsData = dailyAnalytics?.map(day => ({
     date: format(new Date(day.date), 'dd/MM', { locale: it }),
-    visitors: typeof day.unique_visitors === 'number' ? day.unique_visitors : 0,
-    pageViews: typeof day.total_page_views === 'number' ? day.total_page_views : 0,
+    visitors: toNumber(day.unique_visitors),
+    pageViews: toNumber(day.total_page_views),
   })) || [];
 
   const deviceData = visitorSessions?.reduce((acc, session) => {
-    const device = String(session.device_type || 'Unknown');
+    const device = toString(session.device_type) || 'Unknown';
     acc[device] = (acc[device] || 0) + 1;
     return acc;
   }, {} as Record<string, number>) || {};
@@ -94,7 +111,7 @@ export const AdvancedAnalyticsDashboard = () => {
   const deviceChartData = Object.entries(deviceData).map(([name, value]) => ({ name, value }));
 
   const countryData = visitorSessions?.reduce((acc, session) => {
-    const country = String(session.country || 'Unknown');
+    const country = toString(session.country) || 'Unknown';
     acc[country] = (acc[country] || 0) + 1;
     return acc;
   }, {} as Record<string, number>) || {};
@@ -105,7 +122,7 @@ export const AdvancedAnalyticsDashboard = () => {
     .map(([name, value]) => ({ name, value }));
 
   const topPages = pageViews?.reduce((acc, view) => {
-    const page = String(view.page_url || 'Unknown');
+    const page = toString(view.page_url) || 'Unknown';
     acc[page] = (acc[page] || 0) + 1;
     return acc;
   }, {} as Record<string, number>) || {};
@@ -331,7 +348,7 @@ export const AdvancedAnalyticsDashboard = () => {
                     <div key={country.name} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Globe className="h-4 w-4" />
-                        <span>{String(country.name)}</span>
+                        <span>{toString(country.name)}</span>
                       </div>
                       <Badge variant="outline">{country.value}</Badge>
                     </div>
@@ -350,7 +367,7 @@ export const AdvancedAnalyticsDashboard = () => {
                     <div key={page.name} className="flex items-center justify-between">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <Eye className="h-4 w-4 flex-shrink-0" />
-                        <span className="text-sm truncate">{String(page.name)}</span>
+                        <span className="text-sm truncate">{toString(page.name)}</span>
                       </div>
                       <Badge variant="outline">{page.value}</Badge>
                     </div>
@@ -373,10 +390,10 @@ export const AdvancedAnalyticsDashboard = () => {
                     <div className="flex items-center gap-2">
                       <MousePointer className="h-4 w-4" />
                       <div>
-                        <span className="text-sm font-medium">{String(interaction.interaction_type)}</span>
+                        <span className="text-sm font-medium">{toString(interaction.interaction_type)}</span>
                         {interaction.element_text && (
                           <p className="text-xs text-muted-foreground truncate max-w-[200px]">
-                            {String(interaction.element_text)}
+                            {toString(interaction.element_text)}
                           </p>
                         )}
                       </div>
@@ -401,20 +418,20 @@ export const AdvancedAnalyticsDashboard = () => {
                 <div className="space-y-2">
                   {Object.entries(
                     visitorSessions?.reduce((acc, session) => {
-                      const browser = String(session.browser || 'Unknown');
+                      const browser = toString(session.browser) || 'Unknown';
                       acc[browser] = (acc[browser] || 0) + 1;
                       return acc;
                     }, {} as Record<string, number>) || {}
                   )
-                    .sort(([,a], [,b]) => (typeof b === 'number' ? b : 0) - (typeof a === 'number' ? a : 0))
+                    .sort(([,a], [,b]) => b - a)
                     .slice(0, 6)
                     .map(([browser, count]) => (
                       <div key={browser} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Monitor className="h-4 w-4" />
-                          <span>{String(browser)}</span>
+                          <span>{toString(browser)}</span>
                         </div>
-                        <Badge variant="outline">{typeof count === 'number' ? count : 0}</Badge>
+                        <Badge variant="outline">{count}</Badge>
                       </div>
                     ))}
                 </div>
@@ -429,20 +446,20 @@ export const AdvancedAnalyticsDashboard = () => {
                 <div className="space-y-2">
                   {Object.entries(
                     visitorSessions?.reduce((acc, session) => {
-                      const os = String(session.operating_system || 'Unknown');
+                      const os = toString(session.operating_system) || 'Unknown';
                       acc[os] = (acc[os] || 0) + 1;
                       return acc;
                     }, {} as Record<string, number>) || {}
                   )
-                    .sort(([,a], [,b]) => (typeof b === 'number' ? b : 0) - (typeof a === 'number' ? a : 0))
+                    .sort(([,a], [,b]) => b - a)
                     .slice(0, 6)
                     .map(([os, count]) => (
                       <div key={os} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Smartphone className="h-4 w-4" />
-                          <span>{String(os)}</span>
+                          <span>{toString(os)}</span>
                         </div>
-                        <Badge variant="outline">{typeof count === 'number' ? count : 0}</Badge>
+                        <Badge variant="outline">{count}</Badge>
                       </div>
                     ))}
                 </div>
