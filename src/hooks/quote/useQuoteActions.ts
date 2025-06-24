@@ -80,14 +80,11 @@ export function useQuoteActions() {
     console.log("Sending WhatsApp message with form values:", formValues);
   }, [getValues]);
 
+  // Simplified submit handler - no wrapper needed
   const onSubmitHandler = useCallback((data: FormValues) => {
     console.log("Form submitted with data:", data);
     handleSubmit();
   }, []);
-
-  const handleSubmitWrapper = useCallback(() => {
-    return onSubmitHandler;
-  }, [onSubmitHandler]);
 
   const getStepName = (stepNumber: number) => {
     const stepNames = {
@@ -106,7 +103,6 @@ export function useQuoteActions() {
     handlePrevious,
     handleSubmit,
     sendWhatsApp,
-    onSubmitHandler,
-    handleSubmitWrapper
+    onSubmitHandler
   };
 }

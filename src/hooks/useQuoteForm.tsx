@@ -19,7 +19,7 @@ export function useQuoteForm() {
     adults: 2,
     children: 0,
     childrenDetails: [],
-    needsLinen: false, // Cambiato da linenOption a needsLinen
+    needsLinen: false,
     hasPets: false,
     petsCount: 0,
     isGroupBooking: false,
@@ -93,7 +93,6 @@ export function useQuoteForm() {
     closeGroupDialog,
     setFamilyGroups,
     sendWhatsApp: quoteActions.sendWhatsApp,
-    onSubmitHandler: quoteActions.onSubmitHandler,
-    handleSubmitWrapper: quoteActions.handleSubmitWrapper
+    onSubmitHandler: quoteActions.onSubmitHandler
   };
 }

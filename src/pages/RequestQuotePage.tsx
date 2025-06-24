@@ -56,8 +56,7 @@ const RequestQuotePage = () => {
       closeGroupDialog,
       setFamilyGroups,
       sendWhatsApp,
-      onSubmitHandler,
-      handleSubmitWrapper
+      onSubmitHandler
     } = useQuoteForm();
 
     console.log(`🔍 RequestQuotePage: Current step is ${step}/${totalSteps}`);
@@ -224,7 +223,7 @@ const RequestQuotePage = () => {
                 
                 <CardContent className="relative p-8 md:p-12">
                   <Form {...form}>
-                    <form onSubmit={form.handleSubmit(handleSubmitWrapper)}>
+                    <form onSubmit={form.handleSubmit(onSubmitHandler)}>
                       <div className="animate-scale-in">
                         {renderStepContent()}
                       </div>
@@ -269,7 +268,7 @@ const RequestQuotePage = () => {
         <Card className="max-w-md mx-auto bg-white/90 backdrop-blur-md shadow-2xl">
           <CardContent className="p-8 text-center">
             <h2 className="text-xl font-semibold text-red-600 mb-4">Errore nell'applicazione</h2>
-            <p className="text-gray-600 mb-4">Si è verificato un errore imprevisto</p>
+            <p className="text-gray-600 mb-4">Si è verificato un errore imprevisto. Dettagli: {error?.message || 'Errore sconosciuto'}</p>
             <button 
               onClick={() => window.location.reload()} 
               className="px-6 py-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
