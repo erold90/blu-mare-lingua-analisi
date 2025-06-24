@@ -104,7 +104,8 @@ export const AdvancedAnalyticsDashboard = () => {
 
   const deviceData = visitorSessions?.reduce((acc, session) => {
     const device = toString(session.device_type) || 'Unknown';
-    acc[device] = (acc[device] || 0) + 1;
+    const currentCount = toNumber(acc[device]) || 0;
+    acc[device] = currentCount + 1;
     return acc;
   }, {} as Record<string, number>) || {};
 
@@ -112,23 +113,25 @@ export const AdvancedAnalyticsDashboard = () => {
 
   const countryData = visitorSessions?.reduce((acc, session) => {
     const country = toString(session.country) || 'Unknown';
-    acc[country] = (acc[country] || 0) + 1;
+    const currentCount = toNumber(acc[country]) || 0;
+    acc[country] = currentCount + 1;
     return acc;
   }, {} as Record<string, number>) || {};
 
   const topCountries = Object.entries(countryData)
-    .sort(([,a], [,b]) => b - a)
+    .sort(([,a], [,b]) => toNumber(b) - toNumber(a))
     .slice(0, 5)
     .map(([name, value]) => ({ name, value }));
 
   const topPages = pageViews?.reduce((acc, view) => {
     const page = toString(view.page_url) || 'Unknown';
-    acc[page] = (acc[page] || 0) + 1;
+    const currentCount = toNumber(acc[page]) || 0;
+    acc[page] = currentCount + 1;
     return acc;
   }, {} as Record<string, number>) || {};
 
   const topPagesData = Object.entries(topPages)
-    .sort(([,a], [,b]) => b - a)
+    .sort(([,a], [,b]) => toNumber(b) - toNumber(a))
     .slice(0, 10)
     .map(([name, value]) => ({ name, value }));
 
@@ -348,9 +351,9 @@ export const AdvancedAnalyticsDashboard = () => {
                     <div key={country.name} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Globe className="h-4 w-4" />
-                        <span>{toString(country.name)}</span>
+                        <span>{toString(country.name) || 'Unknown'}</span>
                       </div>
-                      <Badge variant="outline">{country.value}</Badge>
+                      <Badge variant="outline">{toNumber(country.value)}</Badge>
                     </div>
                   ))}
                 </div>
@@ -367,9 +370,9 @@ export const AdvancedAnalyticsDashboard = () => {
                     <div key={page.name} className="flex items-center justify-between">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <Eye className="h-4 w-4 flex-shrink-0" />
-                        <span className="text-sm truncate">{toString(page.name)}</span>
+                        <span className="text-sm truncate">{toString(page.name) || 'Unknown'}</span>
                       </div>
-                      <Badge variant="outline">{page.value}</Badge>
+                      <Badge variant="outline">{toNumber(page.value)}</Badge>
                     </div>
                   ))}
                 </div>
@@ -390,7 +393,7 @@ export const AdvancedAnalyticsDashboard = () => {
                     <div className="flex items-center gap-2">
                       <MousePointer className="h-4 w-4" />
                       <div>
-                        <span className="text-sm font-medium">{toString(interaction.interaction_type)}</span>
+                        <span className="text-sm font-medium">{toString(interaction.interaction_type) || 'Unknown'}</span>
                         {interaction.element_text && (
                           <p className="text-xs text-muted-foreground truncate max-w-[200px]">
                             {toString(interaction.element_text)}
@@ -419,19 +422,20 @@ export const AdvancedAnalyticsDashboard = () => {
                   {Object.entries(
                     visitorSessions?.reduce((acc, session) => {
                       const browser = toString(session.browser) || 'Unknown';
-                      acc[browser] = (acc[browser] || 0) + 1;
+                      const currentCount = toNumber(acc[browser]) || 0;
+                      acc[browser] = currentCount + 1;
                       return acc;
                     }, {} as Record<string, number>) || {}
                   )
-                    .sort(([,a], [,b]) => b - a)
+                    .sort(([,a], [,b]) => toNumber(b) - toNumber(a))
                     .slice(0, 6)
                     .map(([browser, count]) => (
                       <div key={browser} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Monitor className="h-4 w-4" />
-                          <span>{toString(browser)}</span>
+                          <span>{toString(browser) || 'Unknown'}</span>
                         </div>
-                        <Badge variant="outline">{count}</Badge>
+                        <Badge variant="outline">{toNumber(count)}</Badge>
                       </div>
                     ))}
                 </div>
@@ -447,19 +451,20 @@ export const AdvancedAnalyticsDashboard = () => {
                   {Object.entries(
                     visitorSessions?.reduce((acc, session) => {
                       const os = toString(session.operating_system) || 'Unknown';
-                      acc[os] = (acc[os] || 0) + 1;
+                      const currentCount = toNumber(acc[os]) || 0;
+                      acc[os] = currentCount + 1;
                       return acc;
                     }, {} as Record<string, number>) || {}
                   )
-                    .sort(([,a], [,b]) => b - a)
+                    .sort(([,a], [,b]) => toNumber(b) - toNumber(a))
                     .slice(0, 6)
                     .map(([os, count]) => (
                       <div key={os} className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Smartphone className="h-4 w-4" />
-                          <span>{toString(os)}</span>
+                          <span>{toString(os) || 'Unknown'}</span>
                         </div>
-                        <Badge variant="outline">{count}</Badge>
+                        <Badge variant="outline">{toNumber(count)}</Badge>
                       </div>
                     ))}
                 </div>
