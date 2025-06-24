@@ -16,7 +16,6 @@ import ReservedAreaPage from "@/pages/ReservedAreaPage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import CookiePolicyPage from "@/pages/CookiePolicyPage";
 import NotFound from "@/pages/NotFound";
-import { CookieConsent } from "@/components/CookieConsent";
 
 const AppWithTracking = () => {
   usePageTracking();
@@ -44,7 +43,6 @@ function App() {
       <AuthProvider>
         <Router>
           <AppWithTracking />
-          <CookieConsent />
           <Toaster />
           <UIToaster />
         </Router>
