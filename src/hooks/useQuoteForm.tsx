@@ -60,7 +60,8 @@ export function useQuoteForm() {
     setFamilyGroups 
   } = useGroupManagement(form, setChildrenArray);
   
-  const quoteActions = useQuoteActions();
+  // Pass the form to useQuoteActions
+  const quoteActions = useQuoteActions(form);
   
   // Setup effect hooks
   useChildEffects(form, childrenArray, setChildrenArray);

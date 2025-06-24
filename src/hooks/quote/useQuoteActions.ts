@@ -1,15 +1,14 @@
 
 import { useState, useCallback } from "react";
-import { useFormContext } from "react-hook-form";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
 import { apartments } from "@/data/apartments";
 import { useAnalytics } from "@/hooks/analytics/useAnalytics";
 import { v4 as uuidv4 } from 'uuid';
 import { useAdvancedTracking } from '@/hooks/analytics/useAdvancedTracking';
+import { UseFormReturn } from "react-hook-form";
 
-export function useQuoteActions() {
-  const { getValues, setValue } = useFormContext<FormValues>();
+export function useQuoteActions(form?: UseFormReturn<FormValues>) {
   const [step, setStep] = useState(1);
   const { addQuoteLog } = useAnalytics();
   
@@ -37,8 +36,13 @@ export function useQuoteActions() {
   };
 
   const handleSubmit = async () => {
+    if (!form) {
+      console.error("Form not available for submit");
+      return;
+    }
+
     try {
-      const formValues = getValues();
+      const formValues = form.getValues();
       const quoteId = uuidv4();
       const totalPrice = calculateTotalPrice(formValues, apartments).totalPrice;
 
@@ -63,7 +67,7 @@ export function useQuoteActions() {
 
       // Reset form
       Object.keys(formValues).forEach(key => {
-        setValue(key as keyof FormValues, undefined);
+        form.setValue(key as keyof FormValues, undefined);
       });
       setStep(1);
       
@@ -75,16 +79,21 @@ export function useQuoteActions() {
   };
 
   const sendWhatsApp = useCallback(() => {
-    const formValues = getValues();
+    if (!form) {
+      console.error("Form not available for WhatsApp");
+      return;
+    }
+    
+    const formValues = form.getValues();
     // Logic for sending WhatsApp message
     console.log("Sending WhatsApp message with form values:", formValues);
-  }, [getValues]);
+  }, [form]);
 
   // Simplified submit handler - no wrapper needed
   const onSubmitHandler = useCallback((data: FormValues) => {
     console.log("Form submitted with data:", data);
     handleSubmit();
-  }, []);
+  }, [handleSubmit]);
 
   const getStepName = (stepNumber: number) => {
     const stepNames = {
