@@ -99,7 +99,7 @@ export function useQuoteActions(form?: UseFormReturn<FormValues>) {
     
     // Encode message for URL
     const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/393299943297?text=${encodedMessage}`;
+    const whatsappUrl = `https://wa.me/393937767749?text=${encodedMessage}`;
     
     console.log("✅ Opening WhatsApp with message length:", message.length);
     
