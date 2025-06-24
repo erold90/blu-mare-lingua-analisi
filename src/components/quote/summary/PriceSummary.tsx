@@ -11,7 +11,6 @@ import PriceValidityWarning from "./pricing/PriceValidityWarning";
 import PeriodInfo from "./pricing/PeriodInfo";
 import ApartmentPricing from "./pricing/ApartmentPricing";
 import ExtraServices from "./pricing/ExtraServices";
-import ServiceInclusions from "./pricing/ServiceInclusions";
 import PaymentBreakdown from "./pricing/PaymentBreakdown";
 import PricingNotes from "./pricing/PricingNotes";
 
@@ -40,7 +39,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   const extraServices = priceInfo.extras;
   const showExtraServices = extraServices > 0;
   
-  // Get cleaning fee and tourist tax - these are ONLY for display
+  // Get cleaning fee and tourist tax - these are ONLY for display and are INCLUDED in final price
   const cleaningFee = priceInfo.cleaningFee;
   const touristTax = priceInfo.touristTax;
   
@@ -83,24 +82,46 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         
         <Separator className="my-2" />
         
-        {/* Subtotal before services */}
+        {/* Subtotal before mandatory services */}
         <div className="flex justify-between text-sm font-medium">
-          <span>Subtotale soggiorno:</span>
+          <span>Subtotale alloggio:</span>
           <span>
             {pricesAreValid ? `${subtotal}€` : 'N/A'}
           </span>
         </div>
         
-        <ServiceInclusions 
-          cleaningFee={cleaningFee}
-          touristTax={touristTax}
-          nights={nights}
-          pricesAreValid={pricesAreValid}
-          formValues={formValues}
-          sleepingInCribs={sleepingInCribs}
-        />
+        {/* Mandatory additional costs */}
+        <div className="ml-4 space-y-2 text-xs text-muted-foreground bg-blue-50 p-3 rounded">
+          <div className="font-medium text-primary mb-2">💡 Costi aggiuntivi obbligatori:</div>
+          
+          <div className="flex justify-between">
+            <span>• Pulizia finale ({hasMultipleApartments ? 'per appartamento' : ''}):</span>
+            <span className="font-medium text-primary">
+              {pricesAreValid ? `${cleaningFee}€` : 'N/A'}
+            </span>
+          </div>
+          
+          <div className="flex justify-between">
+            <span>• Tassa di soggiorno ({formValues.adults || 0} adulti × {nights} notti):</span>
+            <span className="font-medium text-primary">
+              {pricesAreValid ? `${touristTax}€` : 'N/A'}
+            </span>
+          </div>
+          
+          <div className="text-xs text-muted-foreground mt-2 italic">
+            * Questi costi sono già inclusi nel totale finale
+          </div>
+        </div>
         
         <Separator className="my-2" />
+        
+        {/* Pre-discount total */}
+        <div className="flex justify-between text-sm">
+          <span>Totale prima sconti:</span>
+          <span className="font-medium">
+            {pricesAreValid ? `${subtotal + cleaningFee + touristTax}€` : 'N/A'}
+          </span>
+        </div>
         
         {/* Discount (if any) */}
         {discount > 0 && pricesAreValid && (
@@ -116,9 +137,9 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         )}
         
         {/* Final total to pay */}
-        <div className="flex justify-between font-bold text-lg pt-2 border-t">
-          <span>Totale da pagare:</span>
-          <span className={pricesAreValid ? "text-primary" : "text-muted-foreground"}>
+        <div className="flex justify-between font-bold text-xl pt-3 border-t-2 border-primary/20 bg-primary/5 p-3 rounded">
+          <span>TOTALE DA PAGARE:</span>
+          <span className={pricesAreValid ? "text-primary text-2xl" : "text-muted-foreground"}>
             {pricesAreValid ? `${totalToPay}€` : 'Da calcolare'}
           </span>
         </div>
