@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { imageService, ImageRecord } from "@/services/imageService";
+import { imageService as imageUtilService } from "@/utils/image";
 import Autoplay from "embla-carousel-autoplay";
 
 export const HomeImageCarousel = () => {
@@ -27,7 +28,7 @@ export const HomeImageCarousel = () => {
           const firstThreeImages = galleryImages.slice(0, 3).map(img => 
             imageService.getImageUrl(img.file_path)
           );
-          imageService.preloadImages(firstThreeImages, 2);
+          imageUtilService.preloadImages(firstThreeImages, 2);
         }
       } catch (error) {
         console.error('Error loading gallery images:', error);

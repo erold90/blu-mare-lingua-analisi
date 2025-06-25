@@ -1,4 +1,3 @@
-
 import { imageCacheService } from "./cache";
 import { imageSessionService } from "./session";
 
@@ -155,6 +154,32 @@ export class ImageLoaderService {
       const timestamp = new Date().getTime();
       img.src = `${path}?t=${timestamp}`;
     });
+  }
+
+  /**
+   * Debug an image by checking its status and cache information
+   */
+  async debugImage(path: string): Promise<void> {
+    console.log(`🔍 Debugging image: ${path}`);
+    
+    try {
+      // Check cache status
+      const cached = imageCacheService.has(path);
+      const preloaded = imageCacheService.isPreloaded(path);
+      
+      console.log(`📦 Cache status - Cached: ${cached}, Preloaded: ${preloaded}`);
+      
+      // Check if image exists
+      const exists = await this.checkImageExists(path);
+      console.log(`✅ Image exists: ${exists}`);
+      
+      // Get full URL
+      const fullUrl = this.getImageUrl(path);
+      console.log(`🔗 Full URL: ${fullUrl}`);
+      
+    } catch (error) {
+      console.error(`❌ Debug error for ${path}:`, error);
+    }
   }
 }
 
