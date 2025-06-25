@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { useQuoteForm } from "@/hooks/useQuoteForm";
-import { usePageTracking } from "@/hooks/analytics/usePageTracking";
+import { useSimpleTracking } from "@/hooks/analytics/useSimpleTracking";
 import { apartments } from "@/data/apartments";
 import SEOHead from "@/components/seo/SEOHead";
 import { getBreadcrumbSchema } from "@/components/seo/StructuredData";
@@ -16,7 +16,7 @@ import ApartmentSelectionStep from "@/components/quote/ApartmentSelectionStep";
 import ServicesStep from "@/components/quote/ServicesStep";
 import SummaryStep from "@/components/quote/summary/SummaryStep";
 
-// Import dialog components - fix the import for ApartmentDialog
+// Import dialog components
 import { ApartmentDialog } from "@/components/quote/ApartmentDialog";
 import GroupDialog from "@/components/quote/GroupDialog";
 import ProgressBar from "@/components/quote/ProgressBar";
@@ -24,8 +24,8 @@ import ProgressBar from "@/components/quote/ProgressBar";
 const RequestQuotePage = () => {
   console.log("🔍 RequestQuotePage: Loading quote form page");
   
-  // Track page visits
-  usePageTracking();
+  // Use simplified tracking instead of complex system
+  useSimpleTracking();
 
   const breadcrumbItems = [
     { name: "Home", url: "/" },
@@ -104,7 +104,6 @@ const RequestQuotePage = () => {
             );
           case 4:
             console.log("🔍 RequestQuotePage: Rendering ServicesStep");
-            console.log("🔍 RequestQuotePage: Apartments data:", apartments);
             return (
               <ServicesStep
                 form={form}
