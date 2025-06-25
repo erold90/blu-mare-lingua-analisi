@@ -1,11 +1,10 @@
 
-// Main analytics hooks
+// Main analytics hooks - Sistema consolidato
+export { useUnifiedAnalytics } from './useUnifiedAnalytics';
 export { useAnalytics } from './useAnalytics';
-export { useAdvancedAnalytics } from './useAdvancedAnalytics';
+export { useSimpleTracking } from './useSimpleTracking';
 export { useTracking } from './useTracking';
 export { usePageTracking } from './usePageTracking';
-export { useAdvancedTracking } from './useAdvancedTracking';
 
 // Types
-export type { QuoteLog, SiteVisit } from './useAnalytics';
-export type { AnalyticsFilters } from './useAdvancedAnalytics';
+export type { QuoteLog, SiteVisit } from './useUnifiedAnalytics';

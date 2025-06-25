@@ -22,7 +22,7 @@ const AdminLogUnified = () => {
   const isMobile = useIsMobile();
   
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
-    from: subDays(new Date(), 30), // Expanded to 30 days
+    from: subDays(new Date(), 30),
     to: new Date(),
   });
   const [refreshing, setRefreshing] = useState(false);
@@ -73,9 +73,9 @@ const AdminLogUnified = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Sistema di Analytics Unificato</h2>
+          <h2 className="text-2xl font-bold">Sistema Analytics Consolidato</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Sistema ottimizzato per il tracciamento delle attività
+            Sistema unificato e ottimizzato per il tracciamento
           </p>
         </div>
         <div className="flex gap-2">
@@ -149,7 +149,7 @@ const AdminLogUnified = () => {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            <strong>Sistema:</strong> Unificato e ottimizzato
+            <strong>Sistema:</strong> Consolidato e pulito
           </AlertDescription>
         </Alert>
       </div>
@@ -170,15 +170,13 @@ const AdminLogUnified = () => {
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 Nessun preventivo trovato. I preventivi vengono salvati automaticamente quando gli utenti completano il form.
-                <br />
-                <strong>Debug:</strong> Verifica che il form preventivo stia chiamando correttamente addQuoteLog().
               </AlertDescription>
             </Alert>
           ) : (
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Trovati {quoteLogs.length} preventivi. Sistema di salvataggio funzionante correttamente.
+                Trovati {quoteLogs.length} preventivi. Sistema unificato funzionante.
               </AlertDescription>
             </Alert>
           )}
@@ -193,7 +191,7 @@ const AdminLogUnified = () => {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Sistema di tracciamento semplificato attivo. Totale visite: {siteVisits.length}.
+              Sistema di tracciamento consolidato attivo. Totale visite: {siteVisits.length}.
             </AlertDescription>
           </Alert>
           

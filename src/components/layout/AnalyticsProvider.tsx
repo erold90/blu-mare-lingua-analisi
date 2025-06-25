@@ -7,7 +7,7 @@ interface AnalyticsProviderProps {
 }
 
 export const AnalyticsProvider = ({ children }: AnalyticsProviderProps) => {
-  // Use simplified tracking system
+  // Use simplified unified tracking system
   useTracking();
 
   return <>{children}</>;
