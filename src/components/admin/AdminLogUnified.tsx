@@ -32,7 +32,11 @@ const AdminLogUnified = () => {
     try {
       console.log('🔍 Refreshing analytics data...');
       await refreshData();
-      toast.success('Dati aggiornati con successo');
+      if (error) {
+        toast.warning('Dati parzialmente aggiornati - alcuni dati potrebbero non essere disponibili');
+      } else {
+        toast.success('Dati aggiornati con successo');
+      }
     } catch (error) {
       console.error("❌ Error during refresh:", error);
       toast.error('Errore durante il refresh dei dati');
@@ -52,23 +56,6 @@ const AdminLogUnified = () => {
     );
   }
 
-  if (error) {
-    return (
-      <div className="space-y-4">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Errore nel caricamento dei dati: {error}
-          </AlertDescription>
-        </Alert>
-        <Button onClick={handleRefresh} variant="outline">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Riprova
-        </Button>
-      </div>
-    );
-  }
-  
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -132,12 +119,22 @@ const AdminLogUnified = () => {
         </div>
       </div>
 
+      {/* Error handling */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {error}
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Status indicators */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            <strong>Visite:</strong> {siteVisits.length} caricate
+            <strong>Visite:</strong> {siteVisits.length} caricate {error?.includes('Site visits') ? '(ultimi 30 giorni)' : ''}
           </AlertDescription>
         </Alert>
         <Alert>
@@ -149,7 +146,7 @@ const AdminLogUnified = () => {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            <strong>Sistema:</strong> Consolidato e pulito
+            <strong>Sistema:</strong> Consolidato e ottimizzato
           </AlertDescription>
         </Alert>
       </div>
@@ -191,7 +188,10 @@ const AdminLogUnified = () => {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Sistema di tracciamento consolidato attivo. Totale visite: {siteVisits.length}.
+              Sistema di tracciamento consolidato attivo. 
+              {error?.includes('Site visits') 
+                ? 'Visualizzando gli ultimi 30 giorni per performance ottimali.' 
+                : `Totale visite: ${siteVisits.length}.`}
             </AlertDescription>
           </Alert>
           

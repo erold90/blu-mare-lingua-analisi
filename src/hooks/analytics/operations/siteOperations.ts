@@ -31,18 +31,30 @@ export const trackPageVisit = async (page: string) => {
 };
 
 export const loadSiteVisits = async () => {
-  const { data, error } = await supabase
-    .from('site_visits')
-    .select('*')
-    .order('timestamp', { ascending: false })
-    .limit(1000);
+  try {
+    // Load only recent visits (last 30 days) to avoid timeout
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const { data, error } = await supabase
+      .from('site_visits')
+      .select('*')
+      .gte('timestamp', thirtyDaysAgo.toISOString())
+      .order('timestamp', { ascending: false })
+      .limit(500); // Limit to recent 500 visits
 
-  if (error) {
-    console.error('❌ Error loading site visits:', error);
-    throw new Error(`Site visits error: ${error.message}`);
+    if (error) {
+      console.error('❌ Error loading site visits:', error);
+      throw new Error(`Site visits error: ${error.message}`);
+    }
+
+    console.log(`✅ Loaded ${data?.length || 0} recent site visits`);
+    return data || [];
+  } catch (error) {
+    console.error('❌ Error in loadSiteVisits:', error);
+    // Return empty array on error to prevent app crash
+    return [];
   }
-
-  return data || [];
 };
 
 export const calculateVisitsCount = (

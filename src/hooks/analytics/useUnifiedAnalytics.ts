@@ -30,10 +30,21 @@ export function useUnifiedAnalytics() {
       setError(null);
       console.log('🔍 Loading unified analytics data...');
 
-      const [quoteLogs, siteVisits] = await Promise.all([
-        loadQuoteLogs(),
-        loadSiteVisits()
-      ]);
+      // Load data with timeout handling
+      const loadWithTimeout = async () => {
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout during data loading')), 10000)
+        );
+
+        const dataPromise = Promise.all([
+          loadQuoteLogs(),
+          loadSiteVisits()
+        ]);
+
+        return Promise.race([dataPromise, timeoutPromise]);
+      };
+
+      const [quoteLogs, siteVisits] = await loadWithTimeout() as [QuoteLog[], SiteVisit[]];
 
       console.log('✅ Loaded quote logs:', quoteLogs.length);
       console.log('✅ Loaded site visits:', siteVisits.length);
@@ -43,7 +54,17 @@ export function useUnifiedAnalytics() {
 
     } catch (error) {
       console.error('❌ Error loading unified analytics data:', error);
-      setError(error instanceof Error ? error.message : 'Errore sconosciuto nel caricamento dati');
+      
+      // On timeout, try to load at least quote logs
+      try {
+        console.log('🔄 Fallback: loading only quote logs...');
+        const quoteLogs = await loadQuoteLogs();
+        setQuoteLogs(quoteLogs);
+        setSiteVisits([]); // Empty site visits on error
+        setError('Site visits temporaneamente non disponibili (timeout database)');
+      } catch (fallbackError) {
+        setError('Errore nel caricamento dei dati analytics');
+      }
     } finally {
       setLoading(false);
     }
