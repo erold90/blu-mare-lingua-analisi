@@ -5,7 +5,7 @@ import { MessageSquare, ArrowLeft } from "lucide-react";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { PriceCalculation } from "@/utils/price/types";
-import { useAnalytics } from "@/hooks/analytics/useAnalytics";
+import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
 import { v4 as uuidv4 } from "uuid";
 
 interface QuoteActionsProps {
@@ -23,7 +23,7 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
   apartments,
   priceInfo
 }) => {
-  const { addQuoteLog } = useAnalytics();
+  const { addQuoteLog } = useUnifiedAnalytics();
 
   const handleBackClick = () => {
     console.log("🔍 Back button clicked");
