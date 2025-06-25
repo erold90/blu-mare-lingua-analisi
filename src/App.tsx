@@ -4,7 +4,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { Toaster as UIToaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { useSimpleTracking } from "@/hooks/analytics/useSimpleTracking";
 import AppLayout from "@/components/layout/AppLayout";
 import Index from "@/pages/Index";
 import ApartmentsPage from "@/pages/ApartmentsPage";
@@ -17,9 +16,7 @@ import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import CookiePolicyPage from "@/pages/CookiePolicyPage";
 import NotFound from "@/pages/NotFound";
 
-const AppWithTracking = () => {
-  useSimpleTracking();
-  
+const AppWithRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<AppLayout><Index /></AppLayout>} />
@@ -42,7 +39,7 @@ function App() {
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <AuthProvider>
         <Router>
-          <AppWithTracking />
+          <AppWithRoutes />
           <Toaster />
           <UIToaster />
         </Router>

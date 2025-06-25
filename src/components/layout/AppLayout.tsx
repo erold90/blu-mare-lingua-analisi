@@ -4,7 +4,6 @@ import { AppHeader } from "./AppHeader";
 import WhatsAppButton from "./WhatsAppButton";
 import { CookieConsent } from "@/components/CookieConsent";
 import { useLocation } from "react-router-dom";
-import { useSimpleTracking } from "@/hooks/analytics/useSimpleTracking";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { AnalyticsProvider } from "./AnalyticsProvider";
@@ -15,7 +14,6 @@ interface AppLayoutProps {
 
 const AppLayout = ({ children }: AppLayoutProps) => {
   const location = useLocation();
-  useSimpleTracking();
   const [showCookieConsent, setShowCookieConsent] = useState(false);
 
   useEffect(() => {

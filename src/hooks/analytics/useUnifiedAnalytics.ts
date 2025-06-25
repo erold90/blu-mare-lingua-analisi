@@ -30,10 +30,10 @@ export function useUnifiedAnalytics() {
       setError(null);
       console.log('🔍 Loading unified analytics data...');
 
-      // Load data with timeout handling
+      // Load data with improved timeout handling
       const loadWithTimeout = async () => {
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout during data loading')), 10000)
+          setTimeout(() => reject(new Error('Timeout during data loading')), 8000)
         );
 
         const dataPromise = Promise.all([
@@ -44,27 +44,49 @@ export function useUnifiedAnalytics() {
         return Promise.race([dataPromise, timeoutPromise]);
       };
 
-      const [quoteLogs, siteVisits] = await loadWithTimeout() as [QuoteLog[], SiteVisit[]];
+      try {
+        const [quoteLogs, siteVisits] = await loadWithTimeout() as [QuoteLog[], SiteVisit[]];
+        console.log('✅ Loaded quote logs:', quoteLogs.length);
+        console.log('✅ Loaded site visits:', siteVisits.length);
+        setQuoteLogs(quoteLogs);
+        setSiteVisits(siteVisits);
+      } catch (timeoutError) {
+        console.warn('⚠️ Timeout loading complete data, trying fallback...');
+        
+        // Enhanced fallback: try to load each dataset separately
+        try {
+          const quoteLogs = await Promise.race([
+            loadQuoteLogs(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Quote logs timeout')), 4000))
+          ]) as QuoteLog[];
+          setQuoteLogs(quoteLogs);
+          console.log('✅ Fallback: Loaded quote logs:', quoteLogs.length);
+        } catch (quoteError) {
+          console.error('❌ Could not load quote logs:', quoteError);
+          setQuoteLogs([]);
+        }
 
-      console.log('✅ Loaded quote logs:', quoteLogs.length);
-      console.log('✅ Loaded site visits:', siteVisits.length);
+        try {
+          const siteVisits = await Promise.race([
+            loadSiteVisits(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Site visits timeout')), 4000))
+          ]) as SiteVisit[];
+          setSiteVisits(siteVisits);
+          console.log('✅ Fallback: Loaded site visits:', siteVisits.length);
+        } catch (visitsError) {
+          console.error('❌ Could not load site visits:', visitsError);
+          setSiteVisits([]);
+        }
 
-      setQuoteLogs(quoteLogs);
-      setSiteVisits(siteVisits);
+        setError('Alcuni dati potrebbero non essere disponibili (timeout database)');
+      }
 
     } catch (error) {
       console.error('❌ Error loading unified analytics data:', error);
-      
-      // On timeout, try to load at least quote logs
-      try {
-        console.log('🔄 Fallback: loading only quote logs...');
-        const quoteLogs = await loadQuoteLogs();
-        setQuoteLogs(quoteLogs);
-        setSiteVisits([]); // Empty site visits on error
-        setError('Site visits temporaneamente non disponibili (timeout database)');
-      } catch (fallbackError) {
-        setError('Errore nel caricamento dei dati analytics');
-      }
+      setError('Errore nel caricamento dei dati analytics');
+      // Set empty arrays to prevent UI errors
+      setQuoteLogs([]);
+      setSiteVisits([]);
     } finally {
       setLoading(false);
     }
