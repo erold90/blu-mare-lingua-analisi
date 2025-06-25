@@ -1,7 +1,6 @@
 
 import * as React from "react";
-import { useEffect, useState } from "react";
-import { Helmet } from "react-helmet-async";
+import { useEffect } from "react";
 import HeroSection from "@/components/home/HeroSection";
 import { IntroductionSection } from "@/components/home/IntroductionSection";
 import { LocationSection } from "@/components/home/LocationSection";
@@ -13,15 +12,9 @@ import { getLocalBusinessSchema, getWebsiteSchema } from "@/components/seo/Struc
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
 
 const Index = () => {
-  const [scrollY, setScrollY] = useState(0);
-
   useEffect(() => {
     console.log("Index page mounted");
     console.log("Available routes should include /preventivo");
-
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const structuredData = [
@@ -41,11 +34,8 @@ const Index = () => {
         ogDescription="Scopri Villa MareBlu: appartamenti vacanze lusso con vista mare in Salento. La tua casa vacanze fronte mare in Puglia ti aspetta!"
       />
 
-      {/* Parallax background elements */}
-      <div 
-        className="fixed inset-0 bg-gradient-to-b from-blue-50/20 to-transparent pointer-events-none z-0"
-        style={{ transform: `translateY(${scrollY * 0.5}px)` }}
-      />
+      {/* Simplified background - removed parallax for performance */}
+      <div className="fixed inset-0 bg-gradient-to-b from-blue-50/20 to-transparent pointer-events-none z-0" />
       
       <div className="relative z-10">
         <HeroSection />

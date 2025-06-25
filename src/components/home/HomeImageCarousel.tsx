@@ -13,9 +13,8 @@ export const HomeImageCarousel = () => {
   useEffect(() => {
     const loadImages = async () => {
       try {
-        // Optimized loading with timeout
         const timeoutPromise = new Promise<ImageRecord[]>((_, reject) =>
-          setTimeout(() => reject(new Error('Image loading timeout')), 3000)
+          setTimeout(() => reject(new Error('Image loading timeout')), 2000) // Ridotto a 2s
         );
         
         const imagesPromise = imageService.getImagesByCategory('home_gallery');
@@ -23,16 +22,17 @@ export const HomeImageCarousel = () => {
         const galleryImages = await Promise.race([imagesPromise, timeoutPromise]);
         setImages(galleryImages);
         
-        // Preload first few images for better perceived performance
+        // Preload ottimizzato - solo le prime 2 immagini
         if (galleryImages.length > 0) {
-          const firstThreeImages = galleryImages.slice(0, 3).map(img => 
+          const firstTwoImages = galleryImages.slice(0, 2).map(img => 
             imageService.getImageUrl(img.file_path)
           );
-          imageUtilService.preloadImages(firstThreeImages, 2);
+          // Usa il servizio corretto per il preload
+          imageUtilService.preloadImages(firstTwoImages, 1); // Ridotta concorrenza
         }
       } catch (error) {
         console.error('Error loading gallery images:', error);
-        setImages([]); // Set empty array on error
+        setImages([]);
       } finally {
         setLoading(false);
       }
@@ -54,7 +54,7 @@ export const HomeImageCarousel = () => {
             </p>
           </div>
           <div className="flex justify-center">
-            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           </div>
         </div>
       </section>
@@ -101,7 +101,7 @@ export const HomeImageCarousel = () => {
             }}
             plugins={[
               Autoplay({
-                delay: 5000, // Slightly longer delay for better UX
+                delay: 6000, // Aumentato per performance
               }),
             ]}
             className="w-full"
@@ -117,7 +117,7 @@ export const HomeImageCarousel = () => {
                             src={imageService.getImageUrl(image.file_path)}
                             alt={image.alt_text || `Villa MareBlu - Immagine ${index + 1}`}
                             className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
-                            loading={index < 3 ? "eager" : "lazy"} // Eager load first images
+                            loading={index < 2 ? "eager" : "lazy"}
                             onError={(e) => {
                               console.error('Gallery image failed to load:', image.file_path);
                               e.currentTarget.src = "/placeholder.svg";

@@ -9,26 +9,29 @@ const HeroSection = () => {
   const navigate = useNavigate();
   const [heroImage, setHeroImage] = useState<ImageRecord | null>(null);
   const [loading, setLoading] = useState(true);
-  const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
     const loadHeroImage = async () => {
       try {
-        const heroImages = await imageService.getImagesByCategory('hero');
+        // Timeout ridotto per caricamento più veloce
+        const timeoutPromise = new Promise<ImageRecord[]>((_, reject) =>
+          setTimeout(() => reject(new Error('Hero image timeout')), 1500)
+        );
+        
+        const heroImagesPromise = imageService.getImagesByCategory('hero');
+        
+        const heroImages = await Promise.race([heroImagesPromise, timeoutPromise]);
         const primaryImage = heroImages.find(img => img.is_cover) || heroImages[0] || null;
         setHeroImage(primaryImage);
       } catch (error) {
         console.error('Error loading hero image:', error);
+        // Fallback veloce senza immagine da Supabase
       } finally {
         setLoading(false);
       }
     };
 
     loadHeroImage();
-
-    const handleScroll = () => setScrollY(window.scrollY);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleQuoteClick = () => {
@@ -39,7 +42,7 @@ const HeroSection = () => {
     if (heroImage) {
       return imageService.getImageUrl(heroImage.file_path);
     }
-    return "/images/hero/hero.jpg";
+    return "/images/hero/hero.jpg"; // Fallback image
   };
 
   return (
@@ -53,15 +56,12 @@ const HeroSection = () => {
         backgroundAttachment: 'scroll'
       }}
     >
-      {/* Parallax overlay */}
-      <div 
-        className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"
-        style={{ transform: `translateY(${scrollY * 0.3}px)` }}
-      />
+      {/* Simplified overlay without parallax */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
       
-      {/* Floating particles effect */}
+      {/* Reduced particles for performance */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
+        {[...Array(10)].map((_, i) => (
           <div
             key={i}
             className="absolute w-2 h-2 bg-white/10 rounded-full animate-pulse"
@@ -75,10 +75,7 @@ const HeroSection = () => {
         ))}
       </div>
 
-      <div 
-        className="container mx-auto px-4 text-center z-20 relative"
-        style={{ transform: `translateY(${scrollY * 0.2}px)` }}
-      >
+      <div className="container mx-auto px-4 text-center z-20 relative">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-6 md:mb-8 drop-shadow-2xl animate-fade-in">
             <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">

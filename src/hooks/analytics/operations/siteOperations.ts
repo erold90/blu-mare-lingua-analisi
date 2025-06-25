@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SiteVisit } from '../useUnifiedAnalytics';
 
@@ -11,7 +10,7 @@ export const trackPageVisit = async (page: string) => {
 
     const visitId = `visit_${Date.now()}_${Math.random().toString(36).substring(2)}`;
     
-    // Use timeout for tracking to avoid blocking UI
+    // Fire and forget with very short timeout
     const trackingPromise = supabase
       .from('site_visits')
       .insert({
@@ -20,31 +19,32 @@ export const trackPageVisit = async (page: string) => {
         timestamp: new Date().toISOString()
       });
 
-    // Don't wait for tracking to complete, fire and forget with timeout
+    // Reduced timeout to 1 second for faster page loads
     Promise.race([
       trackingPromise,
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Tracking timeout')), 2000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Tracking timeout')), 1000))
     ]).catch(error => {
-      console.warn('⚠️ Site visit tracking failed (non-blocking):', error);
+      // Silent fail to not block UI
+      console.debug('Site visit tracking failed (non-blocking):', error);
     });
 
   } catch (error) {
-    console.warn('⚠️ Error in trackSiteVisit (non-blocking):', error);
+    console.debug('Error in trackSiteVisit (non-blocking):', error);
   }
 };
 
 export const loadSiteVisits = async () => {
   try {
-    // Load only recent visits (last 7 days) for faster loading
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // Load only last 3 days for much faster loading
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
     
     const { data, error } = await supabase
       .from('site_visits')
       .select('*')
-      .gte('timestamp', sevenDaysAgo.toISOString())
+      .gte('timestamp', threeDaysAgo.toISOString())
       .order('timestamp', { ascending: false })
-      .limit(200); // Reduced limit for faster loading
+      .limit(50); // Drastically reduced limit
 
     if (error) {
       console.error('❌ Error loading site visits:', error);
@@ -55,7 +55,6 @@ export const loadSiteVisits = async () => {
     return data || [];
   } catch (error) {
     console.error('❌ Error in loadSiteVisits:', error);
-    // Return empty array on error to prevent app crash
     return [];
   }
 };

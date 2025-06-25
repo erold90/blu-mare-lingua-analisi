@@ -1,3 +1,4 @@
+
 import { imageLoaderService } from "./loader";
 import { apartmentImageService } from "./apartment";
 import { imageCacheService } from "./cache";
@@ -70,12 +71,11 @@ class ImageService {
   }
   
   /**
-   * Scan for all apartment images - UPDATED: Only use Supabase, no file system fallback
+   * Scan for all apartment images - Only use Supabase
    */
   async scanApartmentImages(apartmentId: string, maxImages = 20): Promise<string[]> {
     console.log(`Scanning images for apartment ${apartmentId} - using only Supabase`);
     
-    // Only get images from Supabase
     const supabaseImages = await supabaseImageService.getApartmentImages(apartmentId);
     
     if (supabaseImages.length > 0) {
@@ -88,17 +88,15 @@ class ImageService {
   }
   
   /**
-   * Get apartment images from cache - UPDATED: Only use Supabase
+   * Get apartment images from cache - Only use Supabase
    */
   async getApartmentImagesFromCache(apartmentId: string): Promise<string[]> {
-    // Only check Supabase images
     const hasSupabaseImages = await supabaseImageService.hasImages(apartmentId);
     
     if (hasSupabaseImages) {
       return await supabaseImageService.getApartmentImages(apartmentId);
     }
     
-    // Return empty array if no Supabase images
     return [];
   }
   
@@ -117,7 +115,7 @@ class ImageService {
   }
 
   /**
-   * Get cover image for apartment - UPDATED: Only use Supabase
+   * Get cover image for apartment - Only use Supabase
    */
   async getCoverImage(apartmentId: string): Promise<string | null> {
     console.log(`Getting cover image for apartment ${apartmentId} from Supabase only`);
@@ -134,7 +132,7 @@ class ImageService {
   }
 
   /**
-   * Update favicon in document with hard browser cache busting
+   * Update favicon in document with optimized cache busting
    */
   updateFavicon(faviconPath: string): void {
     if (!faviconPath) return;
@@ -142,29 +140,23 @@ class ImageService {
     console.log("Updating favicon to:", faviconPath);
     
     try {
-      // Add a timestamp or version to force cache refresh
       const timestamp = new Date().getTime();
       let finalPath = faviconPath;
       
-      // Add cache busting parameter if not already present
       if (!finalPath.includes('?')) {
         finalPath = `${finalPath}?v=${timestamp}`;
       }
       
       console.log("Final favicon path:", finalPath);
       
-      // Get all existing favicon links
       const existingFavicons = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
       
-      // If there are existing favicons, update the href of each one
       if (existingFavicons.length > 0) {
         existingFavicons.forEach((favicon) => {
           const linkElement = favicon as HTMLLinkElement;
           linkElement.href = finalPath;
-          console.log("Updated existing favicon link:", linkElement.rel);
         });
       } else {
-        // If no favicon exists, create both standard and shortcut icons
         const iconTypes = [
           { rel: 'icon', type: 'image/x-icon' },
           { rel: 'shortcut icon', type: 'image/x-icon' }
@@ -176,29 +168,8 @@ class ImageService {
           link.href = finalPath;
           link.type = faviconPath.endsWith('.ico') ? 'image/x-icon' : 'image/png';
           document.head.appendChild(link);
-          console.log(`Created new ${iconType.rel} link`);
         });
       }
-      
-      // Advanced browser cache busting technique
-      // 1. Create a temporary favicon with a data URL
-      const tempLink = document.createElement('link');
-      tempLink.rel = 'icon';
-      tempLink.href = 'data:,'; // Empty favicon
-      document.head.appendChild(tempLink);
-      
-      // 2. Remove it after a short delay to trigger a refresh
-      setTimeout(() => {
-        document.head.removeChild(tempLink);
-        
-        // 3. Force favicon reload with additional technique
-        const link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
-        if (link) {
-          const clone = link.cloneNode(true) as HTMLLinkElement;
-          link.parentNode?.replaceChild(clone, link);
-          console.log("Forced favicon refresh with node replacement");
-        }
-      }, 50);
       
     } catch (error) {
       console.error("Error updating favicon:", error);
