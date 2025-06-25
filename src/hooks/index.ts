@@ -9,11 +9,10 @@ export { useCompactPrices } from './prices/useCompactPrices';
 
 // Export dei nuovi hook analytics specializzati
 export { useAnalytics } from './analytics/useAnalytics';
-export { useAdvancedAnalytics } from './analytics/useAdvancedAnalytics';
 export { useTracking } from './analytics/useTracking';
 export { usePageTracking } from './analytics/usePageTracking';
-export { useAdvancedTracking } from './analytics/useAdvancedTracking';
+export { useSimpleTracking } from './analytics/useSimpleTracking';
+export { useUnifiedAnalytics } from './analytics/useUnifiedAnalytics';
 
 // Export types
-export type { QuoteLog, SiteVisit } from './analytics/useAnalytics';
-export type { AnalyticsFilters } from './analytics/useAdvancedAnalytics';
+export type { QuoteLog, SiteVisit } from './analytics/useUnifiedAnalytics';

@@ -5,28 +5,21 @@ import { calculateTotalPrice } from "@/utils/quoteCalculator";
 import { apartments } from "@/data/apartments";
 import { useAnalytics } from "@/hooks/analytics/useAnalytics";
 import { v4 as uuidv4 } from 'uuid';
-import { useAdvancedTracking } from '@/hooks/analytics/useAdvancedTracking';
+import { useSimpleTracking } from '@/hooks/analytics/useSimpleTracking';
 import { UseFormReturn } from "react-hook-form";
 import { createWhatsAppMessage } from "@/utils/price/whatsAppMessage";
 
 export function useQuoteActions(form?: UseFormReturn<FormValues>) {
   const [step, setStep] = useState(1);
   const { addQuoteLog } = useAnalytics();
-  
-  const { trackInteraction } = useAdvancedTracking();
+  const { trackSiteVisit } = useSimpleTracking();
 
   const handleNext = () => {
     if (step < 5) {
       setStep(step + 1);
       
       // Track form progress
-      trackInteraction({
-        interaction_type: 'quote_progress',
-        additional_data: {
-          step: step + 1,
-          step_name: getStepName(step + 1),
-        }
-      });
+      trackSiteVisit(`/quote/step-${step + 1}`);
     }
   };
 
@@ -56,15 +49,7 @@ export function useQuoteActions(form?: UseFormReturn<FormValues>) {
       });
       
       // Track quote completion
-      trackInteraction({
-        interaction_type: 'quote_completed',
-        additional_data: {
-          total_price: calculateTotalPrice(formValues, apartments).totalPrice,
-          apartments_count: formValues.selectedApartments?.length || 0,
-          adults: formValues.adults,
-          children: formValues.children,
-        }
-      });
+      trackSiteVisit('/quote/completed');
 
       // Reset form
       Object.keys(formValues).forEach(key => {
@@ -107,14 +92,8 @@ export function useQuoteActions(form?: UseFormReturn<FormValues>) {
     window.open(whatsappUrl, '_blank');
     
     // Track WhatsApp action
-    trackInteraction({
-      interaction_type: 'whatsapp_sent',
-      additional_data: {
-        message_length: message.length,
-        apartments_count: formValues.selectedApartments?.length || 0,
-      }
-    });
-  }, [form, trackInteraction]);
+    trackSiteVisit('/quote/whatsapp-sent');
+  }, [form, trackSiteVisit]);
 
   // Simplified submit handler - no wrapper needed
   const onSubmitHandler = useCallback((data: FormValues) => {

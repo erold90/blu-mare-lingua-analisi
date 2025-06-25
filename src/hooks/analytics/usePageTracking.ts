@@ -1,17 +1,15 @@
 
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAdvancedTracking } from './useAdvancedTracking';
+import { useSimpleTracking } from './useSimpleTracking';
 
 // Unified page tracking hook that prevents duplicate tracking
 export function usePageTracking() {
   const location = useLocation();
-  const { trackInteraction, isTrackingEnabled } = useAdvancedTracking();
+  const { trackSiteVisit } = useSimpleTracking();
   const hasTrackedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!isTrackingEnabled) return;
-
     const currentPath = location.pathname + location.search;
     
     // Prevent duplicate tracking for the same path
@@ -22,13 +20,7 @@ export function usePageTracking() {
     hasTrackedRef.current.add(currentPath);
 
     // Track page visit
-    trackInteraction({
-      interaction_type: 'page_visit',
-      additional_data: {
-        path: currentPath,
-        title: document.title
-      }
-    });
+    trackSiteVisit(currentPath);
 
     // Clean up old entries to prevent memory leaks
     if (hasTrackedRef.current.size > 50) {
@@ -36,5 +28,5 @@ export function usePageTracking() {
       hasTrackedRef.current = new Set(entries.slice(-25));
     }
 
-  }, [location, trackInteraction, isTrackingEnabled]);
+  }, [location, trackSiteVisit]);
 }
