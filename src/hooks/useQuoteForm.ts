@@ -2,7 +2,7 @@
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FormValues, quoteFormSchema } from "@/utils/quoteFormSchema";
+import { FormValues, formSchema } from "@/utils/quoteFormSchema";
 import { v4 as uuidv4 } from 'uuid';
 import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
 import { createWhatsAppMessage } from "@/utils/price/whatsAppMessage";
@@ -20,21 +20,24 @@ export function useQuoteForm() {
   const [familyGroups, setFamilyGroups] = useState<any[]>([]);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(quoteFormSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      phone: "",
+      step: 1,
       adults: 2,
       children: 0,
+      childrenDetails: [],
       checkIn: undefined,
       checkOut: undefined,
+      selectedApartment: "",
       selectedApartments: [],
       needsLinen: false,
       hasPets: false,
-      groupType: "family",
+      isGroupBooking: false,
+      groupType: "families",
+      name: "",
+      email: "",
+      phone: "",
       notes: "",
-      childrenAges: [],
     },
   });
 
@@ -65,18 +68,21 @@ export function useQuoteForm() {
     if (step < TOTAL_STEPS) {
       const newStep = step + 1;
       setStep(newStep);
+      form.setValue("step", newStep);
       
       // Save progress automatically when moving to next step
       await saveCurrentProgress(newStep, false);
     }
-  }, [step, saveCurrentProgress]);
+  }, [step, saveCurrentProgress, form]);
 
   const prevStep = useCallback(() => {
     console.log(`🔍 useQuoteForm: Moving from step ${step} to ${step - 1}`);
     if (step > 1) {
-      setStep(step - 1);
+      const newStep = step - 1;
+      setStep(newStep);
+      form.setValue("step", newStep);
     }
-  }, [step]);
+  }, [step, form]);
 
   const sendWhatsApp = useCallback(async () => {
     console.log("🔍 useQuoteForm: Sending WhatsApp message");
@@ -110,8 +116,8 @@ export function useQuoteForm() {
     await saveCurrentProgress(TOTAL_STEPS, true);
   }, [saveCurrentProgress]);
 
-  // Guest management functions
-  const childrenArray = form.watch("childrenAges") || [];
+  // Guest management functions - using childrenDetails instead of childrenAges
+  const childrenArray = form.watch("childrenDetails") || [];
 
   const incrementAdults = useCallback(() => {
     const current = form.getValues("adults");
@@ -127,25 +133,25 @@ export function useQuoteForm() {
 
   const incrementChildren = useCallback(() => {
     const current = form.getValues("children");
-    const currentAges = form.getValues("childrenAges") || [];
+    const currentDetails = form.getValues("childrenDetails") || [];
     form.setValue("children", current + 1);
-    form.setValue("childrenAges", [...currentAges, { age: 5, sleepingArrangement: "withParents" }]);
+    form.setValue("childrenDetails", [...currentDetails, { isUnder12: false, sleepsWithParents: false, sleepsInCrib: false }]);
   }, [form]);
 
   const decrementChildren = useCallback(() => {
     const current = form.getValues("children");
     if (current > 0) {
-      const currentAges = form.getValues("childrenAges") || [];
+      const currentDetails = form.getValues("childrenDetails") || [];
       form.setValue("children", current - 1);
-      form.setValue("childrenAges", currentAges.slice(0, -1));
+      form.setValue("childrenDetails", currentDetails.slice(0, -1));
     }
   }, [form]);
 
   const updateChildDetails = useCallback((index: number, field: string, value: any) => {
-    const currentAges = form.getValues("childrenAges") || [];
-    const updated = [...currentAges];
+    const currentDetails = form.getValues("childrenDetails") || [];
+    const updated = [...currentDetails];
     updated[index] = { ...updated[index], [field]: value };
-    form.setValue("childrenAges", updated);
+    form.setValue("childrenDetails", updated);
   }, [form]);
 
   // Apartment dialog functions

@@ -63,6 +63,9 @@ const RequestQuotePage = () => {
     console.log(`🔍 RequestQuotePage: Current step is ${step}/${totalSteps}`);
     console.log("🔍 RequestQuotePage: Form values:", form.getValues());
 
+    // Convert readonly array to mutable array for components
+    const mutableChildrenArray = [...(childrenArray || [])];
+
     // Render current step content
     const renderStepContent = () => {
       try {
@@ -72,7 +75,7 @@ const RequestQuotePage = () => {
             return (
               <GuestInfoStep
                 form={form}
-                childrenArray={childrenArray}
+                childrenArray={mutableChildrenArray}
                 openGroupDialog={openGroupDialog}
                 incrementAdults={incrementAdults}
                 decrementAdults={decrementAdults}
