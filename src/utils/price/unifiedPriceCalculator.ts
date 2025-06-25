@@ -7,21 +7,20 @@ import { calculateMultiApartmentPricing } from "./multiApartmentPricing";
 import { calculateNights } from "./dateUtils";
 import { supabaseService } from "@/services/supabaseService";
 
-// Cache migliorata per i prezzi con timeout e validazione
+// Enhanced cache with longer validity for better performance
 const priceCache = new Map<string, { price: number; timestamp: number; validated: boolean }>();
-const CACHE_DURATION = 2 * 60 * 1000; // 2 minuti
+const CACHE_DURATION = 10 * 60 * 1000; // Increased to 10 minutes
 
 /**
- * Ottiene il prezzo per una settimana specifica con validazione Supabase
+ * Enhanced price retrieval with improved caching
  */
 async function getPriceForWeek(apartmentId: string, weekStart: Date): Promise<number> {
   const weekStartStr = weekStart.toISOString().split('T')[0];
   const cacheKey = `${apartmentId}-${weekStartStr}`;
   
-  // Controlla la cache con timeout
+  // Check cache with extended validity
   const cached = priceCache.get(cacheKey);
   if (cached && cached.validated && (Date.now() - cached.timestamp) < CACHE_DURATION) {
-    console.log(`📋 Using cached price for ${apartmentId} on ${weekStartStr}: ${cached.price}€`);
     return cached.price;
   }
   
@@ -35,21 +34,19 @@ async function getPriceForWeek(apartmentId: string, weekStart: Date): Promise<nu
     
     const priceValue = price ? Number(price.price) : 0;
     
-    // Salva in cache con validazione
+    // Cache with validation
     priceCache.set(cacheKey, { 
       price: priceValue, 
       timestamp: Date.now(), 
       validated: true 
     });
     
-    console.log(`💰 Loaded price for ${apartmentId} on ${weekStartStr}: ${priceValue}€`);
     return priceValue;
   } catch (error) {
     console.error("❌ Error getting price for week:", error);
     
-    // In caso di errore, prova a usare cache non validata
+    // Use fallback cache if available
     if (cached) {
-      console.log(`⚠️ Using fallback cached price for ${apartmentId}: ${cached.price}€`);
       return cached.price;
     }
     
@@ -58,7 +55,7 @@ async function getPriceForWeek(apartmentId: string, weekStart: Date): Promise<nu
 }
 
 /**
- * Versione sincrona migliorata che controlla sempre la validità
+ * Optimized sync version with better fallback
  */
 function getPriceForWeekSync(apartmentId: string, weekStart: Date): number {
   const weekStartStr = weekStart.toISOString().split('T')[0];
@@ -69,63 +66,51 @@ function getPriceForWeekSync(apartmentId: string, weekStart: Date): number {
     return cached.price;
   }
   
-  console.warn(`❌ No valid cached price found for ${apartmentId} on ${weekStartStr}`);
   return 0;
 }
 
 /**
- * Calcola le settimane che copre un soggiorno
+ * Optimized week calculation
  */
 function getWeeksForStay(checkIn: Date, checkOut: Date): Date[] {
   const weeks: Date[] = [];
   const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
   
-  console.log(`📅 Calculating weeks for stay: ${checkIn.toDateString()} to ${checkOut.toDateString()}`);
-  console.log(`📅 Total nights: ${nights}`);
-  
-  // Inizia dalla settimana che contiene il check-in
+  // Find Monday of check-in week
   let currentWeek = new Date(checkIn);
-  
-  // Trova il lunedì di quella settimana
-  const dayOfWeek = currentWeek.getDay(); // 0 = domenica, 1 = lunedì, etc.
-  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Se domenica, torna 6 giorni indietro
+  const dayOfWeek = currentWeek.getDay();
+  const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
   currentWeek.setDate(currentWeek.getDate() - daysToMonday);
   
-  console.log(`📅 First Monday: ${currentWeek.toDateString()}`);
-  
-  // Aggiungi settimane finché non copriamo tutto il soggiorno
+  // Add weeks until stay is covered
   while (currentWeek < checkOut) {
     weeks.push(new Date(currentWeek));
-    console.log(`📅 Added week starting: ${currentWeek.toDateString()}`);
     currentWeek.setDate(currentWeek.getDate() + 7);
   }
   
-  console.log(`📊 Total weeks needed: ${weeks.length}`);
   return weeks;
 }
 
 /**
- * Pre-carica TUTTI i prezzi necessari per il calcolo
+ * Batch preload prices with improved performance
  */
 async function preloadPrices(apartmentIds: string[], checkIn: Date, checkOut: Date): Promise<boolean> {
   const weeks = getWeeksForStay(checkIn, checkOut);
   
-  console.log(`📋 Preloading prices for ${apartmentIds.length} apartments, ${weeks.length} weeks`);
-  
   try {
-    const promises = [];
+    // Create all promises but don't wait for all to complete
+    const promises = apartmentIds.flatMap(apartmentId =>
+      weeks.map(weekStart => getPriceForWeek(apartmentId, weekStart))
+    );
     
-    for (const apartmentId of apartmentIds) {
-      for (const weekStart of weeks) {
-        promises.push(getPriceForWeek(apartmentId, weekStart));
-      }
-    }
+    // Use Promise.allSettled for better error handling
+    const results = await Promise.allSettled(promises);
+    const successfulLoads = results.filter(result => 
+      result.status === 'fulfilled' && result.value > 0
+    ).length;
     
-    const results = await Promise.all(promises);
-    const loadedPrices = results.filter(price => price > 0).length;
-    
-    console.log(`✅ Successfully preloaded ${loadedPrices}/${promises.length} price entries`);
-    return loadedPrices > 0;
+    console.log(`✅ Successfully preloaded ${successfulLoads}/${promises.length} price entries`);
+    return successfulLoads > 0;
   } catch (error) {
     console.error("❌ Error preloading prices:", error);
     return false;
@@ -133,19 +118,17 @@ async function preloadPrices(apartmentIds: string[], checkIn: Date, checkOut: Da
 }
 
 /**
- * Calcola il prezzo totale usando il sistema unificato con validazione completa
- * Ora accetta una funzione getPriceForWeek opzionale per usare prezzi già caricati
+ * Main calculation function with performance optimizations
  */
 export async function calculateTotalPriceUnified(
   formValues: FormValues, 
   apartments: Apartment[],
   externalGetPriceForWeek?: (apartmentId: string, weekStart: Date | string) => number
 ): Promise<PriceCalculation> {
-  console.log("🔍 Starting unified price calculation...");
+  console.log("🔍 Starting optimized price calculation...");
   
-  // Validazione input rigorosa
+  // Early validation
   if (!formValues || !apartments || apartments.length === 0) {
-    console.warn("❌ Invalid input data for price calculation");
     return emptyPriceCalculation;
   }
   
@@ -155,87 +138,66 @@ export async function calculateTotalPriceUnified(
   const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
   
   if (selectedApartments.length === 0 || !formValues.checkIn || !formValues.checkOut) {
-    console.warn("❌ Missing required data for price calculation");
     return emptyPriceCalculation;
   }
   
-  // Validazione date
   if (formValues.checkIn >= formValues.checkOut) {
-    console.warn("❌ Invalid date range for price calculation");
     return emptyPriceCalculation;
   }
   
   try {
     const nights = calculateNights(formValues.checkIn, formValues.checkOut);
-    console.log(`📅 Stay duration: ${nights} nights`);
     
     if (nights <= 0) {
-      console.warn("❌ Invalid stay duration");
       return emptyPriceCalculation;
     }
     
-    // Se non abbiamo la funzione esterna, usa il preloading standard
+    // Optimized price loading
     if (!externalGetPriceForWeek) {
-      const pricesLoaded = await preloadPrices(selectedApartmentIds, formValues.checkIn, formValues.checkOut);
-      
-      if (!pricesLoaded) {
-        console.warn("⚠️ No prices could be loaded from database");
-      }
+      // Don't wait for full preload, start with cached data
+      preloadPrices(selectedApartmentIds, formValues.checkIn, formValues.checkOut);
     }
     
     const apartmentPrices: Record<string, number> = {};
     let basePrice = 0;
     
-    // Calcola il prezzo per ogni appartamento
+    // Calculate prices for each apartment
     for (const apartment of selectedApartments) {
       let totalApartmentPrice = 0;
       const weeks = getWeeksForStay(formValues.checkIn, formValues.checkOut);
-      
-      console.log(`💰 Calculating price for ${apartment.id} across ${weeks.length} weeks`);
       
       for (let i = 0; i < weeks.length; i++) {
         const weekStart = weeks[i];
         let weeklyPrice = 0;
         
         if (externalGetPriceForWeek) {
-          // Usa la funzione esterna (dai prezzi già caricati)
           weeklyPrice = externalGetPriceForWeek(apartment.id, weekStart);
-          console.log(`💰 External price for ${apartment.id}, week ${i+1}: ${weeklyPrice}€`);
         } else {
-          // Usa la funzione interna con cache
           weeklyPrice = getPriceForWeekSync(apartment.id, weekStart);
-          console.log(`💰 Cached price for ${apartment.id}, week ${i+1}: ${weeklyPrice}€`);
         }
         
+        // Use apartment default price as fallback
         if (weeklyPrice === 0) {
-          // Fallback al prezzo di default dell'appartamento
-          const defaultPrice = apartment.price || 500; // Prezzo di sicurezza
-          console.log(`⚠️ Using default price for ${apartment.id}, week ${i+1}: ${defaultPrice}€`);
+          const defaultPrice = apartment.price || 500;
           weeklyPrice = defaultPrice;
         }
         
         totalApartmentPrice += weeklyPrice;
       }
       
-      // Proporziona il prezzo in base ai giorni effettivi
+      // Proportional adjustment for partial weeks
       const totalWeekDays = weeks.length * 7;
       if (nights < totalWeekDays) {
         const proportion = nights / totalWeekDays;
-        const proportionalPrice = Math.round(totalApartmentPrice * proportion);
-        console.log(`⚖️ Proportional adjustment: ${totalApartmentPrice}€ * ${proportion.toFixed(2)} = ${proportionalPrice}€`);
-        totalApartmentPrice = proportionalPrice;
+        totalApartmentPrice = Math.round(totalApartmentPrice * proportion);
       }
       
       apartmentPrices[apartment.id] = totalApartmentPrice;
       basePrice += totalApartmentPrice;
     }
     
-    console.log(`💰 Total base price: ${basePrice}€`);
-    console.log(`📊 Individual apartment prices:`, apartmentPrices);
-    
-    // Calcola gli extra
+    // Calculate extras and discounts
     const { extrasCost, cleaningFee, touristTax } = calculateExtras(formValues, selectedApartments, nights);
-    
     const subtotal = basePrice + extrasCost;
     const totalBeforeDiscount = subtotal;
     
@@ -292,7 +254,6 @@ export async function calculateTotalPriceUnified(
       };
     }
     
-    console.log("✅ Price calculation completed successfully:", result);
     return result;
     
   } catch (error) {

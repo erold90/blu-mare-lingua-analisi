@@ -12,10 +12,26 @@ export const HomeImageCarousel = () => {
   useEffect(() => {
     const loadImages = async () => {
       try {
-        const galleryImages = await imageService.getImagesByCategory('home_gallery');
+        // Optimized loading with timeout
+        const timeoutPromise = new Promise<ImageRecord[]>((_, reject) =>
+          setTimeout(() => reject(new Error('Image loading timeout')), 3000)
+        );
+        
+        const imagesPromise = imageService.getImagesByCategory('home_gallery');
+        
+        const galleryImages = await Promise.race([imagesPromise, timeoutPromise]);
         setImages(galleryImages);
+        
+        // Preload first few images for better perceived performance
+        if (galleryImages.length > 0) {
+          const firstThreeImages = galleryImages.slice(0, 3).map(img => 
+            imageService.getImageUrl(img.file_path)
+          );
+          imageService.preloadImages(firstThreeImages, 2);
+        }
       } catch (error) {
         console.error('Error loading gallery images:', error);
+        setImages([]); // Set empty array on error
       } finally {
         setLoading(false);
       }
@@ -84,7 +100,7 @@ export const HomeImageCarousel = () => {
             }}
             plugins={[
               Autoplay({
-                delay: 4000,
+                delay: 5000, // Slightly longer delay for better UX
               }),
             ]}
             className="w-full"
@@ -100,6 +116,7 @@ export const HomeImageCarousel = () => {
                             src={imageService.getImageUrl(image.file_path)}
                             alt={image.alt_text || `Villa MareBlu - Immagine ${index + 1}`}
                             className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+                            loading={index < 3 ? "eager" : "lazy"} // Eager load first images
                             onError={(e) => {
                               console.error('Gallery image failed to load:', image.file_path);
                               e.currentTarget.src = "/placeholder.svg";

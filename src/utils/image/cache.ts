@@ -2,17 +2,18 @@
 import { ImageCache } from "./types";
 import { toast } from "sonner";
 
-// Cache constants
+// Cache constants - increased validity
 const IMAGE_CACHE_KEY = "imageCache";
 const IMAGE_TIMESTAMP_KEY = "imageCacheTimestamp";
-const CACHE_VALIDITY_HOURS = 24; // Cache valid for 24 hours
+const CACHE_VALIDITY_HOURS = 48; // Increased to 48 hours for better performance
 
 /**
- * Handles image cache operations
+ * Handles image cache operations with improved performance
  */
 class ImageCacheService {
   private imageExistenceCache: Map<string, boolean> = new Map();
   private preloadedImages: Set<string> = new Set();
+  private saveTimeoutId: number | null = null;
 
   constructor() {
     this.loadCacheFromStorage();
@@ -31,7 +32,7 @@ class ImageCacheService {
         const cacheTime = Number(timestamp);
         const hoursSinceCache = (currentTime - cacheTime) / (1000 * 60 * 60);
         
-        // Use cache only if recent
+        // Use cache if recent
         if (hoursSinceCache < CACHE_VALIDITY_HOURS) {
           const data = JSON.parse(cachedData);
           
@@ -52,24 +53,32 @@ class ImageCacheService {
   }
 
   /**
-   * Saves image cache to localStorage
+   * Saves image cache to localStorage with debouncing
    */
   saveCache(): void {
-    try {
-      const data: Record<string, boolean> = {};
-      
-      // Convert Map to object for localStorage
-      this.imageExistenceCache.forEach((exists, path) => {
-        data[path] = exists;
-      });
-      
-      localStorage.setItem(IMAGE_CACHE_KEY, JSON.stringify(data));
-      localStorage.setItem(IMAGE_TIMESTAMP_KEY, String(new Date().getTime()));
-      
-      console.log(`Image cache saved with ${Object.keys(data).length} items`);
-    } catch (error) {
-      console.error("Error saving image cache:", error);
+    // Clear existing timeout
+    if (this.saveTimeoutId) {
+      clearTimeout(this.saveTimeoutId);
     }
+    
+    // Debounce cache saves for better performance
+    this.saveTimeoutId = window.setTimeout(() => {
+      try {
+        const data: Record<string, boolean> = {};
+        
+        // Convert Map to object for localStorage
+        this.imageExistenceCache.forEach((exists, path) => {
+          data[path] = exists;
+        });
+        
+        localStorage.setItem(IMAGE_CACHE_KEY, JSON.stringify(data));
+        localStorage.setItem(IMAGE_TIMESTAMP_KEY, String(new Date().getTime()));
+        
+        console.log(`Image cache saved with ${Object.keys(data).length} items`);
+      } catch (error) {
+        console.error("Error saving image cache:", error);
+      }
+    }, 1000); // 1 second debounce
   }
 
   /**
@@ -80,13 +89,13 @@ class ImageCacheService {
   }
 
   /**
-   * Set an item in the cache
+   * Set an item in the cache with immediate save
    */
   setItem(path: string, exists: boolean): void {
     this.imageExistenceCache.set(path, exists);
     
-    // Save cache periodically (every 10 new entries)
-    if (this.imageExistenceCache.size % 10 === 0) {
+    // Save cache more frequently for immediate updates
+    if (this.imageExistenceCache.size % 5 === 0) {
       this.saveCache();
     }
   }

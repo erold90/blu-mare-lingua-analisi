@@ -11,7 +11,8 @@ export const trackPageVisit = async (page: string) => {
 
     const visitId = `visit_${Date.now()}_${Math.random().toString(36).substring(2)}`;
     
-    const { error } = await supabase
+    // Use timeout for tracking to avoid blocking UI
+    const trackingPromise = supabase
       .from('site_visits')
       .insert({
         id: visitId,
@@ -19,29 +20,31 @@ export const trackPageVisit = async (page: string) => {
         timestamp: new Date().toISOString()
       });
 
-    if (error) {
-      console.error('❌ Error tracking site visit:', error);
-      return;
-    }
+    // Don't wait for tracking to complete, fire and forget with timeout
+    Promise.race([
+      trackingPromise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Tracking timeout')), 2000))
+    ]).catch(error => {
+      console.warn('⚠️ Site visit tracking failed (non-blocking):', error);
+    });
 
-    console.log('✅ Site visit tracked:', page);
   } catch (error) {
-    console.error('❌ Error in trackSiteVisit:', error);
+    console.warn('⚠️ Error in trackSiteVisit (non-blocking):', error);
   }
 };
 
 export const loadSiteVisits = async () => {
   try {
-    // Load only recent visits (last 30 days) to avoid timeout
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    // Load only recent visits (last 7 days) for faster loading
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     
     const { data, error } = await supabase
       .from('site_visits')
       .select('*')
-      .gte('timestamp', thirtyDaysAgo.toISOString())
+      .gte('timestamp', sevenDaysAgo.toISOString())
       .order('timestamp', { ascending: false })
-      .limit(500); // Limit to recent 500 visits
+      .limit(200); // Reduced limit for faster loading
 
     if (error) {
       console.error('❌ Error loading site visits:', error);

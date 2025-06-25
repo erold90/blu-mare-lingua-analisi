@@ -30,10 +30,10 @@ export function useUnifiedAnalytics() {
       setError(null);
       console.log('🔍 Loading unified analytics data...');
 
-      // Load data with improved timeout handling
+      // Reduced timeout for better user experience
       const loadWithTimeout = async () => {
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout during data loading')), 8000)
+          setTimeout(() => reject(new Error('Timeout during data loading')), 5000) // Reduced from 8s to 5s
         );
 
         const dataPromise = Promise.all([
@@ -51,34 +51,46 @@ export function useUnifiedAnalytics() {
         setQuoteLogs(quoteLogs);
         setSiteVisits(siteVisits);
       } catch (timeoutError) {
-        console.warn('⚠️ Timeout loading complete data, trying fallback...');
+        console.warn('⚠️ Timeout loading complete data, trying individual fallback...');
         
-        // Enhanced fallback: try to load each dataset separately
-        try {
-          const quoteLogs = await Promise.race([
+        // Parallel fallback with reduced timeouts
+        const [quoteLogs, siteVisits] = await Promise.allSettled([
+          Promise.race([
             loadQuoteLogs(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Quote logs timeout')), 4000))
-          ]) as QuoteLog[];
-          setQuoteLogs(quoteLogs);
-          console.log('✅ Fallback: Loaded quote logs:', quoteLogs.length);
-        } catch (quoteError) {
-          console.error('❌ Could not load quote logs:', quoteError);
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Quote logs timeout')), 2500))
+          ]),
+          Promise.race([
+            loadSiteVisits(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Site visits timeout')), 2500))
+          ])
+        ]);
+
+        // Handle quote logs result
+        if (quoteLogs.status === 'fulfilled') {
+          setQuoteLogs(quoteLogs.value as QuoteLog[]);
+          console.log('✅ Fallback: Loaded quote logs:', (quoteLogs.value as QuoteLog[]).length);
+        } else {
+          console.error('❌ Could not load quote logs:', quoteLogs.reason);
           setQuoteLogs([]);
         }
 
-        try {
-          const siteVisits = await Promise.race([
-            loadSiteVisits(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Site visits timeout')), 4000))
-          ]) as SiteVisit[];
-          setSiteVisits(siteVisits);
-          console.log('✅ Fallback: Loaded site visits:', siteVisits.length);
-        } catch (visitsError) {
-          console.error('❌ Could not load site visits:', visitsError);
+        // Handle site visits result
+        if (siteVisits.status === 'fulfilled') {
+          setSiteVisits(siteVisits.value as SiteVisit[]);
+          console.log('✅ Fallback: Loaded site visits:', (siteVisits.value as SiteVisit[]).length);
+        } else {
+          console.error('❌ Could not load site visits:', siteVisits.reason);
           setSiteVisits([]);
         }
 
-        setError('Alcuni dati potrebbero non essere disponibili (timeout database)');
+        // Set partial error message
+        const failedOperations = [];
+        if (quoteLogs.status === 'rejected') failedOperations.push('preventivi');
+        if (siteVisits.status === 'rejected') failedOperations.push('visite');
+        
+        if (failedOperations.length > 0) {
+          setError(`Alcuni dati potrebbero non essere disponibili: ${failedOperations.join(', ')}`);
+        }
       }
 
     } catch (error) {

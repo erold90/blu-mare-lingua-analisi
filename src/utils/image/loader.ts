@@ -3,13 +3,13 @@ import { imageCacheService } from "./cache";
 import { imageSessionService } from "./session";
 
 /**
- * Handles image loading and verification
+ * Handles image loading and verification with improved performance
  */
 export class ImageLoaderService {
   private loadingPromises: Map<string, Promise<boolean>> = new Map();
   
   /**
-   * Check if an image exists at a specific path (with optimized cache)
+   * Check if an image exists at a specific path (optimized with faster timeouts)
    */
   async checkImageExists(path: string): Promise<boolean> {
     // Check memory cache first
@@ -22,16 +22,19 @@ export class ImageLoaderService {
       return this.loadingPromises.get(path) || false;
     }
 
-    // Create a new promise for verification
+    // Create a new promise for verification with faster timeout
     const checkPromise = new Promise<boolean>(async (resolve) => {
       try {
-        // Add timestamp to avoid cache issues
-        const timestamp = new Date().getTime();
-        const urlWithTimestamp = `${path}?t=${timestamp}`;
+        // Reduced timeout for faster response
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // Reduced from 8s to 3s
+        
+        const urlWithTimestamp = `${path}?t=${imageSessionService.getSessionTimestamp()}`;
         
         // Use fetch with HEAD to verify existence
         const response = await fetch(urlWithTimestamp, { 
           method: 'HEAD',
+          signal: controller.signal,
           cache: 'no-store',
           headers: { 
             'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -39,6 +42,7 @@ export class ImageLoaderService {
           }
         });
         
+        clearTimeout(timeoutId);
         const exists = response.ok;
         
         // Update memory cache
@@ -46,7 +50,7 @@ export class ImageLoaderService {
         
         resolve(exists);
       } catch (error) {
-        console.error('Error verifying image:', error);
+        // Fail fast on timeout or error
         resolve(false);
       } finally {
         // Remove from loading promises map
@@ -61,7 +65,7 @@ export class ImageLoaderService {
   }
   
   /**
-   * Preload an image in background
+   * Preload an image in background with timeout
    */
   preloadImage(path: string): Promise<boolean> {
     // Avoid preloading already loaded images
@@ -71,19 +75,31 @@ export class ImageLoaderService {
     
     return new Promise((resolve) => {
       const img = new Image();
+      
+      // Add timeout for preloading
+      const timeoutId = setTimeout(() => {
+        resolve(false);
+      }, 5000); // 5 second timeout for preloading
+      
       img.onload = () => {
+        clearTimeout(timeoutId);
         imageCacheService.markAsPreloaded(path);
         resolve(true);
       };
-      img.onerror = () => resolve(false);
+      
+      img.onerror = () => {
+        clearTimeout(timeoutId);
+        resolve(false);
+      };
+      
       img.src = this.getImageUrl(path);
     });
   }
   
   /**
-   * Preload a group of images in background with concurrency limit
+   * Preload a group of images in background with improved concurrency
    */
-  preloadImages(paths: string[], concurrency = 3): void {
+  preloadImages(paths: string[], concurrency = 2): void {
     if (!paths.length) return;
     
     let index = 0;
@@ -96,7 +112,7 @@ export class ImageLoaderService {
       });
     };
     
-    // Start preloading with specified concurrency
+    // Start preloading with reduced concurrency for better performance
     for (let i = 0; i < Math.min(concurrency, paths.length); i++) {
       loadNext();
     }
@@ -119,86 +135,26 @@ export class ImageLoaderService {
     
     return new Promise((resolve) => {
       const img = new Image();
+      
+      const timeoutId = setTimeout(() => {
+        resolve(false);
+      }, 3000); // Faster timeout
+      
       img.onload = () => {
+        clearTimeout(timeoutId);
         imageCacheService.markAsPreloaded(path);
         resolve(true);
       };
-      img.onerror = () => resolve(false);
+      
+      img.onerror = () => {
+        clearTimeout(timeoutId);
+        resolve(false);
+      };
       
       // Use new timestamp to force reload
       const timestamp = new Date().getTime();
       img.src = `${path}?t=${timestamp}`;
     });
-  }
-  
-  /**
-   * Debug an image - adds detailed info about path and availability
-   */
-  async debugImage(path: string): Promise<void> {
-    console.log(`Debugging image path: ${path}`);
-    
-    try {
-      // Check if path is absolute or relative
-      const isAbsolutePath = path.startsWith('/');
-      console.log(`Image path type: ${isAbsolutePath ? 'absolute' : 'relative'}`);
-      
-      // Build full path for checking
-      const checkPath = isAbsolutePath ? path : `/${path}`;
-      console.log(`Full check path: ${checkPath}`);
-      
-      // Check if image exists in cache
-      const cachedStatus = imageCacheService.has(path);
-      console.log(`Image in cache: ${cachedStatus ? 'yes' : 'no'}`);
-      
-      if (cachedStatus) {
-        const exists = imageCacheService.getItem(path);
-        console.log(`Cached status: image ${exists ? 'exists' : 'does not exist'}`);
-      }
-      
-      // Direct check with fetch to verify existence
-      const timestamp = new Date().getTime();
-      const urlWithTimestamp = `${path}?t=${timestamp}`;
-      
-      console.log(`Checking image with URL: ${urlWithTimestamp}`);
-      
-      try {
-        const response = await fetch(urlWithTimestamp, { 
-          method: 'HEAD',
-          cache: 'no-store',
-          headers: { 
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
-          }
-        });
-        
-        console.log(`Fetch response status: ${response.status} (${response.ok ? 'OK' : 'Failed'})`);
-        console.log(`Response headers:`, Object.fromEntries(response.headers.entries()));
-        
-      } catch (fetchError) {
-        console.error(`Fetch error while checking image:`, fetchError);
-      }
-      
-      // Check with Image.onload too
-      console.log(`Testing image loading with Image constructor...`);
-      const imgTestPromise = new Promise<boolean>((resolve) => {
-        const img = new Image();
-        img.onload = () => {
-          console.log(`Image loaded successfully via Image constructor`);
-          resolve(true);
-        };
-        img.onerror = (error) => {
-          console.error(`Failed to load image via Image constructor:`, error);
-          resolve(false);
-        };
-        img.src = urlWithTimestamp;
-      });
-      
-      const imageLoaded = await imgTestPromise;
-      console.log(`Final image load test result: ${imageLoaded ? 'Success' : 'Failed'}`);
-      
-    } catch (error) {
-      console.error(`Error during image debugging for ${path}:`, error);
-    }
   }
 }
 
