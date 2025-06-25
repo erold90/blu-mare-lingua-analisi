@@ -60,9 +60,9 @@ const AdminLogUnified = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Sistema Analytics Consolidato</h2>
+          <h2 className="text-2xl font-bold">Analytics Semplificato</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Sistema unificato e ottimizzato per il tracciamento
+            Sistema ottimizzato per performance e semplicità
           </p>
         </div>
         <div className="flex gap-2">
@@ -134,7 +134,7 @@ const AdminLogUnified = () => {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            <strong>Visite:</strong> {siteVisits.length} caricate {error?.includes('Site visits') ? '(ultimi 30 giorni)' : ''}
+            <strong>Visite:</strong> {siteVisits.length} caricate (ultimi 30 giorni)
           </AlertDescription>
         </Alert>
         <Alert>
@@ -146,7 +146,7 @@ const AdminLogUnified = () => {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            <strong>Sistema:</strong> Consolidato e ottimizzato
+            <strong>Sistema:</strong> Semplificato e ottimizzato
           </AlertDescription>
         </Alert>
       </div>
@@ -173,7 +173,7 @@ const AdminLogUnified = () => {
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                Trovati {quoteLogs.length} preventivi. Sistema unificato funzionante.
+                Trovati {quoteLogs.length} preventivi nel sistema semplificato.
               </AlertDescription>
             </Alert>
           )}
@@ -188,10 +188,7 @@ const AdminLogUnified = () => {
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Sistema di tracciamento consolidato attivo. 
-              {error?.includes('Site visits') 
-                ? 'Visualizzando gli ultimi 30 giorni per performance ottimali.' 
-                : `Totale visite: ${siteVisits.length}.`}
+              Sistema semplificato attivo. Visualizzando le visite degli ultimi 30 giorni per performance ottimali.
             </AlertDescription>
           </Alert>
           

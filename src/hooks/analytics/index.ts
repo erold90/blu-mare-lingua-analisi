@@ -1,7 +1,6 @@
 
-// Main analytics hooks - Sistema consolidato
+// Sistema analytics semplificato - Solo hook essenziali
 export { useUnifiedAnalytics } from './useUnifiedAnalytics';
-export { useAnalytics } from './useAnalytics';
 export { useSimpleTracking } from './useSimpleTracking';
 export { useTracking } from './useTracking';
 export { usePageTracking } from './usePageTracking';

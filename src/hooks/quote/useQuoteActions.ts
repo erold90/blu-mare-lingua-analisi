@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { calculateTotalPrice } from "@/utils/quoteCalculator";
 import { apartments } from "@/data/apartments";
-import { useAnalytics } from "@/hooks/analytics/useAnalytics";
+import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
 import { v4 as uuidv4 } from 'uuid';
 import { useSimpleTracking } from '@/hooks/analytics/useSimpleTracking';
 import { UseFormReturn } from "react-hook-form";
@@ -11,7 +11,7 @@ import { createWhatsAppMessage } from "@/utils/price/whatsAppMessage";
 
 export function useQuoteActions(form?: UseFormReturn<FormValues>) {
   const [step, setStep] = useState(1);
-  const { addQuoteLog } = useAnalytics();
+  const { addQuoteLog } = useUnifiedAnalytics();
   const { trackSiteVisit } = useSimpleTracking();
 
   const handleNext = () => {
@@ -40,7 +40,7 @@ export function useQuoteActions(form?: UseFormReturn<FormValues>) {
       const quoteId = uuidv4();
       const totalPrice = calculateTotalPrice(formValues, apartments).totalPrice;
 
-      // Save quote log using analytics system
+      // Save quote log using unified analytics system
       await addQuoteLog({
         id: quoteId,
         form_values: formValues,
@@ -95,22 +95,11 @@ export function useQuoteActions(form?: UseFormReturn<FormValues>) {
     trackSiteVisit('/quote/whatsapp-sent');
   }, [form, trackSiteVisit]);
 
-  // Simplified submit handler - no wrapper needed
+  // Simplified submit handler
   const onSubmitHandler = useCallback((data: FormValues) => {
     console.log("Form submitted with data:", data);
     handleSubmit();
   }, [handleSubmit]);
-
-  const getStepName = (stepNumber: number) => {
-    const stepNames = {
-      1: 'guest_info',
-      2: 'dates',
-      3: 'apartments',
-      4: 'services',
-      5: 'summary'
-    };
-    return stepNames[stepNumber as keyof typeof stepNames] || 'unknown';
-  };
 
   return {
     step,
