@@ -21,6 +21,13 @@ import { ApartmentDialog } from "@/components/quote/ApartmentDialog";
 import GroupDialog from "@/components/quote/GroupDialog";
 import ProgressBar from "@/components/quote/ProgressBar";
 
+// Define ChildDetail interface to match component expectations
+interface ChildDetail {
+  isUnder12: boolean;
+  sleepsWithParents: boolean;
+  sleepsInCrib: boolean;
+}
+
 const RequestQuotePage = () => {
   console.log("🔍 RequestQuotePage: Loading quote form page");
   
@@ -63,8 +70,12 @@ const RequestQuotePage = () => {
     console.log(`🔍 RequestQuotePage: Current step is ${step}/${totalSteps}`);
     console.log("🔍 RequestQuotePage: Form values:", form.getValues());
 
-    // Convert readonly array to mutable array for components
-    const mutableChildrenArray = [...(childrenArray || [])];
+    // Convert form data to component-expected format with required booleans
+    const mutableChildrenArray: ChildDetail[] = (childrenArray || []).map(child => ({
+      isUnder12: child.isUnder12 ?? false,
+      sleepsWithParents: child.sleepsWithParents ?? false,
+      sleepsInCrib: child.sleepsInCrib ?? false
+    }));
 
     // Render current step content
     const renderStepContent = () => {
