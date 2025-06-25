@@ -9,8 +9,6 @@ export { useCompactPrices } from './prices/useCompactPrices';
 
 // Export degli hook analytics semplificati
 export { useSimpleTracking } from './analytics/useSimpleTracking';
-export { useTracking } from './analytics/useTracking';
-export { usePageTracking } from './analytics/usePageTracking';
 export { useUnifiedAnalytics } from './analytics/useUnifiedAnalytics';
 
 // Export types

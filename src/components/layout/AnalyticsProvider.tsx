@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { useTracking } from "@/hooks/analytics/useTracking";
+import { useSimpleTracking } from "@/hooks/analytics/useSimpleTracking";
 
 interface AnalyticsProviderProps {
   children: React.ReactNode;
@@ -8,7 +8,7 @@ interface AnalyticsProviderProps {
 
 export const AnalyticsProvider = ({ children }: AnalyticsProviderProps) => {
   // Use simplified unified tracking system
-  useTracking();
+  useSimpleTracking();
 
   return <>{children}</>;
 };

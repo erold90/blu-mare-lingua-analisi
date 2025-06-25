@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Toaster as UIToaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { usePageTracking } from "@/hooks/analytics/usePageTracking";
+import { useSimpleTracking } from "@/hooks/analytics/useSimpleTracking";
 import AppLayout from "@/components/layout/AppLayout";
 import Index from "@/pages/Index";
 import ApartmentsPage from "@/pages/ApartmentsPage";
@@ -18,7 +18,7 @@ import CookiePolicyPage from "@/pages/CookiePolicyPage";
 import NotFound from "@/pages/NotFound";
 
 const AppWithTracking = () => {
-  usePageTracking();
+  useSimpleTracking();
   
   return (
     <Routes>
