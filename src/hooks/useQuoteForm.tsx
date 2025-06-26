@@ -1,99 +1,144 @@
+import { useState, useCallback } from 'react';
+import { FormValues } from '@/utils/quoteFormSchema';
+import { useAnalytics } from '@/hooks/analytics/useAnalytics';
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { FormValues, formSchema } from "@/utils/quoteFormSchema";
-import { useChildrenManagement } from "./quote/useChildrenManagement";
-import { useStepManagement } from "./quote/useStepManagement";
-import { useApartmentSelection } from "./quote/useApartmentSelection";
-import { useGroupManagement, FamilyGroup } from "./quote/useGroupManagement";
-import { useQuoteActions } from "./quote/useQuoteActions";
-import { useChildEffects } from "./quote/useChildEffects";
-import { useState, useEffect, useMemo } from "react";
-
-console.log("🔍 Loading useQuoteForm hook");
-
-export function useQuoteForm() {
-  // Prevent re-initialization with useMemo
-  const defaultValues = useMemo(() => ({
-    step: 1,
-    adults: 2,
-    children: 0,
-    childrenDetails: [],
-    needsLinen: false,
-    hasPets: false,
-    petsCount: 0,
-    isGroupBooking: false,
-    selectedApartments: [],
-  }), []);
-  
-  // Initialize form with default values
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues,
+export const useQuoteForm = () => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formValues, setFormValues] = useState<FormValues>({
+    checkIn: '',
+    checkOut: '',
+    guests: 1,
+    apartments: [],
+    services: [],
+    personalInfo: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      message: ''
+    }
   });
-  
-  // Initialize child hooks with proper error handling
-  const { 
-    childrenArray, 
-    setChildrenArray,
-    incrementAdults, 
-    decrementAdults, 
-    incrementChildren, 
-    decrementChildren,
-    updateChildDetails 
-  } = useChildrenManagement(form);
-  
-  const { step, totalSteps, nextStep, prevStep } = useStepManagement(form);
-  
-  const { 
-    apartmentDialog, 
-    openApartmentDialog, 
-    closeApartmentDialog, 
-    selectApartment 
-  } = useApartmentSelection(form);
-  
-  const { 
-    groupDialog, 
-    familyGroups, 
-    openGroupDialog, 
-    closeGroupDialog, 
-    setFamilyGroups 
-  } = useGroupManagement(form, setChildrenArray);
-  
-  // Pass the form to useQuoteActions
-  const quoteActions = useQuoteActions(form);
-  
-  // Setup effect hooks
-  useChildEffects(form, childrenArray, setChildrenArray);
-  
-  // Log only once when mounted
-  useEffect(() => {
-    console.log("🚀 useQuoteForm hook mounted successfully");
-    return () => console.log("👋 useQuoteForm hook unmounted");
+
+  const { saveQuoteLog } = useAnalytics();
+
+  const updateFormValues = useCallback((values: Partial<FormValues>) => {
+    setFormValues(prev => ({ ...prev, ...values }));
   }, []);
-  
+
+  const getTotalPrice = useCallback(() => {
+    // Calculate total price based on form values
+    let total = 0;
+    
+    // Add apartment prices
+    formValues.apartments.forEach(apt => {
+      total += apt.price || 0;
+    });
+    
+    // Add service prices
+    formValues.services.forEach(service => {
+      total += service.price || 0;
+    });
+    
+    return total;
+  }, [formValues]);
+
+  const saveFormData = useCallback(async (completed: boolean = false) => {
+    try {
+      const quoteData = {
+        id: `quote_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+        form_data: formValues,
+        step: currentStep,
+        completed,
+        total_price: completed ? getTotalPrice() : undefined,
+        user_session: sessionStorage.getItem('analytics_session') || undefined
+      };
+
+      await saveQuoteLog(quoteData);
+      console.log('✅ Quote form data saved');
+      
+    } catch (error) {
+      console.error('❌ Error saving quote form data:', error);
+    }
+  }, [formValues, currentStep, saveQuoteLog, getTotalPrice]);
+
+  const nextStep = useCallback(() => {
+    if (currentStep < 6) {
+      const newStep = currentStep + 1;
+      setCurrentStep(newStep);
+      
+      // Salva progresso ad ogni step
+      saveFormData(false);
+    }
+  }, [currentStep, saveFormData]);
+
+  const prevStep = useCallback(() => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  }, [currentStep]);
+
+  const goToStep = useCallback((step: number) => {
+    if (step >= 1 && step <= 6) {
+      setCurrentStep(step);
+    }
+  }, []);
+
+  const completeQuote = useCallback(async () => {
+    await saveFormData(true);
+    // Additional completion logic can be added here
+    console.log('✅ Quote completed');
+  }, [saveFormData]);
+
+  const resetForm = useCallback(() => {
+    setCurrentStep(1);
+    setFormValues({
+      checkIn: '',
+      checkOut: '',
+      guests: 1,
+      apartments: [],
+      services: [],
+      personalInfo: {
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        message: ''
+      }
+    });
+  }, []);
+
+  const isStepValid = useCallback((step: number) => {
+    switch (step) {
+      case 1:
+        return formValues.checkIn && formValues.checkOut && formValues.guests > 0;
+      case 2:
+        return formValues.apartments.length > 0;
+      case 3:
+        return true; // Services are optional
+      case 4:
+        return formValues.personalInfo.firstName && 
+               formValues.personalInfo.lastName && 
+               formValues.personalInfo.email;
+      case 5:
+        return true; // Review step
+      case 6:
+        return true; // Confirmation step
+      default:
+        return false;
+    }
+  }, [formValues]);
+
   return {
-    form,
-    step,
-    totalSteps,
-    childrenArray,
-    apartmentDialog,
-    groupDialog,
-    familyGroups,
-    incrementAdults,
-    decrementAdults,
-    incrementChildren,
-    decrementChildren,
-    updateChildDetails,
+    currentStep,
+    formValues,
+    updateFormValues,
     nextStep,
     prevStep,
-    openApartmentDialog,
-    closeApartmentDialog,
-    selectApartment,
-    openGroupDialog,
-    closeGroupDialog,
-    setFamilyGroups,
-    sendWhatsApp: quoteActions.sendWhatsApp,
-    onSubmitHandler: quoteActions.onSubmitHandler
+    goToStep,
+    completeQuote,
+    resetForm,
+    isStepValid,
+    getTotalPrice,
+    saveFormData
   };
-}
+};

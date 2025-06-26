@@ -5,29 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { format, isSameDay } from "date-fns";
 import { it } from "date-fns/locale";
-import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
-
-interface SiteVisit {
-  id: string;
-  created_at: string;
-  page: string;
-}
+import { AnalyticsMetrics, SiteVisit } from "@/hooks/analytics/useAnalytics";
 
 interface AdminLogAnalyticsProps {
   siteVisits: SiteVisit[];
   dateRange: any;
+  metrics: AnalyticsMetrics;
 }
 
-export const AdminLogAnalytics = ({ siteVisits, dateRange }: AdminLogAnalyticsProps) => {
-  const { metrics } = useUnifiedAnalytics();
-
-  // Memoizzazione ottimizzata delle statistiche
-  const visitStats = React.useMemo(() => ({
-    day: metrics.visitsToday,
-    month: metrics.visitsMonth,
-    year: metrics.visitsYear
-  }), [metrics]);
-
+export const AdminLogAnalytics = ({ siteVisits, dateRange, metrics }: AdminLogAnalyticsProps) => {
   const visitChartData = React.useMemo(() => {
     if (!dateRange?.from || siteVisits.length === 0) return [];
     
@@ -35,7 +21,7 @@ export const AdminLogAnalytics = ({ siteVisits, dateRange }: AdminLogAnalyticsPr
     let currentDate = new Date(dateRange.from);
     const endDate = dateRange.to ? new Date(dateRange.to) : new Date(currentDate);
     
-    // Limita a 14 giorni per performance ottimali
+    // Limita a 14 giorni per performance
     const daysDiff = Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
     if (daysDiff > 14) {
       endDate.setDate(currentDate.getDate() + 14);
@@ -71,50 +57,12 @@ export const AdminLogAnalytics = ({ siteVisits, dateRange }: AdminLogAnalyticsPr
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Visite oggi</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{visitStats.day}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Query ottimizzata database
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Visite questo mese</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{visitStats.month}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Performance migliorata
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Visite quest'anno</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{visitStats.year}</div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Indici ottimizzati
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Andamento visite</CardTitle>
             <div className="flex items-center gap-2">
-              <Badge variant="outline">Sistema ottimizzato</Badge>
+              <Badge variant="outline">Sistema ottimizzato v2</Badge>
               <Badge variant="secondary">Max 14 giorni</Badge>
             </div>
           </CardHeader>
@@ -146,7 +94,7 @@ export const AdminLogAnalytics = ({ siteVisits, dateRange }: AdminLogAnalyticsPr
             <CardTitle>Pagine più visitate</CardTitle>
             <div className="flex items-center gap-2">
               <Badge variant="outline">Top 10</Badge>
-              <Badge variant="secondary">Dati filtrati</Badge>
+              <Badge variant="secondary">Ultimi 30 giorni</Badge>
             </div>
           </CardHeader>
           <CardContent>

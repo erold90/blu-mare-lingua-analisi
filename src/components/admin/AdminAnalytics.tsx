@@ -8,19 +8,17 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, subDays } from "date-fns";
 import { it } from "date-fns/locale";
-import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
-import { CalendarIcon, Info, Loader2, AlertCircle, RefreshCw, CheckCircle2, BarChart3, TrendingUp, Database, Trash2 } from "lucide-react";
+import { useAnalytics } from "@/hooks/analytics/useAnalytics";
+import { CalendarIcon, Loader2, RefreshCw, BarChart3, TrendingUp, Database, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminLogAnalytics } from "./analytics/AdminLogAnalytics";
 import { AdminLogQuotes } from "./quotes/AdminLogQuotes";
-import { SiteVisitsDebug } from "./analytics/SiteVisitsDebug";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { testSupabaseConnection, getFailedTracking, clearFailedTracking } from "@/hooks/analytics/operations/siteOperations";
 
 const AdminAnalytics = () => {
-  const { quoteLogs, siteVisits, metrics, loading, error, refreshData } = useUnifiedAnalytics();
+  const { quoteLogs, siteVisits, metrics, loading, error, refreshData, testConnection, cleanupOldData } = useAnalytics();
   const isMobile = useIsMobile();
   
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -29,15 +27,14 @@ const AdminAnalytics = () => {
   });
   const [refreshing, setRefreshing] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
+  const [cleaning, setCleaning] = useState(false);
   
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      console.log('🔄 Refreshing analytics data...');
       await refreshData();
       toast.success('Analytics aggiornati con successo');
     } catch (error) {
-      console.error("❌ Error during refresh:", error);
       toast.error('Errore durante il refresh dei dati');
     } finally {
       setRefreshing(false);
@@ -47,52 +44,34 @@ const AdminAnalytics = () => {
   const handleTestConnection = async () => {
     setTestingConnection(true);
     try {
-      console.log('🔗 Testing database connection...');
-      const isConnected = await testSupabaseConnection();
+      const isConnected = await testConnection();
       if (isConnected) {
         toast.success('Connessione database OK');
       } else {
         toast.error('Problemi di connessione al database');
       }
     } catch (error) {
-      console.error("❌ Connection test error:", error);
       toast.error('Errore nel test di connessione');
     } finally {
       setTestingConnection(false);
     }
   };
 
-  const handleClearFailedTracking = () => {
-    const failedTracking = getFailedTracking();
-    if (failedTracking.length > 0) {
-      clearFailedTracking();
-      toast.success(`Puliti ${failedTracking.length} tracking falliti`);
-    } else {
-      toast.info('Nessun tracking fallito da pulire');
+  const handleCleanup = async () => {
+    if (!confirm('Eliminare i dati analytics vecchi (visite > 6 mesi, preventivi incompleti > 3 mesi)?')) {
+      return;
+    }
+
+    setCleaning(true);
+    try {
+      const result = await cleanupOldData();
+      toast.success(`Pulizia completata: ${result.deleted_visits} visite e ${result.deleted_quotes} preventivi eliminati`);
+    } catch (error) {
+      toast.error('Errore durante la pulizia');
+    } finally {
+      setCleaning(false);
     }
   };
-
-  // Calcola statistiche dal metrics ottimizzato
-  const stats = React.useMemo(() => {
-    const failedTracking = getFailedTracking();
-    
-    console.log('📊 Stats calculated:', { 
-      visitsToday: metrics.visitsToday, 
-      visitsMonth: metrics.visitsMonth, 
-      visitsYear: metrics.visitsYear, 
-      totalSiteVisits: siteVisits.length, 
-      failedTracking: failedTracking.length 
-    });
-    
-    return {
-      visitsToday: metrics.visitsToday,
-      visitsMonth: metrics.visitsMonth,
-      visitsYear: metrics.visitsYear,
-      totalQuotes: metrics.totalQuotes,
-      completedQuotes: metrics.completedQuotes,
-      failedTracking: failedTracking.length
-    };
-  }, [metrics, siteVisits.length]);
   
   if (loading) {
     return (
@@ -113,7 +92,7 @@ const AdminAnalytics = () => {
           <div>
             <h2 className="text-2xl font-bold">Analytics Villa MareBlu</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Sistema di tracciamento unificato per preventivi e visite
+              Sistema di tracciamento unificato - Versione ottimizzata
             </p>
           </div>
         </div>
@@ -121,10 +100,9 @@ const AdminAnalytics = () => {
           <Popover>
             <PopoverTrigger asChild>
               <Button
-                id="date"
-                variant={"outline"}
+                variant="outline"
                 className={cn(
-                  "w-full justify-start text-left font-normal",
+                  "justify-start text-left font-normal",
                   !dateRange && "text-muted-foreground"
                 )}
               >
@@ -156,17 +134,19 @@ const AdminAnalytics = () => {
             </PopoverContent>
           </Popover>
           
-          {stats.failedTracking > 0 && (
-            <Button 
-              onClick={handleClearFailedTracking} 
-              variant="outline" 
-              size="sm"
-              className="border-orange-400 text-orange-600 hover:bg-orange-50"
-            >
+          <Button 
+            onClick={handleCleanup} 
+            variant="outline" 
+            size="sm"
+            disabled={cleaning}
+          >
+            {cleaning ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
               <Trash2 className="h-4 w-4 mr-2" />
-              Pulisci Errori ({stats.failedTracking})
-            </Button>
-          )}
+            )}
+            Pulizia
+          </Button>
           
           <Button 
             onClick={handleTestConnection} 
@@ -197,175 +177,74 @@ const AdminAnalytics = () => {
         </div>
       </div>
 
-      {/* Debug information migliorato */}
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <strong>Stato Sistema:</strong>
-              <br />
-              Visite caricate: {siteVisits.length}
-              <br />
-              Preventivi: {quoteLogs.length}
-            </div>
-            <div>
-              <strong>Debug Info:</strong>
-              <br />
-              Errori: {error ? 'Presenti' : 'Nessuno'}
-              <br />
-              Tracking falliti: {stats.failedTracking}
-            </div>
-          </div>
-        </AlertDescription>
-      </Alert>
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
-      {/* Indicatori di stato migliorati */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {error ? (
-          <Alert variant="destructive" className="col-span-full">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              {error}
-              {stats.failedTracking > 0 && (
-                <div className="mt-2">
-                  <strong>Trovati {stats.failedTracking} tracking falliti in localStorage.</strong>
-                  <br />
-                  <em>Usa il pulsante "Pulisci Errori" per rimuoverli.</em>
-                </div>
-              )}
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <>
-            <Alert>
-              <TrendingUp className="h-4 w-4 text-blue-600" />
-              <AlertDescription>
-                <div className="font-semibold">Visite Oggi</div>
-                <div className="text-2xl font-bold text-blue-600">{stats.visitsToday}</div>
-                <div className="text-xs text-muted-foreground">
-                  {stats.visitsToday === 0 && siteVisits.length > 0 ? 
-                    'Nessuna visita oggi' : 
-                    'Visite registrate'}
-                </div>
-              </AlertDescription>
-            </Alert>
-            <Alert>
-              <BarChart3 className="h-4 w-4 text-green-600" />
-              <AlertDescription>
-                <div className="font-semibold">Preventivi Totali</div>
-                <div className="text-2xl font-bold text-green-600">{stats.totalQuotes}</div>
-              </AlertDescription>
-            </Alert>
-            <Alert>
-              <CheckCircle2 className="h-4 w-4 text-purple-600" />
-              <AlertDescription>
-                <div className="font-semibold">Preventivi Completati</div>
-                <div className="text-2xl font-bold text-purple-600">{stats.completedQuotes}</div>
-              </AlertDescription>
-            </Alert>
-            <Alert>
-              <Info className="h-4 w-4 text-orange-600" />
-              <AlertDescription>
-                <div className="font-semibold">Visite Totali</div>
-                <div className="text-2xl font-bold text-orange-600">{siteVisits.length}</div>
-                <div className="text-xs text-muted-foreground">Ultimi 30 giorni</div>
-              </AlertDescription>
-            </Alert>
-          </>
-        )}
+      {/* Metriche principali */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <Alert>
+          <TrendingUp className="h-4 w-4 text-blue-600" />
+          <AlertDescription>
+            <div className="font-semibold">Visite Oggi</div>
+            <div className="text-2xl font-bold text-blue-600">{metrics.visitsToday}</div>
+          </AlertDescription>
+        </Alert>
+        <Alert>
+          <TrendingUp className="h-4 w-4 text-green-600" />
+          <AlertDescription>
+            <div className="font-semibold">Visite Settimana</div>
+            <div className="text-2xl font-bold text-green-600">{metrics.visitsWeek}</div>
+          </AlertDescription>
+        </Alert>
+        <Alert>
+          <TrendingUp className="h-4 w-4 text-purple-600" />
+          <AlertDescription>
+            <div className="font-semibold">Visite Mese</div>
+            <div className="text-2xl font-bold text-purple-600">{metrics.visitsMonth}</div>
+          </AlertDescription>
+        </Alert>
+        <Alert>
+          <BarChart3 className="h-4 w-4 text-orange-600" />
+          <AlertDescription>
+            <div className="font-semibold">Preventivi Oggi</div>
+            <div className="text-2xl font-bold text-orange-600">{metrics.quotesToday}</div>
+          </AlertDescription>
+        </Alert>
+        <Alert>
+          <BarChart3 className="h-4 w-4 text-red-600" />
+          <AlertDescription>
+            <div className="font-semibold">Preventivi Completati</div>
+            <div className="text-2xl font-bold text-red-600">{metrics.quotesCompleted}</div>
+          </AlertDescription>
+        </Alert>
       </div>
       
       <Tabs defaultValue="visits" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="visits">
             Visite Sito ({siteVisits.length})
           </TabsTrigger>
           <TabsTrigger value="quotes">
             Preventivi ({quoteLogs.length})
           </TabsTrigger>
-          <TabsTrigger value="debug">
-            🔍 Debug Visite
-          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="visits" className="mt-6 space-y-6">
-          {siteVisits.length === 0 ? (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Nessuna visita registrata.</strong>
-                <br />
-                Il sistema di tracking è attivo e registra automaticamente le visite alle pagine pubbliche.
-                <br />
-                <em>Suggerimento: Visita il sito in una nuova finestra privata per testare il tracking.</em>
-                {stats.failedTracking > 0 && (
-                  <div className="mt-2 p-2 bg-orange-50 rounded">
-                    <strong>⚠️ Trovati {stats.failedTracking} tentativi di tracking falliti.</strong>
-                    <br />
-                    Questo potrebbe indicare problemi di connessione al database.
-                  </div>
-                )}
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <Alert>
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertDescription>
-                Sistema tracking operativo. Registrate {siteVisits.length} visite negli ultimi 30 giorni.
-                <br />
-                Oggi: {stats.visitsToday} visite | Questo mese: {stats.visitsMonth} visite
-                {siteVisits.length >= 500 && (
-                  <div className="mt-2 p-2 bg-yellow-50 rounded border border-yellow-200">
-                    <strong>⚠️ Attenzione:</strong> Trovate {siteVisits.length} visite. 
-                    Se sospetti che siano dati di test, usa la sezione "Debug Visite" per analizzarli.
-                  </div>
-                )}
-              </AlertDescription>
-            </Alert>
-          )}
-          
           <AdminLogAnalytics 
             siteVisits={siteVisits} 
             dateRange={dateRange}
+            metrics={metrics}
           />
         </TabsContent>
         
         <TabsContent value="quotes" className="mt-6 space-y-6">
-          {quoteLogs.length === 0 ? (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Nessun preventivo trovato. I preventivi vengono salvati automaticamente quando gli utenti completano il form.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <Alert>
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertDescription>
-                Sistema preventivi operativo. Trovati {quoteLogs.length} preventivi di cui {stats.completedQuotes} completati.
-              </AlertDescription>
-            </Alert>
-          )}
-          
           <AdminLogQuotes 
             quoteLogs={quoteLogs} 
             dateRange={dateRange}
           />
-        </TabsContent>
-
-        <TabsContent value="debug" className="mt-6 space-y-6">
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              <strong>Sezione Debug Visite</strong>
-              <br />
-              Qui puoi analizzare i dati delle visite per verificare se sono reali o di test.
-              Puoi anche pulire i dati se necessario.
-            </AlertDescription>
-          </Alert>
-          
-          <SiteVisitsDebug />
         </TabsContent>
       </Tabs>
     </div>

@@ -214,29 +214,32 @@ export type Database = {
         Row: {
           completed: boolean
           created_at: string
-          form_values: Json
+          form_data: Json
           id: string
           step: number
-          timestamp: string
+          total_price: number | null
           updated_at: string
+          user_session: string | null
         }
         Insert: {
           completed?: boolean
           created_at?: string
-          form_values: Json
+          form_data: Json
           id: string
-          step: number
-          timestamp?: string
+          step?: number
+          total_price?: number | null
           updated_at?: string
+          user_session?: string | null
         }
         Update: {
           completed?: boolean
           created_at?: string
-          form_values?: Json
+          form_data?: Json
           id?: string
           step?: number
-          timestamp?: string
+          total_price?: number | null
           updated_at?: string
+          user_session?: string | null
         }
         Relationships: []
       }
@@ -307,25 +310,38 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          ip_address: unknown | null
           page: string
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
         }
         Insert: {
           created_at?: string
-          id: string
+          id?: string
+          ip_address?: unknown | null
           page: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
         }
         Update: {
           created_at?: string
           id?: string
+          ip_address?: unknown | null
           page?: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
         }
         Relationships: []
       }
     }
     Views: {
-      site_visits_stats: {
+      analytics_summary: {
         Row: {
           page: string | null
+          unique_sessions: number | null
           visit_count: number | null
           visit_date: string | null
         }
@@ -333,9 +349,22 @@ export type Database = {
       }
     }
     Functions: {
-      cleanup_old_site_visits: {
+      cleanup_old_analytics: {
         Args: Record<PropertyKey, never>
-        Returns: undefined
+        Returns: {
+          deleted_visits: number
+          deleted_quotes: number
+        }[]
+      }
+      get_analytics_counts: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          visits_today: number
+          visits_week: number
+          visits_month: number
+          quotes_today: number
+          quotes_completed: number
+        }[]
       }
     }
     Enums: {
