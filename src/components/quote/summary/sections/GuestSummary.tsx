@@ -10,16 +10,27 @@ interface GuestSummaryProps {
 }
 
 const GuestSummary: React.FC<GuestSummaryProps> = ({ formValues }) => {
+  console.log("🔍 GuestSummary: Form values received", formValues);
+  console.log("🔍 GuestSummary: Children details", formValues.childrenDetails);
+  console.log("🔍 GuestSummary: Children array", formValues.childrenArray);
+  
   const adults = formValues.adults || 0;
   const children = formValues.children || 0;
   const totalGuests = adults + children;
-  const childrenDetails = formValues.childrenDetails || [];
+  
+  // Check both childrenDetails and childrenArray for children data
+  const childrenDetails = formValues.childrenDetails || formValues.childrenArray || [];
+  console.log("🔍 GuestSummary: Final children details", childrenDetails);
 
   // Calculate children statistics
-  const childrenUnder12 = childrenDetails.filter(child => child.isUnder12).length;
+  const childrenUnder12 = childrenDetails.filter(child => child?.isUnder12).length;
   const childrenOver12 = children - childrenUnder12;
-  const childrenWithParents = childrenDetails.filter(child => child.sleepsWithParents).length;
-  const childrenInCribs = childrenDetails.filter(child => child.sleepsInCrib).length;
+  const childrenWithParents = childrenDetails.filter(child => child?.sleepsWithParents).length;
+  const childrenInCribs = childrenDetails.filter(child => child?.sleepsInCrib).length;
+
+  // Calculate effective bed requirements
+  const childrenNotOccupyingBed = childrenWithParents + childrenInCribs;
+  const effectiveGuestsForBeds = totalGuests - childrenNotOccupyingBed;
 
   return (
     <Card className="h-fit">
@@ -71,107 +82,118 @@ const GuestSummary: React.FC<GuestSummaryProps> = ({ formValues }) => {
               <span>Dettagli bambini</span>
             </div>
             
-            {/* Age breakdown */}
-            {childrenDetails.length > 0 && (
-              <div className="bg-blue-50 rounded-lg p-3 space-y-2">
-                <div className="text-sm font-medium text-blue-800 mb-2">
-                  Classificazione per età:
-                </div>
-                
-                {childrenUnder12 > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">• Sotto i 12 anni:</span>
-                    <span className="font-medium text-green-600">
-                      {childrenUnder12} (tassa soggiorno gratuita)
-                    </span>
+            {/* Show children details if available */}
+            {childrenDetails.length > 0 ? (
+              <>
+                {/* Age breakdown */}
+                <div className="bg-blue-50 rounded-lg p-3 space-y-2">
+                  <div className="text-sm font-medium text-blue-800 mb-2">
+                    Classificazione per età:
                   </div>
-                )}
-                
-                {childrenOver12 > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">• Sopra i 12 anni:</span>
-                    <span className="font-medium">{childrenOver12}</span>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {/* Special arrangements */}
-            {(childrenWithParents > 0 || childrenInCribs > 0) && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 space-y-2">
-                <div className="text-sm font-medium text-amber-800 mb-2">
-                  Sistemazioni speciali:
-                </div>
-                
-                {childrenWithParents > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <Heart className="h-3 w-3" />
-                      Dormono con i genitori:
-                    </span>
-                    <span className="font-medium text-blue-600">
-                      {childrenWithParents} (non occupano posto letto)
-                    </span>
-                  </div>
-                )}
-                
-                {childrenInCribs > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      <BedDouble className="h-3 w-3" />
-                      Dormono in culla:
-                    </span>
-                    <span className="font-medium text-green-600">
-                      {childrenInCribs} (servizio gratuito)
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {/* Individual child details */}
-            {childrenDetails.length > 0 && (
-              <div className="bg-gray-50 rounded-lg p-3 space-y-3">
-                <div className="text-sm font-medium text-gray-800 mb-2">
-                  Dettaglio per bambino:
-                </div>
-                
-                {childrenDetails.map((child, index) => (
-                  <div key={index} className="border-l-2 border-primary/30 pl-3 py-1">
-                    <div className="font-medium text-sm text-gray-700 mb-1">
-                      Bambino {index + 1}:
+                  
+                  {childrenUnder12 > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">• Sotto i 12 anni:</span>
+                      <span className="font-medium text-green-600">
+                        {childrenUnder12} (tassa soggiorno gratuita)
+                      </span>
                     </div>
-                    <div className="text-xs space-y-1">
-                      {/* Age */}
-                      <div className={`flex items-center gap-1 ${child.isUnder12 ? 'text-green-600' : 'text-gray-600'}`}>
-                        <UserCheck className="h-3 w-3" />
-                        {child.isUnder12 ? 'Sotto i 12 anni (tassa gratuita)' : 'Sopra i 12 anni'}
-                      </div>
-                      
-                      {/* Sleep arrangement */}
-                      {child.sleepsWithParents && (
-                        <div className="flex items-center gap-1 text-blue-600">
+                  )}
+                  
+                  {childrenOver12 > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">• Sopra i 12 anni:</span>
+                      <span className="font-medium">{childrenOver12}</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Special arrangements */}
+                {(childrenWithParents > 0 || childrenInCribs > 0) && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 space-y-2">
+                    <div className="text-sm font-medium text-amber-800 mb-2">
+                      Sistemazioni speciali:
+                    </div>
+                    
+                    {childrenWithParents > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground flex items-center gap-1">
                           <Heart className="h-3 w-3" />
-                          Dorme con i genitori
-                        </div>
-                      )}
-                      
-                      {child.sleepsInCrib && (
-                        <div className="flex items-center gap-1 text-green-600">
+                          Dormono con i genitori:
+                        </span>
+                        <span className="font-medium text-blue-600">
+                          {childrenWithParents} (non occupano posto letto)
+                        </span>
+                      </div>
+                    )}
+                    
+                    {childrenInCribs > 0 && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground flex items-center gap-1">
                           <BedDouble className="h-3 w-3" />
-                          Dorme in culla (gratuita)
-                        </div>
-                      )}
-                      
-                      {!child.sleepsWithParents && !child.sleepsInCrib && (
-                        <div className="flex items-center gap-1 text-gray-600">
-                          <BedDouble className="h-3 w-3" />
-                          Posto letto singolo
-                        </div>
-                      )}
-                    </div>
+                          Dormono in culla:
+                        </span>
+                        <span className="font-medium text-green-600">
+                          {childrenInCribs} (servizio gratuito)
+                        </span>
+                      </div>
+                    )}
                   </div>
-                ))}
+                )}
+                
+                {/* Individual child details */}
+                <div className="bg-gray-50 rounded-lg p-3 space-y-3">
+                  <div className="text-sm font-medium text-gray-800 mb-2">
+                    Dettaglio per bambino:
+                  </div>
+                  
+                  {childrenDetails.map((child, index) => (
+                    <div key={index} className="border-l-2 border-primary/30 pl-3 py-1">
+                      <div className="font-medium text-sm text-gray-700 mb-1">
+                        Bambino {index + 1}:
+                      </div>
+                      <div className="text-xs space-y-1">
+                        {/* Age */}
+                        <div className={`flex items-center gap-1 ${child?.isUnder12 ? 'text-green-600' : 'text-gray-600'}`}>
+                          <UserCheck className="h-3 w-3" />
+                          {child?.isUnder12 ? 'Sotto i 12 anni (tassa gratuita)' : 'Sopra i 12 anni'}
+                        </div>
+                        
+                        {/* Sleep arrangement */}
+                        {child?.sleepsWithParents && (
+                          <div className="flex items-center gap-1 text-blue-600">
+                            <Heart className="h-3 w-3" />
+                            Dorme con i genitori
+                          </div>
+                        )}
+                        
+                        {child?.sleepsInCrib && (
+                          <div className="flex items-center gap-1 text-green-600">
+                            <BedDouble className="h-3 w-3" />
+                            Dorme in culla (gratuita)
+                          </div>
+                        )}
+                        
+                        {!child?.sleepsWithParents && !child?.sleepsInCrib && (
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <BedDouble className="h-3 w-3" />
+                            Posto letto singolo
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              /* Show placeholder if no details available */
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <div className="text-sm text-yellow-800 font-medium mb-1">
+                  Dettagli bambini
+                </div>
+                <div className="text-xs text-yellow-700">
+                  Completa il primo step per vedere i dettagli specifici sui bambini
+                </div>
               </div>
             )}
             
@@ -180,7 +202,7 @@ const GuestSummary: React.FC<GuestSummaryProps> = ({ formValues }) => {
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">Posti letto necessari:</span>
                 <span className="font-semibold text-primary">
-                  {totalGuests - childrenWithParents - childrenInCribs}
+                  {effectiveGuestsForBeds}
                 </span>
               </div>
               
@@ -190,18 +212,13 @@ const GuestSummary: React.FC<GuestSummaryProps> = ({ formValues }) => {
                   <span className="font-semibold text-green-600">{childrenUnder12}</span>
                 </div>
               )}
-            </div>
-          </div>
-        )}
-        
-        {/* Show placeholder only if no children or no details available */}
-        {children > 0 && childrenDetails.length === 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <div className="text-sm text-yellow-800 font-medium mb-1">
-              Dettagli bambini
-            </div>
-            <div className="text-xs text-yellow-700">
-              Completa il primo step per vedere i dettagli specifici sui bambini
+              
+              {childrenNotOccupyingBed > 0 && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">Bambini che non occupano letto:</span>
+                  <span className="font-semibold text-blue-600">{childrenNotOccupyingBed}</span>
+                </div>
+              )}
             </div>
           </div>
         )}
