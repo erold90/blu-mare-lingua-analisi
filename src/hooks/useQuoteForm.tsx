@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { FormValues, formSchema } from "@/utils/quoteFormSchema";
 import { apartments } from "@/data/apartments";
 import { useAnalyticsCore } from "@/hooks/analytics/useAnalyticsCore";
+import { createWhatsAppMessage } from "@/utils/price/whatsAppMessage";
 import { v4 as uuidv4 } from 'uuid';
 import { useState, useCallback } from "react";
 
@@ -125,72 +126,31 @@ export function useQuoteForm() {
     setGroupDialog(false);
   };
   
-  const sendWhatsApp = () => {
+  const sendWhatsApp = useCallback(() => {
     const formValues = form.getValues();
-    const selectedApartments = formValues.selectedApartments || [];
-    const selectedServices = formValues.services || [];
+    console.log("🔍 Sending WhatsApp message with form values:", formValues);
     
-    let message = `Richiesta preventivo da Villa MareBlu:\n\n`;
+    // Create WhatsApp message using the updated function
+    const message = createWhatsAppMessage(formValues, apartments);
     
-    // Guest Info
-    message += `Ospiti: ${formValues.adults} adulti, ${formValues.children} bambini\n`;
-    
-    // Date Info
-    if (formValues.checkIn && formValues.checkOut) {
-      message += `Check-in: ${formValues.checkIn}\n`;
-      message += `Check-out: ${formValues.checkOut}\n`;
-    } else {
-      message += `Date da definire\n`;
+    if (!message) {
+      console.error("❌ Could not create WhatsApp message");
+      alert("Errore nella creazione del messaggio WhatsApp. Verifica che tutti i campi siano compilati.");
+      return;
     }
     
-    // Apartments
-    if (selectedApartments.length > 0) {
-      message += `\nAppartamenti:\n`;
-      selectedApartments.forEach(apartmentId => {
-        const apartment = apartments.find(apt => apt.id === apartmentId);
-        if (apartment) {
-          message += `- ${apartment.name}\n`;
-        }
-      });
-    } else {
-      message += `\nNessun appartamento selezionato\n`;
-    }
-    
-    // Services
-    if (selectedServices.length > 0) {
-      message += `\nServizi:\n`;
-      selectedServices.forEach(serviceId => {
-        // Assuming you have a services array similar to apartments
-        // const service = services.find(srv => srv.id === serviceId);
-        // if (service) {
-        //   message += `- ${service.name}\n`;
-        // }
-        message += `- ${serviceId}\n`; // Placeholder since we don't have services data
-      });
-    } else {
-      message += `\nNessun servizio selezionato\n`;
-    }
-    
-    // Personal Info
-    if (formValues.personalInfo) {
-      message += `\nInformazioni personali:\n`;
-      message += `Nome: ${formValues.personalInfo.firstName} ${formValues.personalInfo.lastName}\n`;
-      message += `Email: ${formValues.personalInfo.email}\n`;
-      message += `Telefono: ${formValues.personalInfo.phone}\n`;
-    }
-    
-    // Notes
-    if (formValues.notes) {
-      message += `\nNote:\n${formValues.notes}\n`;
-    }
-    
+    // Encode message for URL
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/393937767749?text=${encodedMessage}`;
+    
+    console.log("✅ Opening WhatsApp with message length:", message.length);
+    
+    // Open WhatsApp
     window.open(whatsappUrl, '_blank');
     
     // Track WhatsApp action
     analytics.trackSiteVisit('/quote/whatsapp-sent');
-  };
+  }, [form, analytics]);
 
   const onSubmitHandler = async (data: FormValues) => {
     try {
