@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,7 +20,7 @@ import { toast } from "sonner";
 import { testSupabaseConnection, getFailedTracking, clearFailedTracking } from "@/hooks/analytics/operations/siteOperations";
 
 const AdminAnalytics = () => {
-  const { quoteLogs, siteVisits, getVisitsCount, loading, error, refreshData } = useUnifiedAnalytics();
+  const { quoteLogs, siteVisits, metrics, loading, error, refreshData } = useUnifiedAnalytics();
   const isMobile = useIsMobile();
   
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
@@ -71,24 +72,27 @@ const AdminAnalytics = () => {
     }
   };
 
-  // Calcola statistiche in tempo reale
+  // Calcola statistiche dal metrics ottimizzato
   const stats = React.useMemo(() => {
-    const visitsToday = getVisitsCount('day');
-    const visitsMonth = getVisitsCount('month');
-    const visitsYear = getVisitsCount('year');
     const failedTracking = getFailedTracking();
     
-    console.log('📊 Stats calculated:', { visitsToday, visitsMonth, visitsYear, totalSiteVisits: siteVisits.length, failedTracking: failedTracking.length });
+    console.log('📊 Stats calculated:', { 
+      visitsToday: metrics.visitsToday, 
+      visitsMonth: metrics.visitsMonth, 
+      visitsYear: metrics.visitsYear, 
+      totalSiteVisits: siteVisits.length, 
+      failedTracking: failedTracking.length 
+    });
     
     return {
-      visitsToday,
-      visitsMonth,
-      visitsYear,
-      totalQuotes: quoteLogs.length,
-      completedQuotes: quoteLogs.filter(q => q.completed).length,
+      visitsToday: metrics.visitsToday,
+      visitsMonth: metrics.visitsMonth,
+      visitsYear: metrics.visitsYear,
+      totalQuotes: metrics.totalQuotes,
+      completedQuotes: metrics.completedQuotes,
       failedTracking: failedTracking.length
     };
-  }, [quoteLogs, getVisitsCount, siteVisits.length]);
+  }, [metrics, siteVisits.length]);
   
   if (loading) {
     return (
@@ -323,7 +327,6 @@ const AdminAnalytics = () => {
           
           <AdminLogAnalytics 
             siteVisits={siteVisits} 
-            getVisitsCount={getVisitsCount} 
             dateRange={dateRange}
           />
         </TabsContent>

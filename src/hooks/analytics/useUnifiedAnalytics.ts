@@ -151,17 +151,20 @@ export function useUnifiedAnalytics() {
       });
 
       // Aggiorna metriche
-      setMetrics(prev => ({
-        ...prev,
-        totalQuotes: prev.totalQuotes + (existingIndex === -1 ? 1 : 0),
-        completedQuotes: prev.completedQuotes + (quoteData.completed ? 1 : 0)
-      }));
+      setMetrics(prev => {
+        const existingIndex = quoteLogs.findIndex(log => log.id === quoteData.id);
+        return {
+          ...prev,
+          totalQuotes: prev.totalQuotes + (existingIndex === -1 ? 1 : 0),
+          completedQuotes: prev.completedQuotes + (quoteData.completed ? 1 : 0)
+        };
+      });
 
     } catch (error) {
       console.error('❌ Error saving quote log:', error);
       throw error;
     }
-  }, []);
+  }, [quoteLogs]);
 
   const deleteQuoteLog = useCallback(async (quoteId: string) => {
     try {

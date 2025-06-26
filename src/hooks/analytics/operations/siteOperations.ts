@@ -153,17 +153,19 @@ export const calculateVisitsCount = async (period: 'day' | 'month' | 'year'): Pr
         throw new Error(`Invalid period: ${period}`);
     }
 
-    const { data, error } = await supabase
+    const result = await supabase
       .from('site_visits')
       .select('*', { count: 'exact', head: true })
       .gte('created_at', startDate.toISOString());
+
+    const { data, error, count } = result;
 
     if (error) {
       console.error(`❌ Error calculating ${period} visits:`, error);
       throw error;
     }
 
-    return data ? (data as any).count || 0 : 0;
+    return count || 0;
   } catch (error) {
     console.warn(`⚠️ Failed to calculate ${period} visits, using fallback`);
     return 0;
