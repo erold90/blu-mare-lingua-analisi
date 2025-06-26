@@ -23,8 +23,8 @@ export const trackPageVisit = async (page: string) => {
 
     console.log('📊 Attempting to save visit data:', visitData);
     
-    // Tracking ottimizzato con timeout più breve
-    const { data, error } = await Promise.race([
+    // Tracking ottimizzato con timeout più breve e typing corretto
+    const result = await Promise.race([
       supabase
         .from('site_visits')
         .insert(visitData)
@@ -32,7 +32,9 @@ export const trackPageVisit = async (page: string) => {
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Insert timeout')), 3000)
       )
-    ]);
+    ]) as Awaited<ReturnType<typeof supabase.from<'site_visits'>['insert']>>;
+
+    const { data, error } = result;
 
     if (error) {
       console.error('❌ Site visit tracking error:', error);
@@ -79,7 +81,7 @@ export const loadSiteVisits = async () => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
-    const { data, error } = await Promise.race([
+    const result = await Promise.race([
       supabase
         .from('site_visits')
         .select('id, timestamp, page')
@@ -89,7 +91,9 @@ export const loadSiteVisits = async () => {
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Query timeout')), 5000)
       )
-    ]);
+    ]) as Awaited<ReturnType<typeof supabase.from<'site_visits'>['select']>>;
+
+    const { data, error } = result;
 
     if (error) {
       console.error('❌ Site visits query error:', error);
@@ -148,15 +152,17 @@ export const testSupabaseConnection = async () => {
   try {
     console.log('🔗 Testing Supabase connection...');
     
-    // Test di connessione più semplice e veloce
-    const { data, error, count } = await Promise.race([
+    // Test di connessione più semplice e veloce con typing corretto
+    const result = await Promise.race([
       supabase
         .from('site_visits')
         .select('*', { count: 'exact', head: true }),
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Connection timeout')), 3000)
       )
-    ]);
+    ]) as Awaited<ReturnType<typeof supabase.from<'site_visits'>['select']>>;
+    
+    const { data, error, count } = result;
     
     if (error) {
       console.error('❌ Supabase connection test failed:', error);
