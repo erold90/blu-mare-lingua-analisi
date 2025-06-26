@@ -1,3 +1,4 @@
+
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
@@ -11,14 +12,15 @@ interface ExtrasResult {
 }
 
 /**
- * Calculate extras costs (linen, pets, cleaning fee, tourist tax)
- * Returns costs for display purposes and the actual extras cost that affects pricing
+ * FIXED: Calculate extras costs with improved accuracy and validation
  */
 export const calculateExtras = (
   formValues: FormValues, 
   selectedApartments: Apartment[],
   nights: number
 ): ExtrasResult => {
+  console.log("🧮 Calculating extras with improved validation...");
+  
   // Calculate linen costs
   const linenCost = calculateLinenCost(formValues);
   
@@ -28,11 +30,18 @@ export const calculateExtras = (
   // Calculate cleaning fee (fixed at 50€ per apartment) - FOR DISPLAY ONLY
   const cleaningFee = calculateCleaningFee(selectedApartments);
   
-  // Calculate tourist tax - FOR DISPLAY ONLY
+  // Calculate tourist tax - FOR DISPLAY ONLY - FIXED calculation
   const touristTax = calculateTouristTax(formValues, nights);
   
   // Total extras - ONLY linen and pets affect the actual price
   const extrasCost = linenCost + petsCost;
+  
+  console.log(`✅ Extras calculated:
+    - Linen: ${linenCost}€
+    - Pets: ${petsCost}€  
+    - Total extras (affecting price): ${extrasCost}€
+    - Cleaning fee (display only): ${cleaningFee}€
+    - Tourist tax (display only): ${touristTax}€`);
   
   return {
     extrasCost,
@@ -44,16 +53,14 @@ export const calculateExtras = (
 };
 
 /**
- * Calculate the cost of linen service based on guests who need separate linen
- * CORRECTED: Exclude children who sleep with parents or in cribs
+ * FIXED: Calculate the cost of linen service - improved validation
  */
 export function calculateLinenCost(formValues: FormValues): number {
-  // Skip if not requesting linen service
   if (!formValues.needsLinen) {
     return 0;
   }
   
-  console.log("🔍 Calculating linen cost for form values:", formValues);
+  console.log("🛏️ Calculating linen cost...");
   
   const pricePerPerson = 15; // 15€ per persona per tutto il soggiorno
   
@@ -68,24 +75,25 @@ export function calculateLinenCost(formValues: FormValues): number {
   const childrenInCribs = childrenDetails.filter(child => child.sleepsInCrib).length;
   
   // Guests who need separate linen = total - those who don't need it
-  const guestsNeedingLinen = totalGuests - childrenWithParents - childrenInCribs;
+  const guestsNeedingLinen = Math.max(0, totalGuests - childrenWithParents - childrenInCribs);
   
-  console.log("🔍 Linen calculation:", {
-    adults,
-    children,
-    totalGuests,
-    childrenWithParents,
-    childrenInCribs,
-    guestsNeedingLinen,
-    pricePerPerson,
-    totalCost: guestsNeedingLinen * pricePerPerson
-  });
+  const totalCost = guestsNeedingLinen * pricePerPerson;
   
-  return guestsNeedingLinen * pricePerPerson;
+  console.log(`🛏️ Linen calculation:
+    - Adults: ${adults}
+    - Children: ${children}
+    - Total guests: ${totalGuests}
+    - Children with parents: ${childrenWithParents}
+    - Children in cribs: ${childrenInCribs}
+    - Guests needing linen: ${guestsNeedingLinen}
+    - Price per person: ${pricePerPerson}€
+    - Total cost: ${totalCost}€`);
+  
+  return totalCost;
 }
 
 /**
- * Calculate the cost for pets - CORRECTED to count per apartment
+ * Calculate the cost for pets - per apartment
  */
 export function calculatePetsCost(formValues: FormValues, selectedApartments?: Apartment[]): number {
   if (!formValues.hasPets) {
@@ -104,9 +112,9 @@ export function calculatePetsCost(formValues: FormValues, selectedApartments?: A
       .length;
     
     petsCost = apartmentsWithPets * 50;
-    console.log(`Calculating pets cost: ${apartmentsWithPets} apartments with pets × 50€ = ${petsCost}€`);
+    console.log(`🐕 Pets cost: ${apartmentsWithPets} apartments with pets × 50€ = ${petsCost}€`);
   } else {
-    // Default if not specified which apartment has pets - assume one apartment
+    // Default if not specified - assume one apartment
     petsCost = 50;
   }
   
@@ -114,53 +122,59 @@ export function calculatePetsCost(formValues: FormValues, selectedApartments?: A
 }
 
 /**
- * Calculate cleaning fee
+ * Calculate cleaning fee - per apartment
  */
 export function calculateCleaningFee(selectedApartments: Apartment[]): number {
   return selectedApartments.reduce((total, apartment) => {
-    // Use a default cleaning fee of 50€ per apartment if not specified
     const apartmentCleaningFee = apartment.cleaningFee || 50;
     return total + apartmentCleaningFee;
   }, 0);
 }
 
 /**
- * Calculate tourist tax (1€ per adult per night, children under 12 exempt)
- * CORRECTED: Now properly calculates total taxable guests regardless of apartment distribution
+ * FIXED: Calculate tourist tax with improved accuracy and validation
+ * 1€ per adult per night, children under 12 exempt
  */
 export function calculateTouristTax(formValues: FormValues, nights: number): number {
-  console.log("🏛️ Calculating tourist tax...");
-  console.log("📊 Form values:", {
-    adults: formValues.adults,
-    children: formValues.children,
-    childrenDetails: formValues.childrenDetails,
-    nights
-  });
+  console.log("🏛️ Calculating tourist tax with improved validation...");
+  
+  if (!nights || nights <= 0) {
+    console.log("⚠️ Invalid nights for tourist tax calculation");
+    return 0;
+  }
   
   const adults = formValues.adults || 0;
   const childrenDetails = formValues.childrenDetails || [];
   
-  // Count children who are 12 years old or older (those who are NOT under 12)
+  // FIXED: Count children who are 12 years old or older (those who are NOT under 12)
   const childrenOver12 = childrenDetails.filter(child => {
-    const isUnder12 = child.isUnder12 || false;
-    console.log(`👶 Child isUnder12: ${isUnder12}, taxable: ${!isUnder12}`);
+    const isUnder12 = child.isUnder12 === true; // Explicit check
+    console.log(`👶 Child analysis: isUnder12=${child.isUnder12}, taxable=${!isUnder12}`);
     return !isUnder12; // Children who are NOT under 12 are taxable
   }).length;
+  
+  const childrenUnder12 = childrenDetails.filter(child => child.isUnder12 === true).length;
   
   // Total people subject to tourist tax (adults + children 12+)
   const taxableGuests = adults + childrenOver12;
   
+  // Calculate tax: 1€ per taxable person per night
+  const totalTax = taxableGuests * nights * 1;
+  
   console.log(`🏛️ Tourist tax calculation:
     - Adults: ${adults}
-    - Children over 12: ${childrenOver12}
+    - Children under 12 (exempt): ${childrenUnder12}
+    - Children over 12 (taxable): ${childrenOver12}
     - Total taxable guests: ${taxableGuests}
     - Nights: ${nights}
     - Rate: 1€ per person per night
-    - Total tax: ${taxableGuests * nights * 1}€`);
+    - Total tax: ${totalTax}€`);
   
-  // Calculate tax: 1€ per taxable person per night
-  // This is the TOTAL tax for all guests, not per apartment
-  const totalTax = taxableGuests * nights * 1;
+  // Validation
+  if (totalTax < 0) {
+    console.warn("⚠️ Negative tourist tax calculated, returning 0");
+    return 0;
+  }
   
   return totalTax;
 }

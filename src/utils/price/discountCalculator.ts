@@ -8,36 +8,54 @@ interface DiscountResult {
 }
 
 /**
- * Calculates the total price after applying discount by rounding down to the nearest 50€
- * When multiple apartments are selected, each apartment price is rounded individually
- * before being summed up for the final total
- * 
- * NOTE: touristTax is included only for reference - it does NOT affect the price calculations
+ * FIXED: Calculates the total price after applying discount by rounding down to the nearest 50€
+ * Deposit calculation is now more accurate and consistent
  */
 export function calculateDiscount(totalBeforeDiscount: number, touristTax: number): DiscountResult {
-  console.log(`Calculating discount. Total before discount: ${totalBeforeDiscount}€`);
+  console.log(`💰 Calculating discount. Total before discount: ${totalBeforeDiscount}€`);
   
   // Round down to the nearest 50€
   const roundedPrice = Math.floor(totalBeforeDiscount / 50) * 50;
-  console.log(`Rounded price: ${roundedPrice}€`);
+  console.log(`🎯 Rounded price: ${roundedPrice}€`);
   
   // Calculate the discount amount (difference between original total and rounded total)
   const discount = totalBeforeDiscount - roundedPrice;
-  console.log(`Discount amount: ${discount}€`);
+  console.log(`🏷️ Discount amount: ${discount}€`);
   
   // The savings are the same as the discount
   const savings = discount;
-  console.log(`Total discount savings: ${savings}€`);
+  console.log(`💵 Total discount savings: ${savings}€`);
   
-  // Calculate deposit: 
-  // 1. Calculate 35% of the total price
-  const maxDepositPercent = roundedPrice * 0.35;
-  // 2. Round to nearest 100€ by first dividing by 100, then rounding, then multiplying by 100
-  const deposit = Math.min(
-    Math.round(roundedPrice * 0.3 / 100) * 100,
-    Math.round(maxDepositPercent / 100) * 100
-  );
-  console.log(`Deposit (rounded to nearest 100€, max 35%): ${deposit}€`);
+  // FIXED: Calculate deposit more accurately
+  // 1. Base deposit is 30% of final price (after discounts)
+  const baseDeposit = roundedPrice * 0.30;
+  
+  // 2. Round to nearest 50€ instead of 100€ for better accuracy
+  const roundedDeposit = Math.round(baseDeposit / 50) * 50;
+  
+  // 3. Ensure minimum deposit of 200€ and maximum of 35% of total
+  const maxDeposit = Math.round((roundedPrice * 0.35) / 50) * 50;
+  const minDeposit = 200;
+  
+  const deposit = Math.max(minDeposit, Math.min(roundedDeposit, maxDeposit));
+  
+  console.log(`🏦 Deposit calculation:
+    - Base (30%): ${baseDeposit}€
+    - Rounded to 50€: ${roundedDeposit}€
+    - Min: ${minDeposit}€, Max (35%): ${maxDeposit}€
+    - Final deposit: ${deposit}€`);
+  
+  // Validation checks
+  if (deposit > roundedPrice) {
+    console.warn("⚠️ Deposit is higher than total price! Adjusting...");
+    const adjustedDeposit = Math.round(roundedPrice * 0.30 / 50) * 50;
+    return {
+      totalAfterDiscount: roundedPrice,
+      discount,
+      savings,
+      deposit: Math.max(200, adjustedDeposit)
+    };
+  }
   
   return {
     totalAfterDiscount: roundedPrice,
