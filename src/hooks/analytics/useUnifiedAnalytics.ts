@@ -5,10 +5,10 @@ import { saveQuoteLog, removeQuoteLog, loadQuoteLogs } from './operations/quoteO
 import { 
   trackPageVisit, 
   loadSiteVisits, 
-  calculateVisitsCount,
-  calculateVisitsCountLegacy,
+  calculateAllVisitsCounts,
   cleanupOldVisits,
-  loadOptimizedStats
+  loadOptimizedStats,
+  retryFailedTracking
 } from './operations/siteOperations';
 
 export interface QuoteLog {
@@ -23,7 +23,7 @@ export interface SiteVisit {
   id: string;
   page: string;
   created_at: string;
-  timestamp: string; // Per compatibilità legacy
+  timestamp: string;
 }
 
 export interface AnalyticsMetrics {
@@ -47,35 +47,26 @@ export function useUnifiedAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Caricamento dati ottimizzato con gestione errori migliorata
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('🔍 Loading unified analytics data...');
+      console.log('🔍 Loading unified analytics data with optimizations...');
 
-      // Caricamento parallelo con timeout ottimizzati
-      const [quoteLogsResult, siteVisitsResult, metricsResults] = await Promise.allSettled([
-        Promise.race([
-          loadQuoteLogs(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Quote logs timeout')), 2000))
-        ]),
-        Promise.race([
-          loadSiteVisits(),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Site visits timeout')), 3000))
-        ]),
-        // Caricamento metriche ottimizzato usando query database
-        Promise.allSettled([
-          calculateVisitsCount('day'),
-          calculateVisitsCount('month'),
-          calculateVisitsCount('year')
-        ])
+      // Caricamento parallelo con timeout ottimizzato
+      const [quoteLogsResult, siteVisitsResult, visitsCountsResult] = await Promise.allSettled([
+        loadQuoteLogs(),
+        loadSiteVisits(),
+        calculateAllVisitsCounts()
       ]);
 
       // Gestisci risultati quote logs
+      let quotes: QuoteLog[] = [];
       if (quoteLogsResult.status === 'fulfilled') {
-        const logs = quoteLogsResult.value as QuoteLog[];
-        setQuoteLogs(logs);
-        console.log('✅ Loaded quote logs:', logs.length);
+        quotes = quoteLogsResult.value as QuoteLog[];
+        setQuoteLogs(quotes);
+        console.log('✅ Loaded quote logs:', quotes.length);
       } else {
         console.warn('⚠️ Quote logs failed to load:', quoteLogsResult.reason);
         setQuoteLogs([]);
@@ -91,29 +82,39 @@ export function useUnifiedAnalytics() {
         setSiteVisits([]);
       }
 
-      // Calcola metriche ottimizzate
-      let visitsToday = 0, visitsMonth = 0, visitsYear = 0;
-      
-      if (metricsResults.status === 'fulfilled') {
-        const [todayResult, monthResult, yearResult] = metricsResults.value;
-        visitsToday = todayResult.status === 'fulfilled' ? todayResult.value : 0;
-        visitsMonth = monthResult.status === 'fulfilled' ? monthResult.value : 0;
-        visitsYear = yearResult.status === 'fulfilled' ? yearResult.value : 0;
+      // Gestisci conteggi visite ottimizzati
+      let visitsCounts = { day: 0, month: 0, year: 0 };
+      if (visitsCountsResult.status === 'fulfilled') {
+        visitsCounts = visitsCountsResult.value;
+        console.log('✅ Loaded visits counts:', visitsCounts);
+      } else {
+        console.warn('⚠️ Visits counts failed to load:', visitsCountsResult.reason);
       }
 
-      const quotes = quoteLogsResult.status === 'fulfilled' ? quoteLogsResult.value as QuoteLog[] : [];
       const completedQuotes = quotes.filter(q => q.completed).length;
 
       setMetrics({
-        visitsToday,
-        visitsMonth,
-        visitsYear,
+        visitsToday: visitsCounts.day,
+        visitsMonth: visitsCounts.month,
+        visitsYear: visitsCounts.year,
         totalQuotes: quotes.length,
         completedQuotes
       });
 
-      // Nessun errore critico se almeno uno dei caricamenti funziona
-      if (quoteLogsResult.status === 'rejected' && siteVisitsResult.status === 'rejected') {
+      // Prova retry dei tracking falliti se disponibili
+      try {
+        const retryResult = await retryFailedTracking();
+        if (retryResult.success > 0) {
+          console.log(`🔄 Successfully retried ${retryResult.success} failed tracking attempts`);
+        }
+      } catch (retryError) {
+        console.warn('⚠️ Failed tracking retry error:', retryError);
+      }
+
+      // Errore solo se tutti i caricamenti falliscono
+      if (quoteLogsResult.status === 'rejected' && 
+          siteVisitsResult.status === 'rejected' && 
+          visitsCountsResult.status === 'rejected') {
         setError('Impossibile caricare i dati analytics. Riprova più tardi.');
       }
 
@@ -201,8 +202,8 @@ export function useUnifiedAnalytics() {
   }, [siteVisits]);
 
   // Nuove funzioni ottimizzate
-  const getOptimizedVisitsCount = useCallback(async (period: 'day' | 'month' | 'year'): Promise<number> => {
-    return await calculateVisitsCount(period);
+  const getOptimizedVisitsCount = useCallback(async (): Promise<{ day: number; month: number; year: number }> => {
+    return await calculateAllVisitsCounts();
   }, []);
 
   const performCleanup = useCallback(async () => {
@@ -211,6 +212,10 @@ export function useUnifiedAnalytics() {
 
   const getOptimizedStats = useCallback(async () => {
     return await loadOptimizedStats();
+  }, []);
+
+  const retryFailedOperations = useCallback(async () => {
+    return await retryFailedTracking();
   }, []);
 
   useEffect(() => {
@@ -231,12 +236,10 @@ export function useUnifiedAnalytics() {
     deleteQuoteLog,
     trackSiteVisit,
     
-    // Funzioni legacy (deprecate)
-    getVisitsCount,
-    
     // Nuove funzioni ottimizzate
     getOptimizedVisitsCount,
     performCleanup,
-    getOptimizedStats
+    getOptimizedStats,
+    retryFailedOperations
   };
 }

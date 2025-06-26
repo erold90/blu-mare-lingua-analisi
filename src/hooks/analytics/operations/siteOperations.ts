@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { SiteVisit } from '../useUnifiedAnalytics';
 
-// Type guard robusto per le risposte Supabase
+// Type guards ottimizzati e robusti
 const isSupabaseResponse = (result: any): result is { data: any; error: any } => {
   return result && 
          typeof result === 'object' && 
@@ -9,7 +9,6 @@ const isSupabaseResponse = (result: any): result is { data: any; error: any } =>
          'error' in result;
 };
 
-// Type guard per risposte con count
 const isSupabaseCountResponse = (result: any): result is { data: any; error: any; count: number | null } => {
   return result && 
          typeof result === 'object' && 
@@ -18,17 +17,41 @@ const isSupabaseCountResponse = (result: any): result is { data: any; error: any
          'count' in result;
 };
 
-// Configurazione timeout unificata
+// Configurazione timeout unificata e ottimizzata
 const TIMEOUT_CONFIG = {
-  TRACK_VISIT: 2000,
-  LOAD_VISITS: 3000,
-  CONNECTION_TEST: 2000
+  TRACK_VISIT: 3000,      // Aumentato per maggiore affidabilità
+  LOAD_VISITS: 5000,      // Aumentato per query complesse
+  CONNECTION_TEST: 2000,
+  BATCH_OPERATIONS: 8000  // Nuovo per operazioni batch
 };
+
+// Cache per evitare query duplicate
+const queryCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 60000; // 1 minuto
+
+function getCachedResult(key: string): any | null {
+  const cached = queryCache.get(key);
+  if (cached && (Date.now() - cached.timestamp) < CACHE_DURATION) {
+    return cached.data;
+  }
+  queryCache.delete(key);
+  return null;
+}
+
+function setCachedResult(key: string, data: any): void {
+  queryCache.set(key, { data, timestamp: Date.now() });
+  
+  // Pulisci cache se diventa troppo grande
+  if (queryCache.size > 50) {
+    const oldestKey = queryCache.keys().next().value;
+    queryCache.delete(oldestKey);
+  }
+}
 
 export const trackPageVisit = async (page: string) => {
   try {
-    // Skip tracking per area admin
-    if (page.includes('/area-riservata')) {
+    // Skip tracking per area admin - controllo migliorato
+    if (page.includes('/area-riservata') || page.includes('/admin')) {
       console.log('🚫 Skipping admin area tracking:', page);
       return;
     }
@@ -69,24 +92,25 @@ export const trackPageVisit = async (page: string) => {
   } catch (error) {
     console.error('❌ Critical error in trackPageVisit:', error);
     
-    // Fallback robusto - salva in localStorage per debug
+    // Fallback migliorato con retry
     try {
       const fallbackData = {
         page,
         timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
+        retryable: true
       };
       
       const existingFailed = JSON.parse(localStorage.getItem('failed_tracking') || '[]');
       existingFailed.push(fallbackData);
       
-      // Mantieni solo gli ultimi 10 errori
-      if (existingFailed.length > 10) {
-        existingFailed.splice(0, existingFailed.length - 10);
+      // Mantieni solo gli ultimi 20 errori
+      if (existingFailed.length > 20) {
+        existingFailed.splice(0, existingFailed.length - 20);
       }
       
       localStorage.setItem('failed_tracking', JSON.stringify(existingFailed));
-      console.log('💾 Saved failed tracking to localStorage');
+      console.log('💾 Saved failed tracking to localStorage for retry');
     } catch (lsError) {
       console.warn('⚠️ Could not save to localStorage:', lsError);
     }
@@ -97,7 +121,15 @@ export const trackPageVisit = async (page: string) => {
 
 export const loadSiteVisits = async (): Promise<SiteVisit[]> => {
   try {
-    console.log('🔍 Loading site visits...');
+    const cacheKey = 'site_visits_recent';
+    const cached = getCachedResult(cacheKey);
+    
+    if (cached) {
+      console.log('✅ Using cached site visits');
+      return cached;
+    }
+
+    console.log('🔍 Loading site visits from database...');
     
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -108,7 +140,7 @@ export const loadSiteVisits = async (): Promise<SiteVisit[]> => {
         .select('id, page, created_at')
         .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: false })
-        .limit(500),
+        .limit(1000), // Aumentato il limite
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Query timeout')), TIMEOUT_CONFIG.LOAD_VISITS)
       )
@@ -126,9 +158,10 @@ export const loadSiteVisits = async (): Promise<SiteVisit[]> => {
         id: visit.id,
         page: visit.page,
         created_at: visit.created_at,
-        timestamp: visit.created_at // Per compatibilità con codice legacy
+        timestamp: visit.created_at
       })) as SiteVisit[];
 
+      setCachedResult(cacheKey, visits);
       console.log(`✅ Loaded ${visits.length} site visits`);
       return visits;
     }
@@ -141,47 +174,74 @@ export const loadSiteVisits = async (): Promise<SiteVisit[]> => {
   }
 };
 
-// Funzione ottimizzata per calcolare visite usando query database
-export const calculateVisitsCount = async (period: 'day' | 'month' | 'year'): Promise<number> => {
+// Funzione ottimizzata con batch queries per migliorare performance
+export const calculateAllVisitsCounts = async (): Promise<{
+  day: number;
+  month: number;
+  year: number;
+}> => {
   try {
+    const cacheKey = 'visits_counts_all';
+    const cached = getCachedResult(cacheKey);
+    
+    if (cached) {
+      console.log('✅ Using cached visits counts');
+      return cached;
+    }
+
     const now = new Date();
-    let startDate: Date;
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
 
-    switch (period) {
-      case 'day':
-        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        break;
-      case 'month':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case 'year':
-        startDate = new Date(now.getFullYear(), 0, 1);
-        break;
-      default:
-        throw new Error(`Invalid period: ${period}`);
+    // Batch query per tutte le metriche insieme
+    const [dayResult, monthResult, yearResult] = await Promise.allSettled([
+      supabase
+        .from('site_visits')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', startOfDay.toISOString()),
+      supabase
+        .from('site_visits')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', startOfMonth.toISOString()),
+      supabase
+        .from('site_visits')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', startOfYear.toISOString())
+    ]);
+
+    const counts = {
+      day: 0,
+      month: 0,
+      year: 0
+    };
+
+    if (dayResult.status === 'fulfilled' && isSupabaseCountResponse(dayResult.value)) {
+      counts.day = dayResult.value.count || 0;
     }
 
-    const result = await supabase
-      .from('site_visits')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', startDate.toISOString());
-
-    if (isSupabaseCountResponse(result)) {
-      const { error, count } = result;
-
-      if (error) {
-        console.error(`❌ Error calculating ${period} visits:`, error);
-        throw error;
-      }
-
-      return count || 0;
+    if (monthResult.status === 'fulfilled' && isSupabaseCountResponse(monthResult.value)) {
+      counts.month = monthResult.value.count || 0;
     }
 
-    throw new Error('Invalid response format');
+    if (yearResult.status === 'fulfilled' && isSupabaseCountResponse(yearResult.value)) {
+      counts.year = yearResult.value.count || 0;
+    }
+
+    setCachedResult(cacheKey, counts);
+    console.log('✅ Calculated all visits counts:', counts);
+    return counts;
+
   } catch (error) {
-    console.warn(`⚠️ Failed to calculate ${period} visits, using fallback`);
-    return 0;
+    console.error('❌ Failed to calculate visits counts:', error);
+    return { day: 0, month: 0, year: 0 };
   }
+};
+
+// Manteniamo la funzione legacy per compatibilità
+export const calculateVisitsCount = async (period: 'day' | 'month' | 'year'): Promise<number> => {
+  const counts = await calculateAllVisitsCounts();
+  return counts[period];
 };
 
 // Funzione legacy per compatibilità - deprecata
@@ -300,6 +360,46 @@ export const cleanupOldVisits = async (): Promise<{ success: boolean; message: s
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('❌ Cleanup error:', error);
     return { success: false, message: `Cleanup error: ${message}` };
+  }
+};
+
+// Funzione per retry dei tracking falliti
+export const retryFailedTracking = async (): Promise<{ success: number; failed: number }> => {
+  try {
+    const failedTracking = getFailedTracking();
+    const retryableTracking = failedTracking.filter(item => item.retryable !== false);
+    
+    if (retryableTracking.length === 0) {
+      return { success: 0, failed: 0 };
+    }
+
+    console.log(`🔄 Retrying ${retryableTracking.length} failed tracking attempts...`);
+    
+    let success = 0;
+    let failed = 0;
+
+    for (const item of retryableTracking) {
+      try {
+        await trackPageVisit(item.page);
+        success++;
+      } catch (error) {
+        failed++;
+        console.warn('⚠️ Retry failed for:', item.page);
+      }
+    }
+
+    // Aggiorna il localStorage rimuovendo quelli riusciti
+    if (success > 0) {
+      const remaining = failedTracking.slice(success);
+      localStorage.setItem('failed_tracking', JSON.stringify(remaining));
+    }
+
+    console.log(`✅ Retry completed: ${success} success, ${failed} failed`);
+    return { success, failed };
+
+  } catch (error) {
+    console.error('❌ Error during retry operation:', error);
+    return { success: 0, failed: 0 };
   }
 };
 
