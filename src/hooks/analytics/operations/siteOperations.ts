@@ -32,17 +32,22 @@ export const trackPageVisit = async (page: string) => {
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Insert timeout')), 3000)
       )
-    ]) as Awaited<ReturnType<typeof supabase.from<'site_visits'>['insert']>>;
+    ]);
 
-    const { data, error } = result;
+    // Type guard per verificare se il risultato è una risposta Supabase
+    if (result && typeof result === 'object' && 'data' in result && 'error' in result) {
+      const { data, error } = result as any;
 
-    if (error) {
-      console.error('❌ Site visit tracking error:', error);
-      throw error;
+      if (error) {
+        console.error('❌ Site visit tracking error:', error);
+        throw error;
+      }
+
+      console.log('✅ Site visit tracked successfully:', data);
+      return data;
     }
 
-    console.log('✅ Site visit tracked successfully:', data);
-    return data;
+    throw new Error('Invalid response format');
 
   } catch (error) {
     console.error('❌ Critical error in trackPageVisit:', error);
@@ -91,17 +96,22 @@ export const loadSiteVisits = async () => {
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Query timeout')), 5000)
       )
-    ]) as Awaited<ReturnType<typeof supabase.from<'site_visits'>['select']>>;
+    ]);
 
-    const { data, error } = result;
+    // Type guard per verificare se il risultato è una risposta Supabase
+    if (result && typeof result === 'object' && 'data' in result && 'error' in result) {
+      const { data, error } = result as any;
 
-    if (error) {
-      console.error('❌ Site visits query error:', error);
-      throw error;
+      if (error) {
+        console.error('❌ Site visits query error:', error);
+        throw error;
+      }
+
+      console.log(`✅ Loaded ${data?.length || 0} site visits`);
+      return data || [];
     }
 
-    console.log(`✅ Loaded ${data?.length || 0} site visits`);
-    return data || [];
+    throw new Error('Invalid response format');
     
   } catch (error) {
     console.error('❌ Site visits loading failed:', error);
@@ -160,17 +170,22 @@ export const testSupabaseConnection = async () => {
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Connection timeout')), 3000)
       )
-    ]) as Awaited<ReturnType<typeof supabase.from<'site_visits'>['select']>>;
+    ]);
     
-    const { data, error, count } = result;
-    
-    if (error) {
-      console.error('❌ Supabase connection test failed:', error);
-      return false;
+    // Type guard per verificare se il risultato è una risposta Supabase
+    if (result && typeof result === 'object' && 'data' in result && 'error' in result) {
+      const { data, error, count } = result as any;
+      
+      if (error) {
+        console.error('❌ Supabase connection test failed:', error);
+        return false;
+      }
+      
+      console.log('✅ Supabase connection successful, total visits:', count);
+      return true;
     }
-    
-    console.log('✅ Supabase connection successful, total visits:', count);
-    return true;
+
+    throw new Error('Invalid response format');
     
   } catch (error) {
     console.error('❌ Supabase connection error:', error);
