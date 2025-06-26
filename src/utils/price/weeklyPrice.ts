@@ -74,9 +74,9 @@ export const getPriceForWeekSync = (apartmentId: string, weekStart: Date): numbe
       return 0;
     }
     
-    // Try to find exact match first
+    // Try to find exact match first - convert stored string dates to Date objects for comparison
     const exactMatch = yearData.prices.find(
-      (p: WeeklyPrice) => p.apartmentId === apartmentId && p.weekStart === searchDateStr
+      (p: any) => p.apartmentId === apartmentId && p.weekStart === searchDateStr
     );
     
     if (exactMatch) {
@@ -86,7 +86,7 @@ export const getPriceForWeekSync = (apartmentId: string, weekStart: Date): numbe
     
     // If no exact match, try to find the closest previous week's price
     const apartmentPrices = yearData.prices.filter(
-      (p: WeeklyPrice) => p.apartmentId === apartmentId
+      (p: any) => p.apartmentId === apartmentId
     );
     
     if (apartmentPrices.length === 0) {
@@ -96,11 +96,11 @@ export const getPriceForWeekSync = (apartmentId: string, weekStart: Date): numbe
     
     // Sort prices by date and find the most recent one before our search date
     const sortedPrices = apartmentPrices
-      .map(p => ({
+      .map((p: any) => ({
         ...p,
         weekStartDate: new Date(p.weekStart)
       }))
-      .sort((a, b) => a.weekStartDate.getTime() - b.weekStartDate.getTime());
+      .sort((a: any, b: any) => a.weekStartDate.getTime() - b.weekStartDate.getTime());
     
     let bestMatch = null;
     for (const price of sortedPrices) {
@@ -137,14 +137,17 @@ export const refreshPricesCache = async (): Promise<void> => {
     if (prices && prices.length > 0) {
       const transformedPrices: WeeklyPrice[] = prices.map(price => ({
         apartmentId: price.apartment_id,
-        weekStart: price.week_start,
+        weekStart: new Date(price.week_start), // Convert string to Date
         price: Number(price.price)
       }));
       
-      // Update localStorage with fresh data
+      // Update localStorage with fresh data - convert Dates back to strings for storage
       const seasonalData = [{
         year: currentYear,
-        prices: transformedPrices
+        prices: transformedPrices.map(p => ({
+          ...p,
+          weekStart: p.weekStart.toISOString().split('T')[0] // Store as string
+        }))
       }];
       localStorage.setItem("seasonalPricing", JSON.stringify(seasonalData));
       console.log(`Refreshed ${transformedPrices.length} prices in cache`);
