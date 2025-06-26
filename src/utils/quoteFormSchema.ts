@@ -24,6 +24,7 @@ export const formSchema = z.object({
   adults: z.number().min(1).default(1),
   children: z.number().min(0).default(0),
   childrenDetails: z.array(childDetailSchema).optional(),
+  childrenArray: z.array(childDetailSchema).optional(), // Add this field
   isGroupBooking: z.boolean().default(false),
   groupType: z.enum(["families", "couples"]).optional(),
   familyGroups: z.array(familyGroupSchema).optional(),
@@ -71,4 +72,6 @@ export const formSchema = z.object({
   name: z.string().optional(),
 });
 
+// Export as both names for compatibility
+export const quoteFormSchema = formSchema;
 export type FormValues = z.infer<typeof formSchema>;

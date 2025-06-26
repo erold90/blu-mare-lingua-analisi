@@ -1,6 +1,7 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FormValues, quoteFormSchema } from "@/utils/quoteFormSchema";
+import { FormValues, formSchema } from "@/utils/quoteFormSchema";
 import { apartments } from "@/data/apartments";
 import { useAnalyticsCore } from "@/hooks/analytics/useAnalyticsCore";
 import { v4 as uuidv4 } from 'uuid';
@@ -22,13 +23,14 @@ export function useQuoteForm() {
   const [familyGroups, setFamilyGroups] = useState<number>(1);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(quoteFormSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
       adults: 1,
       children: 0,
-      groupType: 'individual',
+      groupType: undefined, // Don't set a default value for groupType
       apartments: [],
       services: [],
+      childrenArray: [], // Initialize as empty array
       personalInfo: {
         firstName: '',
         lastName: '',
@@ -40,7 +42,7 @@ export function useQuoteForm() {
     mode: "onChange"
   });
 
-  const childrenArray = form.watch('childrenArray');
+  const childrenArray = form.watch('childrenArray') || [];
 
   const totalSteps = 5;
 
@@ -61,7 +63,7 @@ export function useQuoteForm() {
     
     // Initialize the childrenArray if it's undefined
     const currentChildrenArray = form.getValues().childrenArray || [];
-    form.setValue('childrenArray', [...currentChildrenArray, {}]);
+    form.setValue('childrenArray', [...currentChildrenArray, { isUnder12: false, sleepsWithParents: false, sleepsInCrib: false }]);
   };
 
   const decrementChildren = () => {
@@ -215,7 +217,7 @@ export function useQuoteForm() {
     form,
     step,
     totalSteps,
-    childrenArray: form.watch('childrenArray'),
+    childrenArray: form.watch('childrenArray') || [],
     apartmentDialog,
     groupDialog,
     familyGroups,

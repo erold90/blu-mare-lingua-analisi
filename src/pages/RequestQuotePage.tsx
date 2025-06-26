@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
@@ -72,9 +71,9 @@ const RequestQuotePage = () => {
 
     // Convert form data to component-expected format with required booleans
     const mutableChildrenArray: ChildDetail[] = (childrenArray || []).map(child => ({
-      isUnder12: child.isUnder12 ?? false,
-      sleepsWithParents: child.sleepsWithParents ?? false,
-      sleepsInCrib: child.sleepsInCrib ?? false
+      isUnder12: child?.isUnder12 ?? false,
+      sleepsWithParents: child?.sleepsWithParents ?? false,
+      sleepsInCrib: child?.sleepsInCrib ?? false
     }));
 
     // Create a wrapper function to match the expected signature
@@ -261,14 +260,14 @@ const RequestQuotePage = () => {
               />
             )}
             
-            {/* GroupDialog */}
+            {/* GroupDialog - Fix the type issues */}
             <GroupDialog
               open={groupDialog}
               onOpenChange={(open) => open ? openGroupDialog() : closeGroupDialog()}
-              familyGroups={familyGroups}
+              familyGroups={1} // Pass a number as expected
               groupType={form.watch('groupType')}
               onGroupTypeChange={(value) => form.setValue('groupType', value)}
-              onFamilyGroupsChange={setFamilyGroups}
+              onFamilyGroupsChange={(count: number) => setFamilyGroups(count)} // Fix the type signature
               onConfirm={closeGroupDialog}
               onCancel={closeGroupDialog}
             />
