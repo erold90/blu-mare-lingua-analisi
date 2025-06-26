@@ -9,13 +9,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, subDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
-import { CalendarIcon, Info, Loader2, AlertCircle, RefreshCw, CheckCircle2, BarChart3, TrendingUp } from "lucide-react";
+import { CalendarIcon, Info, Loader2, AlertCircle, RefreshCw, CheckCircle2, BarChart3, TrendingUp, Database } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminLogAnalytics } from "./analytics/AdminLogAnalytics";
 import { AdminLogQuotes } from "./quotes/AdminLogQuotes";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
+import { testSupabaseConnection } from "@/hooks/analytics/operations/siteOperations";
 
 const AdminAnalytics = () => {
   const { quoteLogs, siteVisits, getVisitsCount, loading, error, refreshData } = useUnifiedAnalytics();
@@ -26,6 +27,7 @@ const AdminAnalytics = () => {
     to: new Date(),
   });
   const [refreshing, setRefreshing] = useState(false);
+  const [testingConnection, setTestingConnection] = useState(false);
   
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -41,14 +43,40 @@ const AdminAnalytics = () => {
     }
   };
 
+  const handleTestConnection = async () => {
+    setTestingConnection(true);
+    try {
+      console.log('🔗 Testing database connection...');
+      const isConnected = await testSupabaseConnection();
+      if (isConnected) {
+        toast.success('Connessione database OK');
+      } else {
+        toast.error('Problemi di connessione al database');
+      }
+    } catch (error) {
+      console.error("❌ Connection test error:", error);
+      toast.error('Errore nel test di connessione');
+    } finally {
+      setTestingConnection(false);
+    }
+  };
+
   // Calcola statistiche in tempo reale
-  const stats = React.useMemo(() => ({
-    visitsToday: getVisitsCount('day'),
-    visitsMonth: getVisitsCount('month'),
-    visitsYear: getVisitsCount('year'),
-    totalQuotes: quoteLogs.length,
-    completedQuotes: quoteLogs.filter(q => q.completed).length
-  }), [quoteLogs, getVisitsCount]);
+  const stats = React.useMemo(() => {
+    const visitsToday = getVisitsCount('day');
+    const visitsMonth = getVisitsCount('month');
+    const visitsYear = getVisitsCount('year');
+    
+    console.log('📊 Stats calculated:', { visitsToday, visitsMonth, visitsYear, totalSiteVisits: siteVisits.length });
+    
+    return {
+      visitsToday,
+      visitsMonth,
+      visitsYear,
+      totalQuotes: quoteLogs.length,
+      completedQuotes: quoteLogs.filter(q => q.completed).length
+    };
+  }, [quoteLogs, getVisitsCount, siteVisits.length]);
   
   if (loading) {
     return (
@@ -112,6 +140,19 @@ const AdminAnalytics = () => {
             </PopoverContent>
           </Popover>
           <Button 
+            onClick={handleTestConnection} 
+            variant="outline" 
+            size="sm"
+            disabled={testingConnection}
+          >
+            {testingConnection ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            ) : (
+              <Database className="h-4 w-4 mr-2" />
+            )}
+            Test DB
+          </Button>
+          <Button 
             onClick={handleRefresh} 
             variant="outline" 
             size="sm"
@@ -126,6 +167,29 @@ const AdminAnalytics = () => {
           </Button>
         </div>
       </div>
+
+      {/* Debug information */}
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <strong>Stato Sistema:</strong>
+              <br />
+              Visite caricate: {siteVisits.length}
+              <br />
+              Preventivi: {quoteLogs.length}
+            </div>
+            <div>
+              <strong>Debug Info:</strong>
+              <br />
+              Errori: {error ? 'Presenti' : 'Nessuno'}
+              <br />
+              Ultima query: {new Date().toLocaleTimeString()}
+            </div>
+          </div>
+        </AlertDescription>
+      </Alert>
 
       {/* Indicatori di stato migliorati */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -143,6 +207,11 @@ const AdminAnalytics = () => {
               <AlertDescription>
                 <div className="font-semibold">Visite Oggi</div>
                 <div className="text-2xl font-bold text-blue-600">{stats.visitsToday}</div>
+                <div className="text-xs text-muted-foreground">
+                  {stats.visitsToday === 0 && siteVisits.length > 0 ? 
+                    'Nessuna visita oggi' : 
+                    'Visite registrate'}
+                </div>
               </AlertDescription>
             </Alert>
             <Alert>
@@ -164,21 +233,52 @@ const AdminAnalytics = () => {
               <AlertDescription>
                 <div className="font-semibold">Visite Totali</div>
                 <div className="text-2xl font-bold text-orange-600">{siteVisits.length}</div>
+                <div className="text-xs text-muted-foreground">Ultimi 30 giorni</div>
               </AlertDescription>
             </Alert>
           </>
         )}
       </div>
       
-      <Tabs defaultValue="quotes" className="w-full">
+      <Tabs defaultValue="visits" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="quotes">
-            Preventivi ({quoteLogs.length})
-          </TabsTrigger>
           <TabsTrigger value="visits">
             Visite Sito ({siteVisits.length})
           </TabsTrigger>
+          <TabsTrigger value="quotes">
+            Preventivi ({quoteLogs.length})
+          </TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="visits" className="mt-6 space-y-6">
+          {siteVisits.length === 0 ? (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Nessuna visita registrata.</strong>
+                <br />
+                Il sistema di tracking è attivo e registra automaticamente le visite alle pagine pubbliche.
+                <br />
+                <em>Suggerimento: Visita il sito in una nuova finestra privata per testare il tracking.</em>
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert>
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <AlertDescription>
+                Sistema tracking operativo. Registrate {siteVisits.length} visite negli ultimi 30 giorni.
+                <br />
+                Oggi: {stats.visitsToday} visite | Questo mese: {stats.visitsMonth} visite
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          <AdminLogAnalytics 
+            siteVisits={siteVisits} 
+            getVisitsCount={getVisitsCount} 
+            dateRange={dateRange}
+          />
+        </TabsContent>
         
         <TabsContent value="quotes" className="mt-6 space-y-6">
           {quoteLogs.length === 0 ? (
@@ -199,30 +299,6 @@ const AdminAnalytics = () => {
           
           <AdminLogQuotes 
             quoteLogs={quoteLogs} 
-            dateRange={dateRange}
-          />
-        </TabsContent>
-        
-        <TabsContent value="visits" className="mt-6 space-y-6">
-          {siteVisits.length === 0 ? (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Nessuna visita registrata. Il sistema di tracking è attivo e registra automaticamente le visite alle pagine pubbliche.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <Alert>
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
-              <AlertDescription>
-                Sistema tracking operativo. Registrate {siteVisits.length} visite negli ultimi 30 giorni.
-              </AlertDescription>
-            </Alert>
-          )}
-          
-          <AdminLogAnalytics 
-            siteVisits={siteVisits} 
-            getVisitsCount={getVisitsCount} 
             dateRange={dateRange}
           />
         </TabsContent>

@@ -13,15 +13,16 @@ export const ConditionalAnalytics: React.FC = () => {
   const { isTrackingAllowed, preferences } = useCookieConsent();
 
   useEffect(() => {
-    // Se non abbiamo ancora le preferenze, non fare nulla
+    console.log('🍪 ConditionalAnalytics check - preferences:', preferences);
+    console.log('🍪 Analytics tracking allowed:', isTrackingAllowed('analytics'));
+    
+    // Se non abbiamo ancora le preferenze, blocca solo servizi esterni
     if (!preferences) {
-      console.log('🍪 No cookie preferences yet, blocking all tracking');
+      console.log('🍪 No cookie preferences yet, blocking external tracking only');
       return;
     }
 
-    console.log('🍪 Cookie preferences loaded:', preferences);
-
-    // Google Analytics
+    // Google Analytics - solo se consentito esplicitamente
     if (isTrackingAllowed('analytics')) {
       console.log('✅ Analytics tracking enabled');
       
