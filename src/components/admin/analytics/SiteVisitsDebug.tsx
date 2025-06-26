@@ -43,7 +43,7 @@ export const SiteVisitsDebug = () => {
   const loadDebugInfo = async () => {
     setLoading(true);
     try {
-      // Carica statistiche generali usando query dirette
+      // Carica statistiche generali usando query dirette - USO SOLO created_at
       const { data: allVisits, error: visitsError } = await supabase
         .from('site_visits')
         .select('created_at, page')
@@ -62,7 +62,7 @@ export const SiteVisitsDebug = () => {
         });
       }
 
-      // Carica visite recenti
+      // Carica visite recenti - USO created_at come ordinamento principale
       const { data: recentData, error: recentError } = await supabase
         .from('site_visits')
         .select('id, page, timestamp, created_at')

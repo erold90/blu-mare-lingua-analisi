@@ -18,7 +18,8 @@ export const trackPageVisit = async (page: string) => {
     const visitData = {
       id: visitId,
       page: page,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      created_at: new Date().toISOString() // Aggiungo esplicitamente created_at
     };
 
     console.log('📊 Attempting to save visit data:', visitData);
@@ -82,17 +83,17 @@ export const loadSiteVisits = async () => {
   try {
     console.log('🔍 Loading site visits...');
     
-    // Query ottimizzata con limite e timeout
+    // Query ottimizzata con limite e timeout - USO SOLO created_at per consistenza
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     const result = await Promise.race([
       supabase
         .from('site_visits')
-        .select('id, timestamp, page')
-        .gte('timestamp', thirtyDaysAgo.toISOString())
-        .order('timestamp', { ascending: false })
-        .limit(500), // Ridotto per migliori performance
+        .select('id, timestamp, page, created_at')
+        .gte('created_at', thirtyDaysAgo.toISOString()) // Uso created_at invece di timestamp
+        .order('created_at', { ascending: false })
+        .limit(500),
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Query timeout')), 5000)
       )
@@ -132,7 +133,8 @@ export const calculateVisitsCount = (
   
   const filteredVisits = siteVisits.filter(visit => {
     try {
-      const visitDate = new Date(visit.timestamp);
+      // USO created_at come fonte primaria, fallback su timestamp
+      const visitDate = new Date(visit.created_at || visit.timestamp);
       const visitDay = new Date(visitDate.getFullYear(), visitDate.getMonth(), visitDate.getDate());
       
       if (period === 'day') {

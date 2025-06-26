@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { FormValues } from '@/utils/quoteFormSchema';
 import { saveQuoteLog, removeQuoteLog, loadQuoteLogs } from './operations/quoteOperations';
@@ -16,6 +15,7 @@ export interface SiteVisit {
   id: string;
   timestamp: string;
   page: string;
+  created_at: string; // Aggiunto il campo mancante
 }
 
 export function useUnifiedAnalytics() {
