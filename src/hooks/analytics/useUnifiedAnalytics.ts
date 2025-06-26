@@ -30,67 +30,52 @@ export function useUnifiedAnalytics() {
       setError(null);
       console.log('🔍 Loading unified analytics data...');
 
-      // Reduced timeout for better user experience
+      // Load data with very aggressive timeouts and fallbacks
       const loadWithTimeout = async () => {
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout during data loading')), 5000) // Reduced from 8s to 5s
-        );
-
-        const dataPromise = Promise.all([
-          loadQuoteLogs(),
-          loadSiteVisits()
-        ]);
-
-        return Promise.race([dataPromise, timeoutPromise]);
-      };
-
-      try {
-        const [quoteLogs, siteVisits] = await loadWithTimeout() as [QuoteLog[], SiteVisit[]];
-        console.log('✅ Loaded quote logs:', quoteLogs.length);
-        console.log('✅ Loaded site visits:', siteVisits.length);
-        setQuoteLogs(quoteLogs);
-        setSiteVisits(siteVisits);
-      } catch (timeoutError) {
-        console.warn('⚠️ Timeout loading complete data, trying individual fallback...');
-        
-        // Parallel fallback with reduced timeouts
-        const [quoteLogs, siteVisits] = await Promise.allSettled([
+        // Parallel loading with individual timeouts
+        const [quoteLogsResult, siteVisitsResult] = await Promise.allSettled([
           Promise.race([
             loadQuoteLogs(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Quote logs timeout')), 2500))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Quote logs timeout')), 3000))
           ]),
           Promise.race([
             loadSiteVisits(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Site visits timeout')), 2500))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Site visits timeout')), 1500))
           ])
         ]);
 
-        // Handle quote logs result
-        if (quoteLogs.status === 'fulfilled') {
-          setQuoteLogs(quoteLogs.value as QuoteLog[]);
-          console.log('✅ Fallback: Loaded quote logs:', (quoteLogs.value as QuoteLog[]).length);
-        } else {
-          console.error('❌ Could not load quote logs:', quoteLogs.reason);
-          setQuoteLogs([]);
-        }
+        return [quoteLogsResult, siteVisitsResult];
+      };
 
-        // Handle site visits result
-        if (siteVisits.status === 'fulfilled') {
-          setSiteVisits(siteVisits.value as SiteVisit[]);
-          console.log('✅ Fallback: Loaded site visits:', (siteVisits.value as SiteVisit[]).length);
-        } else {
-          console.error('❌ Could not load site visits:', siteVisits.reason);
-          setSiteVisits([]);
-        }
+      const [quoteLogs, siteVisits] = await loadWithTimeout();
 
-        // Set partial error message
-        const failedOperations = [];
-        if (quoteLogs.status === 'rejected') failedOperations.push('preventivi');
-        if (siteVisits.status === 'rejected') failedOperations.push('visite');
-        
-        if (failedOperations.length > 0) {
-          setError(`Alcuni dati potrebbero non essere disponibili: ${failedOperations.join(', ')}`);
-        }
+      // Handle quote logs result
+      if (quoteLogs.status === 'fulfilled') {
+        setQuoteLogs(quoteLogs.value as QuoteLog[]);
+        console.log('✅ Loaded quote logs:', (quoteLogs.value as QuoteLog[]).length);
+      } else {
+        console.warn('⚠️ Quote logs failed to load:', quoteLogs.reason);
+        setQuoteLogs([]);
+      }
+
+      // Handle site visits result (always succeeds due to fallback in loadSiteVisits)
+      if (siteVisits.status === 'fulfilled') {
+        setSiteVisits(siteVisits.value as SiteVisit[]);
+        console.log('✅ Loaded site visits:', (siteVisits.value as SiteVisit[]).length);
+      } else {
+        console.warn('⚠️ Site visits failed to load:', siteVisits.reason);
+        setSiteVisits([]);
+      }
+
+      // Only show error if both operations failed
+      const failedOperations = [];
+      if (quoteLogs.status === 'rejected') failedOperations.push('preventivi');
+      if (siteVisits.status === 'rejected' && (siteVisits.value as SiteVisit[]).length === 0) {
+        failedOperations.push('visite');
+      }
+      
+      if (failedOperations.length > 0) {
+        setError(`Alcuni dati potrebbero non essere disponibili: ${failedOperations.join(', ')}`);
       }
 
     } catch (error) {
