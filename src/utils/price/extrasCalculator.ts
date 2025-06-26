@@ -1,4 +1,3 @@
-
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
@@ -45,8 +44,8 @@ export const calculateExtras = (
 };
 
 /**
- * Calculate the cost of linen service based on total guests
- * CORRECTED: Calculate based on total guests (adults + children) as requested
+ * Calculate the cost of linen service based on guests who need separate linen
+ * CORRECTED: Exclude children who sleep with parents or in cribs
  */
 export function calculateLinenCost(formValues: FormValues): number {
   // Skip if not requesting linen service
@@ -58,20 +57,31 @@ export function calculateLinenCost(formValues: FormValues): number {
   
   const pricePerPerson = 15; // 15€ per persona per tutto il soggiorno
   
-  // Calculate based on total guests (adults + children)
+  // Calculate total guests
   const adults = formValues.adults || 0;
   const children = formValues.children || 0;
   const totalGuests = adults + children;
+  
+  // Calculate guests who don't need separate linen
+  const childrenDetails = formValues.childrenDetails || [];
+  const childrenWithParents = childrenDetails.filter(child => child.sleepsWithParents).length;
+  const childrenInCribs = childrenDetails.filter(child => child.sleepsInCrib).length;
+  
+  // Guests who need separate linen = total - those who don't need it
+  const guestsNeedingLinen = totalGuests - childrenWithParents - childrenInCribs;
   
   console.log("🔍 Linen calculation:", {
     adults,
     children,
     totalGuests,
+    childrenWithParents,
+    childrenInCribs,
+    guestsNeedingLinen,
     pricePerPerson,
-    totalCost: totalGuests * pricePerPerson
+    totalCost: guestsNeedingLinen * pricePerPerson
   });
   
-  return totalGuests * pricePerPerson;
+  return guestsNeedingLinen * pricePerPerson;
 }
 
 /**

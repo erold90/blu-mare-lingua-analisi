@@ -1,4 +1,3 @@
-
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { calculateTotalPrice } from "./priceCalculator";
@@ -194,8 +193,13 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
       const extraDetails = [];
       
       if (formValues.needsLinen) {
+        // Calculate guests who need linen (excluding those sleeping with parents or in cribs)
         const totalPeople = (formValues.adults || 0) + (formValues.children || 0);
-        const linenCost = totalPeople * 15;
+        const childrenDetails = formValues.childrenDetails || [];
+        const childrenWithParents = childrenDetails.filter(child => child.sleepsWithParents).length;
+        const childrenInCribs = childrenDetails.filter(child => child.sleepsInCrib).length;
+        const guestsNeedingLinen = totalPeople - childrenWithParents - childrenInCribs;
+        const linenCost = guestsNeedingLinen * 15;
         extraDetails.push(`Biancheria ${linenCost}€`);
       }
       
