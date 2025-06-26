@@ -5,26 +5,28 @@ import { Badge } from "@/components/ui/badge";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { format, isSameDay } from "date-fns";
 import { it } from "date-fns/locale";
+import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
 
 interface SiteVisit {
   id: string;
-  timestamp: string;
+  created_at: string;
   page: string;
 }
 
 interface AdminLogAnalyticsProps {
   siteVisits: SiteVisit[];
-  getVisitsCount: (period: 'day' | 'month' | 'year') => number;
   dateRange: any;
 }
 
-export const AdminLogAnalytics = ({ siteVisits, getVisitsCount, dateRange }: AdminLogAnalyticsProps) => {
-  // Memoize expensive calculations
+export const AdminLogAnalytics = ({ siteVisits, dateRange }: AdminLogAnalyticsProps) => {
+  const { metrics } = useUnifiedAnalytics();
+
+  // Memoizzazione ottimizzata delle statistiche
   const visitStats = React.useMemo(() => ({
-    day: getVisitsCount('day'),
-    month: getVisitsCount('month'),
-    year: getVisitsCount('year')
-  }), [getVisitsCount, siteVisits.length]); // Only recalculate when visits count changes
+    day: metrics.visitsToday,
+    month: metrics.visitsMonth,
+    year: metrics.visitsYear
+  }), [metrics]);
 
   const visitChartData = React.useMemo(() => {
     if (!dateRange?.from || siteVisits.length === 0) return [];
@@ -33,7 +35,7 @@ export const AdminLogAnalytics = ({ siteVisits, getVisitsCount, dateRange }: Adm
     let currentDate = new Date(dateRange.from);
     const endDate = dateRange.to ? new Date(dateRange.to) : new Date(currentDate);
     
-    // Limit to 14 days for better performance
+    // Limita a 14 giorni per performance ottimali
     const daysDiff = Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
     if (daysDiff > 14) {
       endDate.setDate(currentDate.getDate() + 14);
@@ -42,7 +44,7 @@ export const AdminLogAnalytics = ({ siteVisits, getVisitsCount, dateRange }: Adm
     while (currentDate <= endDate && chartData.length < 14) {
       const day = format(currentDate, 'dd/MM', { locale: it });
       const count = siteVisits.filter(visit => {
-        const visitDate = new Date(visit.timestamp);
+        const visitDate = new Date(visit.created_at);
         return isSameDay(visitDate, currentDate);
       }).length;
       
@@ -53,6 +55,20 @@ export const AdminLogAnalytics = ({ siteVisits, getVisitsCount, dateRange }: Adm
     return chartData;
   }, [siteVisits, dateRange?.from, dateRange?.to]);
 
+  const pageDistribution = React.useMemo(() => {
+    if (siteVisits.length === 0) return [];
+    
+    const pageCount = siteVisits.reduce((acc, visit) => {
+      acc[visit.page] = (acc[visit.page] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return Object.entries(pageCount)
+      .map(([page, count]) => ({ page, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+  }, [siteVisits]);
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -61,9 +77,9 @@ export const AdminLogAnalytics = ({ siteVisits, getVisitsCount, dateRange }: Adm
             <CardTitle className="text-sm font-medium">Visite oggi</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{visitStats.day}</div>
+            <div className="text-2xl font-bold text-blue-600">{visitStats.day}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Visite uniche al sito
+              Query ottimizzata database
             </p>
           </CardContent>
         </Card>
@@ -73,9 +89,9 @@ export const AdminLogAnalytics = ({ siteVisits, getVisitsCount, dateRange }: Adm
             <CardTitle className="text-sm font-medium">Visite questo mese</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{visitStats.month}</div>
+            <div className="text-2xl font-bold text-green-600">{visitStats.month}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Performance ottimizzata
+              Performance migliorata
             </p>
           </CardContent>
         </Card>
@@ -85,44 +101,75 @@ export const AdminLogAnalytics = ({ siteVisits, getVisitsCount, dateRange }: Adm
             <CardTitle className="text-sm font-medium">Visite quest'anno</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{visitStats.year}</div>
+            <div className="text-2xl font-bold text-purple-600">{visitStats.year}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Database Supabase
+              Indici ottimizzati
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Andamento visite</CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">Ottimizzato per performance</Badge>
-            <Badge variant="secondary">Max 14 giorni</Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px]">
-            {visitChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={visitChartData}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip 
-                    formatter={(value: any) => [`${value} visite`, "Visite"]}
-                    labelFormatter={(value: any) => `Giorno: ${value}`}
-                  />
-                  <Bar dataKey="visits" fill="#8b87f5" />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center">
-                <p className="text-muted-foreground">Nessun dato disponibile per il periodo selezionato</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Andamento visite</CardTitle>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">Sistema ottimizzato</Badge>
+              <Badge variant="secondary">Max 14 giorni</Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              {visitChartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={visitChartData}>
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value: any) => [`${value} visite`, "Visite"]}
+                      labelFormatter={(value: any) => `Giorno: ${value}`}
+                    />
+                    <Bar dataKey="visits" fill="#8b87f5" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-muted-foreground">Nessun dato disponibile per il periodo selezionato</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Pagine più visitate</CardTitle>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">Top 10</Badge>
+              <Badge variant="secondary">Dati filtrati</Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {pageDistribution.length > 0 ? (
+                pageDistribution.map((item, index) => (
+                  <div key={item.page} className="flex items-center justify-between p-2 bg-muted rounded">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">{index + 1}</Badge>
+                      <span className="text-sm truncate max-w-[200px]">{item.page}</span>
+                    </div>
+                    <Badge variant="secondary">{item.count} visite</Badge>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-muted-foreground py-4">
+                  Nessun dato disponibile
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </>
   );
 };

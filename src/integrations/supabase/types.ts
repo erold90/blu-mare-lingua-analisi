@@ -308,28 +308,35 @@ export type Database = {
           created_at: string
           id: string
           page: string
-          timestamp: string
         }
         Insert: {
           created_at?: string
           id: string
           page: string
-          timestamp?: string
         }
         Update: {
           created_at?: string
           id?: string
           page?: string
-          timestamp?: string
         }
         Relationships: []
       }
     }
     Views: {
-      [_ in never]: never
+      site_visits_stats: {
+        Row: {
+          page: string | null
+          visit_count: number | null
+          visit_date: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      cleanup_old_site_visits: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

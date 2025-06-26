@@ -2,6 +2,21 @@
 import { supabase } from '@/integrations/supabase/client';
 import { SiteVisit } from '../useUnifiedAnalytics';
 
+// Type guard robusto per le risposte Supabase
+const isSupabaseResponse = (result: any): result is { data: any; error: any } => {
+  return result && 
+         typeof result === 'object' && 
+         'data' in result && 
+         'error' in result;
+};
+
+// Configurazione timeout unificata
+const TIMEOUT_CONFIG = {
+  TRACK_VISIT: 2000,
+  LOAD_VISITS: 3000,
+  CONNECTION_TEST: 2000
+};
+
 export const trackPageVisit = async (page: string) => {
   try {
     // Skip tracking per area admin
@@ -10,34 +25,27 @@ export const trackPageVisit = async (page: string) => {
       return;
     }
 
-    // Genera un ID unico per la visita più semplice e affidabile
     const visitId = `visit_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    
     console.log('📊 Tracking page visit:', page, 'ID:', visitId);
     
     const visitData = {
       id: visitId,
       page: page,
-      timestamp: new Date().toISOString(),
-      created_at: new Date().toISOString() // Aggiungo esplicitamente created_at
+      created_at: new Date().toISOString()
     };
 
-    console.log('📊 Attempting to save visit data:', visitData);
-    
-    // Tracking ottimizzato con timeout più breve e typing corretto
     const result = await Promise.race([
       supabase
         .from('site_visits')
         .insert(visitData)
         .select(),
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Insert timeout')), 3000)
+        setTimeout(() => reject(new Error('Insert timeout')), TIMEOUT_CONFIG.TRACK_VISIT)
       )
     ]);
 
-    // Type guard per verificare se il risultato è una risposta Supabase
-    if (result && typeof result === 'object' && 'data' in result && 'error' in result) {
-      const { data, error } = result as any;
+    if (isSupabaseResponse(result)) {
+      const { data, error } = result;
 
       if (error) {
         console.error('❌ Site visit tracking error:', error);
@@ -53,12 +61,12 @@ export const trackPageVisit = async (page: string) => {
   } catch (error) {
     console.error('❌ Critical error in trackPageVisit:', error);
     
-    // Fallback più robusto - salva in localStorage per debug
+    // Fallback robusto - salva in localStorage per debug
     try {
       const fallbackData = {
         page,
         timestamp: new Date().toISOString(),
-        error: error.message || 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error'
       };
       
       const existingFailed = JSON.parse(localStorage.getItem('failed_tracking') || '[]');
@@ -79,37 +87,42 @@ export const trackPageVisit = async (page: string) => {
   }
 };
 
-export const loadSiteVisits = async () => {
+export const loadSiteVisits = async (): Promise<SiteVisit[]> => {
   try {
     console.log('🔍 Loading site visits...');
     
-    // Query ottimizzata con limite e timeout - USO SOLO created_at per consistenza
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     const result = await Promise.race([
       supabase
         .from('site_visits')
-        .select('id, timestamp, page, created_at')
-        .gte('created_at', thirtyDaysAgo.toISOString()) // Uso created_at invece di timestamp
+        .select('id, page, created_at')
+        .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: false })
         .limit(500),
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Query timeout')), 5000)
+        setTimeout(() => reject(new Error('Query timeout')), TIMEOUT_CONFIG.LOAD_VISITS)
       )
     ]);
 
-    // Type guard per verificare se il risultato è una risposta Supabase
-    if (result && typeof result === 'object' && 'data' in result && 'error' in result) {
-      const { data, error } = result as any;
+    if (isSupabaseResponse(result)) {
+      const { data, error } = result;
 
       if (error) {
         console.error('❌ Site visits query error:', error);
         throw error;
       }
 
-      console.log(`✅ Loaded ${data?.length || 0} site visits`);
-      return data || [];
+      const visits = (data || []).map((visit: any) => ({
+        id: visit.id,
+        page: visit.page,
+        created_at: visit.created_at,
+        timestamp: visit.created_at // Per compatibilità con codice legacy
+      })) as SiteVisit[];
+
+      console.log(`✅ Loaded ${visits.length} site visits`);
+      return visits;
     }
 
     throw new Error('Invalid response format');
@@ -120,10 +133,50 @@ export const loadSiteVisits = async () => {
   }
 };
 
-export const calculateVisitsCount = (
+// Funzione ottimizzata per calcolare visite usando query database
+export const calculateVisitsCount = async (period: 'day' | 'month' | 'year'): Promise<number> => {
+  try {
+    const now = new Date();
+    let startDate: Date;
+
+    switch (period) {
+      case 'day':
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        break;
+      case 'month':
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case 'year':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        break;
+      default:
+        throw new Error(`Invalid period: ${period}`);
+    }
+
+    const { data, error } = await supabase
+      .from('site_visits')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', startDate.toISOString());
+
+    if (error) {
+      console.error(`❌ Error calculating ${period} visits:`, error);
+      throw error;
+    }
+
+    return data ? (data as any).count || 0 : 0;
+  } catch (error) {
+    console.warn(`⚠️ Failed to calculate ${period} visits, using fallback`);
+    return 0;
+  }
+};
+
+// Funzione legacy per compatibilità - deprecata
+export const calculateVisitsCountLegacy = (
   siteVisits: SiteVisit[], 
   period: 'day' | 'month' | 'year'
 ): number => {
+  console.warn('⚠️ Using legacy calculateVisitsCount - consider migrating to database query version');
+  
   if (!siteVisits || siteVisits.length === 0) {
     return 0;
   }
@@ -133,8 +186,7 @@ export const calculateVisitsCount = (
   
   const filteredVisits = siteVisits.filter(visit => {
     try {
-      // USO created_at come fonte primaria, fallback su timestamp
-      const visitDate = new Date(visit.created_at || visit.timestamp);
+      const visitDate = new Date(visit.created_at);
       const visitDay = new Date(visitDate.getFullYear(), visitDate.getMonth(), visitDate.getDate());
       
       if (period === 'day') {
@@ -160,23 +212,21 @@ export const calculateVisitsCount = (
   return filteredVisits.length;
 };
 
-export const testSupabaseConnection = async () => {
+export const testSupabaseConnection = async (): Promise<boolean> => {
   try {
     console.log('🔗 Testing Supabase connection...');
     
-    // Test di connessione più semplice e veloce con typing corretto
     const result = await Promise.race([
       supabase
         .from('site_visits')
         .select('*', { count: 'exact', head: true }),
       new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Connection timeout')), 3000)
+        setTimeout(() => reject(new Error('Connection timeout')), TIMEOUT_CONFIG.CONNECTION_TEST)
       )
     ]);
     
-    // Type guard per verificare se il risultato è una risposta Supabase
-    if (result && typeof result === 'object' && 'data' in result && 'error' in result) {
-      const { data, error, count } = result as any;
+    if (isSupabaseResponse(result)) {
+      const { error, count } = result;
       
       if (error) {
         console.error('❌ Supabase connection test failed:', error);
@@ -195,8 +245,52 @@ export const testSupabaseConnection = async () => {
   }
 };
 
-// Funzione per recuperare tracking falliti dal localStorage
-export const getFailedTracking = () => {
+// Nuova funzione per statistiche ottimizzate usando la vista
+export const loadOptimizedStats = async () => {
+  try {
+    console.log('📊 Loading optimized stats...');
+    
+    const { data, error } = await supabase
+      .from('site_visits_stats')
+      .select('*')
+      .limit(50);
+
+    if (error) {
+      console.error('❌ Error loading optimized stats:', error);
+      throw error;
+    }
+
+    console.log('✅ Loaded optimized stats:', data?.length || 0);
+    return data || [];
+  } catch (error) {
+    console.error('❌ Failed to load optimized stats:', error);
+    throw error;
+  }
+};
+
+// Funzione per pulizia dati vecchi
+export const cleanupOldVisits = async (): Promise<{ success: boolean; message: string }> => {
+  try {
+    console.log('🧹 Starting cleanup of old visits...');
+    
+    const { error } = await supabase.rpc('cleanup_old_site_visits');
+    
+    if (error) {
+      console.error('❌ Cleanup failed:', error);
+      return { success: false, message: `Cleanup failed: ${error.message}` };
+    }
+    
+    console.log('✅ Cleanup completed successfully');
+    return { success: true, message: 'Old visits cleaned up successfully' };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ Cleanup error:', error);
+    return { success: false, message: `Cleanup error: ${message}` };
+  }
+};
+
+// Funzioni di utilità per il debugging
+export const getFailedTracking = (): any[] => {
   try {
     return JSON.parse(localStorage.getItem('failed_tracking') || '[]');
   } catch (error) {
@@ -205,12 +299,22 @@ export const getFailedTracking = () => {
   }
 };
 
-// Funzione per pulire i tracking falliti
-export const clearFailedTracking = () => {
+export const clearFailedTracking = (): void => {
   try {
     localStorage.removeItem('failed_tracking');
     console.log('🧹 Cleared failed tracking data');
   } catch (error) {
     console.warn('⚠️ Error clearing failed tracking:', error);
   }
+};
+
+// Funzione per debug delle performance
+export const getPerformanceMetrics = () => {
+  return {
+    timeouts: TIMEOUT_CONFIG,
+    localStorage: {
+      failedTracking: getFailedTracking().length
+    },
+    timestamp: new Date().toISOString()
+  };
 };
