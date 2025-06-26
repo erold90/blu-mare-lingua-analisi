@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -12,13 +11,26 @@ import SEOHead from "@/components/seo/SEOHead";
 import { getBreadcrumbSchema } from "@/components/seo/StructuredData";
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
 
-// Funzione per tracciare conversioni Google Ads
+// Funzione per tracciare conversioni Google Ads solo se autorizzato
 const trackGoogleAdsConversion = () => {
-  if (typeof window !== 'undefined' && (window as any).gtag) {
-    (window as any).gtag('event', 'conversion', {
-      'send_to': 'AW-1009072951/hjPlCKOwnJnuAELfJ1GEP'
-    });
-    console.log('Google Ads conversion tracked: Form submission');
+  // Controlla se il tracking è autorizzato prima di eseguire
+  const cookieConsent = localStorage.getItem('villamareblu_cookie_consent');
+  if (cookieConsent) {
+    try {
+      const consent = JSON.parse(cookieConsent);
+      if (consent.preferences?.marketing) {
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+          (window as any).gtag('event', 'conversion', {
+            'send_to': 'AW-1009072951/hjPlCKOwnJnuAELfJ1GEP'
+          });
+          console.log('Google Ads conversion tracked: Form submission');
+        }
+      } else {
+        console.log('Marketing cookies not accepted - skipping conversion tracking');
+      }
+    } catch (error) {
+      console.warn('Error checking cookie consent for conversion tracking:', error);
+    }
   }
 };
 
@@ -56,6 +68,7 @@ const ContactsPage = () => {
 
       if (result.text === "OK") {
         // Traccia la conversione Google Ads SOLO se l'email è stata inviata con successo
+        // e solo se l'utente ha acconsentito ai cookie di marketing
         trackGoogleAdsConversion();
         
         toast.success("Messaggio inviato con successo! Ti risponderemo al più presto.");

@@ -3,10 +3,12 @@ import React, { useState, useEffect } from "react";
 import { AppHeader } from "./AppHeader";
 import WhatsAppButton from "./WhatsAppButton";
 import { CookieConsent } from "@/components/CookieConsent";
+import { ConditionalAnalytics } from "@/components/ConditionalAnalytics";
 import { useLocation } from "react-router-dom";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { AnalyticsProvider } from "./AnalyticsProvider";
+import { CookieProvider } from "@/contexts/CookieContext";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -14,53 +16,44 @@ interface AppLayoutProps {
 
 const AppLayout = ({ children }: AppLayoutProps) => {
   const location = useLocation();
-  const [showCookieConsent, setShowCookieConsent] = useState(false);
-
-  useEffect(() => {
-    const hasAcceptedCookies = localStorage.getItem("cookieConsent");
-    setShowCookieConsent(!hasAcceptedCookies);
-  }, []);
-
-  const handleAcceptCookies = () => {
-    localStorage.setItem("cookieConsent", "true");
-    setShowCookieConsent(false);
-  };
 
   // Se siamo nell'area riservata, non usiamo il sidebar principale
   const isReservedArea = location.pathname.startsWith('/area-riservata');
 
   if (isReservedArea) {
     return (
-      <AnalyticsProvider>
-        <div className="min-h-screen bg-background">
-          {children}
-          <WhatsAppButton />
-          {showCookieConsent && (
-            <CookieConsent onAccept={handleAcceptCookies} />
-          )}
-        </div>
-      </AnalyticsProvider>
+      <CookieProvider>
+        <AnalyticsProvider>
+          <div className="min-h-screen bg-background">
+            {children}
+            <WhatsAppButton />
+            <CookieConsent />
+            <ConditionalAnalytics />
+          </div>
+        </AnalyticsProvider>
+      </CookieProvider>
     );
   }
 
   return (
-    <AnalyticsProvider>
-      <SidebarProvider defaultOpen={false}>
-        <div className="min-h-screen bg-background flex w-full">
-          <AppSidebar />
-          <SidebarInset className="flex-1">
-            <AppHeader />
-            <main className="flex-1 p-4">
-              {children}
-            </main>
-          </SidebarInset>
-          <WhatsAppButton />
-          {showCookieConsent && (
-            <CookieConsent onAccept={handleAcceptCookies} />
-          )}
-        </div>
-      </SidebarProvider>
-    </AnalyticsProvider>
+    <CookieProvider>
+      <AnalyticsProvider>
+        <SidebarProvider defaultOpen={false}>
+          <div className="min-h-screen bg-background flex w-full">
+            <AppSidebar />
+            <SidebarInset className="flex-1">
+              <AppHeader />
+              <main className="flex-1 p-4">
+                {children}
+              </main>
+            </SidebarInset>
+            <WhatsAppButton />
+            <CookieConsent />
+            <ConditionalAnalytics />
+          </div>
+        </SidebarProvider>
+      </AnalyticsProvider>
+    </CookieProvider>
   );
 };
 
