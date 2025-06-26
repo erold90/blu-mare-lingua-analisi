@@ -1,9 +1,9 @@
 
-import { useAnalytics } from './useAnalytics';
+import { useAnalyticsCore } from './useAnalyticsCore';
 
 // Simple wrapper that maps the old interface to the new one
 export function useUnifiedAnalytics() {
-  const analytics = useAnalytics();
+  const analytics = useAnalyticsCore();
   
   return {
     // Map the old method names to new ones
@@ -16,4 +16,4 @@ export function useUnifiedAnalytics() {
 }
 
 // Re-export types for compatibility
-export type { QuoteLog, SiteVisit } from './useAnalytics';
+export type { QuoteLog, SiteVisit } from './useAnalyticsCore';

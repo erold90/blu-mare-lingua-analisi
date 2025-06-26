@@ -8,7 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { QuoteLog } from "@/hooks/analytics/useAnalytics";
+import { QuoteLog } from "@/hooks/analytics/useAnalyticsCore";
 import { Eye, Calendar, Users, Euro } from "lucide-react";
 import { DateRange } from "react-day-picker";
 

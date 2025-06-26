@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { format, isSameDay } from "date-fns";
 import { it } from "date-fns/locale";
-import { AnalyticsMetrics, SiteVisit } from "@/hooks/analytics/useAnalytics";
+import { AnalyticsMetrics, SiteVisit } from "@/hooks/analytics/useAnalyticsCore";
 
 interface AdminLogAnalyticsProps {
   siteVisits: SiteVisit[];
@@ -74,8 +74,8 @@ export const AdminLogAnalytics = ({ siteVisits, dateRange, metrics }: AdminLogAn
                     <XAxis dataKey="name" />
                     <YAxis />
                     <Tooltip 
-                      formatter={(value: any) => [`${value} visite`, "Visite"]}
-                      labelFormatter={(value: any) => `Giorno: ${value}`}
+                      formatter={(value: number) => [`${value} visite`, "Visite"]}
+                      labelFormatter={(value: string) => `Giorno: ${value}`}
                     />
                     <Bar dataKey="visits" fill="#8b87f5" />
                   </BarChart>

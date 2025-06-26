@@ -1,191 +1,238 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FormValues, quoteFormSchema } from "@/utils/quoteFormSchema";
+import { apartments } from "@/data/apartments";
+import { useAnalyticsCore } from "@/hooks/analytics/useAnalyticsCore";
+import { v4 as uuidv4 } from 'uuid';
+import { useState, useCallback } from "react";
 
-import { useState, useCallback } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { FormValues, formSchema } from '@/utils/quoteFormSchema';
-import { useAnalytics } from '@/hooks/analytics/useAnalytics';
+// Define ChildDetail interface to match component expectations
+interface ChildDetail {
+  isUnder12: boolean;
+  sleepsWithParents: boolean;
+  sleepsInCrib: boolean;
+}
 
-export const useQuoteForm = () => {
-  const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 5;
+export function useQuoteForm() {
+  const analytics = useAnalyticsCore();
   
-  // Form state
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      step: 1,
-      adults: 1,
-      children: 0,
-      childrenDetails: [],
-      isGroupBooking: false,
-      needsLinen: false,
-      hasPets: false,
-      selectedApartments: [],
-      personsPerApartment: {},
-      petsInApartment: {},
-    }
-  });
-
-  // Additional state for UI components
-  const [childrenArray, setChildrenArray] = useState<Array<{ isUnder12: boolean; sleepsWithParents: boolean; sleepsInCrib: boolean }>>([]);
+  const [step, setStep] = useState(1);
   const [apartmentDialog, setApartmentDialog] = useState<string | null>(null);
   const [groupDialog, setGroupDialog] = useState(false);
-  const [familyGroups, setFamilyGroups] = useState<any[]>([]);
+  const [familyGroups, setFamilyGroups] = useState<number>(1);
 
-  const { saveQuoteLog } = useAnalytics();
+  const form = useForm<FormValues>({
+    resolver: zodResolver(quoteFormSchema),
+    defaultValues: {
+      adults: 1,
+      children: 0,
+      groupType: 'individual',
+      apartments: [],
+      services: [],
+      personalInfo: {
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+      },
+      notes: '',
+    },
+    mode: "onChange"
+  });
 
-  // Guest management functions
-  const incrementAdults = useCallback(() => {
-    const currentAdults = form.getValues('adults') || 1;
-    form.setValue('adults', currentAdults + 1);
-  }, [form]);
+  const childrenArray = form.watch('childrenArray');
 
-  const decrementAdults = useCallback(() => {
-    const currentAdults = form.getValues('adults') || 1;
+  const totalSteps = 5;
+
+  const incrementAdults = () => {
+    form.setValue('adults', form.getValues().adults + 1);
+  };
+
+  const decrementAdults = () => {
+    const currentAdults = form.getValues().adults;
     if (currentAdults > 1) {
       form.setValue('adults', currentAdults - 1);
     }
-  }, [form]);
+  };
 
-  const incrementChildren = useCallback(() => {
-    const currentChildren = form.getValues('children') || 0;
-    const newChildren = currentChildren + 1;
-    form.setValue('children', newChildren);
+  const incrementChildren = () => {
+    const currentChildren = form.getValues().children || 0;
+    form.setValue('children', currentChildren + 1);
     
-    // Add child details
-    const newChildrenArray = [...childrenArray, { isUnder12: false, sleepsWithParents: false, sleepsInCrib: false }];
-    setChildrenArray(newChildrenArray);
-    form.setValue('childrenDetails', newChildrenArray);
-  }, [form, childrenArray]);
+    // Initialize the childrenArray if it's undefined
+    const currentChildrenArray = form.getValues().childrenArray || [];
+    form.setValue('childrenArray', [...currentChildrenArray, {}]);
+  };
 
-  const decrementChildren = useCallback(() => {
-    const currentChildren = form.getValues('children') || 0;
+  const decrementChildren = () => {
+    const currentChildren = form.getValues().children || 0;
     if (currentChildren > 0) {
-      const newChildren = currentChildren - 1;
-      form.setValue('children', newChildren);
-      
-      // Remove child details
-      const newChildrenArray = childrenArray.slice(0, -1);
-      setChildrenArray(newChildrenArray);
-      form.setValue('childrenDetails', newChildrenArray);
+      form.setValue('children', currentChildren - 1);
+
+      // Remove the last element from childrenArray
+      const currentChildrenArray = form.getValues().childrenArray || [];
+      form.setValue('childrenArray', currentChildrenArray.slice(0, -1));
     }
-  }, [form, childrenArray]);
+  };
 
-  const updateChildDetails = useCallback((index: number, details: Partial<{ isUnder12: boolean; sleepsWithParents: boolean; sleepsInCrib: boolean }>) => {
-    const newChildrenArray = [...childrenArray];
-    newChildrenArray[index] = { ...newChildrenArray[index], ...details };
-    setChildrenArray(newChildrenArray);
-    form.setValue('childrenDetails', newChildrenArray);
-  }, [form, childrenArray]);
+  const updateChildDetails = (index: number, details: Partial<ChildDetail>) => {
+    const currentChildrenArray = form.getValues().childrenArray || [];
+    const updatedChildrenArray = [...currentChildrenArray];
+    updatedChildrenArray[index] = { ...updatedChildrenArray[index], ...details };
+    form.setValue('childrenArray', updatedChildrenArray);
+  };
 
-  // Dialog management
-  const openApartmentDialog = useCallback((apartmentId: string) => {
+  const nextStep = () => {
+    if (step < totalSteps) {
+      setStep(step + 1);
+      analytics.trackSiteVisit(`/quote/step-${step + 1}`);
+    }
+  };
+
+  const prevStep = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    }
+  };
+
+  const openApartmentDialog = (apartmentId: string) => {
     setApartmentDialog(apartmentId);
-  }, []);
+  };
 
-  const closeApartmentDialog = useCallback(() => {
+  const closeApartmentDialog = () => {
     setApartmentDialog(null);
-  }, []);
+  };
 
-  const selectApartment = useCallback((apartmentId: string) => {
-    const currentSelected = form.getValues('selectedApartments') || [];
-    const isSelected = currentSelected.includes(apartmentId);
-    
-    if (isSelected) {
-      form.setValue('selectedApartments', currentSelected.filter(id => id !== apartmentId));
+  const selectApartment = (apartmentId: string) => {
+    const selectedApartments = form.getValues('selectedApartments') || [];
+    if (selectedApartments.includes(apartmentId)) {
+      form.setValue(
+        'selectedApartments',
+        selectedApartments.filter((id) => id !== apartmentId)
+      );
     } else {
-      form.setValue('selectedApartments', [...currentSelected, apartmentId]);
+      form.setValue('selectedApartments', [...selectedApartments, apartmentId]);
     }
-  }, [form]);
+  };
 
-  const openGroupDialog = useCallback(() => {
+  const openGroupDialog = () => {
     setGroupDialog(true);
-  }, []);
+  };
 
-  const closeGroupDialog = useCallback(() => {
+  const closeGroupDialog = () => {
     setGroupDialog(false);
-  }, []);
-
-  // Step management
-  const nextStep = useCallback(() => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
-      form.setValue('step', currentStep + 1);
-    }
-  }, [currentStep, totalSteps, form]);
-
-  const prevStep = useCallback(() => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-      form.setValue('step', currentStep - 1);
-    }
-  }, [currentStep, form]);
-
-  // WhatsApp function
-  const sendWhatsApp = useCallback(() => {
+  };
+  
+  const sendWhatsApp = () => {
     const formValues = form.getValues();
-    console.log("🔍 Sending WhatsApp message with form values:", formValues);
+    const selectedApartments = formValues.selectedApartments || [];
+    const selectedServices = formValues.services || [];
     
-    // Here you would create the WhatsApp message
-    const message = `Richiesta preventivo Villa MareBlu:\n\nPeriodo: ${formValues.checkIn} - ${formValues.checkOut}\nOspiti: ${formValues.adults} adulti, ${formValues.children || 0} bambini\n\nDettagli inviati automaticamente.`;
+    let message = `Richiesta preventivo da Villa MareBlu:\n\n`;
+    
+    // Guest Info
+    message += `Ospiti: ${formValues.adults} adulti, ${formValues.children} bambini\n`;
+    
+    // Date Info
+    if (formValues.checkIn && formValues.checkOut) {
+      message += `Check-in: ${formValues.checkIn}\n`;
+      message += `Check-out: ${formValues.checkOut}\n`;
+    } else {
+      message += `Date da definire\n`;
+    }
+    
+    // Apartments
+    if (selectedApartments.length > 0) {
+      message += `\nAppartamenti:\n`;
+      selectedApartments.forEach(apartmentId => {
+        const apartment = apartments.find(apt => apt.id === apartmentId);
+        if (apartment) {
+          message += `- ${apartment.name}\n`;
+        }
+      });
+    } else {
+      message += `\nNessun appartamento selezionato\n`;
+    }
+    
+    // Services
+    if (selectedServices.length > 0) {
+      message += `\nServizi:\n`;
+      selectedServices.forEach(serviceId => {
+        // Assuming you have a services array similar to apartments
+        // const service = services.find(srv => srv.id === serviceId);
+        // if (service) {
+        //   message += `- ${service.name}\n`;
+        // }
+        message += `- ${serviceId}\n`; // Placeholder since we don't have services data
+      });
+    } else {
+      message += `\nNessun servizio selezionato\n`;
+    }
+    
+    // Personal Info
+    if (formValues.personalInfo) {
+      message += `\nInformazioni personali:\n`;
+      message += `Nome: ${formValues.personalInfo.firstName} ${formValues.personalInfo.lastName}\n`;
+      message += `Email: ${formValues.personalInfo.email}\n`;
+      message += `Telefono: ${formValues.personalInfo.phone}\n`;
+    }
+    
+    // Notes
+    if (formValues.notes) {
+      message += `\nNote:\n${formValues.notes}\n`;
+    }
     
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/393937767749?text=${encodedMessage}`;
-    
     window.open(whatsappUrl, '_blank');
-  }, [form]);
-
-  // Form submission
-  const onSubmitHandler = useCallback(async (data: FormValues) => {
-    console.log("Form submitted with data:", data);
     
+    // Track WhatsApp action
+    analytics.trackSiteVisit('/quote/whatsapp-sent');
+  };
+
+  const onSubmitHandler = async (data: FormValues) => {
     try {
-      await saveQuoteLog({
-        id: `quote_${Date.now()}`,
+      const quoteId = uuidv4();
+      
+      // Save quote log using analytics core
+      await analytics.saveQuoteLog({
+        id: quoteId,
         form_data: data,
-        step: currentStep,
+        step: step,
         completed: true,
       });
       
-      console.log("✅ Quote saved successfully");
+      // Track completion
+      analytics.trackSiteVisit('/quote/completed');
+      
+      console.log("Quote submitted successfully:", quoteId);
     } catch (error) {
-      console.error("❌ Error saving quote:", error);
+      console.error("Error submitting quote:", error);
     }
-  }, [saveQuoteLog, currentStep]);
+  };
 
   return {
-    // Form object
     form,
-    
-    // Step management
-    step: currentStep,
+    step,
     totalSteps,
-    nextStep,
-    prevStep,
-    
-    // Guest management
-    childrenArray,
+    childrenArray: form.watch('childrenArray'),
+    apartmentDialog,
+    groupDialog,
+    familyGroups,
     incrementAdults,
     decrementAdults,
     incrementChildren,
     decrementChildren,
     updateChildDetails,
-    
-    // Dialog management
-    apartmentDialog,
+    nextStep,
+    prevStep,
     openApartmentDialog,
     closeApartmentDialog,
     selectApartment,
-    
-    // Group management
-    groupDialog,
     openGroupDialog,
     closeGroupDialog,
-    familyGroups,
     setFamilyGroups,
-    
-    // Actions
     sendWhatsApp,
-    onSubmitHandler,
+    onSubmitHandler
   };
-};
+}
