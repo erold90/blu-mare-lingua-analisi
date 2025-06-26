@@ -2,7 +2,7 @@
 import React from "react";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
-import { Users, Baby, BedDouble } from "lucide-react";
+import { Users, Baby, BedDouble, UserCheck } from "lucide-react";
 
 interface GuestInfoProps {
   formValues: FormValues;
@@ -10,6 +10,10 @@ interface GuestInfoProps {
 
 const GuestInfo: React.FC<GuestInfoProps> = ({ formValues }) => {
   const { totalGuests, effectiveGuestCount, sleepingWithParents, sleepingInCribs } = getEffectiveGuestCount(formValues);
+
+  // Calcola bambini sotto i 12 anni
+  const childrenUnder12 = formValues.childrenDetails?.filter(child => child.isUnder12).length || 0;
+  const childrenOver12 = (formValues.children || 0) - childrenUnder12;
 
   return (
     <div className="border rounded-lg p-4 md:p-5 space-y-4 bg-white shadow-sm">
@@ -29,46 +33,87 @@ const GuestInfo: React.FC<GuestInfoProps> = ({ formValues }) => {
         
         {/* Dettagli bambini se presenti */}
         {formValues.childrenDetails && formValues.childrenDetails.length > 0 && (
-          <div className="bg-blue-50 rounded-lg p-3 space-y-2">
-            <div className="flex items-center gap-2 text-primary text-sm font-medium">
-              <Baby className="h-4 w-4" />
-              Dettagli bambini
-            </div>
-            
-            {formValues.childrenDetails.map((child, index) => (
-              <div key={index} className="text-sm">
-                <span className="font-medium">Bambino {index + 1}:</span>
-                <div className="ml-2 text-muted-foreground">
-                  {child.isUnder12 && <span className="mr-2">• Sotto i 12 anni</span>}
-                  {child.sleepsWithParents && <span className="mr-2 text-blue-600">• Dorme con i genitori</span>}
-                  {child.sleepsInCrib && <span className="mr-2 text-green-600">• Necessita di culla</span>}
-                  {!child.isUnder12 && !child.sleepsWithParents && !child.sleepsInCrib && <span className="text-muted-foreground">• Standard</span>}
+          <div className="space-y-3">
+            {/* Breakdown bambini per età */}
+            {(childrenUnder12 > 0 || childrenOver12 > 0) && (
+              <div className="bg-blue-50 rounded-lg p-3 space-y-2">
+                <div className="flex items-center gap-2 text-primary text-sm font-medium">
+                  <UserCheck className="h-4 w-4" />
+                  Età bambini
                 </div>
+                
+                {childrenUnder12 > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Sotto i 12 anni:</span>
+                    <span className="font-medium text-green-600">{childrenUnder12} (tassa soggiorno gratuita)</span>
+                  </div>
+                )}
+                
+                {childrenOver12 > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Sopra i 12 anni:</span>
+                    <span className="font-medium">{childrenOver12}</span>
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        )}
-        
-        {(sleepingWithParents > 0 || sleepingInCribs > 0) && (
-          <div className="bg-yellow-50 rounded-lg p-3 space-y-2">
-            <div className="flex items-center gap-2 text-amber-700 text-sm font-medium">
-              <BedDouble className="h-4 w-4" />
-              Sistemazione speciale
+            )}
+            
+            {/* Sistemazione speciale */}
+            {(sleepingWithParents > 0 || sleepingInCribs > 0) && (
+              <div className="bg-yellow-50 rounded-lg p-3 space-y-2">
+                <div className="flex items-center gap-2 text-amber-700 text-sm font-medium">
+                  <BedDouble className="h-4 w-4" />
+                  Sistemazione speciale
+                </div>
+                
+                {sleepingWithParents > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Dormono con i genitori:</span>
+                    <span className="font-medium text-blue-600">{sleepingWithParents} (non occupano posto letto)</span>
+                  </div>
+                )}
+                
+                {sleepingInCribs > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Dormono in culla:</span>
+                    <span className="font-medium text-green-600">{sleepingInCribs} (gratuito)</span>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Dettaglio per ogni bambino */}
+            <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+              <div className="flex items-center gap-2 text-gray-700 text-sm font-medium">
+                <Baby className="h-4 w-4" />
+                Dettagli per bambino
+              </div>
+              
+              {formValues.childrenDetails.map((child, index) => (
+                <div key={index} className="text-sm border-l-2 border-gray-300 pl-3">
+                  <span className="font-medium text-gray-700">Bambino {index + 1}:</span>
+                  <div className="text-xs text-muted-foreground mt-1 space-y-1">
+                    {child.isUnder12 ? (
+                      <div className="text-green-600">• Sotto i 12 anni (tassa soggiorno gratuita)</div>
+                    ) : (
+                      <div className="text-gray-600">• Sopra i 12 anni</div>
+                    )}
+                    
+                    {child.sleepsWithParents && (
+                      <div className="text-blue-600">• Dorme con i genitori (non occupa posto letto)</div>
+                    )}
+                    
+                    {child.sleepsInCrib && (
+                      <div className="text-green-600">• Dorme in culla (gratuito)</div>
+                    )}
+                    
+                    {!child.sleepsWithParents && !child.sleepsInCrib && (
+                      <div className="text-gray-600">• Posto letto singolo</div>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-            
-            {sleepingWithParents > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Con i genitori (non occupano posto letto):</span>
-                <span className="font-medium text-blue-600">{sleepingWithParents}</span>
-              </div>
-            )}
-            
-            {sleepingInCribs > 0 && (
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">In culla (gratuito, non occupano posto letto):</span>
-                <span className="font-medium text-green-600">{sleepingInCribs}</span>
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -81,8 +126,15 @@ const GuestInfo: React.FC<GuestInfoProps> = ({ formValues }) => {
         
         {(sleepingWithParents > 0 || sleepingInCribs > 0) && (
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Posti letto necessari:</span>
+            <span className="text-sm text-muted-foreground">Posti letto effettivi necessari:</span>
             <span className="text-primary font-semibold">{effectiveGuestCount}</span>
+          </div>
+        )}
+        
+        {childrenUnder12 > 0 && (
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Bambini esenti tassa soggiorno:</span>
+            <span className="text-green-600 font-semibold">{childrenUnder12}</span>
           </div>
         )}
       </div>
