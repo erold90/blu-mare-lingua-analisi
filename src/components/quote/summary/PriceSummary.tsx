@@ -51,8 +51,8 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   const cleaningFee = priceInfo.cleaningFee;
   const touristTax = priceInfo.touristTax;
   
-  // Subtotal includes base price plus extras (BUT NOT cleaning fee or tourist tax)
-  const subtotal = priceInfo.totalBeforeDiscount;
+  // CORRECTED: Subtotal includes base price plus extras (BUT NOT cleaning fee or tourist tax)
+  const correctSubtotal = basePrice + extraServices;
 
   // The discount is the difference between the original price and the rounded price
   const roundingDiscount = priceInfo.discount;
@@ -62,6 +62,12 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   
   // The deposit is calculated in discountCalculator and rounded to nearest 100€
   const deposit = priceInfo.deposit;
+
+  // Calculate total savings correctly
+  let totalSavings = roundingDiscount;
+  if (hasOccupancyDiscount) {
+    totalSavings += occupancyDiscount.discountAmount;
+  }
 
   return (
     <div className="border rounded-lg p-4 md:p-6 space-y-6 bg-white shadow-sm">
@@ -124,11 +130,11 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
         
         <Separator className="my-4" />
         
-        {/* Subtotal before mandatory services */}
+        {/* CORRECTED: Subtotal before mandatory services */}
         <div className="flex justify-between items-center py-2">
           <span className="font-medium">Subtotale servizi:</span>
           <span className="font-semibold text-lg">
-            {pricesAreValid ? `${subtotal}€` : 'N/A'}
+            {pricesAreValid ? `${correctSubtotal}€` : 'N/A'}
           </span>
         </div>
         
@@ -177,6 +183,14 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
               {pricesAreValid ? `${totalToPay}€` : 'N/A'}
             </span>
           </div>
+          
+          {/* Show total savings if there are any */}
+          {totalSavings > 0 && pricesAreValid && (
+            <div className="flex justify-between items-center mt-2 pt-2 border-t border-primary/20">
+              <span className="text-sm text-green-600 font-medium">Risparmio totale:</span>
+              <span className="text-lg font-bold text-green-600">-{totalSavings}€</span>
+            </div>
+          )}
         </div>
         
         <PaymentBreakdown 
