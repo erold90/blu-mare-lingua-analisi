@@ -1,7 +1,12 @@
 
-// Sistema analytics semplificato - Solo hook essenziali
+// Sistema analytics ottimizzato - Nuova versione
+export { useOptimizedAnalytics } from './useOptimizedAnalytics';
+export { useOptimizedTracking } from './useOptimizedTracking';
+
+// Sistema legacy - Mantenuto per compatibilità
 export { useUnifiedAnalytics } from './useUnifiedAnalytics';
 export { useSimpleTracking } from './useSimpleTracking';
 
-// Types
+// Types unificati
 export type { QuoteLog, SiteVisit } from './useUnifiedAnalytics';
+export type { OptimizedAnalyticsMetrics } from './useOptimizedAnalytics';
