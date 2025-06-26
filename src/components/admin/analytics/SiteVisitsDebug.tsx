@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -117,7 +118,7 @@ export const SiteVisitsDebug = () => {
       const { error } = await supabase
         .from('site_visits')
         .delete()
-        .gt('id', ''); // Usa gt invece di neq per eliminare tutti i record
+        .not('id', 'is', null); // Sintassi corretta per eliminare tutti i record
 
       if (error) throw error;
 
