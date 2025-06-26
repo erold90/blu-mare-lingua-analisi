@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { SiteVisit } from '../useUnifiedAnalytics';
 
@@ -8,6 +7,15 @@ const isSupabaseResponse = (result: any): result is { data: any; error: any } =>
          typeof result === 'object' && 
          'data' in result && 
          'error' in result;
+};
+
+// Type guard per risposte con count
+const isSupabaseCountResponse = (result: any): result is { data: any; error: any; count: number | null } => {
+  return result && 
+         typeof result === 'object' && 
+         'data' in result && 
+         'error' in result &&
+         'count' in result;
 };
 
 // Configurazione timeout unificata
@@ -158,14 +166,18 @@ export const calculateVisitsCount = async (period: 'day' | 'month' | 'year'): Pr
       .select('*', { count: 'exact', head: true })
       .gte('created_at', startDate.toISOString());
 
-    const { data, error, count } = result;
+    if (isSupabaseCountResponse(result)) {
+      const { error, count } = result;
 
-    if (error) {
-      console.error(`❌ Error calculating ${period} visits:`, error);
-      throw error;
+      if (error) {
+        console.error(`❌ Error calculating ${period} visits:`, error);
+        throw error;
+      }
+
+      return count || 0;
     }
 
-    return count || 0;
+    throw new Error('Invalid response format');
   } catch (error) {
     console.warn(`⚠️ Failed to calculate ${period} visits, using fallback`);
     return 0;
@@ -227,7 +239,7 @@ export const testSupabaseConnection = async (): Promise<boolean> => {
       )
     ]);
     
-    if (isSupabaseResponse(result)) {
+    if (isSupabaseCountResponse(result)) {
       const { error, count } = result;
       
       if (error) {
