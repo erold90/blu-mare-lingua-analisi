@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminLogAnalytics } from "./analytics/AdminLogAnalytics";
 import { AdminLogQuotes } from "./quotes/AdminLogQuotes";
+import { SiteVisitsDebug } from "./analytics/SiteVisitsDebug";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { testSupabaseConnection, getFailedTracking, clearFailedTracking } from "@/hooks/analytics/operations/siteOperations";
@@ -273,12 +273,15 @@ const AdminAnalytics = () => {
       </div>
       
       <Tabs defaultValue="visits" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="visits">
             Visite Sito ({siteVisits.length})
           </TabsTrigger>
           <TabsTrigger value="quotes">
             Preventivi ({quoteLogs.length})
+          </TabsTrigger>
+          <TabsTrigger value="debug">
+            🔍 Debug Visite
           </TabsTrigger>
         </TabsList>
         
@@ -308,6 +311,12 @@ const AdminAnalytics = () => {
                 Sistema tracking operativo. Registrate {siteVisits.length} visite negli ultimi 30 giorni.
                 <br />
                 Oggi: {stats.visitsToday} visite | Questo mese: {stats.visitsMonth} visite
+                {siteVisits.length >= 500 && (
+                  <div className="mt-2 p-2 bg-yellow-50 rounded border border-yellow-200">
+                    <strong>⚠️ Attenzione:</strong> Trovate {siteVisits.length} visite. 
+                    Se sospetti che siano dati di test, usa la sezione "Debug Visite" per analizzarli.
+                  </div>
+                )}
               </AlertDescription>
             </Alert>
           )}
@@ -340,6 +349,20 @@ const AdminAnalytics = () => {
             quoteLogs={quoteLogs} 
             dateRange={dateRange}
           />
+        </TabsContent>
+
+        <TabsContent value="debug" className="mt-6 space-y-6">
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Sezione Debug Visite</strong>
+              <br />
+              Qui puoi analizzare i dati delle visite per verificare se sono reali o di test.
+              Puoi anche pulire i dati se necessario.
+            </AlertDescription>
+          </Alert>
+          
+          <SiteVisitsDebug />
         </TabsContent>
       </Tabs>
     </div>
