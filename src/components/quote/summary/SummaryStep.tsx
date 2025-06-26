@@ -7,6 +7,7 @@ import { calculateTotalPrice } from "@/utils/price/priceCalculator";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, MessageCircle } from "lucide-react";
+import { toDateSafe } from "@/utils/price/dateConverter";
 
 // Import components
 import StaySummary from "../StaySummary";
@@ -34,6 +35,17 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
   // Calculate price info
   const priceInfo = calculateTotalPrice(formValues, apartments);
   
+  // Convert dates for StaySummary component
+  const checkInDate = formValues.checkIn ? toDateSafe(formValues.checkIn) : null;
+  const checkOutDate = formValues.checkOut ? toDateSafe(formValues.checkOut) : null;
+  
+  const dateRange = {
+    from: checkInDate,
+    to: checkOutDate
+  };
+  
+  const numberOfNights = priceInfo.nights || 0;
+  
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -46,7 +58,12 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
       <div className="grid gap-6 md:grid-cols-2">
         {/* Colonna sinistra - Dettagli soggiorno */}
         <div className="space-y-6">
-          <StaySummary formValues={formValues} apartments={apartments} />
+          {dateRange.from && dateRange.to && (
+            <StaySummary 
+              dateRange={dateRange} 
+              numberOfNights={numberOfNights}
+            />
+          )}
           <GuestInfo formValues={formValues} />
         </div>
 
