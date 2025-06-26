@@ -1,18 +1,17 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAnalytics } from './useAnalytics';
+import { useAnalyticsCore } from './useAnalyticsCore';
 
-// Configurazione tracking
 const TRACKING_CONFIG = {
-  DELAY_MS: 500, // Ritardo prima del tracking
-  DUPLICATE_WINDOW: 60000, // 1 minuto per evitare duplicati
+  DELAY_MS: 500,
+  DUPLICATE_WINDOW: 60000, // 1 minuto
   MAX_PAGE_LENGTH: 500
 };
 
-export function usePageTracking() {
+export function useOptimizedTracking() {
   const location = useLocation();
-  const { trackSiteVisit } = useAnalytics();
+  const { trackSiteVisit } = useAnalyticsCore();
   const lastTrackedRef = useRef<Map<string, number>>(new Map());
   const isTrackingRef = useRef(false);
 
@@ -23,16 +22,33 @@ export function usePageTracking() {
     // Skip admin e pagine private
     if (page.includes('/area-riservata') || 
         page.includes('/admin') ||
-        page.includes('/login')) return false;
+        page.includes('/login')) {
+      return false;
+    }
     
     return true;
   }, []);
 
-  const trackCurrentPage = useCallback(async () => {
-    const currentPath = location.pathname + location.search;
+  const normalizeUrl = useCallback((url: string): string => {
+    // Rimuovi parametri Lovable
+    if (url.includes('?') && url.includes('lovable')) {
+      url = url.split('?')[0];
+    }
     
-    if (!isValidPage(currentPath)) {
-      console.log('🚫 Skipping invalid page:', currentPath);
+    // Normalizza trailing slash
+    if (url.endsWith('/') && url.length > 1) {
+      url = url.slice(0, -1);
+    }
+    
+    return url;
+  }, []);
+
+  const trackCurrentPage = useCallback(async () => {
+    const rawPath = location.pathname + location.search;
+    const normalizedPath = normalizeUrl(rawPath);
+    
+    if (!isValidPage(normalizedPath)) {
+      console.log('🚫 Skipping invalid page:', normalizedPath);
       return;
     }
     
@@ -44,24 +60,24 @@ export function usePageTracking() {
     
     // Controllo duplicati
     const now = Date.now();
-    const lastTracked = lastTrackedRef.current.get(currentPath);
+    const lastTracked = lastTrackedRef.current.get(normalizedPath);
     if (lastTracked && (now - lastTracked) < TRACKING_CONFIG.DUPLICATE_WINDOW) {
-      console.log('🔄 Page recently tracked, skipping:', currentPath);
+      console.log('🔄 Page recently tracked, skipping:', normalizedPath);
       return;
     }
     
     isTrackingRef.current = true;
     
     try {
-      await trackSiteVisit(currentPath);
-      lastTrackedRef.current.set(currentPath, now);
-      console.log('✅ Page tracked:', currentPath);
+      await trackSiteVisit(normalizedPath);
+      lastTrackedRef.current.set(normalizedPath, now);
+      console.log('✅ Page tracked:', normalizedPath);
     } catch (error) {
-      console.error('❌ Failed to track page:', currentPath, error);
+      console.error('❌ Failed to track page:', normalizedPath, error);
     } finally {
       isTrackingRef.current = false;
     }
-  }, [location, trackSiteVisit, isValidPage]);
+  }, [location, trackSiteVisit, isValidPage, normalizeUrl]);
 
   // Cleanup periodico della cache
   const cleanupCache = useCallback(() => {

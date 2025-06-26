@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
-import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
+import { useAnalyticsCore } from "@/hooks/analytics/useAnalyticsCore";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -22,11 +22,15 @@ interface AdminLogDeleteProps {
 }
 
 const AdminLogDelete: React.FC<AdminLogDeleteProps> = ({ quoteId, customerName }) => {
-  const { deleteQuoteLog } = useUnifiedAnalytics();
+  const { deleteQuoteLog } = useAnalyticsCore();
 
-  const handleDeleteQuote = () => {
-    deleteQuoteLog(quoteId);
-    toast.success("Log del preventivo eliminato con successo");
+  const handleDeleteQuote = async () => {
+    try {
+      await deleteQuoteLog(quoteId);
+      toast.success("Log del preventivo eliminato con successo");
+    } catch (error) {
+      toast.error("Errore durante l'eliminazione del log");
+    }
   };
 
   return (
@@ -50,7 +54,10 @@ const AdminLogDelete: React.FC<AdminLogDeleteProps> = ({ quoteId, customerName }
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Annulla</AlertDialogCancel>
-          <AlertDialogAction onClick={handleDeleteQuote} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+          <AlertDialogAction 
+            onClick={handleDeleteQuote} 
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
             Elimina
           </AlertDialogAction>
         </AlertDialogFooter>

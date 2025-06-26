@@ -12,33 +12,15 @@ import {
   calculateOccupancyDiscount, 
   formatOccupancyDiscountDescription 
 } from "./occupancyDiscount";
+import { toDateSafe, toISOStringSafe } from "./dateConverter";
 
-// Memorization cache to avoid recalculating prices for the same inputs
+// Cache per evitare ricalcoli
 const priceCalculationCache = new Map<string, PriceCalculation>();
 
 /**
- * Safely convert a date value to ISO string
- */
-const toISOStringSafe = (date: Date | string | undefined): string => {
-  if (!date) return '';
-  if (typeof date === 'string') return date;
-  return date.toISOString();
-};
-
-/**
- * Convert string or Date to Date object
- */
-const toDateSafe = (date: Date | string | undefined): Date | null => {
-  if (!date) return null;
-  if (typeof date === 'string') return new Date(date);
-  return date;
-};
-
-/**
- * Generate a cache key for the price calculation
+ * Genera chiave cache per il calcolo del prezzo
  */
 const generateCacheKey = (formValues: FormValues, apartments: Apartment[]): string => {
-  // Include only the values that affect the price calculation
   const cacheKeyParts = [
     toISOStringSafe(formValues.checkIn),
     toISOStringSafe(formValues.checkOut),
@@ -47,7 +29,6 @@ const generateCacheKey = (formValues: FormValues, apartments: Apartment[]): stri
     formValues.children,
     formValues.hasPets ? '1' : '0',
     formValues.needsLinen ? '1' : '0',
-    // Include any other values that affect the price
     JSON.stringify(formValues.personsPerApartment || {}),
     JSON.stringify(formValues.petsInApartment || {})
   ];
@@ -56,116 +37,106 @@ const generateCacheKey = (formValues: FormValues, apartments: Apartment[]): stri
 };
 
 /**
- * Calculates total prices for each apartment and overall price with occupancy discount
+ * Calcola i prezzi totali per ogni appartamento con sconto occupazione
  */
 export function calculateTotalPrice(formValues: FormValues, apartments: Apartment[]): PriceCalculation {
-  console.log("Starting price calculation with occupancy discount...");
+  console.log("🧮 Starting price calculation...");
   
-  // Check for valid inputs
+  // Validazione input
   const selectedApartmentIds = formValues.selectedApartments || 
     (formValues.selectedApartment ? [formValues.selectedApartment] : []);
     
   const selectedApartments = apartments.filter(apt => selectedApartmentIds.includes(apt.id));
   
   if (selectedApartments.length === 0 || !formValues.checkIn || !formValues.checkOut) {
+    console.log("❌ Invalid input - returning empty calculation");
     return emptyPriceCalculation;
   }
   
-  // Convert dates to Date objects
+  // Conversione date sicura
   const checkInDate = toDateSafe(formValues.checkIn);
   const checkOutDate = toDateSafe(formValues.checkOut);
   
   if (!checkInDate || !checkOutDate) {
+    console.log("❌ Invalid dates - returning empty calculation");
     return emptyPriceCalculation;
   }
   
-  // Generate a cache key based on inputs
+  // Cache check
   const cacheKey = generateCacheKey(formValues, selectedApartments);
-  
-  // Check if we have a cached result
   if (priceCalculationCache.has(cacheKey)) {
-    console.log("Using cached price calculation");
+    console.log("✅ Using cached price calculation");
     return priceCalculationCache.get(cacheKey)!;
   }
   
-  // Calculate the number of nights
+  // Calcolo notti
   const nights = calculateNights(checkInDate, checkOutDate);
-  console.log(`Stay duration: ${nights} nights`);
+  console.log(`📅 Stay duration: ${nights} nights`);
   
-  // Track individual apartment prices
+  // Tracciamento prezzi appartamenti
   const apartmentPrices: Record<string, number> = {};
   let originalBasePrice = 0;
   
-  // Calculate number of complete weeks (rounding up)
+  // Calcolo settimane
   const numberOfWeeks = Math.ceil(nights / 7);
-  console.log(`Number of complete weeks: ${numberOfWeeks}`);
+  console.log(`📊 Number of weeks: ${numberOfWeeks}`);
   
-  // For each selected apartment
+  // Calcolo prezzo per ogni appartamento
   selectedApartments.forEach(apartment => {
     let totalApartmentPrice = 0;
     
-    // Optimize: precalculate date values for each week
+    // Pre-calcolo date settimane per performance
     const weekStartDates = Array(numberOfWeeks).fill(0).map((_, week) => {
       const weekStartDate = new Date(checkInDate);
       weekStartDate.setDate(weekStartDate.getDate() + (week * 7));
       return weekStartDate;
     });
     
-    // For each week of stay, get the corresponding price
+    // Calcolo prezzo per ogni settimana
     for (let week = 0; week < numberOfWeeks; week++) {
       const weekStartDate = weekStartDates[week];
-      
-      // Get the price for this week using sync function
       const weeklyPrice = getPriceForWeekSync(apartment.id, weekStartDate);
-      console.log(`Week ${week+1} price for ${apartment.id}: ${weeklyPrice}€ (starting on ${weekStartDate.toISOString().split('T')[0]})`);
+      
+      console.log(`💰 Week ${week+1} price for ${apartment.id}: ${weeklyPrice}€`);
       
       if (weeklyPrice > 0) {
         totalApartmentPrice += weeklyPrice;
       } else {
-        // Use the apartment's default price if no specific price is set
         const defaultPrice = apartment.price || 0;
-        console.log(`No specific price found for week ${week+1}, using default price: ${defaultPrice}€`);
+        console.log(`⚠️ Using default price: ${defaultPrice}€`);
         totalApartmentPrice += defaultPrice;
       }
     }
     
-    // Save the apartment's total price
     apartmentPrices[apartment.id] = totalApartmentPrice;
     originalBasePrice += totalApartmentPrice;
     
-    console.log(`Total price for apartment ${apartment.id} (${numberOfWeeks} weeks): ${totalApartmentPrice}€`);
+    console.log(`🏠 Total price for ${apartment.id}: ${totalApartmentPrice}€`);
   });
   
-  console.log(`Total original base price for all apartments: ${originalBasePrice}€`);
+  console.log(`💵 Total original base price: ${originalBasePrice}€`);
   
-  // Calcola lo sconto di occupazione
+  // Calcolo sconto occupazione
   const occupancyInfo = calculateOccupancyDiscount(
     formValues, 
     selectedApartments, 
     originalBasePrice
   );
   
-  // Il prezzo base finale è quello già scontato per occupazione
   const basePrice = occupancyInfo.discountedPrice;
-  console.log(`Base price after occupancy discount: ${basePrice}€`);
+  console.log(`🎯 Base price after occupancy discount: ${basePrice}€`);
   
-  // Calculate extras separately - pass selectedApartments for correct pets calculation
+  // Calcolo extra
   const { extrasCost, cleaningFee, touristTax } = calculateExtras(formValues, selectedApartments, nights);
-  console.log(`Extras: ${extrasCost}€, Cleaning: ${cleaningFee}€, Tax: ${touristTax}€`);
+  console.log(`🧹 Extras: ${extrasCost}€, Cleaning: ${cleaningFee}€, Tax: ${touristTax}€`);
   
-  // Calculate subtotal (base price + extras)
   const subtotal = basePrice + extrasCost;
-  console.log(`Subtotal: ${subtotal}€`);
-  
-  // Calculate total before discount
   const totalBeforeDiscount = subtotal;
-  console.log(`Total before discount: ${totalBeforeDiscount}€`);
-
-  // Handle pricing logic based on number of apartments
+  
   let result: PriceCalculation;
   
   if (selectedApartments.length > 1) {
-    // For multiple apartments, calculate individual discounts
+    // Logica multi-appartamento
     const {
       totalAfterDiscount,
       discount,
@@ -179,7 +150,6 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
       totalBeforeDiscount
     );
     
-    // Create result object
     result = {
       basePrice,
       extras: extrasCost,
@@ -204,12 +174,9 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
       }
     };
   } else {
-    // For single apartment, use the standard discount calculation
+    // Logica singolo appartamento
     const { totalAfterDiscount, discount, savings, deposit } = calculateDiscount(totalBeforeDiscount, touristTax);
     
-    console.log(`Single apartment - After discount: ${totalAfterDiscount}€, Savings: ${savings}€`);
-    
-    // Create result object for a single apartment
     result = {
       basePrice,
       extras: extrasCost,
@@ -235,23 +202,23 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
     };
   }
   
-  // Cache the result for future calculations
+  // Cache del risultato
   priceCalculationCache.set(cacheKey, result);
   
-  // Limit cache size to prevent memory leaks
+  // Limite cache per prevenire memory leak
   if (priceCalculationCache.size > 100) {
     const oldestKey = priceCalculationCache.keys().next().value;
     priceCalculationCache.delete(oldestKey);
   }
   
+  console.log("✅ Price calculation completed");
   return result;
 }
 
 /**
- * Clear price calculation cache
- * Call this when apartment prices are updated
+ * Pulisce cache calcoli prezzo
  */
 export function clearPriceCalculationCache(): void {
   priceCalculationCache.clear();
-  console.log("Price calculation cache cleared");
+  console.log("🧹 Price calculation cache cleared");
 }

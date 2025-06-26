@@ -1,7 +1,7 @@
 
-// Sistema analytics unificato e semplificato
-export { useAnalytics } from './useAnalytics';
-export { usePageTracking } from './usePageTracking';
+// Sistema analytics ottimizzato e sistemato
+export { useAnalyticsCore as useAnalytics } from './useAnalyticsCore';
+export { useOptimizedTracking as usePageTracking } from './useOptimizedTracking';
 
 // Types
-export type { QuoteLog, SiteVisit, AnalyticsMetrics } from './useAnalytics';
+export type { QuoteLog, SiteVisit, AnalyticsMetrics } from './useAnalyticsCore';

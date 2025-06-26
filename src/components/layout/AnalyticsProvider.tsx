@@ -1,14 +1,14 @@
 
 import * as React from "react";
-import { usePageTracking } from "@/hooks/analytics/usePageTracking";
+import { useOptimizedTracking } from "@/hooks/analytics/useOptimizedTracking";
 
 interface AnalyticsProviderProps {
   children: React.ReactNode;
 }
 
 export const AnalyticsProvider = ({ children }: AnalyticsProviderProps) => {
-  // Attiva il tracking automatico delle pagine
-  usePageTracking();
+  // Attiva il tracking ottimizzato delle pagine
+  useOptimizedTracking();
 
   return <>{children}</>;
 };

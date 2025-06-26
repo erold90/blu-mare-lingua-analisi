@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { FormValues } from '@/utils/quoteFormSchema';
@@ -31,7 +32,24 @@ export interface AnalyticsMetrics {
   quotesCompleted: number;
 }
 
-export function useAnalytics() {
+// Utility per sessioni consistenti
+const getOrCreateSessionId = (): string => {
+  let sessionId = sessionStorage.getItem('analytics_session');
+  if (!sessionId) {
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    sessionStorage.setItem('analytics_session', sessionId);
+  }
+  return sessionId;
+};
+
+// Utility per conversione date sicura
+const safeStringToDate = (dateValue: string | Date | undefined): string => {
+  if (!dateValue) return '';
+  if (typeof dateValue === 'string') return dateValue;
+  return dateValue.toISOString();
+};
+
+export function useAnalyticsCore() {
   const [quoteLogs, setQuoteLogs] = useState<QuoteLog[]>([]);
   const [siteVisits, setSiteVisits] = useState<SiteVisit[]>([]);
   const [metrics, setMetrics] = useState<AnalyticsMetrics>({
@@ -44,12 +62,15 @@ export function useAnalytics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Carica metriche principali con funzione database ottimizzata
+  // Carica metriche con gestione errori migliorata
   const loadMetrics = useCallback(async () => {
     try {
       const { data, error } = await supabase.rpc('get_analytics_counts');
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error loading metrics:', error);
+        throw error;
+      }
       
       const result = data?.[0];
       if (result) {
@@ -62,19 +83,23 @@ export function useAnalytics() {
         });
       }
     } catch (error) {
-      console.error('❌ Error loading analytics metrics:', error);
+      console.error('❌ Failed to load analytics metrics:', error);
+      setError('Errore nel caricamento delle metriche');
     }
   }, []);
 
-  // Carica visite recenti
-  const loadSiteVisits = useCallback(async () => {
+  // Carica visite con paginazione ottimizzata
+  const loadSiteVisits = useCallback(async (limit = 200) => {
     try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
       const { data, error } = await supabase
         .from('site_visits')
         .select('*')
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+        .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: false })
-        .limit(200);
+        .limit(limit);
 
       if (error) throw error;
       
@@ -91,17 +116,18 @@ export function useAnalytics() {
       setSiteVisits(visits);
     } catch (error) {
       console.error('❌ Error loading site visits:', error);
+      setError('Errore nel caricamento delle visite');
     }
   }, []);
 
-  // Carica preventivi
-  const loadQuoteLogs = useCallback(async () => {
+  // Carica preventivi con gestione errori
+  const loadQuoteLogs = useCallback(async (limit = 100) => {
     try {
       const { data, error } = await supabase
         .from('quote_logs')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(100);
+        .limit(limit);
 
       if (error) throw error;
       
@@ -119,41 +145,23 @@ export function useAnalytics() {
       setQuoteLogs(quotes);
     } catch (error) {
       console.error('❌ Error loading quote logs:', error);
+      setError('Errore nel caricamento dei preventivi');
     }
   }, []);
 
-  // Carica tutti i dati
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      await Promise.all([
-        loadMetrics(),
-        loadSiteVisits(),
-        loadQuoteLogs()
-      ]);
-    } catch (error) {
-      console.error('❌ Error loading analytics data:', error);
-      setError('Errore nel caricamento dei dati analytics');
-    } finally {
-      setLoading(false);
-    }
-  }, [loadMetrics, loadSiteVisits, loadQuoteLogs]);
-
-  // Traccia visita pagina
+  // Traccia visita con sessione consistente
   const trackSiteVisit = useCallback(async (page: string) => {
     try {
-      // Genera session ID se non esiste
-      let sessionId = sessionStorage.getItem('analytics_session');
-      if (!sessionId) {
-        sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-        sessionStorage.setItem('analytics_session', sessionId);
+      // Skip admin areas
+      if (page.includes('/area-riservata') || page.includes('/admin')) {
+        return;
       }
+
+      const sessionId = getOrCreateSessionId();
 
       const visitData = {
         id: `visit_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-        page: page.substring(0, 500),
+        page: page.substring(0, 500), // Limita lunghezza
         user_agent: navigator?.userAgent?.substring(0, 500),
         referrer: document?.referrer?.substring(0, 500) || null,
         session_id: sessionId
@@ -163,30 +171,33 @@ export function useAnalytics() {
         .from('site_visits')
         .insert(visitData);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error tracking visit:', error);
+        return;
+      }
       
       console.log('✅ Site visit tracked:', page);
       await loadMetrics();
       
     } catch (error) {
-      console.error('❌ Error tracking site visit:', error);
+      console.error('❌ Failed to track site visit:', error);
     }
   }, [loadMetrics]);
 
-  // Salva preventivo con conversione corretta dei tipi
+  // Salva preventivo con gestione date corretta
   const saveQuoteLog = useCallback(async (quoteData: Omit<QuoteLog, 'created_at' | 'updated_at'>) => {
     try {
-      // Converti Date a string per il database
+      // Converti date in modo sicuro
       const formDataForDb = {
         ...quoteData.form_data,
-        checkIn: quoteData.form_data.checkIn ? String(quoteData.form_data.checkIn) : undefined,
-        checkOut: quoteData.form_data.checkOut ? String(quoteData.form_data.checkOut) : undefined,
+        checkIn: safeStringToDate(quoteData.form_data.checkIn),
+        checkOut: safeStringToDate(quoteData.form_data.checkOut),
       };
 
       const dbData = {
         id: quoteData.id,
         form_data: formDataForDb as any,
-        step: quoteData.step,
+        step: Math.max(1, Math.min(10, quoteData.step)), // Valida step
         completed: quoteData.completed,
         total_price: quoteData.total_price || null,
         user_session: quoteData.user_session || null
@@ -254,7 +265,7 @@ export function useAnalytics() {
     }
   }, [loadMetrics]);
 
-  // Pulizia dati vecchi
+  // Pulizia dati con gestione migliorata
   const cleanupOldData = useCallback(async () => {
     try {
       const { data, error } = await supabase.rpc('cleanup_old_analytics');
@@ -263,14 +274,20 @@ export function useAnalytics() {
       
       const result = data?.[0];
       console.log('🧹 Cleanup completed:', result);
-      await loadData();
-      return result;
+      
+      // Ricarica dati dopo pulizia
+      await Promise.all([loadSiteVisits(), loadQuoteLogs(), loadMetrics()]);
+      
+      return {
+        deleted_visits: result?.deleted_visits || 0,
+        deleted_quotes: result?.deleted_quotes || 0
+      };
       
     } catch (error) {
       console.error('❌ Error during cleanup:', error);
       throw error;
     }
-  }, [loadData]);
+  }, [loadSiteVisits, loadQuoteLogs, loadMetrics]);
 
   // Test connessione
   const testConnection = useCallback(async () => {
@@ -286,6 +303,25 @@ export function useAnalytics() {
       return false;
     }
   }, []);
+
+  // Carica tutti i dati
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      await Promise.all([
+        loadMetrics(),
+        loadSiteVisits(),
+        loadQuoteLogs()
+      ]);
+    } catch (error) {
+      console.error('❌ Error loading analytics data:', error);
+      setError('Errore nel caricamento dei dati analytics');
+    } finally {
+      setLoading(false);
+    }
+  }, [loadMetrics, loadSiteVisits, loadQuoteLogs]);
 
   useEffect(() => {
     loadData();
