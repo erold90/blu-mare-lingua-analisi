@@ -1,3 +1,4 @@
+
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { emptyPriceCalculation, PriceCalculation } from "./types";
@@ -25,6 +26,15 @@ const toISOStringSafe = (date: Date | string | undefined): string => {
 };
 
 /**
+ * Convert string or Date to Date object
+ */
+const toDateSafe = (date: Date | string | undefined): Date | null => {
+  if (!date) return null;
+  if (typeof date === 'string') return new Date(date);
+  return date;
+};
+
+/**
  * Generate a cache key for the price calculation
  */
 const generateCacheKey = (formValues: FormValues, apartments: Apartment[]): string => {
@@ -36,7 +46,7 @@ const generateCacheKey = (formValues: FormValues, apartments: Apartment[]): stri
     formValues.adults,
     formValues.children,
     formValues.hasPets ? '1' : '0',
-    formValues.needsLinen ? '1' : '0', // Updated from linenOption to needsLinen
+    formValues.needsLinen ? '1' : '0',
     // Include any other values that affect the price
     JSON.stringify(formValues.personsPerApartment || {}),
     JSON.stringify(formValues.petsInApartment || {})
@@ -61,6 +71,14 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
     return emptyPriceCalculation;
   }
   
+  // Convert dates to Date objects
+  const checkInDate = toDateSafe(formValues.checkIn);
+  const checkOutDate = toDateSafe(formValues.checkOut);
+  
+  if (!checkInDate || !checkOutDate) {
+    return emptyPriceCalculation;
+  }
+  
   // Generate a cache key based on inputs
   const cacheKey = generateCacheKey(formValues, selectedApartments);
   
@@ -71,7 +89,7 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   }
   
   // Calculate the number of nights
-  const nights = calculateNights(formValues.checkIn, formValues.checkOut);
+  const nights = calculateNights(checkInDate, checkOutDate);
   console.log(`Stay duration: ${nights} nights`);
   
   // Track individual apartment prices
@@ -88,7 +106,7 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
     
     // Optimize: precalculate date values for each week
     const weekStartDates = Array(numberOfWeeks).fill(0).map((_, week) => {
-      const weekStartDate = new Date(formValues.checkIn);
+      const weekStartDate = new Date(checkInDate);
       weekStartDate.setDate(weekStartDate.getDate() + (week * 7));
       return weekStartDate;
     });

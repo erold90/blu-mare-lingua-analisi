@@ -1,3 +1,4 @@
+
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { emptyPriceCalculation, PriceCalculation } from "./types";
@@ -14,6 +15,15 @@ import {
 // Enhanced cache with longer validity for better performance
 const priceCache = new Map<string, { price: number; timestamp: number; validated: boolean }>();
 const CACHE_DURATION = 10 * 60 * 1000; // Increased to 10 minutes
+
+/**
+ * Convert string or Date to Date object
+ */
+const toDateSafe = (date: Date | string | undefined): Date | null => {
+  if (!date) return null;
+  if (typeof date === 'string') return new Date(date);
+  return date;
+};
 
 /**
  * Enhanced price retrieval with improved caching
@@ -145,12 +155,16 @@ export async function calculateTotalPriceUnified(
     return emptyPriceCalculation;
   }
   
-  if (formValues.checkIn >= formValues.checkOut) {
+  // Convert dates to Date objects
+  const checkInDate = toDateSafe(formValues.checkIn);
+  const checkOutDate = toDateSafe(formValues.checkOut);
+  
+  if (!checkInDate || !checkOutDate || checkInDate >= checkOutDate) {
     return emptyPriceCalculation;
   }
   
   try {
-    const nights = calculateNights(formValues.checkIn, formValues.checkOut);
+    const nights = calculateNights(checkInDate, checkOutDate);
     
     if (nights <= 0) {
       return emptyPriceCalculation;
@@ -159,7 +173,7 @@ export async function calculateTotalPriceUnified(
     // Optimized price loading
     if (!externalGetPriceForWeek) {
       // Don't wait for full preload, start with cached data
-      preloadPrices(selectedApartmentIds, formValues.checkIn, formValues.checkOut);
+      preloadPrices(selectedApartmentIds, checkInDate, checkOutDate);
     }
     
     // Calculate original base price (same logic as before)
@@ -168,7 +182,7 @@ export async function calculateTotalPriceUnified(
     
     for (const apartment of selectedApartments) {
       let totalApartmentPrice = 0;
-      const weeks = getWeeksForStay(formValues.checkIn, formValues.checkOut);
+      const weeks = getWeeksForStay(checkInDate, checkOutDate);
       
       for (let i = 0; i < weeks.length; i++) {
         const weekStart = weeks[i];

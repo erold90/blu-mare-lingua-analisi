@@ -77,6 +77,11 @@ const RequestQuotePage = () => {
       sleepsInCrib: child.sleepsInCrib ?? false
     }));
 
+    // Create a wrapper function to match the expected signature
+    const updateChildDetailsWrapper = (index: number, field: "isUnder12" | "sleepsWithParents" | "sleepsInCrib", value: boolean) => {
+      updateChildDetails(index, { [field]: value });
+    };
+
     // Render current step content
     const renderStepContent = () => {
       try {
@@ -92,7 +97,7 @@ const RequestQuotePage = () => {
                 decrementAdults={decrementAdults}
                 incrementChildren={incrementChildren}
                 decrementChildren={decrementChildren}
-                updateChildDetails={updateChildDetails}
+                updateChildDetails={updateChildDetailsWrapper}
                 nextStep={nextStep}
               />
             );

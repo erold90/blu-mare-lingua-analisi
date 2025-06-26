@@ -16,6 +16,15 @@ import {
 } from "./whatsApp/priceFormatter";
 
 /**
+ * Convert string or Date to Date object
+ */
+const toDateSafe = (date: Date | string | undefined): Date | null => {
+  if (!date) return null;
+  if (typeof date === 'string') return new Date(date);
+  return date;
+};
+
+/**
  * Creates a WhatsApp message with quote details
  * Clean text format without emojis
  */
@@ -26,6 +35,14 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
   }
   
   try {
+    // Convert dates to Date objects
+    const checkInDate = toDateSafe(formValues.checkIn);
+    const checkOutDate = toDateSafe(formValues.checkOut);
+    
+    if (!checkInDate || !checkOutDate) {
+      return null;
+    }
+    
     // Calculate prices using the same function as the summary
     const priceInfo = calculateTotalPrice(formValues, apartments);
     
@@ -59,7 +76,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     let message = `*Richiesta Preventivo Villa MareBlu*\n\n`;
     
     // Add all sections
-    message += formatDateSection(formValues.checkIn, formValues.checkOut, nights, weeks);
+    message += formatDateSection(checkInDate, checkOutDate, nights, weeks);
     message += formatGuestSection(formValues);
     message += formatApartmentsSection(selectedApartments, formValues, priceInfo);
     message += formatServicesSection(formValues, selectedApartments);

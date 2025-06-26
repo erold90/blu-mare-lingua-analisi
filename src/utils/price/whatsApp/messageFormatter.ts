@@ -111,10 +111,6 @@ export const formatServicesSection = (formValues: FormValues, selectedApartments
     section += `Culle richieste: ${totalCribs} (gratuite)\n`;
   }
   
-  if (formValues.additionalServices && formValues.additionalServices.length > 0) {
-    section += `Servizi aggiuntivi: ${formValues.additionalServices.join(", ")}\n`;
-  }
-  
   return section + `\n`;
 };
 
