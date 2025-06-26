@@ -6,6 +6,7 @@ import {
   trackPageVisit, 
   loadSiteVisits, 
   calculateAllVisitsCounts,
+  calculateVisitsCountLegacy,
   cleanupOldVisits,
   loadOptimizedStats,
   retryFailedTracking
