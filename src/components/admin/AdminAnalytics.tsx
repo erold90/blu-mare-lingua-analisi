@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, subDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
-import { CalendarIcon, Info, Loader2, AlertCircle, RefreshCw, CheckCircle2 } from "lucide-react";
+import { CalendarIcon, Info, Loader2, AlertCircle, RefreshCw, CheckCircle2, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminLogAnalytics } from "./analytics/AdminLogAnalytics";
@@ -17,7 +17,7 @@ import { AdminLogQuotes } from "./quotes/AdminLogQuotes";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 
-const AdminLogUnified = () => {
+const AdminAnalytics = () => {
   const { quoteLogs, siteVisits, getVisitsCount, loading, error, refreshData } = useUnifiedAnalytics();
   const isMobile = useIsMobile();
   
@@ -32,11 +32,7 @@ const AdminLogUnified = () => {
     try {
       console.log('🔍 Refreshing analytics data...');
       await refreshData();
-      if (error) {
-        toast.warning('Dati parzialmente aggiornati');
-      } else {
-        toast.success('Dati aggiornati con successo');
-      }
+      toast.success('Analytics aggiornati con successo');
     } catch (error) {
       console.error("❌ Error during refresh:", error);
       toast.error('Errore durante il refresh dei dati');
@@ -50,7 +46,7 @@ const AdminLogUnified = () => {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex items-center gap-2">
           <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Caricamento analytics ottimizzato...</span>
+          <span>Caricamento analytics...</span>
         </div>
       </div>
     );
@@ -59,11 +55,14 @@ const AdminLogUnified = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Analytics Ottimizzato</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Sistema ultra-veloce con caricamento intelligente
-          </p>
+        <div className="flex items-center gap-3">
+          <BarChart3 className="h-8 w-8 text-blue-600" />
+          <div>
+            <h2 className="text-2xl font-bold">Analytics Villa MareBlu</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Analisi completa dei preventivi e delle visite al sito
+            </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Popover>
@@ -119,61 +118,47 @@ const AdminLogUnified = () => {
         </div>
       </div>
 
-      {/* Error handling with better messaging */}
+      {/* Gestione errori migliorata */}
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            <div className="space-y-2">
-              <p>{error}</p>
-              <p className="text-xs">
-                Questo è normale durante i primi utilizzi o con connessioni lente. 
-                I dati disponibili vengono comunque mostrati correttamente.
-              </p>
-            </div>
+            {error}
           </AlertDescription>
         </Alert>
       )}
 
-      {/* Success indicators when data loads properly */}
-      {!error && (quoteLogs.length > 0 || siteVisits.length > 0) && (
-        <Alert>
-          <CheckCircle2 className="h-4 w-4 text-green-600" />
-          <AlertDescription>
-            <strong>Sistema operativo:</strong> Tutti i dati caricati correttamente con sistema ottimizzato.
-          </AlertDescription>
-        </Alert>
+      {/* Indicatori di stato */}
+      {!error && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Alert>
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <AlertDescription>
+              <strong>Preventivi:</strong> {quoteLogs.length} registrati nel database
+            </AlertDescription>
+          </Alert>
+          <Alert>
+            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <AlertDescription>
+              <strong>Visite oggi:</strong> {getVisitsCount('day')} visite uniche
+            </AlertDescription>
+          </Alert>
+          <Alert>
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Visite totali:</strong> {siteVisits.length} (ultime 24h)
+            </AlertDescription>
+          </Alert>
+        </div>
       )}
-
-      {/* Status indicators */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Visite:</strong> {siteVisits.length} caricate (ultime 24h per performance)
-          </AlertDescription>
-        </Alert>
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Preventivi:</strong> {quoteLogs.length} salvati nel database
-          </AlertDescription>
-        </Alert>
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Performance:</strong> Caricamento ultra-veloce attivo
-          </AlertDescription>
-        </Alert>
-      </div>
       
-      <Tabs defaultValue="quotes">
-        <TabsList>
+      <Tabs defaultValue="quotes" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="quotes">
             Preventivi ({quoteLogs.length})
           </TabsTrigger>
           <TabsTrigger value="visits">
-            Visite ({siteVisits.length})
+            Analisi Sito ({siteVisits.length})
           </TabsTrigger>
         </TabsList>
         
@@ -201,14 +186,6 @@ const AdminLogUnified = () => {
         </TabsContent>
         
         <TabsContent value="visits" className="mt-6 space-y-6">
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              Sistema ultra-veloce attivo. Visualizzando le visite delle ultime 24 ore per performance ottimali.
-              {siteVisits.length === 0 && " Nessuna visita recente registrata."}
-            </AlertDescription>
-          </Alert>
-          
           <AdminLogAnalytics 
             siteVisits={siteVisits} 
             getVisitsCount={getVisitsCount} 
@@ -220,4 +197,4 @@ const AdminLogUnified = () => {
   );
 };
 
-export default AdminLogUnified;
+export default AdminAnalytics;

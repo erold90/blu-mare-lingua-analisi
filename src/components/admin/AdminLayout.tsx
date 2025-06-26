@@ -7,7 +7,7 @@ import AdminApartments from "./AdminApartments";
 import AdminPrices from "./AdminPrices";
 import AdminCleaningManagement from "./cleaning/AdminCleaningManagement";
 import { SiteImageManager } from "./images/SiteImageManager";
-import AdminLog from "./AdminLog";
+import AdminAnalytics from "./AdminAnalytics";
 import AdminSettings from "./AdminSettings";
 import {
   Users,
@@ -16,13 +16,11 @@ import {
   Euro,
   Sparkles,
   Images,
-  FileText,
-  TrendingUp,
+  BarChart3,
   Settings,
   Menu,
   X
 } from "lucide-react";
-import AdminAdvancedLog from "./AdminAdvancedLog";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -149,18 +147,6 @@ const AdminLayout = () => {
               </button>
 
               <button
-                onClick={() => setActiveTab("log")}
-                className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
-                  activeTab === "log"
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-300 hover:bg-gray-700"
-                }`}
-              >
-                <FileText className="h-5 w-5" />
-                Log
-              </button>
-
-              <button
                 onClick={() => setActiveTab("analytics")}
                 className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
                   activeTab === "analytics"
@@ -168,8 +154,8 @@ const AdminLayout = () => {
                     : "text-gray-300 hover:bg-gray-700"
                 }`}
               >
-                <TrendingUp className="h-5 w-5" />
-                Analytics Avanzati
+                <BarChart3 className="h-5 w-5" />
+                Analytics
               </button>
 
               <button
@@ -200,7 +186,6 @@ const AdminLayout = () => {
             className="mt-5 flex-1 flex flex-col bg-blue-800 space-y-1"
             aria-label="Sidebar"
           >
-            {/* Same navigation buttons as mobile */}
             <button
               onClick={() => setActiveTab("dashboard")}
               className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
@@ -274,18 +259,6 @@ const AdminLayout = () => {
             </button>
 
             <button
-              onClick={() => setActiveTab("log")}
-              className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
-                activeTab === "log"
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-300 hover:bg-gray-700"
-              }`}
-            >
-              <FileText className="h-5 w-5" />
-              Log
-            </button>
-
-            <button
               onClick={() => setActiveTab("analytics")}
               className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
                 activeTab === "analytics"
@@ -293,8 +266,8 @@ const AdminLayout = () => {
                   : "text-gray-300 hover:bg-gray-700"
               }`}
             >
-              <TrendingUp className="h-5 w-5" />
-              Analytics Avanzati
+              <BarChart3 className="h-5 w-5" />
+              Analytics
             </button>
 
             <button
@@ -320,8 +293,7 @@ const AdminLayout = () => {
           {activeTab === "prices" && <AdminPrices />}
           {activeTab === "cleaning" && <AdminCleaningManagement />}
           {activeTab === "images" && <SiteImageManager />}
-          {activeTab === "log" && <AdminLog />}
-          {activeTab === "analytics" && <AdminAdvancedLog />}
+          {activeTab === "analytics" && <AdminAnalytics />}
           {activeTab === "settings" && <AdminSettings />}
         </div>
       </main>

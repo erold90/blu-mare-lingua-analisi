@@ -30,58 +30,50 @@ export function useUnifiedAnalytics() {
       setError(null);
       console.log('🔍 Loading unified analytics data...');
 
-      // Load data with very aggressive timeouts and fallbacks
+      // Caricamento ultra-veloce con timeout aggressivi
       const loadWithTimeout = async () => {
-        // Parallel loading with individual timeouts
         const [quoteLogsResult, siteVisitsResult] = await Promise.allSettled([
           Promise.race([
             loadQuoteLogs(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Quote logs timeout')), 3000))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Quote logs timeout')), 2000))
           ]),
           Promise.race([
             loadSiteVisits(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Site visits timeout')), 1500))
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Site visits timeout')), 1000))
           ])
         ]);
 
         return [quoteLogsResult, siteVisitsResult];
       };
 
-      const [quoteLogs, siteVisits] = await loadWithTimeout();
+      const [quoteLogsResult, siteVisitsResult] = await loadWithTimeout();
 
-      // Handle quote logs result
-      if (quoteLogs.status === 'fulfilled') {
-        setQuoteLogs(quoteLogs.value as QuoteLog[]);
-        console.log('✅ Loaded quote logs:', (quoteLogs.value as QuoteLog[]).length);
+      // Gestisci risultati quote logs
+      if (quoteLogsResult.status === 'fulfilled') {
+        setQuoteLogs(quoteLogsResult.value as QuoteLog[]);
+        console.log('✅ Loaded quote logs:', (quoteLogsResult.value as QuoteLog[]).length);
       } else {
-        console.warn('⚠️ Quote logs failed to load:', quoteLogs.reason);
+        console.warn('⚠️ Quote logs failed to load:', quoteLogsResult.reason);
         setQuoteLogs([]);
       }
 
-      // Handle site visits result (always succeeds due to fallback in loadSiteVisits)
-      if (siteVisits.status === 'fulfilled') {
-        setSiteVisits(siteVisits.value as SiteVisit[]);
-        console.log('✅ Loaded site visits:', (siteVisits.value as SiteVisit[]).length);
+      // Gestisci risultati site visits
+      if (siteVisitsResult.status === 'fulfilled') {
+        setSiteVisits(siteVisitsResult.value as SiteVisit[]);
+        console.log('✅ Loaded site visits:', (siteVisitsResult.value as SiteVisit[]).length);
       } else {
-        console.warn('⚠️ Site visits failed to load:', siteVisits.reason);
+        console.warn('⚠️ Site visits failed to load:', siteVisitsResult.reason);
         setSiteVisits([]);
       }
 
-      // Only show error if both operations failed
-      const failedOperations = [];
-      if (quoteLogs.status === 'rejected') failedOperations.push('preventivi');
-      if (siteVisits.status === 'rejected' && (siteVisits.value as SiteVisit[]).length === 0) {
-        failedOperations.push('visite');
-      }
-      
-      if (failedOperations.length > 0) {
-        setError(`Alcuni dati potrebbero non essere disponibili: ${failedOperations.join(', ')}`);
+      // Nessun errore critico se almeno uno dei due caricamenti funziona
+      if (quoteLogsResult.status === 'rejected' && siteVisitsResult.status === 'rejected') {
+        setError('Impossibile caricare i dati analytics. Riprova più tardi.');
       }
 
     } catch (error) {
       console.error('❌ Error loading unified analytics data:', error);
       setError('Errore nel caricamento dei dati analytics');
-      // Set empty arrays to prevent UI errors
       setQuoteLogs([]);
       setSiteVisits([]);
     } finally {
@@ -93,7 +85,6 @@ export function useUnifiedAnalytics() {
     try {
       const updatedQuoteData = await saveQuoteLog(quoteData);
 
-      // Update local state
       setQuoteLogs(prev => {
         const existingIndex = prev.findIndex(log => log.id === quoteData.id);
         
