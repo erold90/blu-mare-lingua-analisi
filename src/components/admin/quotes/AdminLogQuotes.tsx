@@ -1,356 +1,193 @@
 
 import * as React from "react";
-import { useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { format, isWithinInterval, startOfDay, endOfDay, isSameDay } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { format } from "date-fns";
 import { it } from "date-fns/locale";
-import { CalendarDays, Eye, Users, MapPin, Calendar, Euro } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { calculateTotalPrice } from "@/utils/quoteCalculator";
-import { apartments } from "@/data/apartments";
-import AdminLogDelete from "../AdminLogDelete";
-
-interface QuoteLog {
-  id: string;
-  timestamp: string;
-  form_values: any;
-  step: number;
-  completed: boolean;
-}
+import { QuoteLog } from "@/hooks/analytics/useAnalytics";
+import { Eye, Trash2, Calendar, Users, Euro } from "lucide-react";
+import { DateRange } from "react-day-picker";
 
 interface AdminLogQuotesProps {
   quoteLogs: QuoteLog[];
-  dateRange: any;
+  dateRange: DateRange | undefined;
 }
 
 export const AdminLogQuotes = ({ quoteLogs, dateRange }: AdminLogQuotesProps) => {
-  const isMobile = useIsMobile();
-  const [selectedQuote, setSelectedQuote] = useState<any | null>(null);
+  const [selectedQuote, setSelectedQuote] = useState<QuoteLog | null>(null);
 
-  const filteredQuotes = useMemo(() => {
+  const filteredQuotes = React.useMemo(() => {
     if (!dateRange?.from) return quoteLogs;
     
     return quoteLogs.filter(quote => {
-      const quoteDate = new Date(quote.timestamp);
-      if (dateRange.to) {
-        return isWithinInterval(quoteDate, {
-          start: startOfDay(dateRange.from),
-          end: endOfDay(dateRange.to)
-        });
-      }
-      return isSameDay(quoteDate, dateRange.from);
+      const quoteDate = new Date(quote.created_at);
+      const fromDate = dateRange.from!;
+      const toDate = dateRange.to || new Date();
+      
+      return quoteDate >= fromDate && quoteDate <= toDate;
     });
   }, [quoteLogs, dateRange]);
 
+  const completedQuotes = filteredQuotes.filter(q => q.completed);
+  const inProgressQuotes = filteredQuotes.filter(q => !q.completed);
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Preventivi richiesti</CardTitle>
-        <CardDescription>
-          Elenco dei preventivi salvati nel database Supabase
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {filteredQuotes.length > 0 ? (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[100px]">Data</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead className="hidden md:table-cell">Persone</TableHead>
-                  <TableHead className="hidden md:table-cell">Check-in</TableHead>
-                  <TableHead className="hidden md:table-cell">Check-out</TableHead>
-                  <TableHead className="text-right">Prezzo</TableHead>
-                  <TableHead className="w-[120px]">Azioni</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredQuotes.map((quote) => {
-                  const formValues = quote.form_values;
-                  const price = calculateTotalPrice(formValues, apartments);
-                  
-                  return (
-                    <TableRow key={quote.id}>
-                      <TableCell className="font-medium">
-                        {format(new Date(quote.timestamp), "dd/MM/yyyy", { locale: it })}
-                        <div className="text-xs text-muted-foreground">
-                          {format(new Date(quote.timestamp), "HH:mm", { locale: it })}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {formValues.name || "Anonimo"}
-                        {formValues.email && (
-                          <div className="text-xs text-muted-foreground truncate">
-                            {formValues.email}
-                          </div>
+    <div className="space-y-6">
+      {/* Statistiche rapide */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Preventivi Totali</p>
+                <p className="text-2xl font-bold">{filteredQuotes.length}</p>
+              </div>
+              <Calendar className="h-8 w-8 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Completati</p>
+                <p className="text-2xl font-bold text-green-600">{completedQuotes.length}</p>
+              </div>
+              <Users className="h-8 w-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">In Corso</p>
+                <p className="text-2xl font-bold text-orange-600">{inProgressQuotes.length}</p>
+              </div>
+              <Euro className="h-8 w-8 text-orange-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Lista preventivi */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Preventivi Recenti</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {filteredQuotes.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nessun preventivo trovato per il periodo selezionato
+            </div>
+          ) : (
+            <ScrollArea className="h-[400px]">
+              <div className="space-y-2">
+                {filteredQuotes.map((quote) => (
+                  <div
+                    key={quote.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant={quote.completed ? "default" : "secondary"}>
+                          {quote.completed ? "Completato" : `Step ${quote.step}`}
+                        </Badge>
+                        {quote.total_price && (
+                          <Badge variant="outline">
+                            €{quote.total_price.toFixed(2)}
+                          </Badge>
                         )}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {formValues.adults + (formValues.children || 0)}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {formValues.checkIn ? format(new Date(formValues.checkIn), "dd/MM/yyyy", { locale: it }) : "-"}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {formValues.checkOut ? format(new Date(formValues.checkOut), "dd/MM/yyyy", { locale: it }) : "-"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {price.totalPrice > 0 ? `${price.totalPrice}€` : "-"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => setSelectedQuote({
-                                  ...quote,
-                                  price
-                                })}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle>Dettagli preventivo completo</DialogTitle>
-                              </DialogHeader>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {format(new Date(quote.created_at), 'dd/MM/yyyy HH:mm', { locale: it })}
+                      </p>
+                      {quote.form_data.personalInfo?.firstName && (
+                        <p className="text-sm font-medium">
+                          {quote.form_data.personalInfo.firstName} {quote.form_data.personalInfo.lastName}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedQuote(quote)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Dettagli Preventivo</DialogTitle>
+                          </DialogHeader>
+                          {selectedQuote && (
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <h4 className="font-semibold">Informazioni Base</h4>
+                                  <p>ID: {selectedQuote.id}</p>
+                                  <p>Step: {selectedQuote.step}</p>
+                                  <p>Stato: {selectedQuote.completed ? "Completato" : "In corso"}</p>
+                                  <p>Data: {format(new Date(selectedQuote.created_at), 'dd/MM/yyyy HH:mm', { locale: it })}</p>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold">Periodo Soggiorno</h4>
+                                  {selectedQuote.form_data.checkIn && (
+                                    <p>Check-in: {selectedQuote.form_data.checkIn}</p>
+                                  )}
+                                  {selectedQuote.form_data.checkOut && (
+                                    <p>Check-out: {selectedQuote.form_data.checkOut}</p>
+                                  )}
+                                  <p>Ospiti: {selectedQuote.form_data.guests || 0}</p>
+                                </div>
+                              </div>
                               
-                              {selectedQuote && (
-                                <QuoteDetails quote={selectedQuote} />
+                              {selectedQuote.form_data.personalInfo && (
+                                <div>
+                                  <h4 className="font-semibold">Informazioni Contatto</h4>
+                                  <p>Nome: {selectedQuote.form_data.personalInfo.firstName} {selectedQuote.form_data.personalInfo.lastName}</p>
+                                  <p>Email: {selectedQuote.form_data.personalInfo.email}</p>
+                                  <p>Telefono: {selectedQuote.form_data.personalInfo.phone}</p>
+                                </div>
                               )}
-                            </DialogContent>
-                          </Dialog>
-
-                          <AdminLogDelete 
-                            quoteId={quote.id} 
-                            customerName={formValues.name} 
-                          />
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <CalendarDays className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
-            <h3 className="mt-2 text-lg font-medium">Nessun preventivo trovato</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Non ci sono preventivi richiesti nel periodo selezionato
-            </p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
-
-const QuoteDetails = ({ quote }: { quote: any }) => {
-  const formValues = quote.form_values;
-  const selectedApartments = formValues.selectedApartments || [];
-  
-  return (
-    <div className="space-y-6 py-4">
-      {/* Informazioni generali del log */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Informazioni del log
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div>
-              <p className="text-muted-foreground">ID Log</p>
-              <p className="font-mono text-xs">{quote.id}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Timestamp</p>
-              <p>{format(new Date(quote.timestamp), "dd/MM/yyyy HH:mm:ss", { locale: it })}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground">Step completato</p>
-              <div className="flex items-center gap-2">
-                <Badge variant={quote.completed ? "default" : "secondary"}>
-                  {quote.step}/5
-                </Badge>
-                {quote.completed && <Badge variant="outline">Completato</Badge>}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Dettagli del cliente */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Dettagli cliente
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Nome</p>
-              <p className="font-medium">{formValues.name || "Non specificato"}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Email</p>
-              <p className="font-medium">{formValues.email || "Non specificata"}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Telefono</p>
-              <p className="font-medium">{formValues.phone || "Non specificato"}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Persone totali</p>
-              <p className="font-medium">
-                {formValues.adults || 0} adulti
-                {(formValues.children || 0) > 0 && `, ${formValues.children} bambini`}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Date soggiorno */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Periodo soggiorno
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Check-in</p>
-              <p className="font-medium">
-                {formValues.checkIn ? format(new Date(formValues.checkIn), "dd/MM/yyyy", { locale: it }) : "Non specificato"}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Check-out</p>
-              <p className="font-medium">
-                {formValues.checkOut ? format(new Date(formValues.checkOut), "dd/MM/yyyy", { locale: it }) : "Non specificato"}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Notti</p>
-              <p className="font-medium">
-                {formValues.checkIn && formValues.checkOut
-                  ? Math.ceil((new Date(formValues.checkOut).getTime() - new Date(formValues.checkIn).getTime()) / (1000 * 60 * 60 * 24))
-                  : "Non calcolabile"}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Appartamenti selezionati */}
-      {selectedApartments.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              Appartamenti selezionati
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {selectedApartments.map((aptId: string) => {
-                const apartment = apartments.find(apt => apt.id === aptId);
-                return (
-                  <div key={aptId} className="flex items-center justify-between p-2 bg-muted rounded">
-                    <span className="font-medium">{apartment?.name || `Appartamento ${aptId}`}</span>
-                    <Badge variant="outline">{apartment?.beds} posti letto</Badge>
+                              
+                              {selectedQuote.form_data.apartments && selectedQuote.form_data.apartments.length > 0 && (
+                                <div>
+                                  <h4 className="font-semibold">Appartamenti Selezionati</h4>
+                                  {selectedQuote.form_data.apartments.map((apt, index) => (
+                                    <p key={index}>- {apt.name} (€{apt.price || 0})</p>
+                                  ))}
+                                </div>
+                              )}
+                              
+                              {selectedQuote.total_price && (
+                                <div>
+                                  <h4 className="font-semibold">Prezzo Totale</h4>
+                                  <p className="text-lg font-bold">€{selectedQuote.total_price.toFixed(2)}</p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Servizi aggiuntivi */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Servizi aggiuntivi</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <span>Biancheria</span>
-              <Badge variant={formValues.needsLinen ? "default" : "secondary"}>
-                {formValues.needsLinen ? "Richiesta" : "Non richiesta"}
-              </Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Animali domestici</span>
-              <Badge variant={formValues.hasPets ? "default" : "secondary"}>
-                {formValues.hasPets ? "Sì" : "No"}
-              </Badge>
-            </div>
-          </div>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
         </CardContent>
       </Card>
-
-      {/* Riepilogo prezzi */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Euro className="h-5 w-5" />
-            Riepilogo prezzi
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span>Prezzo base</span>
-              <span className="font-medium">€{quote.price?.basePrice || 0}</span>
-            </div>
-            {quote.price?.linens > 0 && (
-              <div className="flex justify-between">
-                <span>Biancheria</span>
-                <span className="font-medium">€{quote.price.linens}</span>
-              </div>
-            )}
-            {quote.price?.pets > 0 && (
-              <div className="flex justify-between">
-                <span>Animali</span>
-                <span className="font-medium">€{quote.price.pets}</span>
-              </div>
-            )}
-            <div className="border-t pt-2 flex justify-between font-bold">
-              <span>Totale</span>
-              <span>€{quote.price?.totalPrice || 0}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Note aggiuntive */}
-      {formValues.notes && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Note</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm">{formValues.notes}</p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

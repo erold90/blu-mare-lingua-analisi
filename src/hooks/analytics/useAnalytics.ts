@@ -78,7 +78,18 @@ export function useAnalytics() {
         .limit(200);
 
       if (error) throw error;
-      setSiteVisits(data || []);
+      
+      const visits = (data || []).map(visit => ({
+        id: visit.id,
+        page: visit.page,
+        user_agent: visit.user_agent || undefined,
+        ip_address: visit.ip_address?.toString() || undefined,
+        referrer: visit.referrer || undefined,
+        session_id: visit.session_id || undefined,
+        created_at: visit.created_at
+      }));
+      
+      setSiteVisits(visits);
     } catch (error) {
       console.error('❌ Error loading site visits:', error);
     }
@@ -94,7 +105,19 @@ export function useAnalytics() {
         .limit(100);
 
       if (error) throw error;
-      setQuoteLogs(data || []);
+      
+      const quotes = (data || []).map(quote => ({
+        id: quote.id,
+        form_data: quote.form_data as FormValues,
+        step: quote.step,
+        completed: quote.completed,
+        total_price: quote.total_price || undefined,
+        user_session: quote.user_session || undefined,
+        created_at: quote.created_at,
+        updated_at: quote.updated_at
+      }));
+      
+      setQuoteLogs(quotes);
     } catch (error) {
       console.error('❌ Error loading quote logs:', error);
     }
@@ -156,23 +179,43 @@ export function useAnalytics() {
   // Salva preventivo
   const saveQuoteLog = useCallback(async (quoteData: Omit<QuoteLog, 'created_at' | 'updated_at'>) => {
     try {
+      const dbData = {
+        id: quoteData.id,
+        form_data: quoteData.form_data,
+        step: quoteData.step,
+        completed: quoteData.completed,
+        total_price: quoteData.total_price || null,
+        user_session: quoteData.user_session || null
+      };
+
       const { data, error } = await supabase
         .from('quote_logs')
-        .upsert(quoteData, { onConflict: 'id' })
+        .upsert(dbData, { onConflict: 'id' })
         .select()
         .single();
 
       if (error) throw error;
       
+      const processedData: QuoteLog = {
+        id: data.id,
+        form_data: data.form_data as FormValues,
+        step: data.step,
+        completed: data.completed,
+        total_price: data.total_price || undefined,
+        user_session: data.user_session || undefined,
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
+
       // Aggiorna stato locale
       setQuoteLogs(prev => {
         const existingIndex = prev.findIndex(log => log.id === quoteData.id);
         if (existingIndex !== -1) {
           const updated = [...prev];
-          updated[existingIndex] = data;
+          updated[existingIndex] = processedData;
           return updated;
         } else {
-          return [data, ...prev.slice(0, 99)];
+          return [processedData, ...prev.slice(0, 99)];
         }
       });
 
@@ -180,7 +223,7 @@ export function useAnalytics() {
       await loadMetrics();
       
       console.log('✅ Quote log saved:', quoteData.id);
-      return data;
+      return processedData;
       
     } catch (error) {
       console.error('❌ Error saving quote log:', error);
