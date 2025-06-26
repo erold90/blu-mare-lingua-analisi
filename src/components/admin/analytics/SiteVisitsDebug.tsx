@@ -43,32 +43,23 @@ export const SiteVisitsDebug = () => {
   const loadDebugInfo = async () => {
     setLoading(true);
     try {
-      // Carica statistiche generali
-      const { data: statsData, error: statsError } = await supabase
-        .rpc('get_site_visits_stats');
+      // Carica statistiche generali usando query dirette
+      const { data: allVisits, error: visitsError } = await supabase
+        .from('site_visits')
+        .select('created_at, page')
+        .order('created_at', { ascending: true });
 
-      if (statsError) {
-        console.warn('Usando query diretta per le statistiche');
-        const { data: directStats } = await supabase
-          .from('site_visits')
-          .select('created_at')
-          .order('created_at', { ascending: true });
+      if (visitsError) throw visitsError;
+
+      if (allVisits && allVisits.length > 0) {
+        const uniquePages = new Set(allVisits.map(v => v.page)).size;
         
-        if (directStats && directStats.length > 0) {
-          const uniquePages = await supabase
-            .from('site_visits')
-            .select('page')
-            .then(({ data }) => new Set(data?.map(v => v.page)).size || 0);
-
-          setStats({
-            total_records: directStats.length,
-            first_record: directStats[0].created_at,
-            last_record: directStats[directStats.length - 1].created_at,
-            unique_pages: uniquePages
-          });
-        }
-      } else {
-        setStats(statsData[0]);
+        setStats({
+          total_records: allVisits.length,
+          first_record: allVisits[0].created_at,
+          last_record: allVisits[allVisits.length - 1].created_at,
+          unique_pages: uniquePages
+        });
       }
 
       // Carica visite recenti
@@ -83,24 +74,29 @@ export const SiteVisitsDebug = () => {
       }
 
       // Carica statistiche per pagina
-      const { data: pageData } = await supabase
+      const { data: pageData, error: pageError } = await supabase
         .from('site_visits')
-        .select('page')
-        .then(async ({ data }) => {
-          if (!data) return [];
-          
-          const pageGroups = data.reduce((acc, visit) => {
-            acc[visit.page] = (acc[visit.page] || 0) + 1;
-            return acc;
-          }, {} as Record<string, number>);
+        .select('page, created_at');
 
-          return Object.entries(pageGroups)
-            .map(([page, count]) => ({ page, visit_count: count, first_visit: '', last_visit: '' }))
-            .sort((a, b) => b.visit_count - a.visit_count)
-            .slice(0, 15);
-        });
+      if (!pageError && pageData) {
+        const pageGroups = pageData.reduce((acc, visit) => {
+          acc[visit.page] = (acc[visit.page] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
 
-      setPageStats(pageData || []);
+        const pageStatsData = Object.entries(pageGroups)
+          .map(([page, count]) => ({ 
+            page, 
+            visit_count: count, 
+            first_visit: '', 
+            last_visit: '' 
+          }))
+          .sort((a, b) => b.visit_count - a.visit_count)
+          .slice(0, 15);
+
+        setPageStats(pageStatsData);
+      }
+
       setShowDetails(true);
       toast.success('Debug info caricato');
 
