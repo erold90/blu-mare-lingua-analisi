@@ -3,21 +3,30 @@ import React from "react";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Import the new focused components
 import GuestTotals from "./guest/GuestTotals";
 import GuestBreakdown from "./guest/GuestBreakdown";
 import ChildrenDetails from "./guest/ChildrenDetails";
 import BedRequirementsSummary from "./guest/BedRequirementsSummary";
+import MobileGuestSummary from "./guest/MobileGuestSummary";
 
 interface GuestSummaryProps {
   formValues: FormValues;
 }
 
 const GuestSummary: React.FC<GuestSummaryProps> = ({ formValues }) => {
+  const isMobile = useIsMobile();
+  
   console.log("🔍 GuestSummary: Form values received", formValues);
   console.log("🔍 GuestSummary: Children details", formValues.childrenDetails);
   console.log("🔍 GuestSummary: Children array", formValues.childrenArray);
+  
+  // Use mobile version on small screens
+  if (isMobile) {
+    return <MobileGuestSummary formValues={formValues} />;
+  }
   
   const adults = formValues.adults || 0;
   const children = formValues.children || 0;
