@@ -66,41 +66,45 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     // Culle totali
     const totalCribs = formValues.childrenDetails?.filter(child => child.sleepsInCrib)?.length || 0;
     
-    // Costruzione messaggio
-    let message = `*Richiesta Preventivo Villa MareBlu*\n\n`;
+    // Costruzione messaggio migliorato
+    let message = `🏖️ *RICHIESTA PREVENTIVO VILLA MAREBLU* 🏖️\n\n`;
     
-    // Sezioni del messaggio
+    // Sezioni del messaggio con formato migliorato
     message += formatDateSection(checkInDate, checkOutDate, nights, weeks);
     message += formatGuestSection(formValues);
     message += formatApartmentsSection(selectedApartments, formValues, priceInfo);
     message += formatServicesSection(formValues, selectedApartments);
     message += formatPriceSection(selectedApartments, priceInfo, nights, weeks);
     message += formatExtrasSection(formValues, selectedApartments, priceInfo);
-    message += `Subtotale soggiorno: ${subtotal}€\n\n`;
+    message += `💰 Subtotale soggiorno: *${subtotal}€*\n\n`;
     message += formatIncludedServicesSection(cleaningFee, touristTax, totalCribs);
     
     // Sconto se presente
     if (discount > 0) {
-      message += `*Sconto arrotondamento: -${discount}€*\n\n`;
+      message += `💸 *Sconto arrotondamento: -${discount}€*\n\n`;
     }
     
     // Totale finale
-    message += `*TOTALE FINALE: ${totalFinal}€*\n`;
+    message += `🎯 *TOTALE FINALE: ${totalFinal}€*\n`;
     
     // Risparmio totale
     if (priceInfo.occupancyDiscount && priceInfo.occupancyDiscount.discountAmount > 0) {
       const totalSavings = priceInfo.occupancyDiscount.discountAmount + discount;
-      message += `*🎉 RISPARMIO TOTALE: ${totalSavings}€! 🎉*\n`;
+      message += `🎉 *RISPARMIO TOTALE: ${totalSavings}€!* 🎉\n`;
     }
     message += `\n`;
     
     // Modalità pagamento
     message += formatPaymentSection(deposit, balance);
     
-    // Note aggiuntive
-    if (formValues.notes) {
-      message += `*Note aggiuntive:*\n${formValues.notes}\n\n`;
+    // Note aggiuntive se presenti
+    if (formValues.notes && formValues.notes.trim()) {
+      message += `📝 *Note aggiuntive:*\n${formValues.notes}\n\n`;
     }
+    
+    // Footer professionale
+    message += `📞 *Contattateci per confermare la disponibilità!*\n`;
+    message += `✨ Villa MareBlu - La vostra vacanza da sogno nel Salento`;
     
     console.log("✅ WhatsApp message created successfully");
     return message;

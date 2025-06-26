@@ -29,16 +29,16 @@ const formatDuration = (totalNights: number): string => {
 };
 
 /**
- * Formats the date section of the WhatsApp message
+ * Formats the date section of the WhatsApp message with improved formatting
  */
 export const formatDateSection = (checkIn: Date, checkOut: Date, nights: number, weeks: number): string => {
-  const formattedCheckIn = format(checkIn, "EEEE d MMMM yyyy", { locale: it });
-  const formattedCheckOut = format(checkOut, "EEEE d MMMM yyyy", { locale: it });
+  const formattedCheckIn = format(checkIn, "dd/MM/yyyy", { locale: it });
+  const formattedCheckOut = format(checkOut, "dd/MM/yyyy", { locale: it });
   
-  let section = `Date soggiorno:\n`;
-  section += `Check-in: ${formattedCheckIn}\n`;
-  section += `Check-out: ${formattedCheckOut}\n`;
-  section += `Durata: ${formatDuration(nights)}\n\n`;
+  let section = `📅 *PERIODO DEL SOGGIORNO*\n`;
+  section += `• Check-in: ${formattedCheckIn}\n`;
+  section += `• Check-out: ${formattedCheckOut}\n`;
+  section += `• Durata: ${formatDuration(nights)}\n\n`;
   
   return section;
 };
