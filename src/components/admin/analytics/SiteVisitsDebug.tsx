@@ -118,7 +118,7 @@ export const SiteVisitsDebug = () => {
       const { error } = await supabase
         .from('site_visits')
         .delete()
-        .not('id', 'is', null); // Sintassi corretta per eliminare tutti i record
+        .neq('id', ''); // Use neq with empty string to delete all records
 
       if (error) throw error;
 
