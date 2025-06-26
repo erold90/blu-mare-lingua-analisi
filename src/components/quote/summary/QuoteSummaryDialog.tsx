@@ -13,7 +13,6 @@ import { Separator } from "@/components/ui/separator";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { PriceCalculation } from "@/utils/price/types";
-import { formatDate } from "@/utils/price/dateUtils";
 import { Calendar, Users, Home, Euro, CheckCircle } from "lucide-react";
 
 interface QuoteSummaryDialogProps {
@@ -23,6 +22,22 @@ interface QuoteSummaryDialogProps {
   apartments?: Apartment[];
   priceInfo?: PriceCalculation;
 }
+
+// Helper function to format dates
+const formatDate = (dateValue: string | Date | undefined): string => {
+  if (!dateValue) return 'N/A';
+  
+  const date = typeof dateValue === 'string' ? new Date(dateValue) : dateValue;
+  
+  if (isNaN(date.getTime())) return 'N/A';
+  
+  return date.toLocaleDateString('it-IT', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
 
 const QuoteSummaryDialog: React.FC<QuoteSummaryDialogProps> = ({
   open,

@@ -33,7 +33,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ formValues, form }) => {
             type="email"
             className="w-full p-2 border rounded-md"
             placeholder="Inserisci la tua email"
-            value={formValues.email || ""}
+            value={formValues.email || formValues.personalInfo?.email || ""}
             onChange={(e) => form.setValue("email", e.target.value)}
           />
         </div>
@@ -44,7 +44,7 @@ const ContactForm: React.FC<ContactFormProps> = ({ formValues, form }) => {
             type="tel"
             className="w-full p-2 border rounded-md"
             placeholder="Inserisci il tuo numero di telefono"
-            value={formValues.phone || ""}
+            value={formValues.phone || formValues.personalInfo?.phone || ""}
             onChange={(e) => form.setValue("phone", e.target.value)}
           />
         </div>

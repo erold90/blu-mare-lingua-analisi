@@ -32,6 +32,10 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   // Verifica se i prezzi sono validi
   const pricesAreValid = priceInfo.totalPrice > 0 && priceInfo.basePrice > 0;
   
+  // Convert dates to proper format
+  const checkInDate = typeof formValues.checkIn === 'string' ? formValues.checkIn : formValues.checkIn?.toISOString().split('T')[0];
+  const checkOutDate = typeof formValues.checkOut === 'string' ? formValues.checkOut : formValues.checkOut?.toISOString().split('T')[0];
+  
   // Base price is the cost of apartments WITH occupancy discount already applied
   const basePrice = priceInfo.basePrice;
   
@@ -68,7 +72,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
       
       <PriceValidityWarning pricesAreValid={pricesAreValid} />
       
-      <PeriodInfo checkIn={formValues.checkIn} checkOut={formValues.checkOut} />
+      <PeriodInfo checkIn={checkInDate} checkOut={checkOutDate} />
       
       <div className="space-y-4">
         {/* Prezzo originale e sconto occupazione */}
@@ -157,62 +161,34 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
           <div className="flex justify-between items-center py-2 text-green-600">
             <span className="flex items-center gap-2 font-medium">
               <Percent className="h-4 w-4" />
-              Arrotondamento
+              Sconto arrotondamento:
             </span>
-            <span className="flex items-center font-semibold text-lg">
-              <Minus className="h-4 w-4 mr-1" />
-              {roundingDiscount}€
-            </span>
+            <span className="font-semibold">-{roundingDiscount}€</span>
           </div>
         )}
         
         <Separator className="my-4" />
         
-        {/* Final total to pay - More prominent */}
-        <div className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-4 md:p-6">
+        {/* Total to pay */}
+        <div className="bg-primary/5 rounded-lg p-4">
           <div className="flex justify-between items-center">
-            <div>
-              <div className="text-sm text-muted-foreground uppercase tracking-wide">
-                Totale da pagare
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {nights} notti • {formValues.adults} adulti
-              </div>
-              {hasOccupancyDiscount && (
-                <div className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                  <TrendingDown className="h-3 w-3" />
-                  Sconto {occupancyDiscount.discountPercentage}% applicato
-                </div>
-              )}
-            </div>
-            <div className="text-right">
-              <div className={`text-2xl md:text-3xl font-bold ${pricesAreValid ? "text-primary" : "text-muted-foreground"}`}>
-                {pricesAreValid ? `${totalToPay}€` : 'Da calcolare'}
-              </div>
-              {pricesAreValid && (
-                <div className="text-xs text-muted-foreground">
-                  ~{Math.round(totalToPay / nights)}€ per notte
-                </div>
-              )}
-              {hasOccupancyDiscount && pricesAreValid && (
-                <div className="text-xs text-green-600 font-medium">
-                  Risparmi {occupancyDiscount.discountAmount + roundingDiscount}€
-                </div>
-              )}
-            </div>
+            <span className="text-lg font-semibold text-primary">TOTALE DA PAGARE:</span>
+            <span className="text-2xl font-bold text-primary">
+              {pricesAreValid ? `${totalToPay}€` : 'N/A'}
+            </span>
           </div>
         </div>
         
         <PaymentBreakdown 
-          pricesAreValid={pricesAreValid}
           deposit={deposit}
           totalToPay={totalToPay}
+          pricesAreValid={pricesAreValid}
         />
         
-        <PricingNotes pricesAreValid={pricesAreValid} />
+        <PricingNotes />
       </div>
     </div>
   );
-}
+};
 
 export default PriceSummary;

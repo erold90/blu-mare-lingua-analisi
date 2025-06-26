@@ -40,11 +40,15 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
   // Memoizza i valori del form in modo stabile
   const formValues = useMemo(() => {
     const values = form.getValues();
+    
+    // Convert dates to the format expected by the price calculator
+    const checkInDate = typeof values.checkIn === 'string' ? new Date(values.checkIn) : values.checkIn;
+    const checkOutDate = typeof values.checkOut === 'string' ? new Date(values.checkOut) : values.checkOut;
+    
     return {
       ...values,
-      // Assicurati che le date siano oggetti Date validi
-      checkIn: values.checkIn ? new Date(values.checkIn) : null,
-      checkOut: values.checkOut ? new Date(values.checkOut) : null,
+      checkIn: checkInDate ? checkInDate.toISOString().split('T')[0] : undefined,
+      checkOut: checkOutDate ? checkOutDate.toISOString().split('T')[0] : undefined,
     };
   }, [
     form.watch('selectedApartments'),
@@ -86,7 +90,10 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
     }
     
     // Validazione aggiuntiva delle date
-    if (formValues.checkIn >= formValues.checkOut) {
+    const checkInDate = new Date(formValues.checkIn);
+    const checkOutDate = new Date(formValues.checkOut);
+    
+    if (checkInDate >= checkOutDate) {
       console.log("❌ Invalid date range");
       setPriceInfo(emptyPriceCalculation);
       setIsLoadingPrices(false);
@@ -110,7 +117,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
       });
       
       // Prima verifica se abbiamo prezzi per le date richieste
-      const testPrice = getPriceForWeek(selectedApartmentIds[0], formValues.checkIn);
+      const testPrice = getPriceForWeek(selectedApartmentIds[0], checkInDate);
       console.log("🧪 Test price for first week:", testPrice);
       
       if (testPrice === 0 && prices.length === 0) {
@@ -126,7 +133,7 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
         setCalculationError("Prezzi non disponibili per le date selezionate");
         
         // Prova a ricaricare i prezzi per gli appartamenti selezionati
-        const currentYear = formValues.checkIn?.getFullYear() || new Date().getFullYear();
+        const currentYear = checkInDate?.getFullYear() || new Date().getFullYear();
         for (const apartmentId of selectedApartmentIds) {
           await refreshApartmentPrices(apartmentId, currentYear);
         }
@@ -171,12 +178,21 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
   useEffect(() => {
     const quoteLogId = localStorage.getItem('currentQuoteLogId') || uuidv4();
     
+    // Create a safe version of form values for logging
+    const safeFormValues = {
+      ...formValues,
+      // Ensure dates are strings for database storage
+      checkIn: formValues.checkIn || '',
+      checkOut: formValues.checkOut || '',
+    };
+    
     addQuoteLog({
       id: quoteLogId,
-      timestamp: new Date().toISOString(),
-      form_values: formValues,
+      form_data: safeFormValues,
       step: 5,
-      completed: true
+      completed: true,
+      total_price: priceInfo.totalPrice > 0 ? priceInfo.totalPrice : undefined,
+      user_session: sessionStorage.getItem('analytics_session') || undefined
     });
     
     localStorage.setItem('currentQuoteLogId', quoteLogId);

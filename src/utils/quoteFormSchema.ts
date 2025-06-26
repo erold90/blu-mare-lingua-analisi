@@ -15,12 +15,12 @@ export const familyGroupSchema = z.object({
   childrenDetails: z.array(childDetailSchema).optional(),
 });
 
-// Schema completo del form (semplificato per corrispondere alla realtà)
+// Schema completo del form - updated to include all missing properties
 export const formSchema = z.object({
   step: z.number().default(1),
   // Step 1: Date e ospiti
-  checkIn: z.string().optional(),
-  checkOut: z.string().optional(),
+  checkIn: z.union([z.string(), z.date()]).optional(),
+  checkOut: z.union([z.string(), z.date()]).optional(),
   adults: z.number().min(1).default(1),
   children: z.number().min(0).default(0),
   childrenDetails: z.array(childDetailSchema).optional(),
@@ -48,6 +48,10 @@ export const formSchema = z.object({
     price: z.number().optional(),
   })).optional(),
   
+  // Services distribution
+  personsPerApartment: z.record(z.string(), z.number()).optional(),
+  petsInApartment: z.record(z.string(), z.boolean()).optional(),
+  
   // Step 4: Info personali
   personalInfo: z.object({
     firstName: z.string().optional(),
@@ -56,6 +60,10 @@ export const formSchema = z.object({
     phone: z.string().optional(),
     message: z.string().optional(),
   }).optional(),
+  
+  // Direct contact fields (alternative to personalInfo)
+  email: z.string().optional(),
+  phone: z.string().optional(),
   
   // Altri campi
   guests: z.number().optional(),

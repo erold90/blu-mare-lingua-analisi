@@ -25,6 +25,10 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
   apartments,
   form
 }) => {
+  // Convert string dates to Date objects for components that expect them
+  const checkInDate = typeof formValues.checkIn === 'string' ? new Date(formValues.checkIn) : formValues.checkIn;
+  const checkOutDate = typeof formValues.checkOut === 'string' ? new Date(formValues.checkOut) : formValues.checkOut;
+
   return (
     <div className="space-y-6">
       {/* Mobile: single column layout with better spacing */}
@@ -34,8 +38,8 @@ const SummaryContent: React.FC<SummaryContentProps> = ({
           <div>
             <h3 className="font-serif text-lg font-semibold mb-4 text-primary">Date del soggiorno</h3>
             <DateDurationInfo 
-              checkIn={formValues.checkIn}
-              checkOut={formValues.checkOut}
+              checkIn={checkInDate}
+              checkOut={checkOutDate}
               nights={priceInfo.nights}
             />
           </div>
