@@ -52,15 +52,19 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     const nights = priceInfo.nights || 0;
     const weeks = Math.ceil(nights / 7);
     
-    // Valori dal calcolo prezzi
+    // Usa i valori dal calcolo prezzi per evitare errori
     const { 
       totalBeforeDiscount: subtotal, 
       discount, 
       totalAfterDiscount: totalFinal, 
       deposit, 
       cleaningFee, 
-      touristTax 
+      touristTax,
+      extras: extrasCost,
+      basePrice,
+      occupancyDiscount
     } = priceInfo;
+    
     const balance = totalFinal - deposit;
     
     // Culle totali
@@ -76,7 +80,11 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     message += formatServicesSection(formValues, selectedApartments);
     message += formatPriceSection(selectedApartments, priceInfo, nights, weeks);
     message += formatExtrasSection(formValues, selectedApartments, priceInfo);
-    message += `💰 Subtotale soggiorno: *${subtotal}€*\n\n`;
+    
+    // Calcolo subtotale corretto: basePrice + extras
+    const correctSubtotal = basePrice + extrasCost;
+    message += `💰 Subtotale soggiorno: *${correctSubtotal}€*\n\n`;
+    
     message += formatIncludedServicesSection(cleaningFee, touristTax, totalCribs);
     
     // Sconto se presente
@@ -87,9 +95,13 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     // Totale finale
     message += `🎯 *TOTALE FINALE: ${totalFinal}€*\n`;
     
-    // Risparmio totale
-    if (priceInfo.occupancyDiscount && priceInfo.occupancyDiscount.discountAmount > 0) {
-      const totalSavings = priceInfo.occupancyDiscount.discountAmount + discount;
+    // Risparmio totale corretto
+    let totalSavings = discount;
+    if (occupancyDiscount && occupancyDiscount.discountAmount > 0) {
+      totalSavings += occupancyDiscount.discountAmount;
+    }
+    
+    if (totalSavings > 0) {
       message += `🎉 *RISPARMIO TOTALE: ${totalSavings}€!* 🎉\n`;
     }
     message += `\n`;
