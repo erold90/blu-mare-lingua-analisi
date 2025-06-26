@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, subDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
-import { CalendarIcon, Info, Loader2, AlertCircle, RefreshCw, CheckCircle2, BarChart3 } from "lucide-react";
+import { CalendarIcon, Info, Loader2, AlertCircle, RefreshCw, CheckCircle2, BarChart3, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminLogAnalytics } from "./analytics/AdminLogAnalytics";
@@ -30,7 +30,7 @@ const AdminAnalytics = () => {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      console.log('🔍 Refreshing analytics data...');
+      console.log('🔄 Refreshing analytics data...');
       await refreshData();
       toast.success('Analytics aggiornati con successo');
     } catch (error) {
@@ -40,6 +40,15 @@ const AdminAnalytics = () => {
       setRefreshing(false);
     }
   };
+
+  // Calcola statistiche in tempo reale
+  const stats = React.useMemo(() => ({
+    visitsToday: getVisitsCount('day'),
+    visitsMonth: getVisitsCount('month'),
+    visitsYear: getVisitsCount('year'),
+    totalQuotes: quoteLogs.length,
+    completedQuotes: quoteLogs.filter(q => q.completed).length
+  }), [quoteLogs, getVisitsCount]);
   
   if (loading) {
     return (
@@ -60,7 +69,7 @@ const AdminAnalytics = () => {
           <div>
             <h2 className="text-2xl font-bold">Analytics Villa MareBlu</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Analisi completa dei preventivi e delle visite al sito
+              Sistema di tracciamento unificato per preventivi e visite
             </p>
           </div>
         </div>
@@ -118,39 +127,48 @@ const AdminAnalytics = () => {
         </div>
       </div>
 
-      {/* Gestione errori migliorata */}
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            {error}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Indicatori di stato */}
-      {!error && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Alert>
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+      {/* Indicatori di stato migliorati */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {error ? (
+          <Alert variant="destructive" className="col-span-full">
+            <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Preventivi:</strong> {quoteLogs.length} registrati nel database
+              {error}
             </AlertDescription>
           </Alert>
-          <Alert>
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
-            <AlertDescription>
-              <strong>Visite oggi:</strong> {getVisitsCount('day')} visite uniche
-            </AlertDescription>
-          </Alert>
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              <strong>Visite totali:</strong> {siteVisits.length} (ultime 24h)
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
+        ) : (
+          <>
+            <Alert>
+              <TrendingUp className="h-4 w-4 text-blue-600" />
+              <AlertDescription>
+                <div className="font-semibold">Visite Oggi</div>
+                <div className="text-2xl font-bold text-blue-600">{stats.visitsToday}</div>
+              </AlertDescription>
+            </Alert>
+            <Alert>
+              <BarChart3 className="h-4 w-4 text-green-600" />
+              <AlertDescription>
+                <div className="font-semibold">Preventivi Totali</div>
+                <div className="text-2xl font-bold text-green-600">{stats.totalQuotes}</div>
+              </AlertDescription>
+            </Alert>
+            <Alert>
+              <CheckCircle2 className="h-4 w-4 text-purple-600" />
+              <AlertDescription>
+                <div className="font-semibold">Preventivi Completati</div>
+                <div className="text-2xl font-bold text-purple-600">{stats.completedQuotes}</div>
+              </AlertDescription>
+            </Alert>
+            <Alert>
+              <Info className="h-4 w-4 text-orange-600" />
+              <AlertDescription>
+                <div className="font-semibold">Visite Totali</div>
+                <div className="text-2xl font-bold text-orange-600">{siteVisits.length}</div>
+              </AlertDescription>
+            </Alert>
+          </>
+        )}
+      </div>
       
       <Tabs defaultValue="quotes" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
@@ -158,7 +176,7 @@ const AdminAnalytics = () => {
             Preventivi ({quoteLogs.length})
           </TabsTrigger>
           <TabsTrigger value="visits">
-            Analisi Sito ({siteVisits.length})
+            Visite Sito ({siteVisits.length})
           </TabsTrigger>
         </TabsList>
         
@@ -174,7 +192,7 @@ const AdminAnalytics = () => {
             <Alert>
               <CheckCircle2 className="h-4 w-4 text-green-600" />
               <AlertDescription>
-                Trovati {quoteLogs.length} preventivi. Sistema database operativo.
+                Sistema preventivi operativo. Trovati {quoteLogs.length} preventivi di cui {stats.completedQuotes} completati.
               </AlertDescription>
             </Alert>
           )}
@@ -186,6 +204,22 @@ const AdminAnalytics = () => {
         </TabsContent>
         
         <TabsContent value="visits" className="mt-6 space-y-6">
+          {siteVisits.length === 0 ? (
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Nessuna visita registrata. Il sistema di tracking è attivo e registra automaticamente le visite alle pagine pubbliche.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <Alert>
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <AlertDescription>
+                Sistema tracking operativo. Registrate {siteVisits.length} visite negli ultimi 30 giorni.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           <AdminLogAnalytics 
             siteVisits={siteVisits} 
             getVisitsCount={getVisitsCount} 

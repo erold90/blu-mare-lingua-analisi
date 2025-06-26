@@ -9,15 +9,23 @@ export function useSimpleTracking() {
 
   const trackCurrentPage = useCallback(() => {
     const currentPath = location.pathname + location.search;
+    console.log('🔍 Attempting to track page:', currentPath);
+    
+    // Verifica che non sia area admin
+    if (currentPath.includes('/area-riservata')) {
+      console.log('🚫 Skipping admin area tracking');
+      return;
+    }
+    
     trackSiteVisit(currentPath);
   }, [location, trackSiteVisit]);
 
   useEffect(() => {
-    // Only track if not in admin area
-    if (!location.pathname.includes('/area-riservata')) {
-      trackCurrentPage();
-    }
-  }, [location, trackCurrentPage]);
+    // Delay di 100ms per assicurarsi che la pagina sia completamente caricata
+    const timer = setTimeout(trackCurrentPage, 100);
+    
+    return () => clearTimeout(timer);
+  }, [trackCurrentPage]);
 
   return {
     trackSiteVisit,

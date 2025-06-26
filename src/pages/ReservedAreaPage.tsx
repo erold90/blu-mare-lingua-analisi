@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { useNavigate, Link, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,6 @@ import AdminReservations from "@/components/admin/AdminReservations";
 import AdminPrices from "@/components/admin/AdminPrices";
 import AdminApartments from "@/components/admin/AdminApartments";
 import AdminSettings from "@/components/admin/AdminSettings";
-import AdminLog from "@/components/admin/AdminLog";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminCalendar from "@/components/admin/calendar/AdminCalendar";
 import AdminCleaningManagement from "@/components/admin/cleaning/AdminCleaningManagement";
