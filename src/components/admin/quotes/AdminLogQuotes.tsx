@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { QuoteLog } from "@/hooks/analytics/useAnalytics";
-import { Eye, Trash2, Calendar, Users, Euro } from "lucide-react";
+import { Eye, Calendar, Users, Euro } from "lucide-react";
 import { DateRange } from "react-day-picker";
 
 interface AdminLogQuotesProps {
@@ -113,6 +113,11 @@ export const AdminLogQuotes = ({ quoteLogs, dateRange }: AdminLogQuotesProps) =>
                           {quote.form_data.personalInfo.firstName} {quote.form_data.personalInfo.lastName}
                         </p>
                       )}
+                      {quote.form_data.name && !quote.form_data.personalInfo?.firstName && (
+                        <p className="text-sm font-medium">
+                          {quote.form_data.name}
+                        </p>
+                      )}
                     </div>
                     
                     <div className="flex items-center gap-2">
@@ -148,7 +153,8 @@ export const AdminLogQuotes = ({ quoteLogs, dateRange }: AdminLogQuotesProps) =>
                                   {selectedQuote.form_data.checkOut && (
                                     <p>Check-out: {selectedQuote.form_data.checkOut}</p>
                                   )}
-                                  <p>Ospiti: {selectedQuote.form_data.guests || 0}</p>
+                                  <p>Adulti: {selectedQuote.form_data.adults || 0}</p>
+                                  <p>Bambini: {selectedQuote.form_data.children || 0}</p>
                                 </div>
                               </div>
                               
@@ -161,6 +167,13 @@ export const AdminLogQuotes = ({ quoteLogs, dateRange }: AdminLogQuotesProps) =>
                                 </div>
                               )}
                               
+                              {selectedQuote.form_data.name && !selectedQuote.form_data.personalInfo && (
+                                <div>
+                                  <h4 className="font-semibold">Nome Cliente</h4>
+                                  <p>{selectedQuote.form_data.name}</p>
+                                </div>
+                              )}
+                              
                               {selectedQuote.form_data.apartments && selectedQuote.form_data.apartments.length > 0 && (
                                 <div>
                                   <h4 className="font-semibold">Appartamenti Selezionati</h4>
@@ -170,10 +183,26 @@ export const AdminLogQuotes = ({ quoteLogs, dateRange }: AdminLogQuotesProps) =>
                                 </div>
                               )}
                               
+                              {selectedQuote.form_data.services && selectedQuote.form_data.services.length > 0 && (
+                                <div>
+                                  <h4 className="font-semibold">Servizi Aggiuntivi</h4>
+                                  {selectedQuote.form_data.services.map((service, index) => (
+                                    <p key={index}>- {service.name} (€{service.price || 0})</p>
+                                  ))}
+                                </div>
+                              )}
+                              
                               {selectedQuote.total_price && (
                                 <div>
                                   <h4 className="font-semibold">Prezzo Totale</h4>
                                   <p className="text-lg font-bold">€{selectedQuote.total_price.toFixed(2)}</p>
+                                </div>
+                              )}
+                              
+                              {selectedQuote.form_data.notes && (
+                                <div>
+                                  <h4 className="font-semibold">Note</h4>
+                                  <p>{selectedQuote.form_data.notes}</p>
                                 </div>
                               )}
                             </div>

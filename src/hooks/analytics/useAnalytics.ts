@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { FormValues } from '@/utils/quoteFormSchema';
@@ -79,11 +78,11 @@ export function useAnalytics() {
 
       if (error) throw error;
       
-      const visits = (data || []).map(visit => ({
+      const visits: SiteVisit[] = (data || []).map(visit => ({
         id: visit.id,
         page: visit.page,
         user_agent: visit.user_agent || undefined,
-        ip_address: visit.ip_address?.toString() || undefined,
+        ip_address: visit.ip_address ? String(visit.ip_address) : undefined,
         referrer: visit.referrer || undefined,
         session_id: visit.session_id || undefined,
         created_at: visit.created_at
@@ -106,7 +105,7 @@ export function useAnalytics() {
 
       if (error) throw error;
       
-      const quotes = (data || []).map(quote => ({
+      const quotes: QuoteLog[] = (data || []).map(quote => ({
         id: quote.id,
         form_data: quote.form_data as FormValues,
         step: quote.step,
@@ -154,7 +153,7 @@ export function useAnalytics() {
 
       const visitData = {
         id: `visit_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-        page: page.substring(0, 500), // Limita lunghezza
+        page: page.substring(0, 500),
         user_agent: navigator?.userAgent?.substring(0, 500),
         referrer: document?.referrer?.substring(0, 500) || null,
         session_id: sessionId
@@ -167,8 +166,6 @@ export function useAnalytics() {
       if (error) throw error;
       
       console.log('✅ Site visit tracked:', page);
-      
-      // Ricarica metriche per aggiornare conteggi
       await loadMetrics();
       
     } catch (error) {
@@ -176,12 +173,19 @@ export function useAnalytics() {
     }
   }, [loadMetrics]);
 
-  // Salva preventivo
+  // Salva preventivo con conversione corretta dei tipi
   const saveQuoteLog = useCallback(async (quoteData: Omit<QuoteLog, 'created_at' | 'updated_at'>) => {
     try {
+      // Converti Date a string per il database
+      const formDataForDb = {
+        ...quoteData.form_data,
+        checkIn: quoteData.form_data.checkIn ? String(quoteData.form_data.checkIn) : undefined,
+        checkOut: quoteData.form_data.checkOut ? String(quoteData.form_data.checkOut) : undefined,
+      };
+
       const dbData = {
         id: quoteData.id,
-        form_data: quoteData.form_data,
+        form_data: formDataForDb as any,
         step: quoteData.step,
         completed: quoteData.completed,
         total_price: quoteData.total_price || null,
@@ -219,9 +223,7 @@ export function useAnalytics() {
         }
       });
 
-      // Ricarica metriche
       await loadMetrics();
-      
       console.log('✅ Quote log saved:', quoteData.id);
       return processedData;
       
@@ -261,10 +263,7 @@ export function useAnalytics() {
       
       const result = data?.[0];
       console.log('🧹 Cleanup completed:', result);
-      
-      // Ricarica dati dopo pulizia
       await loadData();
-      
       return result;
       
     } catch (error) {

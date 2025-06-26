@@ -2,16 +2,14 @@
 import { supabase } from '@/integrations/supabase/client';
 import { SiteVisit } from '../useAnalytics';
 
-// Configurazione timeout ottimizzata
 const TIMEOUT_CONFIG = {
   TRACK_VISIT: 3000,
   LOAD_VISITS: 5000,
   CONNECTION_TEST: 2000
 };
 
-// Cache per evitare query duplicate
 const queryCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_DURATION = 60000; // 1 minuto
+const CACHE_DURATION = 60000;
 
 function getCachedResult(key: string): any | null {
   const cached = queryCache.get(key);
@@ -25,7 +23,6 @@ function getCachedResult(key: string): any | null {
 function setCachedResult(key: string, data: any): void {
   queryCache.set(key, { data, timestamp: Date.now() });
   
-  // Pulisci cache se diventa troppo grande
   if (queryCache.size > 50) {
     const oldestKey = queryCache.keys().next().value;
     queryCache.delete(oldestKey);
@@ -34,7 +31,6 @@ function setCachedResult(key: string, data: any): void {
 
 export const trackPageVisit = async (page: string) => {
   try {
-    // Skip tracking per area admin
     if (page.includes('/area-riservata') || page.includes('/admin')) {
       console.log('🚫 Skipping admin area tracking:', page);
       return;
@@ -65,7 +61,6 @@ export const trackPageVisit = async (page: string) => {
   } catch (error) {
     console.error('❌ Critical error in trackPageVisit:', error);
     
-    // Fallback con localStorage
     try {
       const fallbackData = {
         page,
@@ -77,7 +72,6 @@ export const trackPageVisit = async (page: string) => {
       const existingFailed = JSON.parse(localStorage.getItem('failed_tracking') || '[]');
       existingFailed.push(fallbackData);
       
-      // Mantieni solo gli ultimi 20 errori
       if (existingFailed.length > 20) {
         existingFailed.splice(0, existingFailed.length - 20);
       }
@@ -119,23 +113,24 @@ export const loadSiteVisits = async (): Promise<SiteVisit[]> => {
       )
     ]);
 
-    if (result && 'data' in result && 'error' in result) {
-      const { data, error } = result;
+    // Type guard per assicurarsi che result sia del tipo corretto
+    if (result && typeof result === 'object' && 'data' in result && 'error' in result) {
+      const { data, error } = result as { data: any[] | null; error: any };
 
       if (error) {
         console.error('❌ Site visits query error:', error);
         throw error;
       }
 
-      const visits = (data || []).map((visit: any) => ({
+      const visits: SiteVisit[] = (data || []).map((visit: any) => ({
         id: visit.id,
         page: visit.page,
         created_at: visit.created_at,
         user_agent: visit.user_agent || undefined,
         referrer: visit.referrer || undefined,
         session_id: visit.session_id || undefined,
-        ip_address: visit.ip_address?.toString() || undefined
-      })) as SiteVisit[];
+        ip_address: visit.ip_address ? String(visit.ip_address) : undefined
+      }));
 
       setCachedResult(cacheKey, visits);
       console.log(`✅ Loaded ${visits.length} site visits`);
@@ -163,8 +158,9 @@ export const testSupabaseConnection = async (): Promise<boolean> => {
       )
     ]);
     
-    if (result && 'error' in result && 'count' in result) {
-      const { error, count } = result;
+    // Type guard per il risultato
+    if (result && typeof result === 'object' && 'error' in result && 'count' in result) {
+      const { error, count } = result as { error: any; count: number };
       
       if (error) {
         console.error('❌ Supabase connection test failed:', error);
@@ -183,7 +179,6 @@ export const testSupabaseConnection = async (): Promise<boolean> => {
   }
 };
 
-// Funzione per pulizia dati vecchi
 export const cleanupOldVisits = async (): Promise<{ success: boolean; message: string }> => {
   try {
     console.log('🧹 Starting cleanup of old visits...');
@@ -204,7 +199,6 @@ export const cleanupOldVisits = async (): Promise<{ success: boolean; message: s
   }
 };
 
-// Funzioni di utilità per il debugging
 export const getFailedTracking = (): any[] => {
   try {
     return JSON.parse(localStorage.getItem('failed_tracking') || '[]');
