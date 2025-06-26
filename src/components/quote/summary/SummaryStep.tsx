@@ -30,7 +30,20 @@ const SummaryStep: React.FC<SummaryStepProps> = ({
   const formValues = form.getValues();
   
   console.log("🔍 SummaryStep: Form values for summary", formValues);
-  console.log("🔍 SummaryStep: Children details", formValues.childrenDetails);
+  console.log("🔍 SummaryStep: Children count", formValues.children);
+  console.log("🔍 SummaryStep: Children details array", formValues.childrenDetails);
+  console.log("🔍 SummaryStep: Adults count", formValues.adults);
+  
+  // Detailed logging of children details
+  if (formValues.childrenDetails) {
+    formValues.childrenDetails.forEach((child, index) => {
+      console.log(`🔍 Child ${index + 1}:`, {
+        isUnder12: child.isUnder12,
+        sleepsWithParents: child.sleepsWithParents,
+        sleepsInCrib: child.sleepsInCrib
+      });
+    });
+  }
   
   // Calculate price info
   const priceInfo = calculateTotalPrice(formValues, apartments);
