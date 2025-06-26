@@ -169,7 +169,8 @@ export const getOptimizedVisitCounts = async (): Promise<OptimizedVisitCounts> =
     
     const result = await withRetry(async () => {
       return await Promise.race([
-        supabase.rpc('get_optimized_visit_counts'),
+        // Cast the RPC call to avoid TypeScript errors since the function was just created
+        (supabase.rpc as any)('get_optimized_visit_counts'),
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('RPC timeout')), UNIFIED_TIMEOUT)
         )
