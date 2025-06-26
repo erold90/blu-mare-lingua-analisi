@@ -68,13 +68,20 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     message += `Subtotale soggiorno: ${subtotal}€\n\n`;
     message += formatIncludedServicesSection(cleaningFee, touristTax, totalCribs);
     
-    // Discount if any
+    // Discount if any (solo arrotondamento, non occupazione che è già mostrato sopra)
     if (discount > 0) {
-      message += `*Sconto applicato: -${discount}€*\n\n`;
+      message += `*Sconto arrotondamento: -${discount}€*\n\n`;
     }
     
-    // Final total
-    message += `*TOTALE FINALE: ${totalFinal}€*\n\n`;
+    // Final total con evidenziazione del risparmio totale
+    message += `*TOTALE FINALE: ${totalFinal}€*\n`;
+    
+    // Mostra il risparmio totale se c'è stato uno sconto di occupazione
+    if (priceInfo.occupancyDiscount && priceInfo.occupancyDiscount.discountAmount > 0) {
+      const totalSavings = priceInfo.occupancyDiscount.discountAmount + discount;
+      message += `*🎉 RISPARMIO TOTALE: ${totalSavings}€! 🎉*\n`;
+    }
+    message += `\n`;
     
     // Payment breakdown
     message += formatPaymentSection(deposit, balance);

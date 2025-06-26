@@ -50,8 +50,20 @@ export const formatApartmentsSection = (
   let section = `*Appartamenti selezionati:*\n`;
   
   selectedApartments.forEach(apartment => {
-    const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
-    section += `• ${apartment.name}: ${apartmentPrice}€\n`;
+    // Mostra il prezzo originale se c'è uno sconto di occupazione
+    if (priceInfo.occupancyDiscount && priceInfo.occupancyDiscount.discountAmount > 0) {
+      const originalApartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
+      // Calcola il prezzo originale proporzionalmente
+      const originalTotal = priceInfo.occupancyDiscount.originalBasePrice;
+      const discountedTotal = priceInfo.basePrice;
+      const originalPrice = Math.round((originalApartmentPrice / discountedTotal) * originalTotal);
+      
+      section += `• ${apartment.name}: ~~${originalPrice}€~~ → ${originalApartmentPrice}€\n`;
+      section += `  (Capacità: ${apartment.capacity} posti, Ospiti: ${(formValues.adults || 0) + (formValues.children || 0)})\n`;
+    } else {
+      const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
+      section += `• ${apartment.name}: ${apartmentPrice}€\n`;
+    }
     
     // Persons assignment if available
     if (formValues.personsPerApartment && formValues.personsPerApartment[apartment.id]) {

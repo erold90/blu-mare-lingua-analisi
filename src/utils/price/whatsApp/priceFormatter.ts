@@ -18,21 +18,39 @@ export const formatPriceSection = (
   
   let section = `*Dettaglio prezzi:*\n`;
   
-  // Show individual apartment breakdown if multiple apartments
-  if (selectedApartments.length > 1) {
-    section += `Prezzo base appartamenti: *${basePrice}€*\n`;
+  // Mostra prima il prezzo originale se c'è uno sconto di occupazione
+  if (priceInfo.occupancyDiscount && priceInfo.occupancyDiscount.discountAmount > 0) {
+    const originalPrice = priceInfo.occupancyDiscount.originalBasePrice;
+    const originalPricePerNight = nights > 0 ? Math.round(originalPrice / nights) : 0;
+    const originalPricePerWeek = weeks > 0 ? Math.round(originalPrice / weeks) : 0;
     
-    // Show individual apartment prices
-    selectedApartments.forEach(apartment => {
-      const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
-      section += `• ${apartment.name}: ${apartmentPrice}€\n`;
-    });
+    section += `Prezzo listino originale: *${originalPrice}€*\n`;
+    section += `• Prezzo per notte: ~${originalPricePerNight}€\n`;
+    section += `• Prezzo per settimana: ~${originalPricePerWeek}€\n`;
+    section += `• ${nights} notti (${weeks} ${weeks === 1 ? 'settimana' : 'settimane'}): ${originalPrice}€\n\n`;
     
+    // Mostra lo sconto di occupazione
+    section += `*${priceInfo.occupancyDiscount.description}*\n`;
+    section += `Sconto applicato: -*${priceInfo.occupancyDiscount.discountAmount}€*\n\n`;
+    
+    // Prezzo finale dopo sconto occupazione
+    section += `Prezzo finale: *${basePrice}€*\n`;
     section += `• Prezzo per notte: ~${pricePerNight}€\n`;
-    section += `• Prezzo per settimana: ~${pricePerWeek}€\n`;
-    section += `• ${nights} notti (${weeks} ${weeks === 1 ? 'settimana' : 'settimane'}): ${basePrice}€\n\n`;
+    section += `• Prezzo per settimana: ~${pricePerWeek}€\n\n`;
   } else {
-    section += `Prezzo base appartamento: *${basePrice}€*\n`;
+    // Nessuno sconto di occupazione, mostra prezzo normale
+    if (selectedApartments.length > 1) {
+      section += `Prezzo base appartamenti: *${basePrice}€*\n`;
+      
+      // Show individual apartment prices
+      selectedApartments.forEach(apartment => {
+        const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
+        section += `• ${apartment.name}: ${apartmentPrice}€\n`;
+      });
+    } else {
+      section += `Prezzo base appartamento: *${basePrice}€*\n`;
+    }
+    
     section += `• Prezzo per notte: ~${pricePerNight}€\n`;
     section += `• Prezzo per settimana: ~${pricePerWeek}€\n`;
     section += `• ${nights} notti (${weeks} ${weeks === 1 ? 'settimana' : 'settimane'}): ${basePrice}€\n\n`;
