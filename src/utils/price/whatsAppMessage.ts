@@ -108,14 +108,14 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
       });
     }
     
-    message += `Totale ospiti: ${(formValues.adults || 0) + (formValues.children || 0)}\n`;
+    message += `\nTotale ospiti: ${(formValues.adults || 0) + (formValues.children || 0)}`;
     
     // Aggiungi informazioni sui posti letto se ci sono bambini che non li occupano
     if (childrenWithParents > 0 || totalCribs > 0) {
       const effectiveGuests = (formValues.adults || 0) + (formValues.children || 0) - childrenWithParents - totalCribs;
-      message += `Posti letto necessari: ${effectiveGuests}\n`;
+      message += `\nPosti letto necessari: ${effectiveGuests}`;
     }
-    message += `\n`;
+    message += `\n\n`;
     
     // Appartamenti selezionati
     message += `*Appartamenti selezionati:*\n`;
@@ -130,11 +130,6 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
         message += `• ${apartment.name}: ~~${originalPrice}€~~ → ${apartmentPrice}€\n`;
       } else {
         message += `• ${apartment.name}: ${apartmentPrice}€\n`;
-      }
-      
-      // Persone assegnate se disponibili
-      if (formValues.personsPerApartment && formValues.personsPerApartment[apartment.id]) {
-        message += `  Persone assegnate: ${formValues.personsPerApartment[apartment.id]}\n`;
       }
     });
     message += `\n`;
@@ -194,7 +189,7 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     message += `• Prezzo per settimana: ~${pricePerWeek}€\n`;
     message += `• ${nights} notti (${weeks} ${weeks === 1 ? 'settimana' : 'settimane'}): ${basePrice}€\n\n`;
     
-    // Servizi extra se presenti
+    // Servizi extra se presenti - CORRETTA LA VISUALIZZAZIONE
     if (extrasCost > 0) {
       const extraDetails = [];
       
