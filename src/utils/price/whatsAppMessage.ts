@@ -2,22 +2,12 @@
 import { FormValues } from "@/utils/quoteFormSchema";
 import { Apartment } from "@/data/apartments";
 import { calculateTotalPrice } from "./priceCalculator";
-import { formatDateSection } from "./whatsApp/dateFormatter";
-import { 
-  formatGuestSection, 
-  formatApartmentsSection, 
-  formatServicesSection, 
-  formatPaymentSection 
-} from "./whatsApp/messageFormatter";
-import { 
-  formatPriceSection, 
-  formatExtrasSection, 
-  formatIncludedServicesSection 
-} from "./whatsApp/priceFormatter";
 import { toDateSafe } from "./dateConverter";
+import { format } from "date-fns";
+import { it } from 'date-fns/locale';
 
 /**
- * Crea messaggio WhatsApp con dettagli preventivo ottimizzato
+ * Crea messaggio WhatsApp con formato semplificato e pulito
  */
 export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartment[]): string | null => {
   // Validazione input
@@ -52,17 +42,16 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     const nights = priceInfo.nights || 0;
     const weeks = Math.ceil(nights / 7);
     
-    // Usa i valori dal calcolo prezzi per evitare errori
+    // Valori dai calcoli
     const { 
-      totalBeforeDiscount: subtotal, 
-      discount, 
       totalAfterDiscount: totalFinal, 
       deposit, 
       cleaningFee, 
       touristTax,
       extras: extrasCost,
       basePrice,
-      occupancyDiscount
+      occupancyDiscount,
+      discount: roundingDiscount
     } = priceInfo;
     
     const balance = totalFinal - deposit;
@@ -70,48 +59,197 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     // Culle totali
     const totalCribs = formValues.childrenDetails?.filter(child => child.sleepsInCrib)?.length || 0;
     
-    // Costruzione messaggio migliorato
-    let message = `🏖️ *RICHIESTA PREVENTIVO VILLA MAREBLU* 🏖️\n\n`;
+    // Formattazione date
+    const formattedCheckIn = format(checkInDate, "EEEE dd MMMM yyyy", { locale: it });
+    const formattedCheckOut = format(checkOutDate, "EEEE dd MMMM yyyy", { locale: it });
     
-    // Sezioni del messaggio con formato migliorato
-    message += formatDateSection(checkInDate, checkOutDate, nights, weeks);
-    message += formatGuestSection(formValues);
-    message += formatApartmentsSection(selectedApartments, formValues, priceInfo);
-    message += formatServicesSection(formValues, selectedApartments);
-    message += formatPriceSection(selectedApartments, priceInfo, nights, weeks);
-    message += formatExtrasSection(formValues, selectedApartments, priceInfo);
+    // Durata formattata
+    const formatDuration = (totalNights: number): string => {
+      const weeks = Math.floor(totalNights / 7);
+      const extraNights = totalNights % 7;
+      
+      if (weeks === 0) {
+        return `${totalNights} ${totalNights === 1 ? 'notte' : 'notti'}`;
+      }
+      
+      if (extraNights === 0) {
+        return `${totalNights} notti (${weeks} ${weeks === 1 ? 'settimana' : 'settimane'})`;
+      }
+      
+      return `${totalNights} notti (${weeks} ${weeks === 1 ? 'settimana' : 'settimane'} + ${extraNights} ${extraNights === 1 ? 'notte' : 'notti'})`;
+    };
     
-    // Calcolo subtotale corretto: basePrice + extras
-    const correctSubtotal = basePrice + extrasCost;
-    message += `💰 Subtotale soggiorno: *${correctSubtotal}€*\n\n`;
+    // Costruzione messaggio semplificato
+    let message = `*Richiesta Preventivo Villa MareBlu*\n\n`;
     
-    message += formatIncludedServicesSection(cleaningFee, touristTax, totalCribs);
+    // Date soggiorno
+    message += `Date soggiorno:\n`;
+    message += `Check-in: ${formattedCheckIn}\n`;
+    message += `Check-out: ${formattedCheckOut}\n`;
+    message += `Durata: ${formatDuration(nights)}\n\n`;
     
-    // Sconto se presente
-    if (discount > 0) {
-      message += `💸 *Sconto arrotondamento: -${discount}€*\n\n`;
+    // Ospiti
+    message += `*Ospiti:*\n`;
+    message += `Adulti: ${formValues.adults}\n`;
+    message += `Bambini: ${formValues.children || 0}\n\n`;
+    
+    // Dettagli bambini se presenti
+    if (formValues.children && formValues.children > 0 && formValues.childrenDetails && formValues.childrenDetails.length > 0) {
+      message += `*Dettagli bambini:*\n`;
+      formValues.childrenDetails.forEach((child, index) => {
+        message += `• Bambino ${index + 1}: `;
+        const details = [];
+        if (child.isUnder12) details.push("Sotto i 12 anni");
+        if (child.sleepsWithParents) details.push("Dorme con i genitori");
+        if (child.sleepsInCrib) details.push("Necessita di culla");
+        message += details.length > 0 ? details.join(", ") : "Standard";
+        message += "\n";
+      });
+    }
+    
+    message += `Totale ospiti: ${(formValues.adults || 0) + (formValues.children || 0)}\n\n`;
+    
+    // Appartamenti selezionati
+    message += `*Appartamenti selezionati:*\n`;
+    selectedApartments.forEach(apartment => {
+      const apartmentPrice = priceInfo.apartmentPrices?.[apartment.id] || 0;
+      
+      // Se c'è uno sconto di occupazione, mostra il prezzo scontato
+      if (occupancyDiscount && occupancyDiscount.discountAmount > 0) {
+        const originalTotal = occupancyDiscount.originalBasePrice;
+        const discountedTotal = basePrice;
+        const originalPrice = Math.round((apartmentPrice / discountedTotal) * originalTotal);
+        message += `• ${apartment.name}: ~~${originalPrice}€~~ → ${apartmentPrice}€\n`;
+      } else {
+        message += `• ${apartment.name}: ${apartmentPrice}€\n`;
+      }
+      
+      // Persone assegnate se disponibili
+      if (formValues.personsPerApartment && formValues.personsPerApartment[apartment.id]) {
+        message += `  Persone assegnate: ${formValues.personsPerApartment[apartment.id]}\n`;
+      }
+    });
+    message += `\n`;
+    
+    // Servizi richiesti
+    message += `*Servizi richiesti:*\n`;
+    message += `Biancheria: ${formValues.needsLinen ? "SI - Richiesta" : "NO - Non richiesta"}\n`;
+    
+    if (formValues.hasPets) {
+      let apartmentsWithPets = 0;
+      if (selectedApartments.length === 1) {
+        apartmentsWithPets = 1;
+      } else if (formValues.petsInApartment) {
+        apartmentsWithPets = Object.values(formValues.petsInApartment).filter(Boolean).length;
+      }
+      message += `Animali domestici: SI - ${apartmentsWithPets} ${apartmentsWithPets === 1 ? 'appartamento' : 'appartamenti'}\n`;
+    } else {
+      message += `Animali domestici: NO - Nessuno\n`;
+    }
+    
+    if (totalCribs > 0) {
+      message += `Culle richieste: ${totalCribs} (gratuite)\n`;
+    }
+    message += `\n`;
+    
+    // Dettaglio prezzi
+    message += `*Dettaglio prezzi:*\n`;
+    
+    // Se c'è sconto di occupazione, mostra prima il prezzo originale
+    if (occupancyDiscount && occupancyDiscount.discountAmount > 0) {
+      const originalPrice = occupancyDiscount.originalBasePrice;
+      const originalPricePerNight = nights > 0 ? Math.round(originalPrice / nights) : 0;
+      const originalPricePerWeek = weeks > 0 ? Math.round(originalPrice / weeks) : 0;
+      
+      message += `Prezzo listino originale: *${originalPrice}€*\n`;
+      message += `• Prezzo per notte: ~${originalPricePerNight}€\n`;
+      message += `• Prezzo per settimana: ~${originalPricePerWeek}€\n\n`;
+      
+      message += `${occupancyDiscount.description}\n`;
+      message += `Sconto applicato: -*${occupancyDiscount.discountAmount}€*\n\n`;
+    }
+    
+    // Prezzo base finale
+    const pricePerNight = nights > 0 ? Math.round(basePrice / nights) : 0;
+    const pricePerWeek = weeks > 0 ? Math.round(basePrice / weeks) : 0;
+    
+    if (selectedApartments.length > 1) {
+      message += `Prezzo base appartamenti: *${basePrice}€*\n`;
+    } else {
+      message += `Prezzo base appartamento: *${basePrice}€*\n`;
+    }
+    message += `• Prezzo per notte: ~${pricePerNight}€\n`;
+    message += `• Prezzo per settimana: ~${pricePerWeek}€\n`;
+    message += `• ${nights} notti (${weeks} ${weeks === 1 ? 'settimana' : 'settimane'}): ${basePrice}€\n\n`;
+    
+    // Servizi extra se presenti
+    if (extrasCost > 0) {
+      const extraDetails = [];
+      
+      if (formValues.needsLinen) {
+        const totalPeople = (formValues.adults || 0) + (formValues.children || 0);
+        const linenCost = totalPeople * 15;
+        extraDetails.push(`Biancheria ${linenCost}€`);
+      }
+      
+      if (formValues.hasPets) {
+        let apartmentsWithPets = 0;
+        if (selectedApartments.length === 1) {
+          apartmentsWithPets = 1;
+        } else if (formValues.petsInApartment) {
+          apartmentsWithPets = Object.values(formValues.petsInApartment).filter(Boolean).length;
+        }
+        const animalsCost = apartmentsWithPets * 50;
+        extraDetails.push(`Animali ${animalsCost}€`);
+      }
+      
+      message += `Servizi extra: ${extrasCost}€`;
+      if (extraDetails.length > 0) {
+        message += ` (${extraDetails.join(", ")})`;
+      }
+      message += `\n\n`;
+    }
+    
+    // Subtotale
+    const subtotal = basePrice + extrasCost;
+    message += `Subtotale soggiorno: ${subtotal}€\n\n`;
+    
+    // Servizi inclusi
+    message += `*Servizi inclusi nel prezzo:*\n`;
+    message += `• Pulizia finale: (inclusa) +${cleaningFee}€\n`;
+    message += `• Tassa di soggiorno: (inclusa) +${touristTax}€\n`;
+    if (totalCribs > 0) {
+      message += `• Culle per bambini (${totalCribs}): Gratuite\n`;
+    }
+    message += `\n`;
+    
+    // Sconto arrotondamento se presente
+    if (roundingDiscount > 0) {
+      message += `Sconto arrotondamento: -*${roundingDiscount}€*\n\n`;
     }
     
     // Totale finale
-    message += `🎯 *TOTALE FINALE: ${totalFinal}€*\n`;
+    message += `*TOTALE FINALE: ${totalFinal}€*\n\n`;
     
-    // Risparmio totale corretto
-    let totalSavings = discount;
+    // Risparmio totale se presente
+    let totalSavings = roundingDiscount;
     if (occupancyDiscount && occupancyDiscount.discountAmount > 0) {
       totalSavings += occupancyDiscount.discountAmount;
     }
     
     if (totalSavings > 0) {
-      message += `🎉 *RISPARMIO TOTALE: ${totalSavings}€!* 🎉\n`;
+      message += `*RISPARMIO TOTALE: ${totalSavings}€*\n\n`;
     }
-    message += `\n`;
     
     // Modalità pagamento
-    message += formatPaymentSection(deposit, balance);
+    message += `*Modalità di pagamento:*\n`;
+    message += `> Alla prenotazione (30%): *${deposit}€*\n`;
+    message += `> All'arrivo (saldo): *${balance}€*\n`;
+    message += `> Cauzione (restituibile): *200€*\n`;
     
     // Note aggiuntive se presenti
     if (formValues.notes && formValues.notes.trim()) {
-      message += `📝 *Note aggiuntive:*\n${formValues.notes}\n\n`;
+      message += `\n*Note aggiuntive:*\n${formValues.notes}`;
     }
     
     console.log("✅ WhatsApp message created successfully");
