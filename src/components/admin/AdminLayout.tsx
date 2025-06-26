@@ -1,6 +1,7 @@
 
 import * as React from "react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import AdminDashboard from "./AdminDashboard";
 import AdminReservations from "./AdminReservations";
 import AdminApartments from "./AdminApartments";
@@ -19,7 +20,8 @@ import {
   BarChart3,
   Settings,
   Menu,
-  X
+  X,
+  Home
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -74,6 +76,16 @@ const AdminLayout = () => {
               className="mt-5 flex-1 px-2 bg-blue-800 space-y-1"
               aria-label="Sidebar"
             >
+              <Link
+                to="/"
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-gray-300 hover:bg-gray-700 hover:text-white"
+              >
+                <Home className="h-5 w-5" />
+                Torna alla Home
+              </Link>
+
+              <div className="border-t border-gray-700 my-2"></div>
+
               <button
                 onClick={() => setActiveTab("dashboard")}
                 className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
@@ -186,6 +198,16 @@ const AdminLayout = () => {
             className="mt-5 flex-1 flex flex-col bg-blue-800 space-y-1"
             aria-label="Sidebar"
           >
+            <Link
+              to="/"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-gray-300 hover:bg-gray-700 hover:text-white"
+            >
+              <Home className="h-5 w-5" />
+              Torna alla Home
+            </Link>
+
+            <div className="border-t border-gray-700 my-2"></div>
+
             <button
               onClick={() => setActiveTab("dashboard")}
               className={`w-full flex items-center gap-3 px-3 py-2 text-left rounded-md transition-colors ${
