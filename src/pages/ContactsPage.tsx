@@ -74,13 +74,13 @@ const ContactsPage = () => {
   return (
     <div className="container px-4 py-8 md:py-12">
       <SEOHead
-        title="Contatti Villa MareBlu Salento - Affitto Settimanale Puglia | Weekend Romantico Salento"
-        description="Contatta Villa MareBlu per il tuo affitto settimanale Puglia o weekend romantico Salento. Info, prenotazioni e disponibilità villa lusso Torre Vado. Tel: +39 3937767749"
+        title="Contatti Villa MareBlu Salento - Affitto Settimanale Puglia"
+        description="Contatta Villa MareBlu per il tuo soggiorno in Salento. Informazioni, prenotazioni e disponibilità per la tua vacanza in Puglia. Tel: +39 3937767749"
         keywords={getPageSpecificKeywords('contact')}
         canonicalUrl="/contatti"
         structuredData={structuredData}
         ogTitle="Contatti Villa MareBlu - Prenota la Tua Vacanza in Salento"
-        ogDescription="Contattaci per prenotare la tua villa di lusso in Salento. Affitto settimanale e weekend romantici nel cuore della Puglia"
+        ogDescription="Contattaci per prenotare la tua villa in Salento. Soggiorni settimanali nel cuore della Puglia"
       />
 
       <h1 className="text-3xl md:text-4xl font-bold mb-6">Contatti Villa MareBlu</h1>
@@ -88,14 +88,18 @@ const ContactsPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Informazioni di contatto */}
         <div>
-          <h2 className="text-2xl font-semibold mb-4">Come Raggiungerci per il Tuo Soggiorno</h2>
+          <h2 className="text-2xl font-semibold mb-4">Come Raggiungerci</h2>
           
           <div className="flex flex-col space-y-6">
             <div className="flex items-start gap-4">
               <MapPin className="h-6 w-6 text-primary shrink-0 mt-1" />
               <div>
                 <h3 className="font-medium">Indirizzo Villa MareBlu</h3>
-                <p className="text-muted-foreground">Via Marco Polo 112<br />73053 Patù (LE)<br />Salento, Puglia<br /><em>Villa lusso Salento mare</em></p>
+                <p className="text-muted-foreground">
+                  Via Marco Polo 112<br />
+                  73053 Patù (LE)<br />
+                  Salento, Puglia
+                </p>
               </div>
             </div>
             
@@ -105,7 +109,7 @@ const ContactsPage = () => {
                 <h3 className="font-medium">Email per Prenotazioni</h3>
                 <p className="text-muted-foreground">macchiaforcato@gmail.com</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  <em>Risposta garantita entro 2 ore per affitto settimanale Puglia</em>
+                  Risposta garantita entro 2 ore
                 </p>
               </div>
             </div>
@@ -116,7 +120,7 @@ const ContactsPage = () => {
                 <h3 className="font-medium">Telefono Villa MareBlu</h3>
                 <p className="text-muted-foreground">+39 3937767749</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  <em>Disponibile 7/7 per weekend romantico Salento</em>
+                  Disponibile tutti i giorni
                 </p>
               </div>
             </div>
@@ -133,7 +137,7 @@ const ContactsPage = () => {
               <div>Su appuntamento</div>
             </div>
             <p className="text-sm text-muted-foreground mt-2">
-              <em>Per emergenze durante il soggiorno, siamo sempre reperibili</em>
+              Per emergenze durante il soggiorno, siamo sempre reperibili
             </p>
           </div>
           
@@ -147,17 +151,17 @@ const ContactsPage = () => {
               loading="lazy" 
               referrerPolicy="no-referrer-when-downgrade"
               className="rounded-lg"
-              title="Mappa Villa MareBlu Salento - Via Marco Polo 112, Patù (LE)"
+              title="Villa MareBlu - Via Marco Polo 112, Patù (LE)"
             ></iframe>
           </div>
         </div>
         
         {/* Form di contatto */}
         <div>
-          <h2 className="text-2xl font-semibold mb-4">Richiedi Informazioni per la Tua Vacanza</h2>
+          <h2 className="text-2xl font-semibold mb-4">Richiedi Informazioni</h2>
           <p className="text-muted-foreground mb-6">
-            Compila il modulo per ricevere informazioni dettagliate sul nostro <strong>affitto settimanale Puglia</strong> 
-            o per organizzare il tuo <strong>weekend romantico Salento</strong>. Ti risponderemo entro 2 ore!
+            Compila il modulo per ricevere informazioni dettagliate sulla tua vacanza in Salento. 
+            Ti risponderemo entro 2 ore con tutte le informazioni necessarie.
           </p>
           
           <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
@@ -208,7 +212,7 @@ const ContactsPage = () => {
               <Input 
                 id="subject" 
                 name="subject"
-                placeholder="Es: Preventivo weekend romantico Salento" 
+                placeholder="Es: Preventivo soggiorno Salento" 
                 required 
               />
             </div>
@@ -230,43 +234,43 @@ const ContactsPage = () => {
               className="w-full bg-primary hover:bg-primary/90"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Invio in corso..." : "Invia Richiesta di Prenotazione"}
+              {isSubmitting ? "Invio in corso..." : "Invia Richiesta"}
             </Button>
             
             <p className="text-xs text-muted-foreground mt-2">
               Inviando questo modulo, accetti la nostra <Link to="/privacy-policy" className="text-primary underline">Privacy Policy</Link>.
               <br />
-              <em>Garantiamo risposta entro 2 ore per tutte le richieste di affitto settimanale Puglia.</em>
+              Garantiamo risposta entro 2 ore per tutte le richieste.
             </p>
           </form>
         </div>
       </div>
 
-      {/* Sezione info aggiuntive */}
+      {/* Sezione vantaggi */}
       <div className="mt-16 bg-gradient-to-r from-blue-50 to-blue-100 p-8 rounded-lg">
         <h2 className="text-2xl font-semibold mb-4 text-center text-primary">
-          Perché Prenotare Direttamente con Noi
+          Perché Prenotare Direttamente
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="text-center">
             <div className="text-3xl mb-3">💰</div>
             <h3 className="font-semibold mb-2">Miglior Prezzo Garantito</h3>
             <p className="text-sm text-muted-foreground">
-              Nessuna commissione aggiuntiva per il tuo affitto settimanale Puglia
+              Nessuna commissione aggiuntiva, prezzi trasparenti
             </p>
           </div>
           <div className="text-center">
             <div className="text-3xl mb-3">🎯</div>
             <h3 className="font-semibold mb-2">Servizio Personalizzato</h3>
             <p className="text-sm text-muted-foreground">
-              Assistenza dedicata per il tuo weekend romantico Salento
+              Assistenza dedicata per il tuo soggiorno
             </p>
           </div>
           <div className="text-center">
             <div className="text-3xl mb-3">⚡</div>
             <h3 className="font-semibold mb-2">Risposta Rapida</h3>
             <p className="text-sm text-muted-foreground">
-              Conferma disponibilità entro 2 ore dalla richiesta
+              Conferma disponibilità entro 2 ore
             </p>
           </div>
         </div>
