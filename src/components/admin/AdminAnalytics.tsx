@@ -9,14 +9,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, subDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { useUnifiedAnalytics } from "@/hooks/analytics/useUnifiedAnalytics";
-import { CalendarIcon, Info, Loader2, AlertCircle, RefreshCw, CheckCircle2, BarChart3, TrendingUp, Database } from "lucide-react";
+import { CalendarIcon, Info, Loader2, AlertCircle, RefreshCw, CheckCircle2, BarChart3, TrendingUp, Database, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminLogAnalytics } from "./analytics/AdminLogAnalytics";
 import { AdminLogQuotes } from "./quotes/AdminLogQuotes";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { testSupabaseConnection } from "@/hooks/analytics/operations/siteOperations";
+import { testSupabaseConnection, getFailedTracking, clearFailedTracking } from "@/hooks/analytics/operations/siteOperations";
 
 const AdminAnalytics = () => {
   const { quoteLogs, siteVisits, getVisitsCount, loading, error, refreshData } = useUnifiedAnalytics();
@@ -61,20 +61,32 @@ const AdminAnalytics = () => {
     }
   };
 
+  const handleClearFailedTracking = () => {
+    const failedTracking = getFailedTracking();
+    if (failedTracking.length > 0) {
+      clearFailedTracking();
+      toast.success(`Puliti ${failedTracking.length} tracking falliti`);
+    } else {
+      toast.info('Nessun tracking fallito da pulire');
+    }
+  };
+
   // Calcola statistiche in tempo reale
   const stats = React.useMemo(() => {
     const visitsToday = getVisitsCount('day');
     const visitsMonth = getVisitsCount('month');
     const visitsYear = getVisitsCount('year');
+    const failedTracking = getFailedTracking();
     
-    console.log('📊 Stats calculated:', { visitsToday, visitsMonth, visitsYear, totalSiteVisits: siteVisits.length });
+    console.log('📊 Stats calculated:', { visitsToday, visitsMonth, visitsYear, totalSiteVisits: siteVisits.length, failedTracking: failedTracking.length });
     
     return {
       visitsToday,
       visitsMonth,
       visitsYear,
       totalQuotes: quoteLogs.length,
-      completedQuotes: quoteLogs.filter(q => q.completed).length
+      completedQuotes: quoteLogs.filter(q => q.completed).length,
+      failedTracking: failedTracking.length
     };
   }, [quoteLogs, getVisitsCount, siteVisits.length]);
   
@@ -139,6 +151,19 @@ const AdminAnalytics = () => {
               />
             </PopoverContent>
           </Popover>
+          
+          {stats.failedTracking > 0 && (
+            <Button 
+              onClick={handleClearFailedTracking} 
+              variant="outline" 
+              size="sm"
+              className="border-orange-400 text-orange-600 hover:bg-orange-50"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Pulisci Errori ({stats.failedTracking})
+            </Button>
+          )}
+          
           <Button 
             onClick={handleTestConnection} 
             variant="outline" 
@@ -168,7 +193,7 @@ const AdminAnalytics = () => {
         </div>
       </div>
 
-      {/* Debug information */}
+      {/* Debug information migliorato */}
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
@@ -185,7 +210,7 @@ const AdminAnalytics = () => {
               <br />
               Errori: {error ? 'Presenti' : 'Nessuno'}
               <br />
-              Ultima query: {new Date().toLocaleTimeString()}
+              Tracking falliti: {stats.failedTracking}
             </div>
           </div>
         </AlertDescription>
@@ -198,6 +223,13 @@ const AdminAnalytics = () => {
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
               {error}
+              {stats.failedTracking > 0 && (
+                <div className="mt-2">
+                  <strong>Trovati {stats.failedTracking} tracking falliti in localStorage.</strong>
+                  <br />
+                  <em>Usa il pulsante "Pulisci Errori" per rimuoverli.</em>
+                </div>
+              )}
             </AlertDescription>
           </Alert>
         ) : (
@@ -260,6 +292,13 @@ const AdminAnalytics = () => {
                 Il sistema di tracking è attivo e registra automaticamente le visite alle pagine pubbliche.
                 <br />
                 <em>Suggerimento: Visita il sito in una nuova finestra privata per testare il tracking.</em>
+                {stats.failedTracking > 0 && (
+                  <div className="mt-2 p-2 bg-orange-50 rounded">
+                    <strong>⚠️ Trovati {stats.failedTracking} tentativi di tracking falliti.</strong>
+                    <br />
+                    Questo potrebbe indicare problemi di connessione al database.
+                  </div>
+                )}
               </AlertDescription>
             </Alert>
           ) : (

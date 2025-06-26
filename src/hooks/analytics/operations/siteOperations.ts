@@ -10,12 +10,11 @@ export const trackPageVisit = async (page: string) => {
       return;
     }
 
-    // Genera un ID unico per la visita con timestamp più preciso
-    const visitId = `visit_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    // Genera un ID unico per la visita più semplice e affidabile
+    const visitId = `visit_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     
     console.log('📊 Tracking page visit:', page, 'ID:', visitId);
     
-    // Tracking immediato e più robusto
     const visitData = {
       id: visitId,
       page: page,
@@ -24,54 +23,51 @@ export const trackPageVisit = async (page: string) => {
 
     console.log('📊 Attempting to save visit data:', visitData);
     
-    // Prova il salvataggio con retry logic
-    let attempts = 0;
-    const maxAttempts = 3;
-    
-    while (attempts < maxAttempts) {
-      try {
-        const { data, error } = await supabase
-          .from('site_visits')
-          .insert(visitData)
-          .select();
+    // Tracking ottimizzato con timeout più breve
+    const { data, error } = await Promise.race([
+      supabase
+        .from('site_visits')
+        .insert(visitData)
+        .select(),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Insert timeout')), 3000)
+      )
+    ]);
 
-        if (error) {
-          console.warn(`⚠️ Site visit tracking attempt ${attempts + 1} failed:`, error);
-          if (attempts === maxAttempts - 1) {
-            throw error;
-          }
-          attempts++;
-          // Breve pausa prima del retry
-          await new Promise(resolve => setTimeout(resolve, 500));
-          continue;
-        }
-
-        console.log('✅ Site visit tracked successfully:', data);
-        return data;
-        
-      } catch (retryError) {
-        console.warn(`⚠️ Retry ${attempts + 1} failed:`, retryError);
-        attempts++;
-        if (attempts < maxAttempts) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-      }
+    if (error) {
+      console.error('❌ Site visit tracking error:', error);
+      throw error;
     }
+
+    console.log('✅ Site visit tracked successfully:', data);
+    return data;
 
   } catch (error) {
     console.error('❌ Critical error in trackPageVisit:', error);
-    // Fallback: prova a salvare in localStorage per debug
+    
+    // Fallback più robusto - salva in localStorage per debug
     try {
       const fallbackData = {
         page,
         timestamp: new Date().toISOString(),
-        error: error.message
+        error: error.message || 'Unknown error'
       };
-      localStorage.setItem('failed_tracking_' + Date.now(), JSON.stringify(fallbackData));
-      console.log('💾 Saved failed tracking to localStorage for debugging');
+      
+      const existingFailed = JSON.parse(localStorage.getItem('failed_tracking') || '[]');
+      existingFailed.push(fallbackData);
+      
+      // Mantieni solo gli ultimi 10 errori
+      if (existingFailed.length > 10) {
+        existingFailed.splice(0, existingFailed.length - 10);
+      }
+      
+      localStorage.setItem('failed_tracking', JSON.stringify(existingFailed));
+      console.log('💾 Saved failed tracking to localStorage');
     } catch (lsError) {
       console.warn('⚠️ Could not save to localStorage:', lsError);
     }
+    
+    throw error;
   }
 };
 
@@ -79,35 +75,33 @@ export const loadSiteVisits = async () => {
   try {
     console.log('🔍 Loading site visits...');
     
-    // Carica le visite degli ultimi 30 giorni
+    // Query ottimizzata con limite e timeout
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
-    console.log('📅 Loading visits from:', thirtyDaysAgo.toISOString());
-    
-    const { data, error } = await supabase
-      .from('site_visits')
-      .select('id, timestamp, page')
-      .gte('timestamp', thirtyDaysAgo.toISOString())
-      .order('timestamp', { ascending: false })
-      .limit(1000);
+    const { data, error } = await Promise.race([
+      supabase
+        .from('site_visits')
+        .select('id, timestamp, page')
+        .gte('timestamp', thirtyDaysAgo.toISOString())
+        .order('timestamp', { ascending: false })
+        .limit(500), // Ridotto per migliori performance
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Query timeout')), 5000)
+      )
+    ]);
 
     if (error) {
       console.error('❌ Site visits query error:', error);
-      return [];
+      throw error;
     }
 
-    console.log(`✅ Loaded ${data?.length || 0} site visits (last 30 days)`);
-    
-    // Log delle ultime 5 visite per debug
-    if (data && data.length > 0) {
-      console.log('📊 Recent visits:', data.slice(0, 5).map(v => ({ page: v.page, timestamp: v.timestamp })));
-    }
-    
+    console.log(`✅ Loaded ${data?.length || 0} site visits`);
     return data || [];
+    
   } catch (error) {
     console.error('❌ Site visits loading failed:', error);
-    return [];
+    throw error;
   }
 };
 
@@ -116,7 +110,6 @@ export const calculateVisitsCount = (
   period: 'day' | 'month' | 'year'
 ): number => {
   if (!siteVisits || siteVisits.length === 0) {
-    console.log(`📊 No visits found for period: ${period}`);
     return 0;
   }
 
@@ -129,11 +122,7 @@ export const calculateVisitsCount = (
       const visitDay = new Date(visitDate.getFullYear(), visitDate.getMonth(), visitDate.getDate());
       
       if (period === 'day') {
-        const isToday = visitDay.getTime() === today.getTime();
-        if (isToday) {
-          console.log(`📅 Found today's visit:`, visit.page, visit.timestamp);
-        }
-        return isToday;
+        return visitDay.getTime() === today.getTime();
       }
       
       if (period === 'month') {
@@ -147,32 +136,58 @@ export const calculateVisitsCount = (
       
       return false;
     } catch (error) {
-      console.warn('⚠️ Error parsing visit date:', error, visit);
+      console.warn('⚠️ Error parsing visit date:', error);
       return false;
     }
   });
 
-  console.log(`📊 Visits count for ${period}:`, filteredVisits.length);
   return filteredVisits.length;
 };
 
-// Funzione di debug per controllare la connessione Supabase
 export const testSupabaseConnection = async () => {
   try {
     console.log('🔗 Testing Supabase connection...');
-    const { data, error } = await supabase
-      .from('site_visits')
-      .select('count(*)', { count: 'exact', head: true });
+    
+    // Test di connessione più semplice e veloce
+    const { data, error, count } = await Promise.race([
+      supabase
+        .from('site_visits')
+        .select('*', { count: 'exact', head: true }),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Connection timeout')), 3000)
+      )
+    ]);
     
     if (error) {
       console.error('❌ Supabase connection test failed:', error);
       return false;
     }
     
-    console.log('✅ Supabase connection successful, total visits:', data);
+    console.log('✅ Supabase connection successful, total visits:', count);
     return true;
+    
   } catch (error) {
     console.error('❌ Supabase connection error:', error);
     return false;
+  }
+};
+
+// Funzione per recuperare tracking falliti dal localStorage
+export const getFailedTracking = () => {
+  try {
+    return JSON.parse(localStorage.getItem('failed_tracking') || '[]');
+  } catch (error) {
+    console.warn('⚠️ Error reading failed tracking:', error);
+    return [];
+  }
+};
+
+// Funzione per pulire i tracking falliti
+export const clearFailedTracking = () => {
+  try {
+    localStorage.removeItem('failed_tracking');
+    console.log('🧹 Cleared failed tracking data');
+  } catch (error) {
+    console.warn('⚠️ Error clearing failed tracking:', error);
   }
 };
