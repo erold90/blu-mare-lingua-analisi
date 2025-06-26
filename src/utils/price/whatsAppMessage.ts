@@ -102,10 +102,6 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
       message += `📝 *Note aggiuntive:*\n${formValues.notes}\n\n`;
     }
     
-    // Footer professionale
-    message += `📞 *Contattateci per confermare la disponibilità!*\n`;
-    message += `✨ Villa MareBlu - La vostra vacanza da sogno nel Salento`;
-    
     console.log("✅ WhatsApp message created successfully");
     return message;
     
