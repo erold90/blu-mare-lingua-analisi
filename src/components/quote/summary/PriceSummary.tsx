@@ -185,7 +185,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
           pricesAreValid={pricesAreValid}
         />
         
-        <PricingNotes />
+        <PricingNotes pricesAreValid={pricesAreValid} />
       </div>
     </div>
   );

@@ -43,7 +43,7 @@ export function useQuoteActions(form?: UseFormReturn<FormValues>) {
       // Save quote log using unified analytics system
       await addQuoteLog({
         id: quoteId,
-        form_values: formValues,
+        form_data: formValues,
         step: step,
         completed: true,
       });

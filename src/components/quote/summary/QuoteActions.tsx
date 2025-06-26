@@ -36,19 +36,16 @@ const QuoteActions: React.FC<QuoteActionsProps> = ({
     // Salva il log del riepilogo per l'area riservata prima di inviare WhatsApp
     if (formValues && priceInfo) {
       const logId = uuidv4();
-      const timestamp = new Date().toISOString();
       
       addQuoteLog({
         id: logId,
-        timestamp,
-        form_values: formValues,
+        form_data: formValues,
         step: 5,
         completed: true
       });
 
       console.log("✅ Riepilogo salvato nel log dell'area riservata:", {
         id: logId,
-        timestamp,
         totalPrice: priceInfo.totalAfterDiscount,
         apartments: formValues.selectedApartments?.length || 1
       });

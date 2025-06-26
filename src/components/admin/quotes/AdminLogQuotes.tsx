@@ -148,10 +148,10 @@ export const AdminLogQuotes = ({ quoteLogs, dateRange }: AdminLogQuotesProps) =>
                                 <div>
                                   <h4 className="font-semibold">Periodo Soggiorno</h4>
                                   {selectedQuote.form_data.checkIn && (
-                                    <p>Check-in: {selectedQuote.form_data.checkIn}</p>
+                                    <p>Check-in: {typeof selectedQuote.form_data.checkIn === 'string' ? selectedQuote.form_data.checkIn : format(new Date(selectedQuote.form_data.checkIn), 'dd/MM/yyyy')}</p>
                                   )}
                                   {selectedQuote.form_data.checkOut && (
-                                    <p>Check-out: {selectedQuote.form_data.checkOut}</p>
+                                    <p>Check-out: {typeof selectedQuote.form_data.checkOut === 'string' ? selectedQuote.form_data.checkOut : format(new Date(selectedQuote.form_data.checkOut), 'dd/MM/yyyy')}</p>
                                   )}
                                   <p>Adulti: {selectedQuote.form_data.adults || 0}</p>
                                   <p>Bambini: {selectedQuote.form_data.children || 0}</p>

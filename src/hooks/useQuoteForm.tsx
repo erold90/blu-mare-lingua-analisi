@@ -1,144 +1,191 @@
+
 import { useState, useCallback } from 'react';
-import { FormValues } from '@/utils/quoteFormSchema';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { FormValues, formSchema } from '@/utils/quoteFormSchema';
 import { useAnalytics } from '@/hooks/analytics/useAnalytics';
 
 export const useQuoteForm = () => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [formValues, setFormValues] = useState<FormValues>({
-    checkIn: '',
-    checkOut: '',
-    guests: 1,
-    apartments: [],
-    services: [],
-    personalInfo: {
-      firstName: '',
-      lastName: '',
-      email: '',
-      phone: '',
-      message: ''
+  const totalSteps = 5;
+  
+  // Form state
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      step: 1,
+      adults: 1,
+      children: 0,
+      childrenDetails: [],
+      isGroupBooking: false,
+      needsLinen: false,
+      hasPets: false,
+      selectedApartments: [],
+      personsPerApartment: {},
+      petsInApartment: {},
     }
   });
 
+  // Additional state for UI components
+  const [childrenArray, setChildrenArray] = useState<Array<{ isUnder12: boolean; sleepsWithParents: boolean; sleepsInCrib: boolean }>>([]);
+  const [apartmentDialog, setApartmentDialog] = useState<string | null>(null);
+  const [groupDialog, setGroupDialog] = useState(false);
+  const [familyGroups, setFamilyGroups] = useState<any[]>([]);
+
   const { saveQuoteLog } = useAnalytics();
 
-  const updateFormValues = useCallback((values: Partial<FormValues>) => {
-    setFormValues(prev => ({ ...prev, ...values }));
+  // Guest management functions
+  const incrementAdults = useCallback(() => {
+    const currentAdults = form.getValues('adults') || 1;
+    form.setValue('adults', currentAdults + 1);
+  }, [form]);
+
+  const decrementAdults = useCallback(() => {
+    const currentAdults = form.getValues('adults') || 1;
+    if (currentAdults > 1) {
+      form.setValue('adults', currentAdults - 1);
+    }
+  }, [form]);
+
+  const incrementChildren = useCallback(() => {
+    const currentChildren = form.getValues('children') || 0;
+    const newChildren = currentChildren + 1;
+    form.setValue('children', newChildren);
+    
+    // Add child details
+    const newChildrenArray = [...childrenArray, { isUnder12: false, sleepsWithParents: false, sleepsInCrib: false }];
+    setChildrenArray(newChildrenArray);
+    form.setValue('childrenDetails', newChildrenArray);
+  }, [form, childrenArray]);
+
+  const decrementChildren = useCallback(() => {
+    const currentChildren = form.getValues('children') || 0;
+    if (currentChildren > 0) {
+      const newChildren = currentChildren - 1;
+      form.setValue('children', newChildren);
+      
+      // Remove child details
+      const newChildrenArray = childrenArray.slice(0, -1);
+      setChildrenArray(newChildrenArray);
+      form.setValue('childrenDetails', newChildrenArray);
+    }
+  }, [form, childrenArray]);
+
+  const updateChildDetails = useCallback((index: number, details: Partial<{ isUnder12: boolean; sleepsWithParents: boolean; sleepsInCrib: boolean }>) => {
+    const newChildrenArray = [...childrenArray];
+    newChildrenArray[index] = { ...newChildrenArray[index], ...details };
+    setChildrenArray(newChildrenArray);
+    form.setValue('childrenDetails', newChildrenArray);
+  }, [form, childrenArray]);
+
+  // Dialog management
+  const openApartmentDialog = useCallback((apartmentId: string) => {
+    setApartmentDialog(apartmentId);
   }, []);
 
-  const getTotalPrice = useCallback(() => {
-    // Calculate total price based on form values
-    let total = 0;
-    
-    // Add apartment prices
-    formValues.apartments.forEach(apt => {
-      total += apt.price || 0;
-    });
-    
-    // Add service prices
-    formValues.services.forEach(service => {
-      total += service.price || 0;
-    });
-    
-    return total;
-  }, [formValues]);
+  const closeApartmentDialog = useCallback(() => {
+    setApartmentDialog(null);
+  }, []);
 
-  const saveFormData = useCallback(async (completed: boolean = false) => {
-    try {
-      const quoteData = {
-        id: `quote_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-        form_data: formValues,
-        step: currentStep,
-        completed,
-        total_price: completed ? getTotalPrice() : undefined,
-        user_session: sessionStorage.getItem('analytics_session') || undefined
-      };
-
-      await saveQuoteLog(quoteData);
-      console.log('✅ Quote form data saved');
-      
-    } catch (error) {
-      console.error('❌ Error saving quote form data:', error);
+  const selectApartment = useCallback((apartmentId: string) => {
+    const currentSelected = form.getValues('selectedApartments') || [];
+    const isSelected = currentSelected.includes(apartmentId);
+    
+    if (isSelected) {
+      form.setValue('selectedApartments', currentSelected.filter(id => id !== apartmentId));
+    } else {
+      form.setValue('selectedApartments', [...currentSelected, apartmentId]);
     }
-  }, [formValues, currentStep, saveQuoteLog, getTotalPrice]);
+  }, [form]);
 
+  const openGroupDialog = useCallback(() => {
+    setGroupDialog(true);
+  }, []);
+
+  const closeGroupDialog = useCallback(() => {
+    setGroupDialog(false);
+  }, []);
+
+  // Step management
   const nextStep = useCallback(() => {
-    if (currentStep < 6) {
-      const newStep = currentStep + 1;
-      setCurrentStep(newStep);
-      
-      // Salva progresso ad ogni step
-      saveFormData(false);
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
+      form.setValue('step', currentStep + 1);
     }
-  }, [currentStep, saveFormData]);
+  }, [currentStep, totalSteps, form]);
 
   const prevStep = useCallback(() => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      form.setValue('step', currentStep - 1);
     }
-  }, [currentStep]);
+  }, [currentStep, form]);
 
-  const goToStep = useCallback((step: number) => {
-    if (step >= 1 && step <= 6) {
-      setCurrentStep(step);
+  // WhatsApp function
+  const sendWhatsApp = useCallback(() => {
+    const formValues = form.getValues();
+    console.log("🔍 Sending WhatsApp message with form values:", formValues);
+    
+    // Here you would create the WhatsApp message
+    const message = `Richiesta preventivo Villa MareBlu:\n\nPeriodo: ${formValues.checkIn} - ${formValues.checkOut}\nOspiti: ${formValues.adults} adulti, ${formValues.children || 0} bambini\n\nDettagli inviati automaticamente.`;
+    
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/393937767749?text=${encodedMessage}`;
+    
+    window.open(whatsappUrl, '_blank');
+  }, [form]);
+
+  // Form submission
+  const onSubmitHandler = useCallback(async (data: FormValues) => {
+    console.log("Form submitted with data:", data);
+    
+    try {
+      await saveQuoteLog({
+        id: `quote_${Date.now()}`,
+        form_data: data,
+        step: currentStep,
+        completed: true,
+      });
+      
+      console.log("✅ Quote saved successfully");
+    } catch (error) {
+      console.error("❌ Error saving quote:", error);
     }
-  }, []);
-
-  const completeQuote = useCallback(async () => {
-    await saveFormData(true);
-    // Additional completion logic can be added here
-    console.log('✅ Quote completed');
-  }, [saveFormData]);
-
-  const resetForm = useCallback(() => {
-    setCurrentStep(1);
-    setFormValues({
-      checkIn: '',
-      checkOut: '',
-      guests: 1,
-      apartments: [],
-      services: [],
-      personalInfo: {
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        message: ''
-      }
-    });
-  }, []);
-
-  const isStepValid = useCallback((step: number) => {
-    switch (step) {
-      case 1:
-        return formValues.checkIn && formValues.checkOut && formValues.guests > 0;
-      case 2:
-        return formValues.apartments.length > 0;
-      case 3:
-        return true; // Services are optional
-      case 4:
-        return formValues.personalInfo.firstName && 
-               formValues.personalInfo.lastName && 
-               formValues.personalInfo.email;
-      case 5:
-        return true; // Review step
-      case 6:
-        return true; // Confirmation step
-      default:
-        return false;
-    }
-  }, [formValues]);
+  }, [saveQuoteLog, currentStep]);
 
   return {
-    currentStep,
-    formValues,
-    updateFormValues,
+    // Form object
+    form,
+    
+    // Step management
+    step: currentStep,
+    totalSteps,
     nextStep,
     prevStep,
-    goToStep,
-    completeQuote,
-    resetForm,
-    isStepValid,
-    getTotalPrice,
-    saveFormData
+    
+    // Guest management
+    childrenArray,
+    incrementAdults,
+    decrementAdults,
+    incrementChildren,
+    decrementChildren,
+    updateChildDetails,
+    
+    // Dialog management
+    apartmentDialog,
+    openApartmentDialog,
+    closeApartmentDialog,
+    selectApartment,
+    
+    // Group management
+    groupDialog,
+    openGroupDialog,
+    closeGroupDialog,
+    familyGroups,
+    setFamilyGroups,
+    
+    // Actions
+    sendWhatsApp,
+    onSubmitHandler,
   };
 };
