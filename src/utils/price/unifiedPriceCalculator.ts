@@ -6,6 +6,10 @@ import { calculateDiscount } from "./discountCalculator";
 import { calculateMultiApartmentPricing } from "./multiApartmentPricing";
 import { calculateNights } from "./dateUtils";
 import { supabaseService } from "@/services/supabaseService";
+import { 
+  calculateOccupancyDiscount, 
+  formatOccupancyDiscountDescription 
+} from "./occupancyDiscount";
 
 // Enhanced cache with longer validity for better performance
 const priceCache = new Map<string, { price: number; timestamp: number; validated: boolean }>();
@@ -118,14 +122,14 @@ async function preloadPrices(apartmentIds: string[], checkIn: Date, checkOut: Da
 }
 
 /**
- * Main calculation function with performance optimizations
+ * Main calculation function with occupancy discount integration
  */
 export async function calculateTotalPriceUnified(
   formValues: FormValues, 
   apartments: Apartment[],
   externalGetPriceForWeek?: (apartmentId: string, weekStart: Date | string) => number
 ): Promise<PriceCalculation> {
-  console.log("🔍 Starting optimized price calculation...");
+  console.log("🔍 Starting optimized price calculation with occupancy discount...");
   
   // Early validation
   if (!formValues || !apartments || apartments.length === 0) {
@@ -158,10 +162,10 @@ export async function calculateTotalPriceUnified(
       preloadPrices(selectedApartmentIds, formValues.checkIn, formValues.checkOut);
     }
     
+    // Calculate original base price (same logic as before)
     const apartmentPrices: Record<string, number> = {};
-    let basePrice = 0;
+    let originalBasePrice = 0;
     
-    // Calculate prices for each apartment
     for (const apartment of selectedApartments) {
       let totalApartmentPrice = 0;
       const weeks = getWeeksForStay(formValues.checkIn, formValues.checkOut);
@@ -176,7 +180,6 @@ export async function calculateTotalPriceUnified(
           weeklyPrice = getPriceForWeekSync(apartment.id, weekStart);
         }
         
-        // Use apartment default price as fallback
         if (weeklyPrice === 0) {
           const defaultPrice = apartment.price || 500;
           weeklyPrice = defaultPrice;
@@ -185,7 +188,6 @@ export async function calculateTotalPriceUnified(
         totalApartmentPrice += weeklyPrice;
       }
       
-      // Proportional adjustment for partial weeks
       const totalWeekDays = weeks.length * 7;
       if (nights < totalWeekDays) {
         const proportion = nights / totalWeekDays;
@@ -193,10 +195,20 @@ export async function calculateTotalPriceUnified(
       }
       
       apartmentPrices[apartment.id] = totalApartmentPrice;
-      basePrice += totalApartmentPrice;
+      originalBasePrice += totalApartmentPrice;
     }
     
-    // Calculate extras and discounts
+    // Calcola lo sconto di occupazione
+    const occupancyInfo = calculateOccupancyDiscount(
+      formValues, 
+      selectedApartments, 
+      originalBasePrice
+    );
+    
+    // Il prezzo base finale è quello già scontato per occupazione
+    const basePrice = occupancyInfo.discountedPrice;
+    
+    // Calculate extras and discounts on the discounted base price
     const { extrasCost, cleaningFee, touristTax } = calculateExtras(formValues, selectedApartments, nights);
     const subtotal = basePrice + extrasCost;
     const totalBeforeDiscount = subtotal;
@@ -204,6 +216,7 @@ export async function calculateTotalPriceUnified(
     let result: PriceCalculation;
     
     if (selectedApartments.length > 1) {
+      // Per appartamenti multipli, applica la logica esistente sul prezzo già scontato
       const {
         totalAfterDiscount,
         discount,
@@ -212,8 +225,8 @@ export async function calculateTotalPriceUnified(
       } = calculateMultiApartmentPricing(
         formValues,
         selectedApartments,
-        apartmentPrices,
-        basePrice,
+        apartmentPrices, // Usa i prezzi originali per il calcolo proporzionale
+        basePrice, // Ma il base price già scontato
         totalBeforeDiscount
       );
       
@@ -226,14 +239,22 @@ export async function calculateTotalPriceUnified(
         totalBeforeDiscount,
         totalAfterDiscount,
         discount,
-        savings: discount,
+        savings: discount + occupancyInfo.savings, // Somma tutti i risparmi
         deposit,
         nights,
         totalPrice: totalAfterDiscount,
         subtotal,
-        apartmentPrices: discountedApartmentPrices
+        apartmentPrices: discountedApartmentPrices,
+        occupancyDiscount: {
+          occupancyPercentage: occupancyInfo.occupancyPercentage,
+          discountPercentage: occupancyInfo.discountPercentage,
+          discountAmount: occupancyInfo.discountAmount,
+          originalBasePrice: occupancyInfo.originalPrice,
+          description: formatOccupancyDiscountDescription(occupancyInfo)
+        }
       };
     } else {
+      // Per singolo appartamento
       const { totalAfterDiscount, discount, savings, deposit } = calculateDiscount(totalBeforeDiscount, touristTax);
       
       result = {
@@ -245,12 +266,19 @@ export async function calculateTotalPriceUnified(
         totalBeforeDiscount,
         totalAfterDiscount,
         discount,
-        savings,
+        savings: savings + occupancyInfo.savings, // Somma tutti i risparmi
         deposit,
         nights,
         totalPrice: totalAfterDiscount,
         subtotal,
-        apartmentPrices
+        apartmentPrices,
+        occupancyDiscount: {
+          occupancyPercentage: occupancyInfo.occupancyPercentage,
+          discountPercentage: occupancyInfo.discountPercentage,
+          discountAmount: occupancyInfo.discountAmount,
+          originalBasePrice: occupancyInfo.originalPrice,
+          description: formatOccupancyDiscountDescription(occupancyInfo)
+        }
       };
     }
     

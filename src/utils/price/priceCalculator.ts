@@ -7,6 +7,10 @@ import { calculateDiscount } from "./discountCalculator";
 import { calculateNights } from "./dateUtils";
 import { getPriceForWeekSync } from "./weeklyPrice";
 import { calculateMultiApartmentPricing } from "./multiApartmentPricing";
+import { 
+  calculateOccupancyDiscount, 
+  formatOccupancyDiscountDescription 
+} from "./occupancyDiscount";
 
 // Memorization cache to avoid recalculating prices for the same inputs
 const priceCalculationCache = new Map<string, PriceCalculation>();
@@ -42,11 +46,10 @@ const generateCacheKey = (formValues: FormValues, apartments: Apartment[]): stri
 };
 
 /**
- * Calculates total prices for each apartment and overall price
- * Uses caching to improve performance for repeated calculations
+ * Calculates total prices for each apartment and overall price with occupancy discount
  */
 export function calculateTotalPrice(formValues: FormValues, apartments: Apartment[]): PriceCalculation {
-  console.log("Starting price calculation...");
+  console.log("Starting price calculation with occupancy discount...");
   
   // Check for valid inputs
   const selectedApartmentIds = formValues.selectedApartments || 
@@ -73,7 +76,7 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
   
   // Track individual apartment prices
   const apartmentPrices: Record<string, number> = {};
-  let basePrice = 0;
+  let originalBasePrice = 0;
   
   // Calculate number of complete weeks (rounding up)
   const numberOfWeeks = Math.ceil(nights / 7);
@@ -110,22 +113,23 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
     
     // Save the apartment's total price
     apartmentPrices[apartment.id] = totalApartmentPrice;
-    basePrice += totalApartmentPrice;
+    originalBasePrice += totalApartmentPrice;
     
     console.log(`Total price for apartment ${apartment.id} (${numberOfWeeks} weeks): ${totalApartmentPrice}€`);
   });
   
-  console.log(`Total base price for all apartments: ${basePrice}€`);
+  console.log(`Total original base price for all apartments: ${originalBasePrice}€`);
   
-  // Calculate extras (linen, pets)
-  const extraOptions = {
-    hasPets: formValues.hasPets || false,
-    petsCount: formValues.petsCount || 0,
-    needsLinen: formValues.needsLinen || false,
-    adults: formValues.adults || 0,
-    children: formValues.children || 0,
-    petsInApartment: formValues.petsInApartment || {}
-  };
+  // Calcola lo sconto di occupazione
+  const occupancyInfo = calculateOccupancyDiscount(
+    formValues, 
+    selectedApartments, 
+    originalBasePrice
+  );
+  
+  // Il prezzo base finale è quello già scontato per occupazione
+  const basePrice = occupancyInfo.discountedPrice;
+  console.log(`Base price after occupancy discount: ${basePrice}€`);
   
   // Calculate extras separately - pass selectedApartments for correct pets calculation
   const { extrasCost, cleaningFee, touristTax } = calculateExtras(formValues, selectedApartments, nights);
@@ -167,12 +171,19 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
       totalBeforeDiscount,
       totalAfterDiscount,
       discount,
-      savings: discount,
+      savings: discount + occupancyInfo.savings,
       deposit,
       nights,
       totalPrice: totalAfterDiscount,
       subtotal,
-      apartmentPrices: discountedApartmentPrices
+      apartmentPrices: discountedApartmentPrices,
+      occupancyDiscount: {
+        occupancyPercentage: occupancyInfo.occupancyPercentage,
+        discountPercentage: occupancyInfo.discountPercentage,
+        discountAmount: occupancyInfo.discountAmount,
+        originalBasePrice: occupancyInfo.originalPrice,
+        description: formatOccupancyDiscountDescription(occupancyInfo)
+      }
     };
   } else {
     // For single apartment, use the standard discount calculation
@@ -190,12 +201,19 @@ export function calculateTotalPrice(formValues: FormValues, apartments: Apartmen
       totalBeforeDiscount,
       totalAfterDiscount,
       discount,
-      savings,
+      savings: savings + occupancyInfo.savings,
       deposit,
       nights,
       totalPrice: totalAfterDiscount,
       subtotal,
-      apartmentPrices
+      apartmentPrices,
+      occupancyDiscount: {
+        occupancyPercentage: occupancyInfo.occupancyPercentage,
+        discountPercentage: occupancyInfo.discountPercentage,
+        discountAmount: occupancyInfo.discountAmount,
+        originalBasePrice: occupancyInfo.originalPrice,
+        description: formatOccupancyDiscountDescription(occupancyInfo)
+      }
     };
   }
   

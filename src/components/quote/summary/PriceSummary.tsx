@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 import { PriceCalculation } from "@/utils/price/types";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
-import { Euro, Percent, Minus, Info } from "lucide-react";
+import { Euro, Percent, Minus, Info, Users, TrendingDown } from "lucide-react";
 
 // Import refactored components
 import PriceValidityWarning from "./pricing/PriceValidityWarning";
@@ -32,8 +32,12 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   // Verifica se i prezzi sono validi
   const pricesAreValid = priceInfo.totalPrice > 0 && priceInfo.basePrice > 0;
   
-  // Base price is the cost of apartments without extras
+  // Base price is the cost of apartments WITH occupancy discount already applied
   const basePrice = priceInfo.basePrice;
+  
+  // Get occupancy discount info
+  const occupancyDiscount = priceInfo.occupancyDiscount;
+  const hasOccupancyDiscount = occupancyDiscount && occupancyDiscount.discountAmount > 0;
   
   // Calculate extra services (animals and extra linen)
   const extraServices = priceInfo.extras;
@@ -47,7 +51,7 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
   const subtotal = priceInfo.totalBeforeDiscount;
 
   // The discount is the difference between the original price and the rounded price
-  const discount = priceInfo.discount;
+  const roundingDiscount = priceInfo.discount;
   
   // The total to pay is the final amount after all discounts
   const totalToPay = priceInfo.totalAfterDiscount;
@@ -67,6 +71,40 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
       <PeriodInfo checkIn={formValues.checkIn} checkOut={formValues.checkOut} />
       
       <div className="space-y-4">
+        {/* Prezzo originale e sconto occupazione */}
+        {hasOccupancyDiscount && pricesAreValid && (
+          <div className="bg-green-50 rounded-lg p-4 space-y-3">
+            <div className="flex items-center gap-2 text-green-700 font-medium">
+              <TrendingDown className="h-4 w-4" />
+              <span className="text-sm">Sconto Occupazione Applicato</span>
+            </div>
+            
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Prezzo listino originale:</span>
+                <span className="font-medium line-through text-muted-foreground">
+                  {occupancyDiscount.originalBasePrice}€
+                </span>
+              </div>
+              
+              <div className="flex justify-between">
+                <span className="flex items-center gap-1 text-green-700">
+                  <Users className="h-3 w-3" />
+                  {occupancyDiscount.description}
+                </span>
+                <span className="font-semibold text-green-700">
+                  -{occupancyDiscount.discountAmount}€
+                </span>
+              </div>
+              
+              <div className="flex justify-between border-t pt-2">
+                <span className="font-medium">Prezzo base scontato:</span>
+                <span className="font-semibold text-green-700">{basePrice}€</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <ApartmentPricing 
           basePrice={basePrice}
           nights={nights}
@@ -114,16 +152,16 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
           </div>
         </div>
         
-        {/* Discount (if any) */}
-        {discount > 0 && pricesAreValid && (
+        {/* Rounding discount (if any) */}
+        {roundingDiscount > 0 && pricesAreValid && (
           <div className="flex justify-between items-center py-2 text-green-600">
             <span className="flex items-center gap-2 font-medium">
               <Percent className="h-4 w-4" />
-              Sconto applicato
+              Arrotondamento
             </span>
             <span className="flex items-center font-semibold text-lg">
               <Minus className="h-4 w-4 mr-1" />
-              {discount}€
+              {roundingDiscount}€
             </span>
           </div>
         )}
@@ -140,6 +178,12 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
               <div className="text-xs text-muted-foreground mt-1">
                 {nights} notti • {formValues.adults} adulti
               </div>
+              {hasOccupancyDiscount && (
+                <div className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                  <TrendingDown className="h-3 w-3" />
+                  Sconto {occupancyDiscount.discountPercentage}% applicato
+                </div>
+              )}
             </div>
             <div className="text-right">
               <div className={`text-2xl md:text-3xl font-bold ${pricesAreValid ? "text-primary" : "text-muted-foreground"}`}>
@@ -148,6 +192,11 @@ const PriceSummary: React.FC<PriceSummaryProps> = ({ priceInfo, formValues }) =>
               {pricesAreValid && (
                 <div className="text-xs text-muted-foreground">
                   ~{Math.round(totalToPay / nights)}€ per notte
+                </div>
+              )}
+              {hasOccupancyDiscount && pricesAreValid && (
+                <div className="text-xs text-green-600 font-medium">
+                  Risparmi {occupancyDiscount.discountAmount + roundingDiscount}€
                 </div>
               )}
             </div>
