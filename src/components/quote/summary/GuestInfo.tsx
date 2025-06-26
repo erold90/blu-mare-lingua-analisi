@@ -2,7 +2,7 @@
 import React from "react";
 import { FormValues } from "@/utils/quoteFormSchema";
 import { getEffectiveGuestCount } from "@/utils/apartmentRecommendation";
-import { Users, Baby } from "lucide-react";
+import { Users, Baby, BedDouble } from "lucide-react";
 
 interface GuestInfoProps {
   formValues: FormValues;
@@ -27,27 +27,46 @@ const GuestInfo: React.FC<GuestInfoProps> = ({ formValues }) => {
           <span className="font-semibold">{formValues.children}</span>
         </div>
         
-        {(sleepingWithParents > 0 || sleepingInCribs > 0) && (
+        {/* Dettagli bambini se presenti */}
+        {formValues.childrenDetails && formValues.childrenDetails.length > 0 && (
           <div className="bg-blue-50 rounded-lg p-3 space-y-2">
             <div className="flex items-center gap-2 text-primary text-sm font-medium">
               <Baby className="h-4 w-4" />
-              Sistemazione bambini
+              Dettagli bambini
+            </div>
+            
+            {formValues.childrenDetails.map((child, index) => (
+              <div key={index} className="text-sm">
+                <span className="font-medium">Bambino {index + 1}:</span>
+                <div className="ml-2 text-muted-foreground">
+                  {child.isUnder12 && <span className="mr-2">• Sotto i 12 anni</span>}
+                  {child.sleepsWithParents && <span className="mr-2 text-blue-600">• Dorme con i genitori</span>}
+                  {child.sleepsInCrib && <span className="mr-2 text-green-600">• Necessita di culla</span>}
+                  {!child.isUnder12 && !child.sleepsWithParents && !child.sleepsInCrib && <span className="text-muted-foreground">• Standard</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {(sleepingWithParents > 0 || sleepingInCribs > 0) && (
+          <div className="bg-yellow-50 rounded-lg p-3 space-y-2">
+            <div className="flex items-center gap-2 text-amber-700 text-sm font-medium">
+              <BedDouble className="h-4 w-4" />
+              Sistemazione speciale
             </div>
             
             {sleepingWithParents > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Con i genitori:</span>
-                <span className="font-medium">{sleepingWithParents}</span>
+                <span className="text-muted-foreground">Con i genitori (non occupano posto letto):</span>
+                <span className="font-medium text-blue-600">{sleepingWithParents}</span>
               </div>
             )}
             
             {sleepingInCribs > 0 && (
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">In culla:</span>
-                <span className="font-medium flex items-center">
-                  {sleepingInCribs} 
-                  <span className="text-green-600 ml-2 text-xs font-normal">(gratuito)</span>
-                </span>
+                <span className="text-muted-foreground">In culla (gratuito, non occupano posto letto):</span>
+                <span className="font-medium text-green-600">{sleepingInCribs}</span>
               </div>
             )}
           </div>

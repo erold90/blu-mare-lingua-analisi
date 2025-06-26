@@ -56,8 +56,9 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     
     const balance = totalFinal - deposit;
     
-    // Culle totali
+    // Culle totali e bambini che dormono con i genitori
     const totalCribs = formValues.childrenDetails?.filter(child => child.sleepsInCrib)?.length || 0;
+    const childrenWithParents = formValues.childrenDetails?.filter(child => child.sleepsWithParents)?.length || 0;
     
     // Formattazione date
     const formattedCheckIn = format(checkInDate, "EEEE dd MMMM yyyy", { locale: it });
@@ -91,11 +92,11 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     // Ospiti
     message += `*Ospiti:*\n`;
     message += `Adulti: ${formValues.adults}\n`;
-    message += `Bambini: ${formValues.children || 0}\n\n`;
+    message += `Bambini: ${formValues.children || 0}\n`;
     
     // Dettagli bambini se presenti
     if (formValues.children && formValues.children > 0 && formValues.childrenDetails && formValues.childrenDetails.length > 0) {
-      message += `*Dettagli bambini:*\n`;
+      message += `\n*Dettagli bambini:*\n`;
       formValues.childrenDetails.forEach((child, index) => {
         message += `• Bambino ${index + 1}: `;
         const details = [];
@@ -107,7 +108,14 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
       });
     }
     
-    message += `Totale ospiti: ${(formValues.adults || 0) + (formValues.children || 0)}\n\n`;
+    message += `Totale ospiti: ${(formValues.adults || 0) + (formValues.children || 0)}\n`;
+    
+    // Aggiungi informazioni sui posti letto se ci sono bambini che non li occupano
+    if (childrenWithParents > 0 || totalCribs > 0) {
+      const effectiveGuests = (formValues.adults || 0) + (formValues.children || 0) - childrenWithParents - totalCribs;
+      message += `Posti letto necessari: ${effectiveGuests}\n`;
+    }
+    message += `\n`;
     
     // Appartamenti selezionati
     message += `*Appartamenti selezionati:*\n`;
@@ -149,6 +157,10 @@ export const createWhatsAppMessage = (formValues: FormValues, apartments: Apartm
     
     if (totalCribs > 0) {
       message += `Culle richieste: ${totalCribs} (gratuite)\n`;
+    }
+    
+    if (childrenWithParents > 0) {
+      message += `Bambini che dormono con i genitori: ${childrenWithParents} (non occupano posto letto)\n`;
     }
     message += `\n`;
     
