@@ -39,24 +39,28 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Controlla se c'è una sessione Supabase esistente
     const checkSupabaseSession = async () => {
       try {
+        console.log('🔍 Checking existing Supabase session...');
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting session:', error);
+          console.error('❌ Error getting session:', error);
           setIsLoading(false);
           return;
         }
 
         if (session?.user) {
+          console.log('✅ Found existing session for:', session.user.email);
           setUser({
             id: session.user.id,
             email: session.user.email || '',
             username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'admin'
           });
           setUserRole('admin');
+        } else {
+          console.log('❌ No existing session found');
         }
       } catch (error) {
-        console.error('Error checking session:', error);
+        console.error('❌ Error checking session:', error);
       } finally {
         setIsLoading(false);
       }
@@ -83,6 +87,8 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setUserRole(null);
         setIsLoading(false);
         console.log('🚪 User signed out');
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log('🔄 Token refreshed');
       }
     });
 
