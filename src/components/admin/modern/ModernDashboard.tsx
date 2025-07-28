@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminAuth } from "@/components/auth/AdminAuthProvider";
 
 const StatCard = ({ 
   title, 
@@ -103,6 +104,7 @@ const QuickAction = ({
 };
 
 export function ModernDashboard() {
+  const { isAuthenticated, isLoading: authLoading } = useAdminAuth();
   const [stats, setStats] = useState({
     reservationsToday: 0,
     occupiedApartments: 0,
@@ -202,9 +204,16 @@ export function ModernDashboard() {
   };
 
   useEffect(() => {
-    console.log('🏠 Dashboard: fetchDashboardData called');
-    fetchDashboardData();
-  }, []);
+    console.log('🏠 Dashboard: Effect triggered, authLoading:', authLoading, 'isAuthenticated:', isAuthenticated);
+    
+    // Solo se l'autenticazione è completata e l'utente è autenticato
+    if (!authLoading && isAuthenticated) {
+      console.log('🏠 Dashboard: Starting fetchDashboardData');
+      fetchDashboardData();
+    } else {
+      console.log('🏠 Dashboard: Waiting for auth completion...');
+    }
+  }, [authLoading, isAuthenticated]);
 
   // Real-time updates
   useEffect(() => {
@@ -223,11 +232,13 @@ export function ModernDashboard() {
     };
   }, []);
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-        <span className="ml-2 text-slate-600">Caricamento dashboard...</span>
+        <span className="ml-2 text-slate-600">
+          {authLoading ? 'Verifica autenticazione...' : 'Caricamento dashboard...'}
+        </span>
       </div>
     );
   }

@@ -16,8 +16,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const { isAuthenticated, isLoading, userRole } = useAdminAuth();
   const location = useLocation();
 
+  console.log('🛡️ ProtectedRoute state:', { isAuthenticated, isLoading, userRole });
+
   // Mostra loading mentre verifica l'autenticazione
   if (isLoading) {
+    console.log('🔄 ProtectedRoute: Still loading auth...');
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -31,8 +34,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (!isAuthenticated) {
+    console.log('❌ ProtectedRoute: Not authenticated, redirecting to login');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
+
+  console.log('✅ ProtectedRoute: Authenticated, rendering children');
 
   if (requiredRole && userRole !== requiredRole && userRole !== 'admin') {
     return (
