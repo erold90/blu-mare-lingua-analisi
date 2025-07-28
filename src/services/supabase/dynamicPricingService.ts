@@ -277,8 +277,8 @@ class PricingService {
         discountTotal: discountTotal + finalDiscount,
         extrasTotal,
         finalTotal,
-        deposit: Math.round(finalTotal * 0.3),
-        balance: finalTotal - Math.round(finalTotal * 0.3)
+        deposit: this.roundToMultipleOf50(Math.round(finalTotal * 0.3)),
+        balance: finalTotal - this.roundToMultipleOf50(Math.round(finalTotal * 0.3))
       };
       
     } catch (error) {
