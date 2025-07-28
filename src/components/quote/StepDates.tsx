@@ -90,7 +90,7 @@ export const StepDates: React.FC<StepDatesProps> = ({
                 onSelect={handleDateSelect}
                 disabled={isDateDisabled}
                 locale={it}
-                className="rounded-md border"
+                className="rounded-md border pointer-events-auto"
                 showOutsideDays={false}
               />
               
