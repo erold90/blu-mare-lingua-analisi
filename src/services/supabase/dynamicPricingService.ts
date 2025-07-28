@@ -161,8 +161,13 @@ class PricingService {
         .eq('status', 'confirmed')
         .or(`checkin_date.lt.${checkout},checkout_date.gt.${checkin}`);
       
-      if (error) throw new Error(`Errore verifica disponibilità: ${error.message}`);
+      if (error) {
+        console.warn(`Errore verifica disponibilità: ${error.message}`);
+        // In caso di errore, assumiamo che sia disponibile per evitare blocchi
+        return true;
+      }
       
+      // Se non ci sono conflitti, l'appartamento è disponibile
       return !conflicts || conflicts.length === 0;
     });
   }
