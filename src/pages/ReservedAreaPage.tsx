@@ -4,9 +4,9 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AdminAuthProvider } from "@/components/auth/AdminAuthProvider";
 
 // Admin components imports
-import AdminLayoutNew from "@/components/admin/AdminLayoutNew";
-import AdminDashboardNew from "@/components/admin/dashboard/AdminDashboardNew";
-import AdminReservations from "@/components/admin/AdminReservations";
+import ModernAdminLayout from "@/components/admin/modern/ModernAdminLayout";
+import { ModernDashboard } from "@/components/admin/modern/ModernDashboard";
+import { ModernReservations } from "@/components/admin/modern/ModernReservations";
 import AdminPrices from "@/components/admin/AdminPrices";
 import AdminApartments from "@/components/admin/AdminApartments";
 import AdminSettings from "@/components/admin/AdminSettings";
@@ -25,15 +25,15 @@ const ReservedAreaPage = () => {
           <ReservationsProvider>
             <SupabasePricesProvider>
               <Routes>
-                <Route path="/*" element={<AdminLayoutNew />}>
-                  <Route path="dashboard" element={<AdminDashboardNew />} />
-                  <Route path="reservations" element={<AdminReservations />} />
-                  <Route path="apartments" element={<AdminApartments />} />
-                  <Route path="prices" element={<AdminPrices />} />
-                  <Route path="cleaning" element={<AdminCleaningManagement />} />
-                  <Route path="images" element={<SiteImageManager />} />
+                <Route path="/*" element={<ModernAdminLayout />}>
+                  <Route path="dashboard" element={<ModernDashboard />} />
+                  <Route path="prenotazioni" element={<ModernReservations />} />
+                  <Route path="appartamenti" element={<AdminApartments />} />
+                  <Route path="prezzi" element={<AdminPrices />} />
+                  <Route path="pulizie" element={<AdminCleaningManagement />} />
+                  <Route path="immagini" element={<SiteImageManager />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
-                  <Route path="settings" element={<AdminSettings />} />
+                  <Route path="impostazioni" element={<AdminSettings />} />
                   <Route index element={<Navigate to="dashboard" replace />} />
                 </Route>
               </Routes>
