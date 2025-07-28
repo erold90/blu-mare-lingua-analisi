@@ -46,8 +46,8 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-900 via-blue-700 to-cyan-600">
-      {/* Background image with modern overlay */}
+    <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      {/* Clean background image */}
       <div 
         className="absolute inset-0 z-0"
         style={{
@@ -58,83 +58,42 @@ const HeroSection = () => {
         }}
       />
       
-      {/* Modern gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-blue-800/60 to-cyan-600/70 z-10" />
+      {/* Subtle overlay */}
+      <div className="absolute inset-0 bg-black/20 z-10" />
       
-      {/* Floating elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-20">
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-4 h-4 bg-white/10 rounded-full animate-pulse"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${3 + Math.random() * 2}s`
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Main content */}
-      <div className="container mx-auto px-6 text-center z-30 relative">
-        <div className="max-w-5xl mx-auto">
-          {/* Badge */}
-          <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-8 animate-fade-in">
-            <span className="text-white/90 text-sm font-medium">🏖️ Salento • Vista Mare • Lusso</span>
+      {/* Content */}
+      <div className="container mx-auto px-8 text-center z-20 relative text-white">
+        <div className="max-w-4xl mx-auto space-y-8">
+          
+          {/* Main title - elegant typography */}
+          <div className="space-y-4">
+            <h1 className="text-6xl md:text-7xl lg:text-8xl font-light tracking-wide">
+              Villa MareBlu
+            </h1>
+            <div className="w-24 h-px bg-white/80 mx-auto"></div>
+            <p className="text-xl md:text-2xl font-light text-white/90 max-w-2xl mx-auto leading-relaxed">
+              Eleganza e tranquillità nel Salento
+            </p>
           </div>
           
-          {/* Main title */}
-          <h1 className="text-5xl md:text-6xl lg:text-8xl font-bold mb-6 animate-fade-in animation-delay-200">
-            <span className="bg-gradient-to-r from-white via-cyan-100 to-blue-100 bg-clip-text text-transparent drop-shadow-2xl">
-              Villa MareBlu
-            </span>
-          </h1>
-          
-          {/* Decorative line */}
-          <div className="h-1 w-32 bg-gradient-to-r from-cyan-400 via-white to-blue-400 mx-auto mb-8 rounded-full animate-scale-in animation-delay-500" />
-          
-          {/* Subtitle */}
-          <p className="text-xl md:text-2xl lg:text-3xl mb-12 max-w-4xl mx-auto text-white/90 leading-relaxed animate-fade-in animation-delay-700 font-light">
-            <span className="font-medium">Appartamenti vista mare</span> nel cuore del Salento.
-            <br className="hidden md:block" />
-            Dove il <span className="text-cyan-200">lusso</span> incontra la <span className="text-blue-200">tranquillità</span>.
-          </p>
-          
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in animation-delay-1000">
+          {/* Simple CTA */}
+          <div className="pt-8">
             <Button 
               size="lg" 
               onClick={handleQuoteClick}
-              className="group bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white border-0 px-10 py-6 text-lg font-semibold rounded-2xl shadow-2xl hover:shadow-cyan-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-1"
+              variant="outline"
+              className="bg-transparent border-white/50 text-white hover:bg-white hover:text-black px-12 py-4 text-lg font-light rounded-none transition-all duration-300"
             >
-              <span className="mr-2">💎</span>
-              Calcola Preventivo
-              <ChevronRight className="ml-3 h-5 w-5 transition-transform group-hover:translate-x-2" />
-            </Button>
-            
-            <Button 
-              size="lg" 
-              variant="outline" 
-              onClick={() => navigate("/appartamenti")}
-              className="group bg-white/10 backdrop-blur-md border-2 border-white/30 text-white hover:bg-white/20 hover:border-white/50 px-10 py-6 text-lg font-semibold rounded-2xl shadow-xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-1"
-            >
-              <span className="mr-2">🏡</span>
-              Scopri gli Appartamenti
+              Richiedi Preventivo
             </Button>
           </div>
         </div>
       </div>
       
-      {/* Modern scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce z-30">
-        <div className="flex flex-col items-center space-y-2">
-          <span className="text-white/70 text-sm font-medium">Scopri di più</span>
-          <div className="w-6 h-10 border-2 border-white/40 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full mt-2 animate-pulse" />
-          </div>
-        </div>
+      {/* Minimal scroll indicator */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/60">
+        <div className="w-px h-12 bg-white/30 mx-auto mb-2"></div>
+        <div className="text-xs uppercase tracking-widest">Scroll</div>
       </div>
     </section>
   );

@@ -30,63 +30,72 @@ export const CtaSection = () => {
   }, []);
   
   return (
-    <div 
-      ref={sectionRef}
-      className="relative py-24 md:py-32 bg-gradient-to-br from-blue-50 via-white to-blue-50 overflow-hidden"
-    >
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-200 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-100 rounded-full blur-3xl" />
-      </div>
-      
-      <div className="container px-6 relative z-10">
-        <Card className={`max-w-4xl mx-auto overflow-hidden bg-gradient-to-r from-white via-blue-50/50 to-white border-0 shadow-2xl transition-all duration-1000 ${
-          isVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-95'
-        }`}>
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-transparent to-blue-600/5" />
+    <section className="py-24 bg-gray-50">
+      <div ref={sectionRef} className="container mx-auto px-8">
+        <div className={`max-w-5xl mx-auto text-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           
-          <CardContent className="relative p-10 md:p-16">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-              <div className={`flex-1 transition-all duration-1000 delay-300 ${
-                isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'
-              }`}>
-                <div className="flex items-center gap-3 mb-4">
-                  <Sparkles className="h-6 w-6 text-blue-500" />
-                  <span className="text-sm font-medium text-blue-600 uppercase tracking-wider">Esperienza Esclusiva</span>
-                </div>
-                
-                <h2 className="text-3xl md:text-4xl font-serif font-semibold mb-4 text-primary leading-tight">
-                  Pronto per prenotare la tua 
-                  <span className="block bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                    vacanza da sogno?
-                  </span>
-                </h2>
-                
-                <p className="text-lg text-muted-foreground leading-relaxed">
-                  Contattaci oggi per scoprire disponibilità e offerte speciali. 
-                  Il tuo rifugio nel Salento ti sta aspettando.
+          {/* Header */}
+          <div className="mb-16">
+            <h2 className="text-4xl md:text-5xl font-light text-gray-900 mb-6 tracking-wide">
+              Pianifica la tua<br />
+              <span className="italic">fuga perfetta</span>
+            </h2>
+            <div className="w-16 h-px bg-gray-300 mx-auto mb-8"></div>
+            <p className="text-lg text-gray-600 font-light leading-relaxed max-w-2xl mx-auto">
+              Scopri le nostre offerte e personalizza il tuo soggiorno 
+              per vivere un'esperienza indimenticabile.
+            </p>
+          </div>
+
+          {/* CTA Cards */}
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            
+            {/* Preventivo Card */}
+            <div className={`group transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+              <div className="bg-white p-8 md:p-10 rounded-sm border border-gray-100 hover:border-gray-200 transition-all duration-300 h-full">
+                <h3 className="text-2xl font-light text-gray-900 mb-4 tracking-wide">
+                  Preventivo Personalizzato
+                </h3>
+                <p className="text-gray-600 mb-8 leading-relaxed">
+                  Ricevi un preventivo su misura per le tue esigenze 
+                  e scopri le migliori offerte disponibili.
                 </p>
-              </div>
-              
-              <div className={`flex-shrink-0 transition-all duration-1000 delay-500 ${
-                isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
-              }`}>
                 <Button 
-                  size="lg" 
-                  className="group bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-10 py-6 text-lg font-semibold rounded-full shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:scale-105"
+                  className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-none py-3 transition-all duration-300"
                   asChild
                 >
-                  <Link to="/preventivo" className="flex items-center gap-3">
-                    <span>Calcola Preventivo</span>
-                    <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  <Link to="/preventivo" className="font-light tracking-wide">
+                    Calcola Preventivo
                   </Link>
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Appartamenti Card */}
+            <div className={`group transition-all duration-1000 delay-500 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+              <div className="bg-white p-8 md:p-10 rounded-sm border border-gray-100 hover:border-gray-200 transition-all duration-300 h-full">
+                <h3 className="text-2xl font-light text-gray-900 mb-4 tracking-wide">
+                  Esplora gli Appartamenti
+                </h3>
+                <p className="text-gray-600 mb-8 leading-relaxed">
+                  Scopri i nostri appartamenti e scegli quello 
+                  che meglio si adatta al tuo stile di vacanza.
+                </p>
+                <Button 
+                  variant="outline"
+                  className="w-full border-gray-300 text-gray-900 hover:bg-gray-50 rounded-none py-3 transition-all duration-300"
+                  asChild
+                >
+                  <Link to="/appartamenti" className="font-light tracking-wide">
+                    Vedi Appartamenti
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 };
