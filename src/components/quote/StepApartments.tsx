@@ -231,9 +231,6 @@ export const StepApartments: React.FC<StepApartmentsProps> = ({
                       <AlertCircle className="h-4 w-4" />
                       <span className="font-semibold">Non disponibile</span>
                     </div>
-                    <p className="text-sm text-destructive mt-1">
-                      Prenotato da {bookingInfo.ospite}
-                    </p>
                     <p className="text-xs text-muted-foreground">
                       Dal {bookingInfo.checkin} al {bookingInfo.checkout}
                     </p>
