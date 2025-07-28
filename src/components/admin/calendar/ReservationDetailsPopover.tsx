@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
@@ -50,6 +50,9 @@ export const ReservationDetailsPopover: React.FC<ReservationDetailsPopoverProps>
             <Calendar className="h-5 w-5" />
             Dettagli Prenotazione
           </DialogTitle>
+          <DialogDescription>
+            Visualizza tutti i dettagli della prenotazione selezionata.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4">

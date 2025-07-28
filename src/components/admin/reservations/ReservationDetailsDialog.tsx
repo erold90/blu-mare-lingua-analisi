@@ -5,6 +5,7 @@ import { Reservation } from "@/hooks/useSupabaseReservations";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -48,6 +49,9 @@ export const ReservationDetailsDialog = ({
       <DialogContent className="w-[95vw] p-4 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Dettagli Prenotazione</DialogTitle>
+          <DialogDescription>
+            Visualizza tutte le informazioni della prenotazione selezionata.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>

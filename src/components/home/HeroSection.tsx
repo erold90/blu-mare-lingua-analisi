@@ -13,14 +13,8 @@ const HeroSection = () => {
   useEffect(() => {
     const loadHeroImage = async () => {
       try {
-        // Timeout aumentato per evitare errori di caricamento
-        const timeoutPromise = new Promise<ImageRecord[]>((_, reject) =>
-          setTimeout(() => reject(new Error('Hero image timeout')), 10000)
-        );
-        
-        const heroImagesPromise = imageService.getImagesByCategory('hero');
-        
-        const heroImages = await Promise.race([heroImagesPromise, timeoutPromise]);
+        // Timeout disabilitato per evitare errori, gestita con try/catch
+        const heroImages = await imageService.getImagesByCategory('hero');
         const primaryImage = heroImages.find(img => img.is_cover) || heroImages[0] || null;
         setHeroImage(primaryImage);
       } catch (error) {

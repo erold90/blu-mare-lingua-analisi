@@ -9,6 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -164,6 +165,9 @@ export const ReservationSummaryDialog = ({
           <DialogTitle className="flex items-center gap-2">
             Riepilogo Prenotazione
           </DialogTitle>
+          <DialogDescription>
+            Visualizza il riepilogo completo della prenotazione e stampa il PDF.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">

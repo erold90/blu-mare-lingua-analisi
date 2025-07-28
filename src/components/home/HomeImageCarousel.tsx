@@ -13,13 +13,8 @@ export const HomeImageCarousel = () => {
   useEffect(() => {
     const loadImages = async () => {
       try {
-        const timeoutPromise = new Promise<ImageRecord[]>((_, reject) =>
-          setTimeout(() => reject(new Error('Image loading timeout')), 10000) // Aumentato a 10s
-        );
-        
-        const imagesPromise = imageService.getImagesByCategory('home_gallery');
-        
-        const galleryImages = await Promise.race([imagesPromise, timeoutPromise]);
+        // Timeout disabilitato per evitare errori, gestita con try/catch
+        const galleryImages = await imageService.getImagesByCategory('home_gallery');
         setImages(galleryImages);
         
         // Preload ottimizzato - solo le prime 2 immagini
