@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -116,7 +116,7 @@ export function ModernDashboard() {
   const [loading, setLoading] = useState(true);
 
   // Carica le statistiche dal database
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       console.log('🏠 Dashboard: Fetching dashboard data...');
@@ -185,7 +185,7 @@ export function ModernDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const getTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
@@ -209,10 +209,12 @@ export function ModernDashboard() {
       console.log('🏠 Dashboard: Starting fetchDashboardData');
       fetchDashboardData();
     }
-  }, [authLoading, isAuthenticated]); // Rimuoviamo fetchDashboardData dalle dipendenze
+  }, [authLoading, isAuthenticated, fetchDashboardData]);
 
   // Real-time updates
   useEffect(() => {
+    if (!isAuthenticated) return;
+    
     const channel = supabase
       .channel('dashboard-changes')
       .on('postgres_changes', 
@@ -226,7 +228,7 @@ export function ModernDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [isAuthenticated, fetchDashboardData]);
 
   if (authLoading || loading) {
     return (
