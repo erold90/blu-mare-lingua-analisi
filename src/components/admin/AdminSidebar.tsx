@@ -1,5 +1,5 @@
 import * as React from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -27,7 +27,7 @@ import {
   LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const navigationItems = [
   {
@@ -75,9 +75,16 @@ const navigationItems = [
 export function AdminSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
-  const { logout } = useAuth();
+  const navigate = useNavigate();
   const currentPath = location.pathname;
   const collapsed = state === "collapsed";
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('currentUser');
+    toast.success('Logout effettuato con successo');
+    navigate('/login');
+  };
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
@@ -145,7 +152,7 @@ export function AdminSidebar() {
       <SidebarFooter className="p-4 border-t">
         <Button 
           variant="ghost" 
-          onClick={logout}
+          onClick={handleLogout}
           className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
         >
           <LogOut className="h-4 w-4" />
