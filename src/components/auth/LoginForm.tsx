@@ -37,26 +37,31 @@ export const LoginForm = () => {
     setError(null);
 
     try {
-      // Prima ottieni l'email dall'username
+      // Prima ottieni l'email dall'username (senza validare la password qui)
       const { data: userLookup, error: lookupError } = await supabase
         .rpc('login_with_username', {
           username_input: formData.username,
-          password_input: formData.password
+          password_input: '' // Password non necessaria per la lookup
         });
 
       if (lookupError || !userLookup || userLookup.length === 0) {
-        throw new Error('Username o password non validi');
+        throw new Error('Username non trovato');
       }
 
       const userEmail = userLookup[0].email;
 
-      // Usa l'email per il login Supabase
+      // Usa l'email per il login Supabase (qui viene validata la password)
       const { data, error } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password: formData.password
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          throw new Error('Username o password non validi');
+        }
+        throw error;
+      }
 
       if (data.user) {
         toast.success('Accesso effettuato con successo');
