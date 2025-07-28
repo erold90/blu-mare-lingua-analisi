@@ -14,7 +14,7 @@ import RequestQuotePage from "@/pages/RequestQuotePage";
 import ReservedAreaPage from "@/pages/ReservedAreaPage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import CookiePolicyPage from "@/pages/CookiePolicyPage";
-import { LoginPage } from "@/pages/LoginPage";
+import LoginPage from "@/pages/LoginPage";
 import NotFound from "@/pages/NotFound";
 
 const AppWithRoutes = () => {

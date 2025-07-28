@@ -1,8 +1,7 @@
-
 import * as React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { useAuth } from "@/components/auth/AuthProvider";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AdminAuthProvider } from "@/components/auth/AdminAuthProvider";
 
 // Admin components imports
 import AdminLayoutNew from "@/components/admin/AdminLayoutNew";
@@ -15,33 +14,34 @@ import { AdminCleaningManagement } from "@/components/admin/cleaning/AdminCleani
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import { SiteImageManager } from "@/components/admin/images/SiteImageManager";
 import { ReservationsProvider } from "@/hooks/useReservations";
-import { SupabasePricesProvider } from "@/hooks/useSupabasePrices";
+import { SupabasePricesProvider } from "@/hooks/price/SupabasePricesProvider";
 import { AnalyticsProvider } from "@/components/layout/AnalyticsProvider";
-
 
 const ReservedAreaPage = () => {
   return (
-    <ProtectedRoute>
-      <AnalyticsProvider>
-        <ReservationsProvider>
-          <SupabasePricesProvider>
-            <Routes>
-              <Route path="/*" element={<AdminLayoutNew />}>
-                <Route path="dashboard" element={<AdminDashboardNew />} />
-                <Route path="reservations" element={<AdminReservations />} />
-                <Route path="apartments" element={<AdminApartments />} />
-                <Route path="prices" element={<AdminPrices />} />
-                <Route path="cleaning" element={<AdminCleaningManagement />} />
-                <Route path="images" element={<SiteImageManager />} />
-                <Route path="analytics" element={<AdminAnalytics />} />
-                <Route path="settings" element={<AdminSettings />} />
-                <Route index element={<Navigate to="dashboard" replace />} />
-              </Route>
-            </Routes>
-          </SupabasePricesProvider>
-        </ReservationsProvider>
-      </AnalyticsProvider>
-    </ProtectedRoute>
+    <AdminAuthProvider>
+      <ProtectedRoute>
+        <AnalyticsProvider>
+          <ReservationsProvider>
+            <SupabasePricesProvider>
+              <Routes>
+                <Route path="/*" element={<AdminLayoutNew />}>
+                  <Route path="dashboard" element={<AdminDashboardNew />} />
+                  <Route path="reservations" element={<AdminReservations />} />
+                  <Route path="apartments" element={<AdminApartments />} />
+                  <Route path="prices" element={<AdminPrices />} />
+                  <Route path="cleaning" element={<AdminCleaningManagement />} />
+                  <Route path="images" element={<SiteImageManager />} />
+                  <Route path="analytics" element={<AdminAnalytics />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                  <Route index element={<Navigate to="dashboard" replace />} />
+                </Route>
+              </Routes>
+            </SupabasePricesProvider>
+          </ReservationsProvider>
+        </AnalyticsProvider>
+      </ProtectedRoute>
+    </AdminAuthProvider>
   );
 };
 
