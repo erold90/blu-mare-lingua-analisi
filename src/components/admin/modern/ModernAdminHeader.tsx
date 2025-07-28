@@ -3,9 +3,9 @@ import { useLocation } from "react-router-dom";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bell, Search, User } from "lucide-react";
+import { Search, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { NotificationsDropdown } from "./NotificationsDropdown";
 
 const getPageTitle = (pathname: string) => {
   const routes: Record<string, { title: string; subtitle: string }> = {
@@ -46,19 +46,7 @@ export function ModernAdminHeader() {
             />
           </div>
           
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="relative text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-          >
-            <Bell className="h-4 w-4" />
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-4 w-4 p-0 text-xs flex items-center justify-center"
-            >
-              3
-            </Badge>
-          </Button>
+          <NotificationsDropdown />
           
           <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
             <Avatar className="h-8 w-8">
