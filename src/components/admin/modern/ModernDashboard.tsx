@@ -230,12 +230,15 @@ export function ModernDashboard() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-        <span className="ml-2 text-slate-600">
-          {authLoading ? 'Verifica autenticazione...' : 'Caricamento dashboard...'}
-        </span>
-      </div>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <div className="ml-2 text-slate-600">
+            {authLoading ? 'Verifica autenticazione...' : 'Caricamento dashboard...'}
+            <div className="text-xs text-slate-400 mt-1">
+              Configurazione permessi completata. Ricarica la pagina se il caricamento continua.
+            </div>
+          </div>
+        </div>
     );
   }
   return (
