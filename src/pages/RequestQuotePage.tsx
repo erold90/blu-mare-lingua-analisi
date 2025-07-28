@@ -10,14 +10,17 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, MapPin, Euro, ChevronRight, ChevronLeft, Check, X } from 'lucide-react';
 import { apartments } from '@/data/apartments';
 import { useReservations } from '@/hooks/useReservations';
+import { usePricing } from '@/hooks/usePricing';
 import { toast } from 'sonner';
 import SEOHead from '@/components/seo/SEOHead';
 
 export default function RequestQuotePage() {
   const { addReservation, getApartmentAvailability } = useReservations();
+  const { calculatePriceForStay, checkAvailabilityForDateRange } = usePricing();
   
   const [currentStep, setCurrentStep] = useState(1);
   const [availableApartments, setAvailableApartments] = useState<typeof apartments>([]);
+  const [estimatedPrice, setEstimatedPrice] = useState(0);
   
   const [formData, setFormData] = useState({
     guest_name: '',
@@ -51,38 +54,69 @@ export default function RequestQuotePage() {
     return apartments.find(apt => apt.id === formData.apartment_ids[0]);
   };
 
-  const calculateEstimatedPrice = () => {
-    const nights = calculateNights();
+  const calculateEstimatedPrice = async () => {
     const apartment = getSelectedApartment();
-    if (!nights || !apartment?.price) return 0;
+    if (!formData.start_date || !formData.end_date || !apartment) {
+      setEstimatedPrice(0);
+      return;
+    }
     
-    const basePrice = apartment.price * nights;
-    const cleaningFee = apartment.cleaningFee || 0;
-    const linenFee = formData.linen_option === 'extra' ? 20 : 0;
-    return basePrice + cleaningFee + linenFee;
+    try {
+      const startDate = new Date(formData.start_date);
+      const endDate = new Date(formData.end_date);
+      
+      const dynamicPrice = await calculatePriceForStay(apartment.id, startDate, endDate);
+      const cleaningFee = apartment.cleaningFee || 0;
+      const linenFee = formData.linen_option === 'extra' ? 20 : 0;
+      
+      const totalPrice = dynamicPrice + cleaningFee + linenFee;
+      setEstimatedPrice(totalPrice);
+    } catch (error) {
+      console.error('Error calculating price:', error);
+      // Fallback to static pricing
+      const nights = calculateNights();
+      const basePrice = apartment.price * nights;
+      const cleaningFee = apartment.cleaningFee || 0;
+      const linenFee = formData.linen_option === 'extra' ? 20 : 0;
+      const totalPrice = basePrice + cleaningFee + linenFee;
+      setEstimatedPrice(totalPrice);
+    }
   };
 
   // Check apartment availability when dates change
   useEffect(() => {
-    if (formData.start_date && formData.end_date) {
-      const checkIn = new Date(formData.start_date);
-      const checkOut = new Date(formData.end_date);
-      
-      const available = apartments.filter(apartment => 
-        getApartmentAvailability(apartment.id, checkIn, checkOut)
-      );
-      
-      setAvailableApartments(available);
-      
-      // Reset apartment selection if currently selected apartment is not available
-      if (formData.apartment_ids.length > 0 && 
-          !available.some(apt => apt.id === formData.apartment_ids[0])) {
-        setFormData(prev => ({ ...prev, apartment_ids: [] }));
+    const checkAvailability = async () => {
+      if (formData.start_date && formData.end_date) {
+        const checkIn = new Date(formData.start_date);
+        const checkOut = new Date(formData.end_date);
+        
+        const availabilityChecks = await Promise.all(
+          apartments.map(async apartment => {
+            const isAvailable = await checkAvailabilityForDateRange(apartment.id, checkIn, checkOut);
+            return isAvailable ? apartment : null;
+          })
+        );
+        
+        const available = availabilityChecks.filter(apt => apt !== null);
+        setAvailableApartments(available);
+        
+        // Reset apartment selection if currently selected apartment is not available
+        if (formData.apartment_ids.length > 0 && 
+            !available.some(apt => apt.id === formData.apartment_ids[0])) {
+          setFormData(prev => ({ ...prev, apartment_ids: [] }));
+        }
+      } else {
+        setAvailableApartments([]);
       }
-    } else {
-      setAvailableApartments([]);
-    }
-  }, [formData.start_date, formData.end_date, getApartmentAvailability]);
+    };
+
+    checkAvailability();
+  }, [formData.start_date, formData.end_date, checkAvailabilityForDateRange]);
+
+  // Recalculate price when relevant data changes
+  useEffect(() => {
+    calculateEstimatedPrice();
+  }, [formData.start_date, formData.end_date, formData.apartment_ids, formData.linen_option]);
 
   const canProceedToStep = (step: number) => {
     switch(step) {
@@ -112,7 +146,7 @@ export default function RequestQuotePage() {
   const sendWhatsAppMessage = () => {
     const apartment = getSelectedApartment();
     const nights = calculateNights();
-    const price = calculateEstimatedPrice();
+    const price = estimatedPrice;
     
     const message = `🏖️ *RICHIESTA PREVENTIVO VILLA MAREBLU*
     
@@ -152,7 +186,7 @@ _Preventivo automatico da villamareblu.it_`;
     setIsSubmitting(true);
 
     try {
-      const estimatedPrice = calculateEstimatedPrice();
+      const finalPrice = estimatedPrice;
       
       const reservationData = {
         id: `quote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -165,7 +199,7 @@ _Preventivo automatico da villamareblu.it_`;
         cribs: formData.cribs,
         has_pets: formData.has_pets,
         linen_option: formData.linen_option,
-        final_price: estimatedPrice,
+        final_price: finalPrice,
         deposit_amount: 0,
         payment_status: 'notPaid',
         payment_method: '',
@@ -606,7 +640,7 @@ _Preventivo automatico da villamareblu.it_`;
                   </div>
                 )}
 
-                {calculateEstimatedPrice() > 0 && (
+                {estimatedPrice > 0 && (
                   <div className="border-t pt-4">
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
@@ -629,7 +663,7 @@ _Preventivo automatico da villamareblu.it_`;
                     <div className="border-t mt-2 pt-2">
                       <div className="text-lg font-bold flex justify-between">
                         <span>Totale:</span>
-                        <span>€{calculateEstimatedPrice()}</span>
+                        <span>€{estimatedPrice}</span>
                       </div>
                     </div>
                     <div className="text-xs text-muted-foreground mt-2">

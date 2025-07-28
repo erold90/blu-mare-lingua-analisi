@@ -9,12 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Users, Home, BarChart, Plus, Edit, Trash2 } from 'lucide-react';
+import { Calendar, Users, Home, BarChart, Plus, Edit, Trash2, Euro } from 'lucide-react';
 import { useReservations } from '@/hooks/useReservations';
 import { apartments } from '@/data/apartments';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { toast } from 'sonner';
+import { PricingManagement } from '@/components/admin/PricingManagement';
 
 const LOGIN_CREDENTIALS = {
   username: 'admin',
@@ -213,6 +214,10 @@ export default function AdminPage() {
             <TabsTrigger value="reservations" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Prenotazioni
+            </TabsTrigger>
+            <TabsTrigger value="pricing" className="flex items-center gap-2">
+              <Euro className="h-4 w-4" />
+              Prezzi e Disponibilità
             </TabsTrigger>
           </TabsList>
 
@@ -575,6 +580,10 @@ export default function AdminPage() {
                 </div>
               </DialogContent>
             </Dialog>
+          </TabsContent>
+
+          <TabsContent value="pricing" className="space-y-6">
+            <PricingManagement />
           </TabsContent>
         </Tabs>
       </div>
