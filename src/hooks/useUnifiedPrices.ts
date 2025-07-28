@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from "sonner";
 import { supabaseService } from "@/services/supabaseService";
 import { format } from 'date-fns';
+import { generateSeasonWeeks, DEFAULT_2025_PRICES } from '@/utils/price/seasonCalendar';
 
 export interface PriceData {
   apartmentId: string;
@@ -25,27 +26,7 @@ export interface UnifiedPricesContextType {
 
 const APARTMENT_IDS = ['appartamento-1', 'appartamento-2', 'appartamento-3', 'appartamento-4'];
 
-// Prezzi corretti per il 2025 basati sulla tabella dell'utente
-const DEFAULT_2025_PRICES = {
-  "2025-06-02": { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 },
-  "2025-06-09": { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 },
-  "2025-06-16": { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 },
-  "2025-06-23": { "appartamento-1": 400, "appartamento-2": 500, "appartamento-3": 350, "appartamento-4": 375 },
-  "2025-06-30": { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 },
-  "2025-07-07": { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 },
-  "2025-07-14": { "appartamento-1": 475, "appartamento-2": 575, "appartamento-3": 425, "appartamento-4": 450 },
-  "2025-07-21": { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 665, "appartamento-4": 700 },
-  "2025-07-28": { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 665, "appartamento-4": 700 },
-  "2025-08-04": { "appartamento-1": 1150, "appartamento-2": 1250, "appartamento-3": 1075, "appartamento-4": 1100 },
-  "2025-08-11": { "appartamento-1": 1150, "appartamento-2": 1250, "appartamento-3": 1075, "appartamento-4": 1100 },
-  "2025-08-18": { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 675, "appartamento-4": 700 },
-  "2025-08-25": { "appartamento-1": 750, "appartamento-2": 850, "appartamento-3": 675, "appartamento-4": 700 },
-  "2025-09-01": { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 },
-  "2025-09-08": { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 },
-  "2025-09-15": { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 },
-  "2025-09-22": { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 },
-  "2025-09-29": { "appartamento-1": 500, "appartamento-2": 600, "appartamento-3": 425, "appartamento-4": 450 }
-};
+// Prezzi di default importati dal modulo centralizzato
 
 /**
  * Converte una data in formato stringa YYYY-MM-DD
@@ -115,14 +96,14 @@ export const useUnifiedPrices = (): UnifiedPricesContextType => {
         }
       }
     } else {
-      // Per gli altri anni, genera settimane vuote (prezzo 0)
+      // Per gli altri anni, genera settimane usando la nuova funzione centralizzata
       const seasonWeeks = generateSeasonWeeks(year);
       for (const week of seasonWeeks) {
         for (const apartmentId of APARTMENT_IDS) {
           pricesToInsert.push({
             apartment_id: apartmentId,
             year,
-            week_start: week,
+            week_start: week.startStr,
             price: 0
           });
         }
@@ -243,19 +224,4 @@ export const useUnifiedPrices = (): UnifiedPricesContextType => {
   };
 };
 
-/**
- * Genera le settimane della stagione per un anno
- */
-function generateSeasonWeeks(year: number): string[] {
-  const weeks = [];
-  const seasonStart = new Date(year, 5, 2); // 2 giugno
-  let currentWeek = seasonStart;
-  
-  while (currentWeek <= new Date(year, 8, 29)) { // 29 settembre
-    weeks.push(format(currentWeek, 'yyyy-MM-dd'));
-    currentWeek = new Date(currentWeek);
-    currentWeek.setDate(currentWeek.getDate() + 7);
-  }
-  
-  return weeks;
-}
+// La generazione delle settimane è ora centralizzata nel modulo seasonCalendar

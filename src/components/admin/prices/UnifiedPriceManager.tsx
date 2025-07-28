@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useUnifiedPrices } from "@/hooks/useUnifiedPrices";
 import { apartments } from "@/data/apartments";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { generateSeasonWeeks } from "@/utils/price/seasonCalendar";
 import PriceDialog from "./PriceDialog";
 
 const UnifiedPriceManager: React.FC = () => {
@@ -31,30 +32,8 @@ const UnifiedPriceManager: React.FC = () => {
     currentPrice: number;
   } | null>(null);
 
-  // Genera le settimane della stagione per l'anno corrente
-  const generateSeasonWeeks = () => {
-    const weeks = [];
-    const seasonStart = new Date(currentYear, 5, 2); // 2 giugno
-    let currentWeek = seasonStart;
-    
-    while (currentWeek <= new Date(currentYear, 8, 29)) { // 29 settembre
-      const weekEnd = new Date(currentWeek);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      
-      weeks.push({
-        start: new Date(currentWeek),
-        end: weekEnd,
-        startStr: format(currentWeek, 'yyyy-MM-dd')
-      });
-      
-      currentWeek = new Date(currentWeek);
-      currentWeek.setDate(currentWeek.getDate() + 7);
-    }
-    
-    return weeks;
-  };
-
-  const weeks = generateSeasonWeeks();
+  // Usa la funzione centralizzata per generare le settimane
+  const weeks = generateSeasonWeeks(currentYear);
 
   const handleEditClick = (apartmentId: string, apartmentName: string, weekStart: string) => {
     const currentPrice = getPriceForWeek(apartmentId, weekStart);
