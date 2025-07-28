@@ -13,6 +13,7 @@ import RequestQuotePage from "@/pages/RequestQuotePage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import CookiePolicyPage from "@/pages/CookiePolicyPage";
 import NotFound from "@/pages/NotFound";
+import AdminPage from "@/pages/AdminPage";
 
 const AppWithRoutes = () => {
   return (
@@ -26,6 +27,7 @@ const AppWithRoutes = () => {
       <Route path="/preventivo" element={<Navigate to="/richiedi-preventivo" replace />} />
       <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicyPage /></AppLayout>} />
       <Route path="/cookie-policy" element={<AppLayout><CookiePolicyPage /></AppLayout>} />
+      <Route path="/admin" element={<AdminPage />} />
       <Route path="*" element={<AppLayout><NotFound /></AppLayout>} />
     </Routes>
   );
