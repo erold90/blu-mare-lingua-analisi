@@ -41,55 +41,44 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   
   if (!hasValidData) {
     return (
-      <Card className="max-w-2xl mx-auto">
-        <CardContent className="text-center py-12">
-          <div className="mb-6">
-            <Info className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Dati insufficienti</h3>
-            <p className="text-muted-foreground">
-              Completa tutti i passaggi precedenti per visualizzare il riepilogo
-            </p>
-          </div>
-          <Button onClick={prevStep} variant="outline" size="lg">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Torna indietro
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="max-w-2xl mx-auto border border-border/50 p-12 text-center">
+        <Info className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-medium mb-2">Dati insufficienti</h3>
+        <p className="text-muted-foreground mb-6">
+          Completa tutti i passaggi precedenti per visualizzare il riepilogo
+        </p>
+        <Button onClick={prevStep} variant="ghost" className="px-8">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Torna indietro
+        </Button>
+      </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-5xl mx-auto">
       {/* Header */}
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full mb-4">
-          <Euro className="h-5 w-5 text-primary" />
-          <span className="text-primary font-medium">Riepilogo Prenotazione</span>
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Controlla i dettagli della tua prenotazione
-        </h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Verifica tutti i dettagli prima di inviare la richiesta. 
-          Non sarai impegnato fino alla conferma scritta.
+      <div className="border-b border-border/50 pb-6 mb-8">
+        <h2 className="text-2xl font-light mb-2">Riepilogo</h2>
+        <p className="text-muted-foreground font-light">
+          Verifica i dettagli prima di inviare la richiesta
         </p>
       </div>
 
-      {/* Main Content - Layout a due colonne */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        {/* Colonna sinistra - Informazioni booking */}
-        <div className="lg:col-span-2 space-y-6">
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        {/* Informazioni booking */}
+        <div className="space-y-8">
           <BookingDates formValues={formValues} />
           <GuestSummary formValues={formValues} />
-        </div>
-
-        {/* Colonna destra - Appartamenti e prezzi */}
-        <div className="lg:col-span-3 space-y-6">
           <ApartmentsSummary 
             selectedApartments={selectedApartments}
             formValues={formValues}
           />
+        </div>
+
+        {/* Prezzi */}
+        <div>
           <PricingBreakdown
             formValues={formValues}
             selectedApartments={selectedApartments}
@@ -100,28 +89,23 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
 
       {/* Note section */}
       {formValues.notes && formValues.notes.trim() && (
-        <div className="mt-8">
-          <Card className="bg-blue-50 border-blue-200">
-            <CardHeader>
-              <CardTitle className="text-blue-900 flex items-center gap-2">
-                <MessageCircle className="h-5 w-5" />
-                Note aggiuntive
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-blue-800 leading-relaxed">{formValues.notes}</p>
-            </CardContent>
-          </Card>
+        <div className="mt-8 pt-8 border-t border-border/50">
+          <div className="border border-border/50 p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <MessageCircle className="h-4 w-4" />
+              <span className="text-sm font-medium uppercase tracking-wider">Note</span>
+            </div>
+            <p className="text-muted-foreground leading-relaxed">{formValues.notes}</p>
+          </div>
         </div>
       )}
 
-      <Separator className="my-8" />
-
-      {/* Actions */}
-      <BookingActions 
-        prevStep={prevStep}
-        sendWhatsApp={sendWhatsApp}
-      />
+      <div className="border-t border-border/50 pt-8 mt-8">
+        <BookingActions 
+          prevStep={prevStep}
+          sendWhatsApp={sendWhatsApp}
+        />
+      </div>
     </div>
   );
 };

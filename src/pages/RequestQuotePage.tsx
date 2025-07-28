@@ -170,7 +170,7 @@ const RequestQuotePage = () => {
     };
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 relative overflow-hidden">
+      <div className="min-h-screen bg-background relative">
         <SEOHead
           title="Preventivo Villa MareBlu - Vacanze Estate Salento | Alternativa Airbnb Salento"
           description="Calcola il preventivo per Villa MareBlu: vacanze estate Salento, casa vacanze agosto Puglia. Miglior alternativa Airbnb Salento con piscina privata. Preventivo gratuito e immediato!"
@@ -181,73 +181,35 @@ const RequestQuotePage = () => {
           ogDescription="Calcola subito il tuo preventivo per Villa MareBlu: la migliore alternativa ad Airbnb nel Salento con piscina privata"
         />
 
-        {/* Background decorative elements */}
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-200 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-blue-100 rounded-full blur-3xl animate-pulse animation-delay-1000" />
-        </div>
-        
-        {/* Floating particles effect */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {[...Array(15)].map((_, i) => (
-            <div
-              key={i}
-              className="absolute w-2 h-2 bg-blue-300/20 rounded-full animate-pulse"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 3}s`,
-                animationDuration: `${3 + Math.random() * 2}s`
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="container mx-auto px-4 py-12 relative z-10">
-          <div className="max-w-5xl mx-auto">
-            {/* Header with elegant styling */}
-            <div className="text-center mb-12 animate-fade-in">
-              <h1 className="text-5xl md:text-6xl font-serif font-semibold mb-6 leading-tight">
-                <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-700 bg-clip-text text-transparent">
-                  Calcola Preventivo
-                </span>
+        <div className="container mx-auto px-4 py-16 relative">
+          <div className="max-w-4xl mx-auto">
+            {/* Header */}
+            <div className="text-center mb-16">
+              <h1 className="text-4xl md:text-5xl font-light mb-4 text-foreground">
+                Richiedi Preventivo
               </h1>
               
-              <div className="flex justify-center mb-8">
-                <div className="relative">
-                  <div className="w-32 h-1 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full" />
-                  <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
-                </div>
-              </div>
+              <div className="w-24 h-px bg-foreground/20 mx-auto mb-6" />
               
-              <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-light">
-                Crea il tuo preventivo personalizzato - <span className="font-medium text-primary">nessun impegno</span> - 
-                <span className="font-medium text-primary"> prezzi trasparenti e immediati</span>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto font-light">
+                Configura il tuo soggiorno in pochi passaggi
               </p>
             </div>
             
-            {/* Progress Bar with enhanced styling */}
-            <div className="mb-12 animate-fade-in animation-delay-300">
-              <div className="bg-white/50 backdrop-blur-sm rounded-full p-4 shadow-lg border border-white/20">
-                <ProgressBar step={step} totalSteps={totalSteps} />
-              </div>
+            {/* Progress Bar */}
+            <div className="mb-12">
+              <ProgressBar step={step} totalSteps={totalSteps} />
             </div>
             
-            {/* Form Content with glass morphism */}
-            <div className="animate-fade-in animation-delay-500">
-              <Card className="bg-white/80 backdrop-blur-md border-0 shadow-2xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-white/10 via-transparent to-white/10" />
-                
-                <CardContent className="relative p-8 md:p-12">
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmitHandler)}>
-                      <div className="animate-scale-in">
-                        {renderStepContent()}
-                      </div>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
+            {/* Form Content */}
+            <div className="bg-card border border-border/50 rounded-none shadow-sm">
+              <div className="p-8 md:p-12">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmitHandler)}>
+                    {renderStepContent()}
+                  </form>
+                </Form>
+              </div>
             </div>
             
             {/* Dialogs */}
@@ -278,21 +240,19 @@ const RequestQuotePage = () => {
           </div>
         </div>
         
-        {/* Bottom decorative gradient */}
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-blue-50/40 to-transparent pointer-events-none" />
       </div>
     );
   } catch (error) {
     console.error("❌ RequestQuotePage: Critical error:", error);
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
-        <Card className="max-w-md mx-auto bg-white/90 backdrop-blur-md shadow-2xl">
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="max-w-md mx-auto border border-border/50 shadow-sm">
           <CardContent className="p-8 text-center">
             <h2 className="text-xl font-semibold text-red-600 mb-4">Errore nell'applicazione</h2>
             <p className="text-gray-600 mb-4">Si è verificato un errore imprevisto. Dettagli: {error?.message || 'Errore sconosciuto'}</p>
             <button 
               onClick={() => window.location.reload()} 
-              className="px-6 py-3 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              className="px-6 py-2 bg-foreground text-background hover:bg-foreground/90 transition-colors duration-200"
             >
               Ricarica pagina
             </button>

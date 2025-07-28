@@ -48,81 +48,83 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
   const childrenNotOccupyingBed = childrenSleepingWithParents + childrenSleepingInCribs;
   
   return (
-    <Card className="max-w-2xl mx-auto">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xl">Informazioni sugli ospiti</CardTitle>
-        <CardDescription>Indica il numero di ospiti che soggiorneranno</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid md:grid-cols-2 gap-4">
+    <div className="max-w-2xl mx-auto">
+      <div className="border-b border-border/50 pb-6 mb-8">
+        <h2 className="text-2xl font-light mb-2">Ospiti</h2>
+        <p className="text-muted-foreground font-light">Indica il numero di ospiti che soggiorneranno</p>
+      </div>
+      <div className="space-y-8">
+        <div className="grid md:grid-cols-2 gap-8">
           {/* Numero di adulti */}
-          <div className="space-y-2">
-            <Label htmlFor="adults">Numero di adulti</Label>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center space-x-3">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={decrementAdults}
-                  disabled={form.getValues("adults") <= 1}
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <Input
-                  id="adults"
-                  type="number"
-                  className="w-16 text-center"
-                  {...form.register("adults", { valueAsNumber: true })}
-                  readOnly
-                />
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="icon" 
-                  onClick={incrementAdults}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
+          <div className="space-y-4">
+            <Label htmlFor="adults" className="text-sm font-medium uppercase tracking-wider">Adulti</Label>
+            <div className="flex items-center space-x-4">
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                onClick={decrementAdults}
+                disabled={form.getValues("adults") <= 1}
+                className="h-10 w-10 border border-border hover:bg-muted"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <Input
+                id="adults"
+                type="number"
+                className="w-20 text-center border-0 border-b border-border rounded-none bg-transparent font-medium text-lg"
+                {...form.register("adults", { valueAsNumber: true })}
+                readOnly
+              />
+              <Button 
+                type="button" 
+                variant="ghost" 
+                size="icon" 
+                onClick={incrementAdults}
+                className="h-10 w-10 border border-border hover:bg-muted"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
             </div>
           </div>
           
           {/* Numero di bambini */}
-          <div className="space-y-2">
+          <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <Label htmlFor="children">Numero di bambini</Label>
+              <Label htmlFor="children" className="text-sm font-medium uppercase tracking-wider">Bambini</Label>
               
               {/* Badge showing children sleeping with parents or in cribs */}
               {childrenNotOccupyingBed > 0 && (
-                <Badge variant="outline" className="text-blue-600 border-blue-300 bg-blue-50">
-                  <BedDouble className="h-3 w-3 mr-1" />
-                  {childrenNotOccupyingBed} {childrenNotOccupyingBed === 1 ? "bambino non" : "bambini non"} occupa posto letto
-                </Badge>
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  <BedDouble className="h-3 w-3" />
+                  {childrenNotOccupyingBed} non occupano letto
+                </div>
               )}
             </div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <Button 
                 type="button" 
-                variant="outline" 
+                variant="ghost" 
                 size="icon" 
                 onClick={decrementChildren}
                 disabled={form.getValues("children") <= 0}
+                className="h-10 w-10 border border-border hover:bg-muted"
               >
                 <Minus className="h-4 w-4" />
               </Button>
               <Input
                 id="children"
                 type="number"
-                className="w-16 text-center"
+                className="w-20 text-center border-0 border-b border-border rounded-none bg-transparent font-medium text-lg"
                 {...form.register("children", { valueAsNumber: true })}
                 readOnly
               />
               <Button 
                 type="button" 
-                variant="outline" 
+                variant="ghost" 
                 size="icon" 
                 onClick={incrementChildren}
+                className="h-10 w-10 border border-border hover:bg-muted"
               >
                 <Plus className="h-4 w-4" />
               </Button>
@@ -130,34 +132,33 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
           </div>
         </div>
         
-        {/* Mostra il pulsante per i gruppi se ci sono più di 3 adulti */}
-        <div className="flex justify-center mt-2">
+        {/* Gruppo section */}
+        <div className="flex justify-center">
           {form.watch("adults") > 3 && !form.watch("isGroupBooking") && (
             <Button 
               type="button"
-              variant="outline"
-              className="gap-2 text-sm"
+              variant="ghost"
+              className="gap-2 text-sm border border-border hover:bg-muted"
               onClick={openGroupDialog}
-              size={isMobile ? "sm" : "default"}
+              size="sm"
             >
               <Users className="h-4 w-4" />
-              {isMobile ? "Composizione" : "Specifica composizione gruppo"}
+              Configura gruppo
             </Button>
           )}
           
-          {/* Badge che indica che è una prenotazione di gruppo */}
           {form.watch("isGroupBooking") && (
-            <div className="flex flex-wrap items-center">
-              <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground flex items-center gap-1 uppercase tracking-wider">
                 <Users className="h-3 w-3" />
-                Gruppo definito
+                Gruppo configurato
               </span>
               <Button 
                 type="button"
                 variant="ghost"
                 size="sm"
                 onClick={openGroupDialog}
-                className="ml-1 h-auto p-1"
+                className="text-xs underline"
               >
                 Modifica
               </Button>
@@ -165,91 +166,91 @@ const GuestInfoStep: React.FC<GuestInfoStepProps> = ({
           )}
         </div>
         
-        {/* Dettagli dei bambini - mostrati solo se non è una prenotazione di gruppo */}
+        {/* Dettagli bambini */}
         {childrenArray.length > 0 && !form.watch("isGroupBooking") && (
-          <div className="mt-2 border rounded-lg p-3">
-            <h3 className="font-medium mb-2">Dettagli bambini</h3>
-            <div className="grid md:grid-cols-2 gap-3">
-              {childrenArray.map((child, index) => (
-                <div key={`child-${index}`} className="space-y-3 p-3 border rounded-md">
-                  <h4 className="font-medium">Bambino {index + 1}</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`under-12-${index}`}
-                        checked={child.isUnder12}
-                        onCheckedChange={(checked) => {
-                          updateChildDetails(index, 'isUnder12', checked === true);
-                        }}
-                      />
-                      <Label htmlFor={`under-12-${index}`}>Minore di 12 anni</Label>
-                    </div>
-                    
-                    {/* Opzioni aggiuntive solo per bambini sotto i 12 anni */}
-                    {child.isUnder12 && (
-                      <div className="ml-6 space-y-2">
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`sleeps-with-parents-${index}`}
-                            checked={child.sleepsWithParents}
-                            onCheckedChange={(checked) => {
-                              const newValue = checked === true;
-                              updateChildDetails(index, 'sleepsWithParents', newValue);
-                              // Se selezionato, deseleziona l'opzione culla
-                              if (newValue && child.sleepsInCrib) {
-                                updateChildDetails(index, 'sleepsInCrib', false);
-                              }
-                            }}
-                          />
-                          <Label htmlFor={`sleeps-with-parents-${index}`}>Dorme con i genitori</Label>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`sleeps-in-crib-${index}`}
-                            checked={child.sleepsInCrib}
-                            onCheckedChange={(checked) => {
-                              const newValue = checked === true;
-                              updateChildDetails(index, 'sleepsInCrib', newValue);
-                              // Se selezionato, deseleziona l'opzione dorme con i genitori
-                              if (newValue && child.sleepsWithParents) {
-                                updateChildDetails(index, 'sleepsWithParents', false);
-                              }
-                            }}
-                          />
-                          <Label htmlFor={`sleeps-in-crib-${index}`}>Dorme in culla</Label>
-                        </div>
+          <div className="space-y-6">
+            <div className="border-t border-border/50 pt-6">
+              <h3 className="text-sm font-medium uppercase tracking-wider mb-6">Dettagli bambini</h3>
+              <div className="grid md:grid-cols-2 gap-6">
+                {childrenArray.map((child, index) => (
+                  <div key={`child-${index}`} className="space-y-4 p-4 border border-border/50">
+                    <h4 className="font-medium text-sm uppercase tracking-wider">Bambino {index + 1}</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-3">
+                        <Checkbox 
+                          id={`under-12-${index}`}
+                          checked={child.isUnder12}
+                          onCheckedChange={(checked) => {
+                            updateChildDetails(index, 'isUnder12', checked === true);
+                          }}
+                        />
+                        <Label htmlFor={`under-12-${index}`} className="text-sm">Minore di 12 anni</Label>
                       </div>
-                    )}
+                      
+                      {child.isUnder12 && (
+                        <div className="ml-6 space-y-3">
+                          <div className="flex items-center space-x-3">
+                            <Checkbox 
+                              id={`sleeps-with-parents-${index}`}
+                              checked={child.sleepsWithParents}
+                              onCheckedChange={(checked) => {
+                                const newValue = checked === true;
+                                updateChildDetails(index, 'sleepsWithParents', newValue);
+                                if (newValue && child.sleepsInCrib) {
+                                  updateChildDetails(index, 'sleepsInCrib', false);
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`sleeps-with-parents-${index}`} className="text-sm">Dorme con i genitori</Label>
+                          </div>
+                          
+                          <div className="flex items-center space-x-3">
+                            <Checkbox 
+                              id={`sleeps-in-crib-${index}`}
+                              checked={child.sleepsInCrib}
+                              onCheckedChange={(checked) => {
+                                const newValue = checked === true;
+                                updateChildDetails(index, 'sleepsInCrib', newValue);
+                                if (newValue && child.sleepsWithParents) {
+                                  updateChildDetails(index, 'sleepsWithParents', false);
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`sleeps-in-crib-${index}`} className="text-sm">Dorme in culla</Label>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-            
-            {/* Add explanation about bed occupancy */}
-            {childrenNotOccupyingBed > 0 && (
-              <div className="mt-3 pt-3 border-t text-sm">
-                {childrenSleepingWithParents > 0 && (
-                  <p className="flex items-center text-blue-600 mb-2">
-                    <BedDouble className="h-4 w-4 mr-2" />
-                    {childrenSleepingWithParents} {childrenSleepingWithParents === 1 ? "bambino dorme" : "bambini dormono"} con i genitori (non occupa posto letto).
-                  </p>
-                )}
-                {childrenSleepingInCribs > 0 && (
-                  <p className="flex items-center text-green-600">
-                    <Baby className="h-4 w-4 mr-2" />
-                    {childrenSleepingInCribs} {childrenSleepingInCribs === 1 ? "bambino dorme" : "bambini dormono"} in culla (gratuito, non occupa posto letto).
-                  </p>
-                )}
+                ))}
               </div>
-            )}
+              
+              {childrenNotOccupyingBed > 0 && (
+                <div className="mt-6 pt-4 border-t border-border/50 text-sm text-muted-foreground space-y-1">
+                  {childrenSleepingWithParents > 0 && (
+                    <p className="flex items-center gap-2">
+                      <BedDouble className="h-4 w-4" />
+                      {childrenSleepingWithParents} {childrenSleepingWithParents === 1 ? "bambino dorme" : "bambini dormono"} con i genitori
+                    </p>
+                  )}
+                  {childrenSleepingInCribs > 0 && (
+                    <p className="flex items-center gap-2">
+                      <Baby className="h-4 w-4" />
+                      {childrenSleepingInCribs} {childrenSleepingInCribs === 1 ? "bambino dorme" : "bambini dormono"} in culla (gratuito)
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
-      </CardContent>
-      <CardFooter className="flex justify-end pt-2">
-        <Button type="button" onClick={nextStep}>Avanti</Button>
-      </CardFooter>
-    </Card>
+      </div>
+      <div className="flex justify-end pt-8 border-t border-border/50 mt-8">
+        <Button type="button" onClick={nextStep} variant="default" className="px-8">
+          Continua
+        </Button>
+      </div>
+    </div>
   );
 };
 

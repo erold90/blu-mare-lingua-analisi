@@ -101,12 +101,13 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
     });
 
     return (
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xl">Servizi extra</CardTitle>
-          <CardDescription>Personalizza il tuo soggiorno con servizi aggiuntivi</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <div className="max-w-3xl mx-auto">
+        <div className="border-b border-border/50 pb-6 mb-8">
+          <h2 className="text-2xl font-light mb-2">Servizi aggiuntivi</h2>
+          <p className="text-muted-foreground font-light">Personalizza il tuo soggiorno</p>
+        </div>
+        
+        <div className="space-y-8">
           {/* Opzioni biancheria */}
           <LinenService 
             form={form}
@@ -118,18 +119,19 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
             hasReachedApartmentCapacity={hasReachedApartmentCapacity}
           />
           
-          <Separator />
-          
-          {/* Animali domestici */}
-          <PetsService 
-            form={form}
-            selectedApartments={selectedApartments}
-            petsInApartment={petsInApartment || {}}
-            togglePetInApartment={togglePetInApartment}
-          />
-        </CardContent>
-        <CardFooter className="flex justify-between pt-2">
-          <Button type="button" variant="outline" onClick={prevStep}>Indietro</Button>
+          <div className="border-t border-border/50 pt-8">
+            {/* Animali domestici */}
+            <PetsService 
+              form={form}
+              selectedApartments={selectedApartments}
+              petsInApartment={petsInApartment || {}}
+              togglePetInApartment={togglePetInApartment}
+            />
+          </div>
+        </div>
+        
+        <div className="flex justify-between pt-8 border-t border-border/50 mt-8">
+          <Button type="button" variant="ghost" onClick={prevStep} className="px-8">Indietro</Button>
           <Button 
             type="button" 
             onClick={nextStep}
@@ -138,38 +140,37 @@ const ServicesStep: React.FC<ServicesStepProps> = ({ form, prevStep, nextStep, a
               multipleApartments && 
               (totalAssignedPersons || 0) !== totalPeopleForLinen
             }
+            className="px-8"
           >
-            Avanti
+            Continua
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     );
   } catch (error) {
     console.error("❌ ServicesStep: Critical error:", error);
     return (
-      <Card className="max-w-2xl mx-auto">
-        <CardContent className="p-8 text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-4">Errore nei Servizi Extra</h2>
-          <p className="text-red-500 mb-2">
-            {error instanceof Error ? error.message : "Errore sconosciuto"}
-          </p>
-          <p className="text-sm text-gray-500 mb-4">
-            Controlla la console per maggiori dettagli
-          </p>
-          <div className="space-y-2">
-            <Button onClick={prevStep} className="w-full">
-              Torna al passaggio precedente
-            </Button>
-            <Button 
-              onClick={() => window.location.reload()} 
-              variant="outline" 
-              className="w-full"
-            >
-              Ricarica la pagina
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="max-w-2xl mx-auto border border-border/50 p-8 text-center">
+        <h2 className="text-xl font-medium text-destructive mb-4">Errore nei servizi</h2>
+        <p className="text-muted-foreground mb-2">
+          {error instanceof Error ? error.message : "Errore sconosciuto"}
+        </p>
+        <p className="text-sm text-muted-foreground mb-6">
+          Controlla la console per maggiori dettagli
+        </p>
+        <div className="space-y-2">
+          <Button onClick={prevStep} className="w-full">
+            Torna indietro
+          </Button>
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="ghost" 
+            className="w-full"
+          >
+            Ricarica
+          </Button>
+        </div>
+      </div>
     );
   }
 };

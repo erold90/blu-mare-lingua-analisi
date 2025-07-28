@@ -89,12 +89,13 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
   };
 
   return (
-    <Card className="max-w-3xl mx-auto">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xl">Appartamenti disponibili</CardTitle>
-        <CardDescription>Seleziona l'appartamento o gli appartamenti che preferisci per il tuo soggiorno</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="max-w-4xl mx-auto">
+      <div className="border-b border-border/50 pb-6 mb-8">
+        <h2 className="text-2xl font-light mb-2">Appartamenti</h2>
+        <p className="text-muted-foreground font-light">Seleziona gli appartamenti per il tuo soggiorno</p>
+      </div>
+      
+      <div className="space-y-8">
         {/* Alert for guest count */}
         <GuestInfoAlert formValues={formValues} />
         
@@ -112,21 +113,22 @@ const ApartmentSelectionStep: React.FC<ApartmentSelectionStepProps> = ({
             {form.formState.errors.selectedApartment.message}
           </p>
         )}
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button type="button" variant="outline" onClick={prevStep}>Indietro</Button>
+      </div>
+      
+      <div className="flex justify-between pt-8 border-t border-border/50 mt-8">
+        <Button type="button" variant="ghost" onClick={prevStep} className="px-8">Indietro</Button>
         <Button 
           type="button" 
           onClick={handleNextStep}
           disabled={availableApartments.length === 0 || (selectedApartmentIds.length === 0) || !hasEnoughBeds}
-          className="text-balance w-auto"
+          className="px-8"
         >
           {!hasEnoughBeds && selectedApartmentIds.length > 0 
-            ? `Seleziona altri appartamenti (${selectedBedsCount}/${requiredBeds})` 
-            : 'Avanti'}
+            ? `Seleziona altri (${selectedBedsCount}/${requiredBeds})` 
+            : 'Continua'}
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 };
 
