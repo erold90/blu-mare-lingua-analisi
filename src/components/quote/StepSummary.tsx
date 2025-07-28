@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,9 +42,82 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   getBedsNeeded,
   calculatePrice
 }) => {
+  const [priceCalculation, setPriceCalculation] = useState({
+    apartmentPrices: [],
+    servicesTotal: 0,
+    subtotal: 0,
+    finalDiscount: 0,
+    total: 0,
+    deposit: 0,
+    balance: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadPriceCalculation = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const result = await calculatePrice();
+        setPriceCalculation(result);
+      } catch (err) {
+        console.error('Errore nel calcolo prezzi:', err);
+        setError('Non è possibile calcolare il preventivo. Alcune date potrebbero non essere disponibili.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPriceCalculation();
+  }, [formData.checkIn, formData.checkOut, formData.selectedApartments]);
+
   const nights = getNights();
   const bedsNeeded = getBedsNeeded();
-  const priceCalculation = calculatePrice();
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center mb-8">
+          <Receipt className="h-12 w-12 text-primary mx-auto mb-4" />
+          <h2 className="text-3xl font-bold mb-2">Riepilogo Preventivo</h2>
+          <p className="text-muted-foreground">
+            Villa MareBlu - Torre Vado, Salento
+          </p>
+        </div>
+        
+        <div className="text-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Calcolando il tuo preventivo...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center mb-8">
+          <Receipt className="h-12 w-12 text-primary mx-auto mb-4" />
+          <h2 className="text-3xl font-bold mb-2">Errore nel Preventivo</h2>
+          <p className="text-muted-foreground">
+            Villa MareBlu - Torre Vado, Salento
+          </p>
+        </div>
+        
+        <Card className="max-w-2xl mx-auto">
+          <CardContent className="p-8 text-center">
+            <div className="text-red-500 mb-4">⚠️</div>
+            <h3 className="text-lg font-semibold mb-2">Impossibile calcolare il preventivo</h3>
+            <p className="text-muted-foreground mb-4">{error}</p>
+            <Button variant="outline" onClick={onPrev}>
+              Torna indietro e modifica le date
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
