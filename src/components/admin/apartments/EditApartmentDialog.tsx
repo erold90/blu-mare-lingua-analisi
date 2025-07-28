@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogFooter,
@@ -56,6 +57,9 @@ export const EditApartmentDialog: React.FC<EditApartmentDialogProps> = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Modifica {apartment.name}</DialogTitle>
+          <DialogDescription>
+            Modifica i dettagli dell'appartamento. Tutti i campi sono modificabili.
+          </DialogDescription>
         </DialogHeader>
         
         {editedApartment && (

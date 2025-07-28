@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { QuoteLog } from "@/hooks/analytics/useAnalyticsCore";
@@ -134,6 +134,9 @@ export const AdminLogQuotes = ({ quoteLogs, dateRange }: AdminLogQuotesProps) =>
                         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
                             <DialogTitle>Dettagli Preventivo</DialogTitle>
+                            <DialogDescription>
+                              Visualizza tutti i dettagli del preventivo selezionato.
+                            </DialogDescription>
                           </DialogHeader>
                           {selectedQuote && (
                             <div className="space-y-4">

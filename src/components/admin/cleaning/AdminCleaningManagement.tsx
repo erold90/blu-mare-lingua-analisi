@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCleaningManagement } from "@/hooks/cleaning/useCleaningManagement";
 import { Calendar, Plus, CheckCircle2, Clock, AlertTriangle, Users, BarChart3 } from "lucide-react";
@@ -108,6 +108,9 @@ export const AdminCleaningManagement = () => {
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Crea Nuova Task di Pulizia</DialogTitle>
+              <DialogDescription>
+                Crea una nuova task di pulizia per un appartamento specifico.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
