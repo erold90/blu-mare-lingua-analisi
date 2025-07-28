@@ -294,14 +294,14 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
             <div className="flex justify-between">
               <span>Totale appartamenti:</span>
               <span className="font-semibold">
-                €{priceCalculation.apartmentPrices.reduce((sum: number, apt: any) => sum + apt.finalPrice, 0)}
+                €{(priceCalculation.apartmentPrices || []).reduce((sum: number, apt: any) => sum + apt.finalPrice, 0).toFixed(2)}
               </span>
             </div>
             
             {priceCalculation.servicesTotal > 0 && (
               <div className="flex justify-between">
                 <span>Servizi aggiuntivi:</span>
-                <span className="font-semibold">€{priceCalculation.servicesTotal}</span>
+                <span className="font-semibold">€{(priceCalculation.servicesTotal || 0).toFixed(2)}</span>
               </div>
             )}
             
@@ -309,13 +309,13 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
             
             <div className="flex justify-between">
               <span>Totale parziale:</span>
-              <span className="font-semibold">€{priceCalculation.subtotal}</span>
+              <span className="font-semibold">€{(priceCalculation.subtotal || 0).toFixed(2)}</span>
             </div>
             
             {priceCalculation.finalDiscount > 0 && (
               <div className="flex justify-between text-green-600">
                 <span>Sconto finale:</span>
-                <span className="font-semibold">-€{priceCalculation.finalDiscount}</span>
+                <span className="font-semibold">-€{(priceCalculation.finalDiscount || 0).toFixed(2)}</span>
               </div>
             )}
             
@@ -323,7 +323,7 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
             
             <div className="flex justify-between text-xl font-bold text-primary">
               <span>TOTALE FINALE:</span>
-              <span>€{priceCalculation.total}</span>
+              <span>€{(priceCalculation.total || 0).toFixed(2)}</span>
             </div>
           </div>
 
