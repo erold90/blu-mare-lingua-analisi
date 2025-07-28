@@ -75,6 +75,51 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   const nights = getNights();
   const bedsNeeded = getBedsNeeded();
 
+  const sendWhatsApp = () => {
+    const apartmentNames = {
+      "appartamento-1": "Appartamento 1 (6 posti)",
+      "appartamento-2": "Appartamento 2 (8 posti)", 
+      "appartamento-3": "Appartamento 3 (4 posti)",
+      "appartamento-4": "Appartamento 4 (5 posti)"
+    };
+
+    const message = `🏖️ *RICHIESTA PREVENTIVO VILLA MAREBLU*
+
+📅 *SOGGIORNO:*
+Check-in: ${format(new Date(formData.checkIn), 'dd/MM/yyyy (EEEE)', { locale: it })}
+Check-out: ${format(new Date(formData.checkOut), 'dd/MM/yyyy (EEEE)', { locale: it })}
+Durata: ${nights} notti
+
+👥 *OSPITI:*
+Adulti: ${formData.adults}
+Bambini: ${formData.children}${formData.children > 0 ? ` (di cui ${formData.childrenWithParents.filter(Boolean).length} non occupano posto letto)` : ''}
+Totale posti letto: ${bedsNeeded}
+
+🏠 *APPARTAMENTI:*
+${formData.selectedApartments.map(aptId => {
+  const apt = priceCalculation.apartmentPrices.find((p: any) => p.apartmentId === aptId);
+  return `• ${apartmentNames[aptId as keyof typeof apartmentNames]} - Occupazione: ${apt?.occupation}`;
+}).join('\n')}
+
+${formData.hasPets ? `🐕 *ANIMALE:* Sì${formData.petApartment ? ` - ${apartmentNames[formData.petApartment as keyof typeof apartmentNames]}` : ''}` : '🐕 *ANIMALE:* No'}
+${formData.requestLinen ? `🛏️ *BIANCHERIA:* Sì - ${bedsNeeded} ospiti` : '🛏️ *BIANCHERIA:* No'}
+
+💰 *PREVENTIVO:*
+Prezzo base: €${priceCalculation.apartmentPrices.reduce((sum: number, apt: any) => sum + apt.basePrice, 0)}
+Sconti occupazione: -€${priceCalculation.apartmentPrices.reduce((sum: number, apt: any) => sum + apt.discountAmount, 0)}
+Servizi extra: €${priceCalculation.servicesTotal}
+TOTALE: €${priceCalculation.total}
+
+💳 *PAGAMENTO:*
+Caparra (30%): €${priceCalculation.deposit}
+Saldo arrivo: €${priceCalculation.balance}
+
+*Preventivo senza impegno - Valido 7 giorni*`;
+
+    const whatsappUrl = `https://wa.me/393937767749?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -366,8 +411,8 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
         <Button variant="outline" onClick={onPrev} size="lg">
           Indietro
         </Button>
-        <Button onClick={onNext} size="lg" className="min-w-[200px]">
-          Invia Preventivo
+        <Button onClick={sendWhatsApp} size="lg" className="min-w-[200px]" disabled={loading}>
+          {loading ? 'Caricamento...' : 'Invia su WhatsApp'}
         </Button>
       </div>
     </div>
