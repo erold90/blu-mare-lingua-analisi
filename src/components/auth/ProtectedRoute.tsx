@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
@@ -15,11 +15,30 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { isAuthenticated, isLoading, userRole } = useAdminAuth();
   const location = useLocation();
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-  console.log('🛡️ ProtectedRoute state:', { isAuthenticated, isLoading, userRole });
+  // Timeout per evitare loading infinito
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        console.log('⏰ Auth loading timeout - forcing navigation to login');
+        setLoadingTimeout(true);
+      }
+    }, 5000); // 5 secondi timeout
 
-  // Mostra loading mentre verifica l'autenticazione
-  if (isLoading) {
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
+  console.log('🛡️ ProtectedRoute state:', { isAuthenticated, isLoading, userRole, loadingTimeout });
+
+  // Se timeout o non autenticato, redirect al login
+  if (loadingTimeout || (!isLoading && !isAuthenticated)) {
+    console.log('❌ ProtectedRoute: Redirecting to login (timeout or not authenticated)');
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // Mostra loading solo se sta ancora caricando (senza timeout)
+  if (isLoading && !loadingTimeout) {
     console.log('🔄 ProtectedRoute: Still loading auth...');
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -31,11 +50,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         </Card>
       </div>
     );
-  }
-
-  if (!isAuthenticated) {
-    console.log('❌ ProtectedRoute: Not authenticated, redirecting to login');
-    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   console.log('✅ ProtectedRoute: Authenticated, rendering children');
