@@ -23,13 +23,13 @@ import {
 const routeMap: Record<string, { title: string; icon: React.ElementType }> = {
   "/area-riservata": { title: "Area Riservata", icon: Home },
   "/area-riservata/dashboard": { title: "Dashboard", icon: LayoutDashboard },
-  "/area-riservata/prenotazioni": { title: "Prenotazioni", icon: Calendar },
-  "/area-riservata/appartamenti": { title: "Appartamenti", icon: Building },
-  "/area-riservata/prezzi": { title: "Prezzi", icon: Euro },
-  "/area-riservata/pulizie": { title: "Pulizie", icon: Sparkles },
-  "/area-riservata/immagini": { title: "Immagini", icon: Images },
+  "/area-riservata/reservations": { title: "Prenotazioni", icon: Calendar },
+  "/area-riservata/apartments": { title: "Appartamenti", icon: Building },
+  "/area-riservata/prices": { title: "Prezzi", icon: Euro },
+  "/area-riservata/cleaning": { title: "Pulizie", icon: Sparkles },
+  "/area-riservata/images": { title: "Immagini", icon: Images },
   "/area-riservata/analytics": { title: "Analytics", icon: BarChart3 },
-  "/area-riservata/impostazioni": { title: "Impostazioni", icon: Settings },
+  "/area-riservata/settings": { title: "Impostazioni", icon: Settings },
 };
 
 export function AdminBreadcrumbs() {
