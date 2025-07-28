@@ -154,6 +154,8 @@ class PricingService {
     const cacheKey = `availability_${apartmentId}_${checkin}_${checkout}`;
     
     return this.getOrSetCache(cacheKey, async () => {
+      console.log(`🔍 Controllo disponibilità appartamento ${apartmentId} dal ${checkin} al ${checkout}`);
+      
       const { data: conflicts, error } = await supabase
         .from('bookings')
         .select('id')
@@ -161,14 +163,19 @@ class PricingService {
         .eq('status', 'confirmed')
         .or(`checkin_date.lt.${checkout},checkout_date.gt.${checkin}`);
       
+      console.log(`📋 Query results per appartamento ${apartmentId}:`, { conflicts, error });
+      
       if (error) {
-        console.warn(`Errore verifica disponibilità: ${error.message}`);
+        console.warn(`⚠️ Errore verifica disponibilità: ${error.message}`);
         // In caso di errore, assumiamo che sia disponibile per evitare blocchi
         return true;
       }
       
+      const isAvailable = !conflicts || conflicts.length === 0;
+      console.log(`✅ Appartamento ${apartmentId} ${isAvailable ? 'DISPONIBILE' : 'OCCUPATO'} (${conflicts?.length || 0} conflitti)`);
+      
       // Se non ci sono conflitti, l'appartamento è disponibile
-      return !conflicts || conflicts.length === 0;
+      return isAvailable;
     });
   }
 
@@ -216,14 +223,20 @@ class PricingService {
   // Calcolo preventivo totale
   static async calculateQuote(params: QuoteParams): Promise<QuoteResult> {
     try {
+      console.log('🔍 Inizio verifica disponibilità per appartamenti:', params.apartments);
       // Verifica disponibilità per tutti gli appartamenti
       const availabilityChecks = await Promise.all(
-        params.apartments.map(id => 
-          this.checkAvailability(id, params.checkin, params.checkout)
-        )
+        params.apartments.map(async (id) => {
+          const isAvailable = await this.checkAvailability(id, params.checkin, params.checkout);
+          console.log(`🏠 Appartamento ${id}: ${isAvailable ? 'DISPONIBILE' : 'NON DISPONIBILE'}`);
+          return isAvailable;
+        })
       );
       
+      console.log('📊 Risultati disponibilità:', availabilityChecks);
+      
       if (availabilityChecks.some(available => !available)) {
+        console.error('❌ Alcuni appartamenti non sono disponibili');
         throw new Error('Uno o più appartamenti non sono disponibili nelle date selezionate');
       }
       
