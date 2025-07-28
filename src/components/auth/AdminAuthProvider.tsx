@@ -36,11 +36,15 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-    // Controlla se c'è una sessione Supabase esistente
-    const checkSupabaseSession = async () => {
+    let mounted = true;
+    
+    const initializeAuth = async () => {
+      console.log('🔍 Checking existing Supabase session...');
+      
       try {
-        console.log('🔍 Checking existing Supabase session...');
         const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
         
         if (error) {
           console.error('❌ Error getting session:', error);
@@ -48,51 +52,64 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           return;
         }
 
-        if (session?.user) {
-          console.log('✅ Found existing session for:', session.user.email);
-          setUser({
+        if (session?.user?.email) {
+          const adminUser: AdminUser = {
             id: session.user.id,
-            email: session.user.email || '',
-            username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'admin'
-          });
+            email: session.user.email,
+            username: session.user.email.split('@')[0],
+          };
+
+          console.log('✅ User authenticated:', adminUser);
+          setUser(adminUser);
           setUserRole('admin');
         } else {
-          console.log('❌ No existing session found');
+          console.log('⚠️ No valid session found');
         }
       } catch (error) {
-        console.error('❌ Error checking session:', error);
+        console.error('❌ Session check failed:', error);
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     };
 
-    checkSupabaseSession();
+    // Inizializza auth state una sola volta
+    initializeAuth();
 
-    // Ascolta i cambiamenti di autenticazione
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔐 Auth state change:', event, 'User:', session?.user?.email, 'Session:', !!session);
-      
-      if (event === 'SIGNED_IN' && session?.user) {
-        const newUser = {
-          id: session.user.id,
-          email: session.user.email || '',
-          username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'admin'
-        };
-        setUser(newUser);
-        setUserRole('admin');
-        setIsLoading(false);
-        console.log('✅ User authenticated:', newUser);
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setUserRole(null);
-        setIsLoading(false);
-        console.log('🚪 User signed out');
-      } else if (event === 'TOKEN_REFRESHED') {
-        console.log('🔄 Token refreshed');
+    // Listener per cambiamenti auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!mounted) return;
+        
+        console.log('🔐 Auth state change:', event, 'User:', session?.user?.email, 'Session:', !!session);
+        
+        if (event === 'SIGNED_IN' && session?.user?.email) {
+          const adminUser: AdminUser = {
+            id: session.user.id,
+            email: session.user.email,
+            username: session.user.email.split('@')[0],
+          };
+          
+          console.log('✅ User authenticated:', adminUser);
+          setUser(adminUser);
+          setUserRole('admin');
+          setIsLoading(false);
+        } else if (event === 'SIGNED_OUT') {
+          console.log('🚪 User signed out');
+          setUser(null);
+          setUserRole(null);
+          setIsLoading(false);
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('🔄 Token refreshed');
+        }
       }
-    });
+    );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signInWithUsernamePassword = useCallback(async (username: string, password: string): Promise<boolean> => {
