@@ -2,10 +2,10 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { useAdminAuth } from "@/components/auth/AdminAuthProvider";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const LoginPageContent = () => {
-  const { isAuthenticated, isLoading } = useAdminAuth();
+  const { user, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -15,7 +15,7 @@ const LoginPageContent = () => {
     );
   }
 
-  if (isAuthenticated) {
+  if (user) {
     return <Navigate to="/area-riservata" replace />;
   }
 

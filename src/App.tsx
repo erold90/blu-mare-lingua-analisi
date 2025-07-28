@@ -4,7 +4,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { Toaster as UIToaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/components/auth/AuthProvider";
-import { AdminAuthProvider } from "@/components/auth/AdminAuthProvider";
 import AppLayout from "@/components/layout/AppLayout";
 import Index from "@/pages/Index";
 import ApartmentsPage from "@/pages/ApartmentsPage";
@@ -40,15 +39,13 @@ const AppWithRoutes = () => {
 function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <AdminAuthProvider>
-        <AuthProvider>
+      <AuthProvider>
         <Router>
           <AppWithRoutes />
           <Toaster />
           <UIToaster />
         </Router>
-        </AuthProvider>
-      </AdminAuthProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

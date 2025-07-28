@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from './AuthProvider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
-import { useAdminAuth } from './AdminAuthProvider';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -11,35 +11,13 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  requiredRole 
+  requiredRole = 'admin' 
 }) => {
-  const { isAuthenticated, isLoading, userRole } = useAdminAuth();
+  const { user, isLoading, userRole } = useAuth();
   const location = useLocation();
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
 
-  // Timeout per evitare loading infinito
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (isLoading) {
-        console.log('⏰ Auth loading timeout - forcing navigation to login');
-        setLoadingTimeout(true);
-      }
-    }, 5000); // 5 secondi timeout
-
-    return () => clearTimeout(timer);
-  }, [isLoading]);
-
-  console.log('🛡️ ProtectedRoute state:', { isAuthenticated, isLoading, userRole, loadingTimeout });
-
-  // Se timeout o non autenticato, redirect al login
-  if (loadingTimeout || (!isLoading && !isAuthenticated)) {
-    console.log('❌ ProtectedRoute: Redirecting to login (timeout or not authenticated)');
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  // Mostra loading solo se sta ancora caricando (senza timeout)
-  if (isLoading && !loadingTimeout) {
-    console.log('🔄 ProtectedRoute: Still loading auth...');
+  // Still loading authentication
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -52,8 +30,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  console.log('✅ ProtectedRoute: Authenticated, rendering children');
+  // Not authenticated
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
 
+  // Check role if required
   if (requiredRole && userRole !== requiredRole && userRole !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center">

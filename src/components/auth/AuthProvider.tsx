@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
   userRole: string | null;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -75,12 +78,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      toast.error('Errore durante il login: ' + error.message);
+    } else {
+      toast.success('Login effettuato con successo');
+    }
+
+    return { error };
+  };
+
+  const signUp = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/area-riservata`
+      }
+    });
+
+    if (error) {
+      toast.error('Errore durante la registrazione: ' + error.message);
+    } else {
+      toast.success('Registrazione completata! Controlla la tua email.');
+    }
+
+    return { error };
+  };
+
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      toast.success('Logout effettuato con successo');
     } catch (error) {
       console.error('Error signing out:', error);
+      toast.error('Errore durante il logout');
     }
   };
 
@@ -89,6 +127,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     isLoading,
     userRole,
+    signIn,
+    signUp,
     signOut
   };
 

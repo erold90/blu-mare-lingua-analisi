@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, LogIn, Loader2 } from "lucide-react";
-import { useAdminAuth } from "./AdminAuthProvider";
+import { useAuth } from "./AuthProvider";
 
 export const LoginForm = () => {
   const [username, setUsername] = useState("");
@@ -13,7 +13,7 @@ export const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signInWithUsernamePassword } = useAdminAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -29,10 +29,15 @@ export const LoginForm = () => {
     setError(null);
 
     try {
-      const success = await signInWithUsernamePassword(username, password);
-      if (success) {
-        const from = location.state?.from?.pathname || "/area-riservata";
-        navigate(from, { replace: true });
+      // Hardcoded admin login for now
+      if (username === 'erold' && password === '205647') {
+        const { error } = await signIn('erold@villamareblu.it', password);
+        if (!error) {
+          const from = location.state?.from?.pathname || "/area-riservata";
+          navigate(from, { replace: true });
+        } else {
+          setError('Errore durante il login');
+        }
       } else {
         setError('Username o password non validi');
       }
