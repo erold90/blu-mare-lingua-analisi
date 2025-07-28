@@ -73,9 +73,11 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'admin'
         });
         setUserRole('admin');
+        setIsLoading(false); // Ferma il caricamento dopo il login
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setUserRole(null);
+        setIsLoading(false); // Ferma il caricamento dopo il logout
       }
     });
 
