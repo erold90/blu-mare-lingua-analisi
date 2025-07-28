@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,10 +27,35 @@ export const StepWhatsApp: React.FC<StepWhatsAppProps> = ({
   calculatePrice
 }) => {
   const [isSending, setIsSending] = useState(false);
+  const [priceCalculation, setPriceCalculation] = useState({
+    apartmentPrices: [],
+    servicesTotal: 0,
+    subtotal: 0,
+    finalDiscount: 0,
+    total: 0,
+    deposit: 0,
+    balance: 0
+  });
+  const [loading, setLoading] = useState(true);
   
   const nights = getNights();
   const bedsNeeded = getBedsNeeded();
-  const priceCalculation = calculatePrice();
+
+  useEffect(() => {
+    const loadPriceCalculation = async () => {
+      try {
+        setLoading(true);
+        const result = await calculatePrice();
+        setPriceCalculation(result);
+      } catch (error) {
+        console.error('Error loading price calculation:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPriceCalculation();
+  }, [calculatePrice]);
 
   const canSend = () => {
     return formData.guestName && formData.email;
@@ -153,12 +178,21 @@ ${formData.phone ? `Telefono: ${formData.phone}` : ''}
         </CardHeader>
         <CardContent>
           <div className="text-center">
-            <Badge variant="outline" className="text-lg py-2 px-4 mb-4">
-              Totale: €{priceCalculation.total}
-            </Badge>
-            <p className="text-sm text-muted-foreground">
-              Il preventivo verrà inviato automaticamente via WhatsApp
-            </p>
+            {loading ? (
+              <div className="py-4">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
+                <p className="text-sm text-muted-foreground">Caricamento preventivo...</p>
+              </div>
+            ) : (
+              <>
+                <Badge variant="outline" className="text-lg py-2 px-4 mb-4">
+                  Totale: €{priceCalculation.total}
+                </Badge>
+                <p className="text-sm text-muted-foreground">
+                  Il preventivo verrà inviato automaticamente via WhatsApp
+                </p>
+              </>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -169,12 +203,12 @@ ${formData.phone ? `Telefono: ${formData.phone}` : ''}
         </Button>
         <Button
           onClick={sendWhatsApp}
-          disabled={!canSend() || isSending}
+          disabled={!canSend() || isSending || loading}
           size="lg"
           className="min-w-[200px]"
         >
           <Send className="h-4 w-4 mr-2" />
-          {isSending ? 'Invio...' : 'Invia su WhatsApp'}
+          {isSending ? 'Invio...' : loading ? 'Caricamento...' : 'Invia su WhatsApp'}
         </Button>
       </div>
     </div>
