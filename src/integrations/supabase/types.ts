@@ -104,6 +104,39 @@ export type Database = {
         }
         Relationships: []
       }
+      date_blocks: {
+        Row: {
+          apartment_id: string | null
+          block_reason: string | null
+          created_at: string
+          end_date: string
+          id: string
+          is_active: boolean
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          apartment_id?: string | null
+          block_reason?: string | null
+          created_at?: string
+          end_date: string
+          id?: string
+          is_active?: boolean
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          apartment_id?: string | null
+          block_reason?: string | null
+          created_at?: string
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       images: {
         Row: {
           alt_text: string | null
@@ -236,12 +269,87 @@ export type Database = {
         }
         Relationships: []
       }
+      season_config: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          season_end_day: number
+          season_end_month: number
+          season_start_day: number
+          season_start_month: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          season_end_day?: number
+          season_end_month?: number
+          season_start_day?: number
+          season_start_month?: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          season_end_day?: number
+          season_end_month?: number
+          season_start_day?: number
+          season_start_month?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      weekly_prices: {
+        Row: {
+          apartment_id: string
+          created_at: string
+          id: string
+          price: number
+          updated_at: string
+          week_end: string
+          week_number: number
+          week_start: string
+          year: number
+        }
+        Insert: {
+          apartment_id: string
+          created_at?: string
+          id?: string
+          price: number
+          updated_at?: string
+          week_end: string
+          week_number: number
+          week_start: string
+          year: number
+        }
+        Update: {
+          apartment_id?: string
+          created_at?: string
+          id?: string
+          price?: number
+          updated_at?: string
+          week_end?: string
+          week_number?: number
+          week_start?: string
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_weekly_prices_for_year: {
+        Args: { target_year: number; copy_from_year?: number }
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
