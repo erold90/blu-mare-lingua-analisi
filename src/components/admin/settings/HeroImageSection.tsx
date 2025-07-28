@@ -18,23 +18,12 @@ export const HeroImageSection = () => {
   const loadHeroImage = async () => {
     setIsLoading(true);
     try {
-      // Timeout per evitare caricamenti infiniti
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout loading hero image')), 10000)
-      );
-      
-      const loadPromise = imageService.getImagesByCategory('hero');
-      
-      const heroImages = await Promise.race([loadPromise, timeoutPromise]) as ImageRecord[];
+      const heroImages = await imageService.getImagesByCategory('hero');
       const primaryHero = heroImages.find(img => img.is_cover) || heroImages[0] || null;
       setHeroImage(primaryHero);
     } catch (error) {
       console.error('Error loading hero image:', error);
-      // Non mostrare toast di errore se è solo un timeout, imposta solo null
-      setHeroImage(null);
-      if (!error.message?.includes('Timeout')) {
-        toast.error("Errore nel caricamento dell'immagine hero");
-      }
+      toast.error("Errore nel caricamento dell'immagine hero");
     } finally {
       setIsLoading(false);
     }

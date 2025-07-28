@@ -75,24 +75,12 @@ export const SiteImageSettings: React.FC = () => {
   const loadAllImages = async () => {
     setLoading(true);
     try {
-      console.log('Loading all site images...');
-      
-      // Timeout per evitare caricamenti infiniti
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout loading images')), 15000)
-      );
-      
-      const loadPromise = Promise.all([
+      const [hero, homeGallery, social, favicon] = await Promise.all([
         imageService.getImagesByCategory('hero'),
         imageService.getImagesByCategory('home_gallery'),
         imageService.getImagesByCategory('social'),
         imageService.getImagesByCategory('favicon')
       ]);
-      
-      const [hero, homeGallery, social, favicon] = await Promise.race([
-        loadPromise,
-        timeoutPromise
-      ]) as [ImageRecord[], ImageRecord[], ImageRecord[], ImageRecord[]];
 
       setImages({
         hero,
@@ -100,21 +88,9 @@ export const SiteImageSettings: React.FC = () => {
         social,
         favicon
       });
-      
-      console.log('Site images loaded successfully');
     } catch (error) {
       console.error('Error loading images:', error);
-      // Imposta immagini vuote invece di bloccare
-      setImages({
-        hero: [],
-        home_gallery: [],
-        social: [],
-        favicon: []
-      });
-      
-      if (!error.message?.includes('Timeout')) {
-        toast.error('Errore nel caricamento delle immagini');
-      }
+      toast.error('Errore nel caricamento delle immagini');
     } finally {
       setLoading(false);
     }

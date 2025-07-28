@@ -187,33 +187,19 @@ export const useUnifiedPrices = (): UnifiedPricesContextType => {
    */
   const refreshPrices = useCallback(async () => {
     setIsLoading(true);
-    console.log(`Refreshing prices for year ${currentYear}...`);
-    
     try {
-      // Timeout per evitare caricamenti infiniti
-      const timeoutPromise = new Promise<PriceData[]>((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout loading prices')), 15000)
-      );
-      
-      const loadPromise = loadPricesForYear(currentYear);
-      
-      const loadedPrices = await Promise.race([loadPromise, timeoutPromise]);
+      const loadedPrices = await loadPricesForYear(currentYear);
       
       if (loadedPrices.length === 0 && currentYear === 2025) {
-        console.log("No prices found for 2025, initializing defaults...");
         // Se non ci sono prezzi per il 2025, inizializza con i valori di default
         const initializedPrices = await initializeDefaultPrices(currentYear);
         setPrices(initializedPrices);
       } else {
         setPrices(loadedPrices);
       }
-      
-      console.log(`Prices loaded successfully for year ${currentYear}`);
     } catch (error) {
       console.error("Error refreshing prices:", error);
-      // In caso di errore, imposta prezzi vuoti per non bloccare l'UI
-      setPrices([]);
-      toast.error("Errore nel caricamento dei prezzi - modalità offline");
+      toast.error("Errore nel caricamento dei prezzi");
     } finally {
       setIsLoading(false);
     }
