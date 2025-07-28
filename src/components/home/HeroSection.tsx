@@ -46,25 +46,27 @@ const HeroSection = () => {
   };
 
   return (
-    <section 
-      className="relative h-screen flex items-center justify-center text-white overflow-hidden"
-      style={{
-        backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)), url('${getBackgroundImage()}')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'scroll'
-      }}
-    >
-      {/* Simplified overlay without parallax */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-900 via-blue-700 to-cyan-600">
+      {/* Background image with modern overlay */}
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `url('${getBackgroundImage()}')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
       
-      {/* Reduced particles for performance */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(10)].map((_, i) => (
+      {/* Modern gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-blue-800/60 to-cyan-600/70 z-10" />
+      
+      {/* Floating elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-20">
+        {[...Array(6)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-2 h-2 bg-white/10 rounded-full animate-pulse"
+            className="absolute w-4 h-4 bg-white/10 rounded-full animate-pulse"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -75,46 +77,63 @@ const HeroSection = () => {
         ))}
       </div>
 
-      <div className="container mx-auto px-4 text-center z-20 relative">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-5xl lg:text-7xl font-serif font-bold mb-6 md:mb-8 drop-shadow-2xl animate-fade-in">
-            <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">
+      {/* Main content */}
+      <div className="container mx-auto px-6 text-center z-30 relative">
+        <div className="max-w-5xl mx-auto">
+          {/* Badge */}
+          <div className="inline-flex items-center px-4 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-8 animate-fade-in">
+            <span className="text-white/90 text-sm font-medium">🏖️ Salento • Vista Mare • Lusso</span>
+          </div>
+          
+          {/* Main title */}
+          <h1 className="text-5xl md:text-6xl lg:text-8xl font-bold mb-6 animate-fade-in animation-delay-200">
+            <span className="bg-gradient-to-r from-white via-cyan-100 to-blue-100 bg-clip-text text-transparent drop-shadow-2xl">
               Villa MareBlu
             </span>
           </h1>
           
-          <div className="h-1 w-24 md:w-32 bg-gradient-to-r from-transparent via-white to-transparent mx-auto mb-6 md:mb-8 animate-scale-in animation-delay-500" />
+          {/* Decorative line */}
+          <div className="h-1 w-32 bg-gradient-to-r from-cyan-400 via-white to-blue-400 mx-auto mb-8 rounded-full animate-scale-in animation-delay-500" />
           
-          <p className="text-lg md:text-xl lg:text-2xl mb-8 md:mb-12 max-w-3xl mx-auto drop-shadow-lg leading-relaxed animate-fade-in animation-delay-700 px-4">
-            Villa con vista mare nel Salento. Tranquillità e comfort per una vacanza indimenticabile.
+          {/* Subtitle */}
+          <p className="text-xl md:text-2xl lg:text-3xl mb-12 max-w-4xl mx-auto text-white/90 leading-relaxed animate-fade-in animation-delay-700 font-light">
+            <span className="font-medium">Appartamenti vista mare</span> nel cuore del Salento.
+            <br className="hidden md:block" />
+            Dove il <span className="text-cyan-200">lusso</span> incontra la <span className="text-blue-200">tranquillità</span>.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 md:gap-6 justify-center animate-fade-in animation-delay-1000 px-4">
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in animation-delay-1000">
             <Button 
               size="lg" 
               onClick={handleQuoteClick}
-              className="group bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white hover:text-gray-900 px-8 md:px-10 py-4 md:py-6 text-base md:text-lg font-semibold rounded-full shadow-2xl hover:shadow-white/20 transition-all duration-500 transform hover:scale-105"
+              className="group bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white border-0 px-10 py-6 text-lg font-semibold rounded-2xl shadow-2xl hover:shadow-cyan-500/30 transition-all duration-500 transform hover:scale-105 hover:-translate-y-1"
             >
+              <span className="mr-2">💎</span>
               Calcola Preventivo
-              <ChevronRight className="ml-2 h-4 w-4 md:h-5 md:w-5 transition-transform group-hover:translate-x-1" />
+              <ChevronRight className="ml-3 h-5 w-5 transition-transform group-hover:translate-x-2" />
             </Button>
             
             <Button 
               size="lg" 
               variant="outline" 
               onClick={() => navigate("/appartamenti")}
-              className="group bg-transparent border-2 border-white/40 text-white hover:bg-white/20 hover:border-white px-8 md:px-10 py-4 md:py-6 text-base md:text-lg font-semibold rounded-full shadow-xl transition-all duration-500 transform hover:scale-105"
+              className="group bg-white/10 backdrop-blur-md border-2 border-white/30 text-white hover:bg-white/20 hover:border-white/50 px-10 py-6 text-lg font-semibold rounded-2xl shadow-xl transition-all duration-500 transform hover:scale-105 hover:-translate-y-1"
             >
+              <span className="mr-2">🏡</span>
               Scopri gli Appartamenti
             </Button>
           </div>
         </div>
       </div>
       
-      {/* Scroll indicator */}
-      <div className="absolute bottom-6 md:bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-        <div className="w-5 h-8 md:w-6 md:h-10 border-2 border-white/50 rounded-full flex justify-center">
-          <div className="w-1 h-2 md:h-3 bg-white/70 rounded-full mt-1 md:mt-2 animate-pulse" />
+      {/* Modern scroll indicator */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce z-30">
+        <div className="flex flex-col items-center space-y-2">
+          <span className="text-white/70 text-sm font-medium">Scopri di più</span>
+          <div className="w-6 h-10 border-2 border-white/40 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-gradient-to-b from-cyan-400 to-blue-500 rounded-full mt-2 animate-pulse" />
+          </div>
         </div>
       </div>
     </section>
