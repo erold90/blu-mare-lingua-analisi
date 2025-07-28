@@ -1,54 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, MapPin, Euro, ChevronRight, ChevronLeft, Check, X } from 'lucide-react';
-import { apartments } from '@/data/apartments';
-import { useReservations } from '@/hooks/useReservations';
-import { usePricing } from '@/hooks/usePricing';
-import { toast } from 'sonner';
+import React from 'react';
+import { Progress } from '@/components/ui/progress';
+import { useMultiStepQuote } from '@/hooks/useMultiStepQuote';
+import { StepGuests } from '@/components/quote/StepGuests';
+import { StepDates } from '@/components/quote/StepDates';
+import { StepApartments } from '@/components/quote/StepApartments';
+import { StepPets } from '@/components/quote/StepPets';
+import { StepLinen } from '@/components/quote/StepLinen';
+import { StepSummary } from '@/components/quote/StepSummary';
+import { StepWhatsApp } from '@/components/quote/StepWhatsApp';
 import SEOHead from '@/components/seo/SEOHead';
 
 export default function RequestQuotePage() {
-  const { addReservation, getApartmentAvailability } = useReservations();
-  const { calculatePriceForStay, checkAvailabilityForDateRange } = usePricing();
-  
-  const [currentStep, setCurrentStep] = useState(1);
-  const [availableApartments, setAvailableApartments] = useState<typeof apartments>([]);
-  const [estimatedPrice, setEstimatedPrice] = useState(0);
-  
-  const [formData, setFormData] = useState({
-    guest_name: '',
-    email: '',
-    phone: '',
-    start_date: '',
-    end_date: '',
-    apartment_ids: [] as string[],
-    adults: 1,
-    children: 0,
-    cribs: 0,
-    has_pets: false,
-    linen_option: 'no',
-    notes: '',
-    privacy_accepted: false
-  });
+  const {
+    currentStep,
+    formData,
+    updateFormData,
+    nextStep,
+    prevStep,
+    getBedsNeeded,
+    getNights,
+    isApartmentAvailable,
+    isValidDay,
+    calculatePrice,
+    prenotazioni
+  } = useMultiStepQuote();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-
-  const calculateNights = () => {
-    if (!formData.start_date || !formData.end_date) return 0;
-    const start = new Date(formData.start_date);
-    const end = new Date(formData.end_date);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
+  const steps = [
+    'Ospiti', 
+    'Date', 
+    'Appartamenti', 
+    'Animali', 
+    'Biancheria', 
+    'Riepilogo', 
+    'Invio'
+  ];
 
   const getSelectedApartment = () => {
     return apartments.find(apt => apt.id === formData.apartment_ids[0]);
