@@ -1,10 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+interface AdminUser {
+  id: string;
+  email: string;
+  username: string;
+}
+
 interface AdminAuthContextType {
-  user: User | null;
+  user: AdminUser | null;
   isLoading: boolean;
   userRole: string | null;
   isAuthenticated: boolean;
@@ -14,111 +18,66 @@ interface AdminAuthContextType {
 
 const AdminAuthContext = createContext<AdminAuthContextType | undefined>(undefined);
 
+// Credenziali hardcoded per il login locale
+const ADMIN_CREDENTIALS = {
+  username: 'erold',
+  password: '205647',
+  user: {
+    id: 'admin-001',
+    email: 'erold@villamareblu.it',
+    username: 'erold'
+  }
+};
+
 export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AdminUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-    // Controlla se c'è una sessione esistente
-    const getInitialSession = async () => {
+    // Controlla se c'è una sessione locale esistente
+    const checkLocalSession = () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+        const userData = localStorage.getItem('currentUser');
         
-        if (error) {
-          console.error('Error getting session:', error);
-        } else if (session?.user) {
-          setUser(session.user);
-          await fetchUserRole(session.user.id);
+        if (isAuthenticated && userData) {
+          const parsedUser = JSON.parse(userData);
+          setUser(parsedUser);
+          setUserRole('admin');
         }
       } catch (error) {
-        console.error('Error in getInitialSession:', error);
+        console.error('Error checking local session:', error);
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('currentUser');
       } finally {
         setIsLoading(false);
       }
     };
 
-    getInitialSession();
-
-    // Ascolta i cambiamenti di autenticazione
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          await fetchUserRole(session.user.id);
-          // Sincronizza con localStorage per compatibilità
-          localStorage.setItem('isAuthenticated', 'true');
-          localStorage.setItem('currentUser', JSON.stringify({
-            id: session.user.id,
-            email: session.user.email,
-            role: 'admin'
-          }));
-        } else {
-          setUserRole(null);
-          localStorage.removeItem('isAuthenticated');
-          localStorage.removeItem('currentUser');
-        }
-        
-        setIsLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
+    checkLocalSession();
   }, []);
-
-  const fetchUserRole = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .rpc('get_current_user_role');
-      
-      if (error) {
-        console.error('Error fetching user role:', error);
-        setUserRole('admin'); // Default per ora
-      } else {
-        setUserRole(data || 'admin');
-      }
-    } catch (error) {
-      console.error('Error in fetchUserRole:', error);
-      setUserRole('admin');
-    }
-  };
 
   const signInWithUsernamePassword = async (username: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
       
-      // Prima ottieni l'email dall'username
-      const { data: userData, error: userError } = await supabase
-        .rpc('login_with_username', {
-          username_input: username,
-          password_input: password
-        });
-
-      if (userError || !userData || userData.length === 0) {
-        toast.error('Username non trovato');
-        return false;
-      }
-
-      const email = userData[0].email;
-
-      // Ora fai il login con Supabase Auth
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) {
+      // Verifica credenziali locali
+      if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+        const adminUser = ADMIN_CREDENTIALS.user;
+        
+        // Salva sessione locale
+        setUser(adminUser);
+        setUserRole('admin');
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('currentUser', JSON.stringify(adminUser));
+        
+        toast.success('Login effettuato con successo');
+        return true;
+      } else {
         toast.error('Credenziali non valide');
         return false;
       }
-
-      if (data.user) {
-        toast.success('Login effettuato con successo');
-        return true;
-      }
-
-      return false;
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Errore durante il login');
@@ -130,8 +89,10 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      setUser(null);
+      setUserRole(null);
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('currentUser');
       toast.success('Logout effettuato con successo');
     } catch (error) {
       console.error('Error signing out:', error);
