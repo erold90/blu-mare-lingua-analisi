@@ -2,7 +2,7 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LoginForm } from "@/components/auth/LoginForm";
-import { AdminAuthProvider, useAdminAuth } from "@/components/auth/AdminAuthProvider";
+import { useAdminAuth } from "@/components/auth/AdminAuthProvider";
 
 const LoginPageContent = () => {
   const { isAuthenticated, isLoading } = useAdminAuth();
@@ -37,11 +37,7 @@ const LoginPageContent = () => {
 };
 
 const LoginPage = () => {
-  return (
-    <AdminAuthProvider>
-      <LoginPageContent />
-    </AdminAuthProvider>
-  );
+  return <LoginPageContent />;
 };
 
 export default LoginPage;

@@ -19,29 +19,27 @@ import { AnalyticsProvider } from "@/components/layout/AnalyticsProvider";
 
 const ReservedAreaPage = () => {
   return (
-    <AdminAuthProvider>
-      <ProtectedRoute>
-        <AnalyticsProvider>
-          <ReservationsProvider>
-            <SupabasePricesProvider>
-              <Routes>
-                <Route path="/*" element={<ModernAdminLayout />}>
-                  <Route path="dashboard" element={<ModernDashboard />} />
-                  <Route path="prenotazioni" element={<ModernReservations />} />
-                  <Route path="appartamenti" element={<AdminApartments />} />
-                  <Route path="prezzi" element={<AdminPrices />} />
-                  <Route path="pulizie" element={<AdminCleaningManagement />} />
-                  <Route path="immagini" element={<SiteImageManager />} />
-                  <Route path="analytics" element={<AdminAnalytics />} />
-                  <Route path="impostazioni" element={<AdminSettings />} />
-                  <Route index element={<Navigate to="dashboard" replace />} />
-                </Route>
-              </Routes>
-            </SupabasePricesProvider>
-          </ReservationsProvider>
-        </AnalyticsProvider>
-      </ProtectedRoute>
-    </AdminAuthProvider>
+    <ProtectedRoute>
+      <AnalyticsProvider>
+        <ReservationsProvider>
+          <SupabasePricesProvider>
+            <Routes>
+              <Route path="/*" element={<ModernAdminLayout />}>
+                <Route path="dashboard" element={<ModernDashboard />} />
+                <Route path="prenotazioni" element={<ModernReservations />} />
+                <Route path="appartamenti" element={<AdminApartments />} />
+                <Route path="prezzi" element={<AdminPrices />} />
+                <Route path="pulizie" element={<AdminCleaningManagement />} />
+                <Route path="immagini" element={<SiteImageManager />} />
+                <Route path="analytics" element={<AdminAnalytics />} />
+                <Route path="impostazioni" element={<AdminSettings />} />
+                <Route index element={<Navigate to="dashboard" replace />} />
+              </Route>
+            </Routes>
+          </SupabasePricesProvider>
+        </ReservationsProvider>
+      </AnalyticsProvider>
+    </ProtectedRoute>
   );
 };
 
