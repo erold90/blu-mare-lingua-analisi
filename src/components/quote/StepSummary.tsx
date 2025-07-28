@@ -77,6 +77,10 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
 
   const sendWhatsApp = () => {
     const apartmentNames = {
+      "1": "Appartamento 1 (6 posti)",
+      "2": "Appartamento 2 (8 posti)", 
+      "3": "Appartamento 3 (4 posti)",
+      "4": "Appartamento 4 (5 posti)",
       "appartamento-1": "Appartamento 1 (6 posti)",
       "appartamento-2": "Appartamento 2 (8 posti)", 
       "appartamento-3": "Appartamento 3 (4 posti)",
