@@ -6,10 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, Home, BarChart } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar, Users, Home, BarChart, Plus, Edit, Trash2 } from 'lucide-react';
 import { useReservations } from '@/hooks/useReservations';
+import { apartments } from '@/data/apartments';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 const LOGIN_CREDENTIALS = {
   username: 'admin',
@@ -23,7 +28,7 @@ export default function AdminPage() {
   const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
 
-  const { reservations, loading } = useReservations();
+  const { reservations, loading, addReservation, updateReservation, deleteReservation, fetchReservations } = useReservations();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +45,92 @@ export default function AdminPage() {
   const handleLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('admin-auth');
+  };
+
+  // New reservation form state
+  const [newReservation, setNewReservation] = useState({
+    guest_name: '',
+    start_date: '',
+    end_date: '',
+    apartment_ids: [] as string[],
+    adults: 1,
+    children: 0,
+    cribs: 0,
+    has_pets: false,
+    linen_option: 'no',
+    final_price: 0,
+    deposit_amount: 0,
+    payment_status: 'notPaid',
+    payment_method: '',
+    notes: ''
+  });
+
+  const [editingReservation, setEditingReservation] = useState<any>(null);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+
+  // Handle add reservation
+  const handleAddReservation = async () => {
+    if (!newReservation.guest_name || !newReservation.start_date || !newReservation.end_date) {
+      toast.error('Compila tutti i campi obbligatori');
+      return;
+    }
+
+    const result = await addReservation({
+      ...newReservation,
+      id: `res_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    });
+
+    if (result.error) {
+      toast.error('Errore nell\'aggiunta della prenotazione: ' + result.error);
+    } else {
+      toast.success('Prenotazione aggiunta con successo!');
+      setShowAddDialog(false);
+      setNewReservation({
+        guest_name: '',
+        start_date: '',
+        end_date: '',
+        apartment_ids: [],
+        adults: 1,
+        children: 0,
+        cribs: 0,
+        has_pets: false,
+        linen_option: 'no',
+        final_price: 0,
+        deposit_amount: 0,
+        payment_status: 'notPaid',
+        payment_method: '',
+        notes: ''
+      });
+    }
+  };
+
+  // Handle edit reservation
+  const handleEditReservation = async () => {
+    if (!editingReservation) return;
+
+    const result = await updateReservation(editingReservation.id, editingReservation);
+
+    if (result.error) {
+      toast.error('Errore nella modifica della prenotazione: ' + result.error);
+    } else {
+      toast.success('Prenotazione modificata con successo!');
+      setShowEditDialog(false);
+      setEditingReservation(null);
+    }
+  };
+
+  // Handle delete reservation
+  const handleDeleteReservation = async (id: string) => {
+    if (!confirm('Sei sicuro di voler eliminare questa prenotazione?')) return;
+
+    const result = await deleteReservation(id);
+
+    if (result.error) {
+      toast.error('Errore nell\'eliminazione della prenotazione: ' + result.error);
+    } else {
+      toast.success('Prenotazione eliminata con successo!');
+    }
   };
 
   // Login form
@@ -206,7 +297,129 @@ export default function AdminPage() {
           <TabsContent value="reservations" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Tutte le Prenotazioni</CardTitle>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Tutte le Prenotazioni</CardTitle>
+                  <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+                    <DialogTrigger asChild>
+                      <Button className="flex items-center gap-2">
+                        <Plus className="h-4 w-4" />
+                        Nuova Prenotazione
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Aggiungi Nuova Prenotazione</DialogTitle>
+                      </DialogHeader>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="guest_name">Nome Ospite *</Label>
+                          <Input
+                            id="guest_name"
+                            value={newReservation.guest_name}
+                            onChange={(e) => setNewReservation(prev => ({ ...prev, guest_name: e.target.value }))}
+                            placeholder="Nome completo"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="start_date">Data Check-in *</Label>
+                          <Input
+                            id="start_date"
+                            type="date"
+                            value={newReservation.start_date}
+                            onChange={(e) => setNewReservation(prev => ({ ...prev, start_date: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="end_date">Data Check-out *</Label>
+                          <Input
+                            id="end_date"
+                            type="date"
+                            value={newReservation.end_date}
+                            onChange={(e) => setNewReservation(prev => ({ ...prev, end_date: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="adults">Adulti</Label>
+                          <Input
+                            id="adults"
+                            type="number"
+                            min="1"
+                            value={newReservation.adults}
+                            onChange={(e) => setNewReservation(prev => ({ ...prev, adults: parseInt(e.target.value) || 1 }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="children">Bambini</Label>
+                          <Input
+                            id="children"
+                            type="number"
+                            min="0"
+                            value={newReservation.children}
+                            onChange={(e) => setNewReservation(prev => ({ ...prev, children: parseInt(e.target.value) || 0 }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="apartment">Appartamento</Label>
+                          <Select 
+                            value={newReservation.apartment_ids[0] || ''} 
+                            onValueChange={(value) => setNewReservation(prev => ({ ...prev, apartment_ids: [value] }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleziona appartamento" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {apartments.map(apt => (
+                                <SelectItem key={apt.id} value={apt.id}>{apt.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="final_price">Prezzo Finale €</Label>
+                          <Input
+                            id="final_price"
+                            type="number"
+                            value={newReservation.final_price}
+                            onChange={(e) => setNewReservation(prev => ({ ...prev, final_price: parseFloat(e.target.value) || 0 }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="payment_status">Stato Pagamento</Label>
+                          <Select 
+                            value={newReservation.payment_status} 
+                            onValueChange={(value) => setNewReservation(prev => ({ ...prev, payment_status: value }))}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="notPaid">Non Pagato</SelectItem>
+                              <SelectItem value="partiallyPaid">Parzialmente Pagato</SelectItem>
+                              <SelectItem value="paid">Pagato</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="col-span-2">
+                          <Label htmlFor="notes">Note</Label>
+                          <Textarea
+                            id="notes"
+                            value={newReservation.notes}
+                            onChange={(e) => setNewReservation(prev => ({ ...prev, notes: e.target.value }))}
+                            placeholder="Note aggiuntive..."
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2 mt-4">
+                        <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+                          Annulla
+                        </Button>
+                        <Button onClick={handleAddReservation}>
+                          Aggiungi Prenotazione
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </CardHeader>
               <CardContent>
                 {loading ? (
@@ -225,24 +438,43 @@ export default function AdminPage() {
                             ID: {reservation.id}
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="outline">
-                              {reservation.adults} adulti
-                              {reservation.children > 0 && `, ${reservation.children} bambini`}
-                            </Badge>
+                        <div className="flex items-center gap-2">
+                          <div className="text-right mr-4">
+                            <div className="flex items-center gap-2 mb-1">
+                              <Badge variant="outline">
+                                {reservation.adults} adulti
+                                {reservation.children > 0 && `, ${reservation.children} bambini`}
+                              </Badge>
+                            </div>
+                            {reservation.final_price && (
+                              <div className="font-medium">€{reservation.final_price}</div>
+                            )}
+                            {reservation.payment_status && (
+                              <Badge 
+                                variant={reservation.payment_status === 'paid' ? 'default' : 'secondary'}
+                                className="text-xs"
+                              >
+                                {reservation.payment_status}
+                              </Badge>
+                            )}
                           </div>
-                          {reservation.final_price && (
-                            <div className="font-medium">€{reservation.final_price}</div>
-                          )}
-                          {reservation.payment_status && (
-                            <Badge 
-                              variant={reservation.payment_status === 'paid' ? 'default' : 'secondary'}
-                              className="text-xs"
-                            >
-                              {reservation.payment_status}
-                            </Badge>
-                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingReservation({...reservation});
+                              setShowEditDialog(true);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteReservation(reservation.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -252,6 +484,97 @@ export default function AdminPage() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Edit Dialog */}
+            <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Modifica Prenotazione</DialogTitle>
+                </DialogHeader>
+                {editingReservation && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="edit_guest_name">Nome Ospite</Label>
+                      <Input
+                        id="edit_guest_name"
+                        value={editingReservation.guest_name}
+                        onChange={(e) => setEditingReservation(prev => ({ ...prev, guest_name: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_start_date">Data Check-in</Label>
+                      <Input
+                        id="edit_start_date"
+                        type="date"
+                        value={editingReservation.start_date}
+                        onChange={(e) => setEditingReservation(prev => ({ ...prev, start_date: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_end_date">Data Check-out</Label>
+                      <Input
+                        id="edit_end_date"
+                        type="date"
+                        value={editingReservation.end_date}
+                        onChange={(e) => setEditingReservation(prev => ({ ...prev, end_date: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_adults">Adulti</Label>
+                      <Input
+                        id="edit_adults"
+                        type="number"
+                        min="1"
+                        value={editingReservation.adults}
+                        onChange={(e) => setEditingReservation(prev => ({ ...prev, adults: parseInt(e.target.value) || 1 }))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_final_price">Prezzo Finale €</Label>
+                      <Input
+                        id="edit_final_price"
+                        type="number"
+                        value={editingReservation.final_price || 0}
+                        onChange={(e) => setEditingReservation(prev => ({ ...prev, final_price: parseFloat(e.target.value) || 0 }))}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit_payment_status">Stato Pagamento</Label>
+                      <Select 
+                        value={editingReservation.payment_status || 'notPaid'} 
+                        onValueChange={(value) => setEditingReservation(prev => ({ ...prev, payment_status: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="notPaid">Non Pagato</SelectItem>
+                          <SelectItem value="partiallyPaid">Parzialmente Pagato</SelectItem>
+                          <SelectItem value="paid">Pagato</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="col-span-2">
+                      <Label htmlFor="edit_notes">Note</Label>
+                      <Textarea
+                        id="edit_notes"
+                        value={editingReservation.notes || ''}
+                        onChange={(e) => setEditingReservation(prev => ({ ...prev, notes: e.target.value }))}
+                        placeholder="Note aggiuntive..."
+                      />
+                    </div>
+                  </div>
+                )}
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                    Annulla
+                  </Button>
+                  <Button onClick={handleEditReservation}>
+                    Salva Modifiche
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
         </Tabs>
       </div>
