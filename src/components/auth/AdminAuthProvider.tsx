@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -95,7 +95,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithUsernamePassword = async (username: string, password: string): Promise<boolean> => {
+  const signInWithUsernamePassword = useCallback(async (username: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
       
@@ -153,9 +153,9 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
       await supabase.auth.signOut();
       setUser(null);
@@ -168,16 +168,16 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.error('Error signing out:', error);
       toast.error('Errore durante il logout');
     }
-  };
+  }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     isLoading,
     userRole,
     isAuthenticated: !!user,
     signInWithUsernamePassword,
     signOut
-  };
+  }), [user, isLoading, userRole, signInWithUsernamePassword, signOut]);
 
   return (
     <AdminAuthContext.Provider value={value}>

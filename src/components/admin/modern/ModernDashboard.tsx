@@ -204,16 +204,12 @@ export function ModernDashboard() {
   };
 
   useEffect(() => {
-    console.log('🏠 Dashboard: Effect triggered, authLoading:', authLoading, 'isAuthenticated:', isAuthenticated);
-    
     // Solo se l'autenticazione è completata e l'utente è autenticato
     if (!authLoading && isAuthenticated) {
       console.log('🏠 Dashboard: Starting fetchDashboardData');
       fetchDashboardData();
-    } else {
-      console.log('🏠 Dashboard: Waiting for auth completion...');
     }
-  }, [authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated]); // Rimuoviamo fetchDashboardData dalle dipendenze
 
   // Real-time updates
   useEffect(() => {
