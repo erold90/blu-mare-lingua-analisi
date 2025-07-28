@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: number
+          quote_id: number | null
+          read_at: string | null
+          sent_at: string | null
+          type: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: number
+          quote_id?: number | null
+          read_at?: string | null
+          sent_at?: string | null
+          type: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: number
+          quote_id?: number | null
+          read_at?: string | null
+          sent_at?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_notifications_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quote_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_users: {
         Row: {
           created_at: string | null
@@ -37,72 +75,92 @@ export type Database = {
       }
       apartments: {
         Row: {
-          bedrooms: number | null
-          beds: number | null
-          capacity: number
-          cin: string | null
+          base_price: number | null
+          beds: number
           cleaning_fee: number | null
           created_at: string | null
           description: string | null
-          floor: string | null
-          has_air_conditioning: boolean | null
-          has_terrace: boolean | null
-          has_veranda: boolean | null
-          id: string
-          images: Json | null
-          long_description: string | null
+          features: string[] | null
+          id: number
           name: string
-          price: number | null
-          services: Json | null
-          size: number | null
-          updated_at: string | null
-          view: string | null
         }
         Insert: {
-          bedrooms?: number | null
-          beds?: number | null
-          capacity: number
-          cin?: string | null
+          base_price?: number | null
+          beds: number
           cleaning_fee?: number | null
           created_at?: string | null
           description?: string | null
-          floor?: string | null
-          has_air_conditioning?: boolean | null
-          has_terrace?: boolean | null
-          has_veranda?: boolean | null
-          id: string
-          images?: Json | null
-          long_description?: string | null
+          features?: string[] | null
+          id: number
           name: string
-          price?: number | null
-          services?: Json | null
-          size?: number | null
-          updated_at?: string | null
-          view?: string | null
         }
         Update: {
-          bedrooms?: number | null
-          beds?: number | null
-          capacity?: number
-          cin?: string | null
+          base_price?: number | null
+          beds?: number
           cleaning_fee?: number | null
           created_at?: string | null
           description?: string | null
-          floor?: string | null
-          has_air_conditioning?: boolean | null
-          has_terrace?: boolean | null
-          has_veranda?: boolean | null
-          id?: string
-          images?: Json | null
-          long_description?: string | null
+          features?: string[] | null
+          id?: number
           name?: string
-          price?: number | null
-          services?: Json | null
-          size?: number | null
-          updated_at?: string | null
-          view?: string | null
         }
         Relationships: []
+      }
+      bookings: {
+        Row: {
+          apartment_id: number | null
+          checkin_date: string
+          checkout_date: string
+          created_at: string | null
+          deposit_paid: number | null
+          guest_name: string
+          guests_total: number
+          id: number
+          notes: string | null
+          payment_method: string | null
+          status: string | null
+          total_price: number
+          updated_at: string | null
+        }
+        Insert: {
+          apartment_id?: number | null
+          checkin_date: string
+          checkout_date: string
+          created_at?: string | null
+          deposit_paid?: number | null
+          guest_name: string
+          guests_total: number
+          id?: number
+          notes?: string | null
+          payment_method?: string | null
+          status?: string | null
+          total_price: number
+          updated_at?: string | null
+        }
+        Update: {
+          apartment_id?: number | null
+          checkin_date?: string
+          checkout_date?: string
+          created_at?: string | null
+          deposit_paid?: number | null
+          guest_name?: string
+          guests_total?: number
+          id?: number
+          notes?: string | null
+          payment_method?: string | null
+          status?: string | null
+          total_price?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       date_blocks: {
         Row: {
@@ -203,6 +261,116 @@ export type Database = {
           updated_at?: string | null
           week_start?: string
           year?: number
+        }
+        Relationships: []
+      }
+      pricing_periods: {
+        Row: {
+          apartment_id: number | null
+          created_at: string | null
+          end_date: string
+          id: number
+          is_active: boolean | null
+          season_name: string | null
+          start_date: string
+          updated_at: string | null
+          weekly_price: number
+        }
+        Insert: {
+          apartment_id?: number | null
+          created_at?: string | null
+          end_date: string
+          id?: number
+          is_active?: boolean | null
+          season_name?: string | null
+          start_date: string
+          updated_at?: string | null
+          weekly_price: number
+        }
+        Update: {
+          apartment_id?: number | null
+          created_at?: string | null
+          end_date?: string
+          id?: number
+          is_active?: boolean | null
+          season_name?: string | null
+          start_date?: string
+          updated_at?: string | null
+          weekly_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_periods_apartment_id_fkey"
+            columns: ["apartment_id"]
+            isOneToOne: false
+            referencedRelation: "apartments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quote_requests: {
+        Row: {
+          adults: number
+          base_total: number | null
+          checkin_date: string
+          checkout_date: string
+          children: number
+          children_no_bed: number
+          created_at: string | null
+          discount_total: number | null
+          extras_total: number | null
+          final_total: number | null
+          guest_email: string | null
+          guest_name: string | null
+          guest_phone: string | null
+          has_pet: boolean | null
+          id: number
+          linen_requested: boolean | null
+          pet_apartment: number | null
+          selected_apartments: number[] | null
+          whatsapp_sent: boolean | null
+        }
+        Insert: {
+          adults: number
+          base_total?: number | null
+          checkin_date: string
+          checkout_date: string
+          children: number
+          children_no_bed: number
+          created_at?: string | null
+          discount_total?: number | null
+          extras_total?: number | null
+          final_total?: number | null
+          guest_email?: string | null
+          guest_name?: string | null
+          guest_phone?: string | null
+          has_pet?: boolean | null
+          id?: number
+          linen_requested?: boolean | null
+          pet_apartment?: number | null
+          selected_apartments?: number[] | null
+          whatsapp_sent?: boolean | null
+        }
+        Update: {
+          adults?: number
+          base_total?: number | null
+          checkin_date?: string
+          checkout_date?: string
+          children?: number
+          children_no_bed?: number
+          created_at?: string | null
+          discount_total?: number | null
+          extras_total?: number | null
+          final_total?: number | null
+          guest_email?: string | null
+          guest_name?: string | null
+          guest_phone?: string | null
+          has_pet?: boolean | null
+          id?: number
+          linen_requested?: boolean | null
+          pet_apartment?: number | null
+          selected_apartments?: number[] | null
+          whatsapp_sent?: boolean | null
         }
         Relationships: []
       }
