@@ -14,7 +14,7 @@ export const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   });
   const [error, setError] = useState<string | null>(null);
@@ -28,8 +28,8 @@ export const LoginForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.email || !formData.password) {
-      setError('Inserisci email e password');
+    if (!formData.username || !formData.password) {
+      setError('Inserisci username e password');
       return;
     }
 
@@ -37,8 +37,22 @@ export const LoginForm = () => {
     setError(null);
 
     try {
+      // Prima ottieni l'email dall'username
+      const { data: userLookup, error: lookupError } = await supabase
+        .rpc('login_with_username', {
+          username_input: formData.username,
+          password_input: formData.password
+        });
+
+      if (lookupError || !userLookup || userLookup.length === 0) {
+        throw new Error('Username o password non validi');
+      }
+
+      const userEmail = userLookup[0].email;
+
+      // Usa l'email per il login Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
+        email: userEmail,
         password: formData.password
       });
 
@@ -75,13 +89,13 @@ export const LoginForm = () => {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="Inserisci la tua email"
-                value={formData.email}
+                id="username"
+                name="username"
+                type="text"
+                placeholder="Inserisci il tuo username"
+                value={formData.username}
                 onChange={handleInputChange}
                 disabled={isLoading}
                 className="w-full"
