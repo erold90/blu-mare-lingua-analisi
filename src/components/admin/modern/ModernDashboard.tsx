@@ -117,15 +117,35 @@ export function ModernDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      console.log('Fetching dashboard data...');
       
-      // Carica prenotazioni
-      const { data: reservations, error: reservationsError } = await supabase
+      // Timeout per evitare caricamenti infiniti
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 10000)
+      );
+      
+      // Carica prenotazioni con timeout
+      const dataPromise = supabase
         .from('reservations')
         .select('*')
         .order('created_at', { ascending: false });
+      
+      const { data: reservations, error: reservationsError } = await Promise.race([
+        dataPromise,
+        timeoutPromise
+      ]) as any;
 
       if (reservationsError) {
         console.error('Error fetching reservations:', reservationsError);
+        // Imposta dati di fallback
+        setStats({
+          reservationsToday: 0,
+          occupiedApartments: 0,
+          totalApartments: 4,
+          monthlyRevenue: 0,
+          totalGuests: 0
+        });
+        setRecentActivities([]);
         return;
       }
 
@@ -169,9 +189,19 @@ export function ModernDashboard() {
       })) || [];
 
       setRecentActivities(activities);
+      console.log('Dashboard data loaded successfully');
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      // Imposta dati di fallback in caso di errore
+      setStats({
+        reservationsToday: 0,
+        occupiedApartments: 0,
+        totalApartments: 4,
+        monthlyRevenue: 0,
+        totalGuests: 0
+      });
+      setRecentActivities([]);
     } finally {
       setLoading(false);
     }
