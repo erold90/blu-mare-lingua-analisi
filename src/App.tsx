@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { Toaster } from "@/components/ui/sonner";
 import { Toaster as UIToaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 import AppLayout from "@/components/layout/AppLayout";
 import Index from "@/pages/Index";
 import ApartmentsPage from "@/pages/ApartmentsPage";
@@ -14,6 +14,7 @@ import RequestQuotePage from "@/pages/RequestQuotePage";
 import ReservedAreaPage from "@/pages/ReservedAreaPage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import CookiePolicyPage from "@/pages/CookiePolicyPage";
+import { LoginPage } from "@/pages/LoginPage";
 import NotFound from "@/pages/NotFound";
 
 const AppWithRoutes = () => {
@@ -28,6 +29,7 @@ const AppWithRoutes = () => {
       <Route path="/preventivo" element={<Navigate to="/richiedi-preventivo" replace />} />
       <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicyPage /></AppLayout>} />
       <Route path="/cookie-policy" element={<AppLayout><CookiePolicyPage /></AppLayout>} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/area-riservata/*" element={<ReservedAreaPage />} />
       <Route path="*" element={<AppLayout><NotFound /></AppLayout>} />
     </Routes>
