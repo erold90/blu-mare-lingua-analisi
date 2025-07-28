@@ -161,7 +161,8 @@ class PricingService {
         .select('id')
         .eq('apartment_id', apartmentId)
         .eq('status', 'confirmed')
-        .or(`checkin_date.lt.${checkout},checkout_date.gt.${checkin}`);
+        .lt('checkin_date', checkout)
+        .gt('checkout_date', checkin);
       
       console.log(`📋 Query results per appartamento ${apartmentId}:`, { conflicts, error });
       
