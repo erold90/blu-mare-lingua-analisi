@@ -15,7 +15,7 @@ import AdminReservations from "@/components/admin/AdminReservations";
 import AdminPrices from "@/components/admin/AdminPrices";
 import AdminApartments from "@/components/admin/AdminApartments";
 import AdminSettings from "@/components/admin/AdminSettings";
-import AdminCleaningManagement from "@/components/admin/cleaning/AdminCleaningManagement";
+import { AdminCleaningManagement } from "@/components/admin/cleaning/AdminCleaningManagement";
 import AdminAnalytics from "@/components/admin/AdminAnalytics";
 import { SiteImageManager } from "@/components/admin/images/SiteImageManager";
 

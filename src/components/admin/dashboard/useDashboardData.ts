@@ -1,13 +1,13 @@
 import * as React from "react";
 import { useReservations } from "@/hooks/useReservations";
-import { useSafeCleaningContext } from "@/hooks/cleaning";
+// import { useSafeCleaningContext } from "@/hooks/cleaning"; // Temporaneamente disabilitato
 import { format, addDays, isWithinInterval } from "date-fns";
 import { it } from "date-fns/locale";
 
 export const useDashboardData = () => {
   const { reservations, apartments } = useReservations();
-  const cleaningContext = useSafeCleaningContext();
-  const cleaningTasks = cleaningContext?.cleaningTasks || [];
+  // const cleaningContext = useSafeCleaningContext(); // Temporaneamente disabilitato
+  const cleaningTasks: any[] = []; // Array vuoto temporaneo
   
   // Calcola il numero di prenotazioni future
   const futureReservations = React.useMemo(() => {

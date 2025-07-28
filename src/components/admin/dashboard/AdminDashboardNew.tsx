@@ -1,6 +1,5 @@
 
 import * as React from "react";
-import { CleaningProvider } from "@/hooks/cleaning";
 import { useDashboardData } from "./useDashboardData";
 
 // Import new refactored components
@@ -29,11 +28,7 @@ const AdminDashboardContent = React.memo(() => {
 AdminDashboardContent.displayName = "AdminDashboardContent";
 
 const AdminDashboard = () => {
-  return (
-    <CleaningProvider>
-      <AdminDashboardContent />
-    </CleaningProvider>
-  );
+  return <AdminDashboardContent />;
 };
 
 export default AdminDashboard;
