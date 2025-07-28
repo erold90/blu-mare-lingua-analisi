@@ -218,10 +218,9 @@ class PricingService {
         )
       );
       
-      // Commento temporaneamente il controllo disponibilità per permettere il calcolo prezzi
-      // if (availabilityChecks.some(available => !available)) {
-      //   throw new Error('Uno o più appartamenti non sono disponibili nelle date selezionate');
-      // }
+      if (availabilityChecks.some(available => !available)) {
+        throw new Error('Uno o più appartamenti non sono disponibili nelle date selezionate');
+      }
       
       let baseTotal = 0;
       let discountTotal = 0;
