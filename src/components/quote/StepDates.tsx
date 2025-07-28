@@ -25,29 +25,6 @@ export const StepDates: React.FC<StepDatesProps> = ({
   getNights,
   isValidDay
 }) => {
-  const [selectingCheckIn, setSelectingCheckIn] = useState(true);
-
-  const handleDateSelect = (date: Date | undefined) => {
-    if (!date) return;
-
-    // Correggo il problema timezone usando toLocaleDateString formato ISO
-    const formatDateToISO = (date: Date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    };
-
-    if (selectingCheckIn) {
-      updateFormData({ 
-        checkIn: formatDateToISO(date),
-        checkOut: '' // Reset checkout quando cambia checkin
-      });
-      setSelectingCheckIn(false);
-    } else {
-      updateFormData({ checkOut: formatDateToISO(date) });
-    }
-  };
 
   const canProceed = () => {
     return formData.checkIn && formData.checkOut && getNights() >= 5;
@@ -66,7 +43,7 @@ export const StepDates: React.FC<StepDatesProps> = ({
     if (date < new Date()) return true;
     
     // Se stiamo selezionando checkout, deve essere dopo checkin
-    if (!selectingCheckIn && checkInDate && date <= checkInDate) return true;
+    // Per il range selector, non abbiamo più questo controllo
     
     return false;
   };
@@ -87,40 +64,59 @@ export const StepDates: React.FC<StepDatesProps> = ({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <CalendarIcon className="h-5 w-5" />
-              {selectingCheckIn ? 'Seleziona Check-in' : 'Seleziona Check-out'}
+              Seleziona date soggiorno
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <Calendar
-                mode="single"
-                selected={selectingCheckIn ? checkInDate : checkOutDate}
-                onSelect={handleDateSelect}
+                mode="range"
+                selected={
+                  formData.checkIn && formData.checkOut 
+                    ? { from: new Date(formData.checkIn), to: new Date(formData.checkOut) }
+                    : formData.checkIn 
+                    ? { from: new Date(formData.checkIn), to: undefined }
+                    : undefined
+                }
+                onSelect={(range) => {
+                  if (!range?.from) return;
+                  
+                  const formatDateToISO = (date: Date) => {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                  };
+
+                  const checkInISO = formatDateToISO(range.from);
+                  const checkOutISO = range.to ? formatDateToISO(range.to) : '';
+
+                  updateFormData({ 
+                    checkIn: checkInISO,
+                    checkOut: checkOutISO
+                  });
+                }}
                 disabled={isDateDisabled}
                 locale={it}
                 className="rounded-md border pointer-events-auto"
                 showOutsideDays={false}
               />
               
-              <div className="text-center space-y-2">
-                <p className="text-sm font-medium">
-                  {selectingCheckIn 
-                    ? "🗓️ Scegli la data di arrivo (check-in)" 
-                    : "🗓️ Scegli la data di partenza (check-out)"
-                  }
-                </p>
-                {formData.checkIn && selectingCheckIn === false && (
-                  <div className="p-2 bg-green-50 border border-green-200 rounded-md">
-                    <p className="text-sm text-green-700">
-                      ✅ Check-in: {format(new Date(formData.checkIn), 'dd MMM yyyy', { locale: it })}
-                    </p>
-                    <p className="text-xs text-green-600">Ora seleziona la data di check-out</p>
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Giorni disponibili: Sabato, Domenica, Lunedì
-                </p>
-              </div>
+               <div className="text-center space-y-2">
+                 <p className="text-sm font-medium">
+                   🗓️ Seleziona il periodo di soggiorno
+                 </p>
+                 {formData.checkIn && formData.checkOut && (
+                   <div className="p-2 bg-green-50 border border-green-200 rounded-md">
+                     <p className="text-sm text-green-700">
+                       ✅ Periodo selezionato: {format(new Date(formData.checkIn), 'dd MMM', { locale: it })} - {format(new Date(formData.checkOut), 'dd MMM yyyy', { locale: it })}
+                     </p>
+                   </div>
+                 )}
+                 <p className="text-xs text-muted-foreground">
+                   Giorni disponibili: Sabato, Domenica, Lunedì
+                 </p>
+               </div>
             </div>
           </CardContent>
         </Card>
