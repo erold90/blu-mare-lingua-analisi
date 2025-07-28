@@ -1,0 +1,120 @@
+import { useState, useCallback } from 'react';
+import { PricingService, QuoteParams, QuoteResult } from '@/services/supabase/dynamicPricingService';
+import { toast } from 'sonner';
+
+export const useDynamicQuote = () => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [quoteResult, setQuoteResult] = useState<QuoteResult | null>(null);
+
+  const calculateQuote = useCallback(async (params: QuoteParams): Promise<QuoteResult | null> => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Calculating quote with params:', params);
+      
+      const result = await PricingService.calculateQuote(params);
+      setQuoteResult(result);
+      
+      return result;
+      
+    } catch (err: any) {
+      const errorMessage = err.message || 'Errore nel calcolo del preventivo';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const checkAvailability = useCallback(async (
+    apartmentId: number, 
+    checkin: string, 
+    checkout: string
+  ): Promise<boolean> => {
+    try {
+      return await PricingService.checkAvailability(apartmentId, checkin, checkout);
+    } catch (err: any) {
+      console.error('Error checking availability:', err);
+      return false;
+    }
+  }, []);
+
+  const checkMultipleAvailability = useCallback(async (
+    apartmentIds: number[], 
+    checkin: string, 
+    checkout: string
+  ): Promise<Record<number, boolean>> => {
+    try {
+      const results = await Promise.all(
+        apartmentIds.map(async id => ({
+          id,
+          available: await PricingService.checkAvailability(id, checkin, checkout)
+        }))
+      );
+      
+      return results.reduce((acc, { id, available }) => {
+        acc[id] = available;
+        return acc;
+      }, {} as Record<number, boolean>);
+      
+    } catch (err: any) {
+      console.error('Error checking multiple availability:', err);
+      return {};
+    }
+  }, []);
+
+  const saveQuote = useCallback(async (
+    params: QuoteParams & {
+      guestName?: string;
+      guestEmail?: string;
+      guestPhone?: string;
+    }
+  ): Promise<number | null> => {
+    if (!quoteResult) {
+      toast.error('Nessun preventivo da salvare');
+      return null;
+    }
+
+    try {
+      const quoteId = await PricingService.saveQuoteRequest(params, quoteResult);
+      toast.success('Preventivo salvato con successo');
+      return quoteId;
+    } catch (err: any) {
+      toast.error('Errore nel salvataggio del preventivo');
+      return null;
+    }
+  }, [quoteResult]);
+
+  const getPriceForPeriod = useCallback(async (
+    apartmentId: number,
+    checkin: string,
+    checkout: string
+  ): Promise<number | null> => {
+    try {
+      return await PricingService.getPriceForPeriod(apartmentId, checkin, checkout);
+    } catch (err: any) {
+      console.error('Error getting price for period:', err);
+      return null;
+    }
+  }, []);
+
+  const resetQuote = useCallback(() => {
+    setQuoteResult(null);
+    setError(null);
+  }, []);
+
+  return {
+    loading,
+    error,
+    quoteResult,
+    calculateQuote,
+    checkAvailability,
+    checkMultipleAvailability,
+    saveQuote,
+    getPriceForPeriod,
+    resetQuote
+  };
+};

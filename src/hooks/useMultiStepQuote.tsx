@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useDynamicQuote } from './useDynamicQuote';
 
 export interface QuoteFormData {
   // Step 1: Ospiti
@@ -26,61 +27,25 @@ export interface QuoteFormData {
   phone: string;
 }
 
-const prenotazioni = [
+// Prenotazioni esistenti ora vengono caricate dal database
+const prenotazioniStatiche = [
   // Appartamento 1
-  { apt: "appartamento-1", checkin: '2025-07-12', checkout: '2025-07-26', ospite: 'Stanila Livia' },
-  { apt: "appartamento-1", checkin: '2025-08-02', checkout: '2025-08-23', ospite: 'Angela Monda' },
+  { apt: "1", checkin: '2025-07-12', checkout: '2025-07-26', ospite: 'Stanila Livia' },
+  { apt: "1", checkin: '2025-08-02', checkout: '2025-08-23', ospite: 'Angela Monda' },
   
   // Appartamento 2  
-  { apt: "appartamento-2", checkin: '2025-06-21', checkout: '2025-06-28', ospite: 'Davidescu Magdalena' },
-  { apt: "appartamento-2", checkin: '2025-08-16', checkout: '2025-08-23', ospite: 'Ida Manasterliu' },
+  { apt: "2", checkin: '2025-06-21', checkout: '2025-06-28', ospite: 'Davidescu Magdalena' },
+  { apt: "2", checkin: '2025-08-16', checkout: '2025-08-23', ospite: 'Ida Manasterliu' },
   
   // Appartamento 3
-  { apt: "appartamento-3", checkin: '2025-07-26', checkout: '2025-08-09', ospite: 'Dechambre Manon' },
-  { apt: "appartamento-3", checkin: '2025-08-16', checkout: '2025-08-23', ospite: 'Elisa Valdo' },
+  { apt: "3", checkin: '2025-07-26', checkout: '2025-08-09', ospite: 'Dechambre Manon' },
+  { apt: "3", checkin: '2025-08-16', checkout: '2025-08-23', ospite: 'Elisa Valdo' },
   
   // Appartamento 4
-  { apt: "appartamento-4", checkin: '2025-07-12', checkout: '2025-07-19', ospite: 'Metta Laura' },
-  { apt: "appartamento-4", checkin: '2025-08-02', checkout: '2025-08-09', ospite: 'Nestri Valeria' },
-  { apt: "appartamento-4", checkin: '2025-08-09', checkout: '2025-08-23', ospite: 'Salvatore Somma' }
+  { apt: "4", checkin: '2025-07-12', checkout: '2025-07-19', ospite: 'Metta Laura' },
+  { apt: "4", checkin: '2025-08-02', checkout: '2025-08-09', ospite: 'Nestri Valeria' },
+  { apt: "4", checkin: '2025-08-09', checkout: '2025-08-23', ospite: 'Salvatore Somma' }
 ];
-
-const prezziSettimanali = {
-  "appartamento-1": {
-    "2025-06-07_2025-06-27": 400,
-    "2025-06-28_2025-07-04": 400,
-    "2025-07-05_2025-07-11": 475,
-    "2025-07-26_2025-08-01": 750,
-    "2025-08-23_2025-09-05": 750,
-    "2025-09-06_2025-10-03": 500
-  },
-  "appartamento-2": {
-    "2025-06-07_2025-06-20": 500,
-    "2025-06-28_2025-07-04": 500,
-    "2025-07-05_2025-07-25": 575,
-    "2025-07-26_2025-08-08": 850,
-    "2025-08-09_2025-08-15": 1250,
-    "2025-08-23_2025-09-05": 850,
-    "2025-09-06_2025-10-03": 600
-  },
-  "appartamento-3": {
-    "2025-06-07_2025-06-27": 350,
-    "2025-06-28_2025-07-04": 350,
-    "2025-07-05_2025-07-25": 425,
-    "2025-08-09_2025-08-15": 1075,
-    "2025-08-23_2025-09-05": 675,
-    "2025-09-06_2025-10-03": 425
-  },
-  "appartamento-4": {
-    "2025-06-07_2025-06-27": 375,
-    "2025-06-28_2025-07-04": 375,
-    "2025-07-05_2025-07-11": 450,
-    "2025-07-19_2025-07-25": 450,
-    "2025-07-26_2025-08-01": 700,
-    "2025-08-23_2025-09-05": 700,
-    "2025-09-06_2025-10-03": 450
-  }
-};
 
 export const useMultiStepQuote = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -97,6 +62,16 @@ export const useMultiStepQuote = () => {
     email: '',
     phone: ''
   });
+
+  // Hook per gestione dinamica prezzi
+  const { 
+    calculateQuote, 
+    checkAvailability, 
+    checkMultipleAvailability,
+    quoteResult,
+    loading: priceLoading,
+    saveQuote
+  } = useDynamicQuote();
 
   const updateFormData = useCallback((updates: Partial<QuoteFormData>) => {
     setFormData(prev => ({ ...prev, ...updates }));
@@ -141,38 +116,25 @@ export const useMultiStepQuote = () => {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }, [formData.checkIn, formData.checkOut]);
 
-  const isApartmentAvailable = useCallback((apartmentId: string, checkIn: string, checkOut: string) => {
+  const isApartmentAvailable = useCallback(async (apartmentId: string, checkIn: string, checkOut: string) => {
     if (!checkIn || !checkOut) return true;
     
-    const startDate = new Date(checkIn);
-    const endDate = new Date(checkOut);
-    
-    return !prenotazioni.some(prenotazione => {
-      if (prenotazione.apt !== apartmentId) return false;
-      
-      const prenotazioneStart = new Date(prenotazione.checkin);
-      const prenotazioneEnd = new Date(prenotazione.checkout);
-      
-      // Check for overlap
-      return (startDate < prenotazioneEnd && endDate > prenotazioneStart);
-    });
-  }, []);
+    try {
+      // Converte ID appartamento da stringa a numero
+      const numericId = parseInt(apartmentId);
+      return await checkAvailability(numericId, checkIn, checkOut);
+    } catch (error) {
+      console.error('Error checking availability:', error);
+      return false;
+    }
+  }, [checkAvailability]);
 
   const isValidDay = useCallback((date: Date) => {
     const day = date.getDay(); // 0 = domenica, 6 = sabato, 1 = lunedì
     return day === 0 || day === 1 || day === 6; // sabato, domenica, lunedì
   }, []);
 
-  const calcolaSconto = useCallback((postiOccupati: number, postiTotali: number) => {
-    const percentualeOccupazione = postiOccupati / postiTotali;
-    
-    if (percentualeOccupazione >= 1.0) return 0;      // 100% = prezzo pieno
-    if (percentualeOccupazione >= 0.75) return 12;    // 75% = -12%
-    if (percentualeOccupazione >= 0.50) return 27;    // 50% = -27%
-    return 40;                                        // <50% = -40%
-  }, []);
-
-  const calculatePrice = useCallback(() => {
+  const calculatePrice = useCallback(async () => {
     if (!formData.selectedApartments.length || !formData.checkIn || !formData.checkOut) {
       return { 
         apartmentPrices: [], 
@@ -185,84 +147,77 @@ export const useMultiStepQuote = () => {
       };
     }
 
-    const nights = getNights();
-    const bedsNeeded = getBedsNeeded();
-    let apartmentPrices: any[] = [];
-    let servicesTotal = 0;
+    try {
+      const params = {
+        apartments: formData.selectedApartments.map(id => parseInt(id)),
+        checkin: formData.checkIn,
+        checkout: formData.checkOut,
+        adults: formData.adults,
+        children: formData.children,
+        childrenNoBed: formData.childrenWithParents.filter(Boolean).length,
+        hasPet: formData.hasPets,
+        petApartment: formData.petApartment ? parseInt(formData.petApartment) : undefined,
+        needsLinen: formData.requestLinen
+      };
 
-    // Calcola prezzi appartamenti
-    formData.selectedApartments.forEach(aptId => {
-      const apartment = [
-        { id: "appartamento-1", capacity: 6, name: "Appartamento 1" },
-        { id: "appartamento-2", capacity: 8, name: "Appartamento 2" },
-        { id: "appartamento-3", capacity: 4, name: "Appartamento 3" },
-        { id: "appartamento-4", capacity: 5, name: "Appartamento 4" }
-      ].find(apt => apt.id === aptId);
-
-      if (!apartment) return;
-
-      // Find matching price period
-      const prezzi = prezziSettimanali[aptId as keyof typeof prezziSettimanali];
-      let basePrice = 0;
-
-      for (const [period, price] of Object.entries(prezzi)) {
-        const [startStr, endStr] = period.split('_');
-        const periodStart = new Date(startStr);
-        const periodEnd = new Date(endStr);
-        const checkInDate = new Date(formData.checkIn);
-        
-        if (checkInDate >= periodStart && checkInDate <= periodEnd) {
-          basePrice = price * nights;
-          break;
-        }
+      const result = await calculateQuote(params);
+      
+      if (result) {
+        return {
+          apartmentPrices: result.apartmentDetails.map(detail => ({
+            apartmentId: detail.apartmentId.toString(),
+            name: detail.apartment.name,
+            capacity: detail.apartment.beds,
+            basePrice: detail.basePrice,
+            occupation: `${detail.occupiedBeds}/${detail.apartment.beds}`,
+            occupationPercent: Math.round((detail.occupiedBeds / detail.apartment.beds) * 100),
+            discount: detail.discountPercent,
+            discountAmount: detail.discountAmount,
+            finalPrice: detail.finalPrice
+          })),
+          servicesTotal: result.extrasTotal,
+          subtotal: result.baseTotal - result.discountTotal + result.extrasTotal,
+          finalDiscount: result.discountTotal,
+          total: result.finalTotal,
+          deposit: result.deposit,
+          balance: result.balance
+        };
       }
-
-      // Calcola sconto occupazione
-      const discount = calcolaSconto(bedsNeeded, apartment.capacity);
-      const discountAmount = (basePrice * discount) / 100;
-      const finalPrice = basePrice - discountAmount;
-
-      apartmentPrices.push({
-        apartmentId: aptId,
-        name: apartment.name,
-        capacity: apartment.capacity,
-        basePrice,
-        occupation: `${bedsNeeded}/${apartment.capacity}`,
-        occupationPercent: Math.round((bedsNeeded / apartment.capacity) * 100),
-        discount,
-        discountAmount,
-        finalPrice
-      });
-    });
-
-    // Servizi aggiuntivi
-    if (formData.hasPets) {
-      servicesTotal += 50;
+    } catch (error) {
+      console.error('Error calculating price:', error);
     }
 
-    if (formData.requestLinen) {
-      servicesTotal += 15 * bedsNeeded;
-    }
-
-    const subtotal = apartmentPrices.reduce((sum, apt) => sum + apt.finalPrice, 0) + servicesTotal;
-    
-    // Sconto finale (multiplo di €50)
-    const finalDiscount = Math.floor(subtotal / 50) * 2; // €2 per ogni €50
-    const total = subtotal - finalDiscount;
-    
-    const deposit = Math.round(total * 0.3); // 30%
-    const balance = total - deposit;
-
-    return {
-      apartmentPrices,
-      servicesTotal,
-      subtotal,
-      finalDiscount,
-      total,
-      deposit,
-      balance
+    return { 
+      apartmentPrices: [], 
+      servicesTotal: 0, 
+      subtotal: 0, 
+      finalDiscount: 0, 
+      total: 0,
+      deposit: 0,
+      balance: 0
     };
-  }, [formData, getNights, getBedsNeeded, calcolaSconto]);
+  }, [formData, calculateQuote]);
+
+  const saveQuoteToDatabase = useCallback(async () => {
+    if (!quoteResult) return null;
+
+    const params = {
+      apartments: formData.selectedApartments.map(id => parseInt(id)),
+      checkin: formData.checkIn,
+      checkout: formData.checkOut,
+      adults: formData.adults,
+      children: formData.children,
+      childrenNoBed: formData.childrenWithParents.filter(Boolean).length,
+      hasPet: formData.hasPets,
+      petApartment: formData.petApartment ? parseInt(formData.petApartment) : undefined,
+      needsLinen: formData.requestLinen,
+      guestName: formData.guestName,
+      guestEmail: formData.email,
+      guestPhone: formData.phone
+    };
+
+    return await saveQuote(params);
+  }, [formData, quoteResult, saveQuote]);
 
   return {
     currentStep,
@@ -276,6 +231,8 @@ export const useMultiStepQuote = () => {
     isApartmentAvailable,
     isValidDay,
     calculatePrice,
-    prenotazioni
+    saveQuoteToDatabase,
+    priceLoading,
+    prenotazioni: prenotazioniStatiche
   };
 };

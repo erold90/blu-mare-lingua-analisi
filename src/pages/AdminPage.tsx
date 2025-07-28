@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { PricingManagement } from '@/components/admin/PricingManagement';
+import { DynamicPricingDashboard } from '@/components/admin/DynamicPricingDashboard';
 
 const LOGIN_CREDENTIALS = {
   username: 'admin',
@@ -29,6 +30,7 @@ export default function AdminPage() {
   const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
 
+  const [activeTab, setActiveTab] = useState('pricing-dynamic');
   const { reservations, loading, addReservation, updateReservation, deleteReservation, fetchReservations } = useReservations();
 
   const handleLogin = (e: React.FormEvent) => {
@@ -583,7 +585,23 @@ export default function AdminPage() {
           </TabsContent>
 
           <TabsContent value="pricing" className="space-y-6">
-            <PricingManagement />
+            <div className="flex gap-4 mb-6">
+              <Button 
+                variant={activeTab === 'pricing-dynamic' ? 'default' : 'outline'}
+                onClick={() => setActiveTab('pricing-dynamic')}
+              >
+                Gestione Prezzi Dinamici
+              </Button>
+              <Button 
+                variant={activeTab === 'pricing' ? 'default' : 'outline'}
+                onClick={() => setActiveTab('pricing')}
+              >
+                Gestione Prezzi Settimanali
+              </Button>
+            </div>
+
+            {activeTab === 'pricing-dynamic' && <DynamicPricingDashboard />}
+            {activeTab === 'pricing' && <PricingManagement />}
           </TabsContent>
         </Tabs>
       </div>

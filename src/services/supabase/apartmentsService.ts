@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 export const apartmentsService = {
@@ -12,7 +11,7 @@ export const apartmentsService = {
     return data;
   },
 
-  getById: async (id: string) => {
+  getById: async (id: number) => {
     const { data, error } = await supabase
       .from('apartments')
       .select('*')
@@ -23,7 +22,7 @@ export const apartmentsService = {
     return data;
   },
 
-  update: async (id: string, updates: any) => {
+  update: async (id: number, updates: any) => {
     const { data, error } = await supabase
       .from('apartments')
       .update(updates)

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Home, Users, MapPin, Eye, Bed, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Home, Users, MapPin, Eye, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 
 interface StepApartmentsProps {
@@ -12,13 +12,13 @@ interface StepApartmentsProps {
   onNext: () => void;
   onPrev: () => void;
   getBedsNeeded: () => number;
-  isApartmentAvailable: (apartmentId: string, checkIn: string, checkOut: string) => boolean;
+  isApartmentAvailable: (apartmentId: string, checkIn: string, checkOut: string) => Promise<boolean>;
   prenotazioni: any[];
 }
 
 const apartments = [
   {
-    id: "appartamento-1",
+    id: "1",
     name: "Appartamento 1",
     capacity: 6,
     floor: "piano terra",
@@ -27,7 +27,7 @@ const apartments = [
     image: "/images/apartments/appartamento-1/image1.jpg"
   },
   {
-    id: "appartamento-2", 
+    id: "2", 
     name: "Appartamento 2",
     capacity: 8,
     floor: "primo piano",
@@ -36,7 +36,7 @@ const apartments = [
     image: "/images/apartments/appartamento-2/image1.jpg"
   },
   {
-    id: "appartamento-3",
+    id: "3",
     name: "Appartamento 3", 
     capacity: 4,
     floor: "piano terra",
@@ -45,7 +45,7 @@ const apartments = [
     image: "/images/apartments/appartamento-3/image1.jpg"
   },
   {
-    id: "appartamento-4",
+    id: "4",
     name: "Appartamento 4",
     capacity: 5,
     floor: "primo piano", 
@@ -61,7 +61,6 @@ export const StepApartments: React.FC<StepApartmentsProps> = ({
   onNext,
   onPrev,
   getBedsNeeded,
-  isApartmentAvailable,
   prenotazioni
 }) => {
   const bedsNeeded = getBedsNeeded();
@@ -142,7 +141,15 @@ export const StepApartments: React.FC<StepApartmentsProps> = ({
       {/* Apartments Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
         {apartments.map(apartment => {
-          const isAvailable = isApartmentAvailable(apartment.id, formData.checkIn, formData.checkOut);
+          // Verifica disponibilità usando la logica statica per ora
+          const isAvailable = !prenotazioni.some(p => 
+            p.apt === apartment.id && 
+            formData.checkIn && 
+            formData.checkOut &&
+            (new Date(formData.checkIn) < new Date(p.checkout) && 
+             new Date(formData.checkOut) > new Date(p.checkin))
+          );
+          
           const isSelected = formData.selectedApartments.includes(apartment.id);
           const bookingInfo = getBookingInfo(apartment.id);
 
