@@ -101,22 +101,31 @@ export const SupabasePricesProvider: React.FC<{ children: React.ReactNode }> = (
   }, []);
 
   useEffect(() => {
-    loadPrices();
-  }, [loadPrices]);
+    let mounted = true;
+    const initializePrices = async () => {
+      if (mounted) {
+        await loadPrices();
+      }
+    };
+    initializePrices();
+    return () => { mounted = false; };
+  }, []); // Solo al mount iniziale
+
+  const contextValue = React.useMemo(() => ({
+    prices,
+    isLoading,
+    updatePrice,
+    getPriceForWeek,
+    getWeeksForYear,
+    availableYears,
+    selectedYear,
+    setSelectedYear,
+    resetPrices,
+    loadPrices
+  }), [prices, isLoading, updatePrice, getPriceForWeek, selectedYear, resetPrices, loadPrices]);
 
   return (
-    <SupabasePricesContext.Provider value={{
-      prices,
-      isLoading,
-      updatePrice,
-      getPriceForWeek,
-      getWeeksForYear,
-      availableYears,
-      selectedYear,
-      setSelectedYear,
-      resetPrices,
-      loadPrices
-    }}>
+    <SupabasePricesContext.Provider value={contextValue}>
       {children}
     </SupabasePricesContext.Provider>
   );

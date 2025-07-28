@@ -7,7 +7,7 @@ import { it } from "date-fns/locale";
 export const useDashboardData = () => {
   const { reservations, apartments } = useReservations();
   // const cleaningContext = useSafeCleaningContext(); // Temporaneamente disabilitato
-  const cleaningTasks: any[] = []; // Array vuoto temporaneo
+  const cleaningTasks: any[] = React.useMemo(() => [], []); // Array vuoto temporaneo memoizzato
   
   // Calcola il numero di prenotazioni future
   const futureReservations = React.useMemo(() => {
@@ -181,7 +181,7 @@ export const useDashboardData = () => {
     };
   }, [cleaningTasks]);
   
-  return {
+  return React.useMemo(() => ({
     futureReservations,
     pendingCleanings,
     totalGuests,
@@ -194,5 +194,5 @@ export const useDashboardData = () => {
     upcomingMovements,
     cleaningStats,
     apartments
-  };
+  }), [futureReservations, pendingCleanings, totalGuests, totalRevenue, summerOccupancy, summerMonthlyRevenue, reservationsByMonth, guestDistribution, activeReservations, upcomingMovements, cleaningStats, apartments]);
 };
