@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,11 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  ArrowRight
+  ArrowRight,
+  Loader2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const StatCard = ({ 
   title, 
@@ -101,6 +103,125 @@ const QuickAction = ({
 };
 
 export function ModernDashboard() {
+  const [stats, setStats] = useState({
+    reservationsToday: 0,
+    occupiedApartments: 0,
+    totalApartments: 4,
+    monthlyRevenue: 0,
+    totalGuests: 0
+  });
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Carica le statistiche dal database
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Carica prenotazioni
+      const { data: reservations, error: reservationsError } = await supabase
+        .from('reservations')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (reservationsError) {
+        console.error('Error fetching reservations:', reservationsError);
+        return;
+      }
+
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      const currentYear = today.getFullYear();
+
+      // Calcola statistiche
+      const reservationsToday = reservations?.filter(r => {
+        const startDate = new Date(r.start_date);
+        const endDate = new Date(r.end_date);
+        return startDate <= today && endDate >= today;
+      }).length || 0;
+
+      const monthlyReservations = reservations?.filter(r => {
+        const startDate = new Date(r.start_date);
+        return startDate.getMonth() === currentMonth && startDate.getFullYear() === currentYear;
+      }) || [];
+
+      const monthlyRevenue = monthlyReservations.reduce((sum, r) => sum + (r.final_price || 0), 0);
+
+      const currentGuests = reservations?.filter(r => {
+        const startDate = new Date(r.start_date);
+        const endDate = new Date(r.end_date);
+        return startDate <= today && endDate >= today;
+      }).reduce((sum, r) => sum + (r.adults || 0) + (r.children || 0), 0) || 0;
+
+      setStats({
+        reservationsToday,
+        occupiedApartments: reservationsToday,
+        totalApartments: 4,
+        monthlyRevenue,
+        totalGuests: currentGuests
+      });
+
+      // Attività recenti (ultime 5 prenotazioni)
+      const activities = reservations?.slice(0, 4).map(r => ({
+        action: `Prenotazione di ${r.guest_name}`,
+        time: getTimeAgo(r.created_at),
+        status: 'info'
+      })) || [];
+
+      setRecentActivities(activities);
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 0) {
+      return `${diffDays} ${diffDays === 1 ? 'giorno' : 'giorni'} fa`;
+    } else if (diffHours > 0) {
+      return `${diffHours} ${diffHours === 1 ? 'ora' : 'ore'} fa`;
+    } else {
+      return 'Pochi minuti fa';
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  // Real-time updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('dashboard-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'reservations' },
+        () => {
+          fetchDashboardData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span className="ml-2 text-slate-600">Caricamento dashboard...</span>
+      </div>
+    );
+  }
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -120,32 +241,29 @@ export function ModernDashboard() {
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
-          title="Prenotazioni Oggi"
-          value="12"
-          description="Check-in e check-out"
+          title="Prenotazioni Attive"
+          value={stats.reservationsToday.toString()}
+          description="In corso oggi"
           icon={Calendar}
-          trend="+8% rispetto a ieri"
           color="blue"
         />
         <StatCard
           title="Appartamenti Occupati"
-          value="3/4"
-          description="Tasso di occupazione 75%"
+          value={`${stats.occupiedApartments}/${stats.totalApartments}`}
+          description={`Tasso di occupazione ${Math.round((stats.occupiedApartments / stats.totalApartments) * 100)}%`}
           icon={Building}
-          trend="+15% questo mese"
           color="green"
         />
         <StatCard
           title="Fatturato Mensile"
-          value="€12,450"
-          description="Luglio 2025"
+          value={`€${stats.monthlyRevenue.toLocaleString()}`}
+          description={`${new Date().toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })}`}
           icon={Euro}
-          trend="+22% rispetto al mese scorso"
           color="purple"
         />
         <StatCard
           title="Ospiti Totali"
-          value="28"
+          value={stats.totalGuests.toString()}
           description="In struttura oggi"
           icon={Users}
           color="amber"
@@ -162,12 +280,7 @@ export function ModernDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {[
-                  { action: "Nuova prenotazione confermata", time: "2 minuti fa", status: "success" },
-                  { action: "Check-out completato - App. 2", time: "15 minuti fa", status: "info" },
-                  { action: "Pulizia programmata - App. 1", time: "1 ora fa", status: "warning" },
-                  { action: "Nuovo preventivo richiesto", time: "2 ore fa", status: "info" },
-                ].map((item, index) => (
+                {recentActivities.length > 0 ? recentActivities.map((item, index) => (
                   <div key={index} className="flex items-center gap-3 py-2">
                     <div className={`h-2 w-2 rounded-full ${
                       item.status === 'success' ? 'bg-green-500' :
@@ -178,7 +291,9 @@ export function ModernDashboard() {
                       <p className="text-xs text-slate-500">{item.time}</p>
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-sm text-slate-500">Nessuna attività recente</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -228,10 +343,10 @@ export function ModernDashboard() {
         <CardContent>
           <div className="space-y-2">
             <p className="text-sm text-amber-800">
-              • 2 appartamenti necessitano di pulizie programmate per domani
+              • {stats.reservationsToday} prenotazioni attive oggi
             </p>
             <p className="text-sm text-amber-800">
-              • Check-in previsto alle 15:00 per Appartamento 3
+              • {stats.totalGuests} ospiti totali in struttura
             </p>
           </div>
         </CardContent>

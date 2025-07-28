@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,8 @@ import {
   Building,
   Clock,
   Phone,
-  Mail
+  Mail,
+  Loader2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -28,64 +29,128 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-const mockReservations = [
-  {
-    id: "1",
-    guestName: "Marco Rossi",
-    apartment: "Appartamento 1",
-    checkIn: "2025-07-28",
-    checkOut: "2025-08-02",
-    guests: 4,
-    status: "confirmed",
-    phone: "+39 333 1234567",
-    email: "marco.rossi@email.com",
-    totalPrice: 1200
-  },
-  {
-    id: "2", 
-    guestName: "Laura Bianchi",
-    apartment: "Appartamento 3",
-    checkIn: "2025-07-30",
-    checkOut: "2025-08-05",
-    guests: 2,
-    status: "pending",
-    phone: "+39 347 9876543",
-    email: "laura.bianchi@email.com",
-    totalPrice: 900
-  },
-  {
-    id: "3",
-    guestName: "Andrea Verdi",
-    apartment: "Appartamento 2",
-    checkIn: "2025-08-01",
-    checkOut: "2025-08-07",
-    guests: 6,
-    status: "checkedIn",
-    phone: "+39 339 5551234",
-    email: "andrea.verdi@email.com",
-    totalPrice: 1800
-  }
-];
+interface Reservation {
+  id: string;
+  guest_name: string;
+  apartment_ids: any; // Json type from Supabase
+  start_date: string;
+  end_date: string;
+  adults: number;
+  children: number;
+  payment_status: string;
+  final_price: number;
+  has_pets: boolean;
+  linen_option: string;
+  notes?: string;
+  created_at: string;
+}
 
 const statusConfig = {
-  confirmed: { label: "Confermata", color: "bg-blue-50 text-blue-700 border-blue-200" },
-  pending: { label: "In Attesa", color: "bg-amber-50 text-amber-700 border-amber-200" },
-  checkedIn: { label: "Check-in", color: "bg-green-50 text-green-700 border-green-200" },
-  checkedOut: { label: "Check-out", color: "bg-slate-50 text-slate-700 border-slate-200" },
-  cancelled: { label: "Cancellata", color: "bg-red-50 text-red-700 border-red-200" }
+  notPaid: { label: "Non Pagata", color: "bg-red-50 text-red-700 border-red-200" },
+  deposit: { label: "Acconto", color: "bg-amber-50 text-amber-700 border-amber-200" },
+  paid: { label: "Pagata", color: "bg-green-50 text-green-700 border-green-200" },
+  cancelled: { label: "Cancellata", color: "bg-slate-50 text-slate-700 border-slate-200" }
+};
+
+const getReservationStatus = (reservation: Reservation) => {
+  const today = new Date();
+  const startDate = new Date(reservation.start_date);
+  const endDate = new Date(reservation.end_date);
+  
+  if (today >= startDate && today <= endDate) {
+    return "checkedIn";
+  } else if (today > endDate) {
+    return "checkedOut";  
+  } else {
+    return reservation.payment_status;
+  }
+};
+
+const getApartmentNames = (apartmentIds: any) => {
+  const apartmentMap: Record<string, string> = {
+    'appartamento-1': 'Appartamento 1',
+    'appartamento-2': 'Appartamento 2', 
+    'appartamento-3': 'Appartamento 3',
+    'appartamento-4': 'Appartamento 4'
+  };
+  
+  // Gestisce sia array che stringhe da Supabase
+  const ids = Array.isArray(apartmentIds) ? apartmentIds : [apartmentIds];
+  return ids.map(id => apartmentMap[id] || id).join(', ');
 };
 
 export function ModernReservations() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredReservations = mockReservations.filter(reservation => {
-    const matchesSearch = reservation.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         reservation.apartment.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || reservation.status === statusFilter;
+  // Carica le prenotazioni da Supabase
+  const fetchReservations = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('reservations')
+        .select('*')
+        .order('start_date', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching reservations:', error);
+        toast.error('Errore nel caricamento delle prenotazioni');
+        return;
+      }
+
+      setReservations(data || []);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Errore nel caricamento delle prenotazioni');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Effetto per caricare i dati all'avvio
+  useEffect(() => {
+    fetchReservations();
+  }, []);
+
+  // Real-time updates per le prenotazioni
+  useEffect(() => {
+    const channel = supabase
+      .channel('reservations-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'reservations' },
+        (payload) => {
+          console.log('Reservation change detected:', payload);
+          fetchReservations(); // Ricarica i dati quando ci sono cambiamenti
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const filteredReservations = reservations.filter(reservation => {
+    const matchesSearch = reservation.guest_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         getApartmentNames(reservation.apartment_ids).toLowerCase().includes(searchTerm.toLowerCase());
+    const reservationStatus = getReservationStatus(reservation);
+    const matchesStatus = statusFilter === "all" || reservationStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <span className="ml-2 text-slate-600">Caricamento prenotazioni...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -114,27 +179,32 @@ export function ModernReservations() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Stato" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutti gli stati</SelectItem>
-                <SelectItem value="confirmed">Confermata</SelectItem>
-                <SelectItem value="pending">In Attesa</SelectItem>
-                <SelectItem value="checkedIn">Check-in</SelectItem>
-                <SelectItem value="checkedOut">Check-out</SelectItem>
-                <SelectItem value="cancelled">Cancellata</SelectItem>
-              </SelectContent>
-            </Select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-48">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Stato" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tutti gli stati</SelectItem>
+                  <SelectItem value="notPaid">Non Pagata</SelectItem>
+                  <SelectItem value="deposit">Acconto</SelectItem>
+                  <SelectItem value="paid">Pagata</SelectItem>
+                  <SelectItem value="checkedIn">Check-in</SelectItem>
+                  <SelectItem value="checkedOut">Check-out</SelectItem>
+                  <SelectItem value="cancelled">Cancellata</SelectItem>
+                </SelectContent>
+              </Select>
           </div>
         </CardContent>
       </Card>
 
       {/* Reservations List */}
       <div className="grid gap-4">
-        {filteredReservations.map((reservation) => (
+        {filteredReservations.map((reservation) => {
+          const reservationStatus = getReservationStatus(reservation);
+          const totalGuests = reservation.adults + reservation.children;
+          
+          return (
           <Card key={reservation.id} className="border-slate-200/60 hover:shadow-md transition-shadow duration-200">
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
@@ -145,20 +215,16 @@ export function ModernReservations() {
                       <User className="h-6 w-6 text-blue-600" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-slate-900">{reservation.guestName}</h3>
+                      <h3 className="font-semibold text-slate-900">{reservation.guest_name}</h3>
                       <div className="flex items-center gap-4 mt-1">
-                        <div className="flex items-center text-sm text-slate-500">
-                          <Phone className="h-4 w-4 mr-1" />
-                          {reservation.phone}
-                        </div>
-                        <div className="flex items-center text-sm text-slate-500">
-                          <Mail className="h-4 w-4 mr-1" />
-                          {reservation.email}
+                        <div className="text-sm text-slate-500">
+                          {reservation.has_pets && "🐕 Con animali"}
+                          {reservation.linen_option !== 'no' && " • 🛏️ Biancheria"}
                         </div>
                       </div>
                     </div>
-                    <Badge className={statusConfig[reservation.status as keyof typeof statusConfig].color}>
-                      {statusConfig[reservation.status as keyof typeof statusConfig].label}
+                    <Badge className={statusConfig[reservationStatus as keyof typeof statusConfig]?.color || "bg-slate-50 text-slate-700 border-slate-200"}>
+                      {statusConfig[reservationStatus as keyof typeof statusConfig]?.label || reservationStatus}
                     </Badge>
                   </div>
 
@@ -167,8 +233,8 @@ export function ModernReservations() {
                     <div className="flex items-center gap-2">
                       <Building className="h-4 w-4 text-slate-400" />
                       <div>
-                        <p className="text-sm font-medium text-slate-900">{reservation.apartment}</p>
-                        <p className="text-xs text-slate-500">{reservation.guests} ospiti</p>
+                        <p className="text-sm font-medium text-slate-900">{getApartmentNames(reservation.apartment_ids)}</p>
+                        <p className="text-xs text-slate-500">{totalGuests} ospiti ({reservation.adults} adulti, {reservation.children} bambini)</p>
                       </div>
                     </div>
                     
@@ -176,7 +242,7 @@ export function ModernReservations() {
                       <Calendar className="h-4 w-4 text-slate-400" />
                       <div>
                         <p className="text-sm font-medium text-slate-900">Check-in</p>
-                        <p className="text-xs text-slate-500">{new Date(reservation.checkIn).toLocaleDateString('it-IT')}</p>
+                        <p className="text-xs text-slate-500">{new Date(reservation.start_date).toLocaleDateString('it-IT')}</p>
                       </div>
                     </div>
                     
@@ -184,12 +250,12 @@ export function ModernReservations() {
                       <Clock className="h-4 w-4 text-slate-400" />
                       <div>
                         <p className="text-sm font-medium text-slate-900">Check-out</p>
-                        <p className="text-xs text-slate-500">{new Date(reservation.checkOut).toLocaleDateString('it-IT')}</p>
+                        <p className="text-xs text-slate-500">{new Date(reservation.end_date).toLocaleDateString('it-IT')}</p>
                       </div>
                     </div>
                     
                     <div className="text-right">
-                      <p className="text-sm font-medium text-slate-900">€{reservation.totalPrice}</p>
+                      <p className="text-sm font-medium text-slate-900">€{reservation.final_price}</p>
                       <p className="text-xs text-slate-500">Totale</p>
                     </div>
                   </div>
@@ -212,7 +278,8 @@ export function ModernReservations() {
               </div>
             </CardContent>
           </Card>
-        ))}
+        );
+        })}
       </div>
 
       {filteredReservations.length === 0 && (
