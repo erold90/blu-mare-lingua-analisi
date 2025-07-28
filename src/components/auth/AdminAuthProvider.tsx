@@ -36,68 +36,28 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-    // Controlla se c'è una sessione Supabase esistente
-    const checkSupabaseSession = async () => {
+    // Controlla prima il localStorage per compatibilità
+    const checkLocalAuth = () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const isAuth = localStorage.getItem('isAuthenticated');
+        const currentUser = localStorage.getItem('currentUser');
         
-        if (error) {
-          console.error('Error getting session:', error);
-          setIsLoading(false);
-          return;
-        }
-
-        if (session?.user) {
-          // Verifica se l'utente ha il ruolo admin
-          const { data: roleData, error: roleError } = await supabase
-            .rpc('get_current_user_role');
-
-          if (roleError) {
-            console.error('Error getting user role:', roleError);
-          }
-
-          if (roleData === 'admin' || session.user.email === 'erold@villamareblu.it') {
-            setUser({
-              id: session.user.id,
-              email: session.user.email || '',
-              username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'admin'
-            });
-            setUserRole('admin');
-          } else {
-            console.log('User does not have admin role');
-            await supabase.auth.signOut();
-          }
+        if (isAuth === 'true' && currentUser) {
+          const userData = JSON.parse(currentUser);
+          setUser(userData);
+          setUserRole('admin');
         }
       } catch (error) {
-        console.error('Error checking session:', error);
+        console.error('Error checking local auth:', error);
+        // Pulisci localStorage se corrotto
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('currentUser');
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkSupabaseSession();
-
-    // Ascolta i cambiamenti di autenticazione
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        // Verifica ruolo admin
-        const { data: roleData } = await supabase.rpc('get_current_user_role');
-        
-        if (roleData === 'admin' || session.user.email === 'erold@villamareblu.it') {
-          setUser({
-            id: session.user.id,
-            email: session.user.email || '',
-            username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'admin'
-          });
-          setUserRole('admin');
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setUserRole(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    checkLocalAuth();
   }, []);
 
   const signInWithUsernamePassword = async (username: string, password: string): Promise<boolean> => {
@@ -106,60 +66,17 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
       // Prova prima il login locale per l'utente admin hardcoded
       if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-        // Crea o effettua login con Supabase per l'admin
-        const adminEmail = 'erold@villamareblu.it';
-        
-        try {
-          // Prova il login
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email: adminEmail,
-            password: password,
-          });
-
-          if (error && error.message.includes('Invalid login credentials')) {
-            // Se l'utente non esiste, crealo
-            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-              email: adminEmail,
-              password: password,
-              options: {
-                data: {
-                  username: username,
-                  first_name: 'Erold',
-                  last_name: 'Admin'
-                }
-              }
-            });
-
-            if (signUpError) {
-              console.error('Signup error:', signUpError);
-              toast.error('Errore nella creazione dell\'account admin');
-              return false;
-            }
-
-            // Se la registrazione è riuscita, l'utente dovrebbe essere automaticamente loggato
-            if (signUpData.user) {
-              toast.success('Account admin creato e login effettuato');
-              return true;
-            }
-          } else if (error) {
-            console.error('Login error:', error);
-            toast.error('Errore durante il login: ' + error.message);
-            return false;
-          } else if (data.user) {
-            toast.success('Login effettuato con successo');
-            return true;
-          }
-        } catch (supabaseError) {
-          console.error('Supabase auth error:', supabaseError);
-          toast.error('Errore di autenticazione');
-          return false;
-        }
+        // Usa direttamente le credenziali locali senza Supabase finché l'email non è abilitata
+        setUser(ADMIN_CREDENTIALS.user);
+        setUserRole('admin');
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('currentUser', JSON.stringify(ADMIN_CREDENTIALS.user));
+        toast.success('Login effettuato con successo');
+        return true;
       } else {
         toast.error('Credenziali non valide');
         return false;
       }
-      
-      return false;
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Errore durante il login');
