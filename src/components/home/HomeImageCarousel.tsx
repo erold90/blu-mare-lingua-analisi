@@ -14,7 +14,7 @@ export const HomeImageCarousel = () => {
     const loadImages = async () => {
       try {
         const timeoutPromise = new Promise<ImageRecord[]>((_, reject) =>
-          setTimeout(() => reject(new Error('Image loading timeout')), 2000) // Ridotto a 2s
+          setTimeout(() => reject(new Error('Image loading timeout')), 10000) // Aumentato a 10s
         );
         
         const imagesPromise = imageService.getImagesByCategory('home_gallery');

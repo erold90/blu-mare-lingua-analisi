@@ -13,9 +13,9 @@ const HeroSection = () => {
   useEffect(() => {
     const loadHeroImage = async () => {
       try {
-        // Timeout ridotto per caricamento più veloce
+        // Timeout aumentato per evitare errori di caricamento
         const timeoutPromise = new Promise<ImageRecord[]>((_, reject) =>
-          setTimeout(() => reject(new Error('Hero image timeout')), 1500)
+          setTimeout(() => reject(new Error('Hero image timeout')), 10000)
         );
         
         const heroImagesPromise = imageService.getImagesByCategory('hero');
