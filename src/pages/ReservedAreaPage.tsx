@@ -1,23 +1,23 @@
 
 import * as React from "react";
-import { useNavigate, Link, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useNavigate, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 
 // Admin components imports
-import AdminDashboard from "@/components/admin/AdminDashboard";
+import AdminLayoutNew from "@/components/admin/AdminLayoutNew";
+import AdminDashboard from "@/components/admin/dashboard/AdminDashboardNew";
 import AdminReservations from "@/components/admin/AdminReservations";
 import AdminPrices from "@/components/admin/AdminPrices";
 import AdminApartments from "@/components/admin/AdminApartments";
 import AdminSettings from "@/components/admin/AdminSettings";
-import AdminLayout from "@/components/admin/AdminLayout";
-import AdminCalendar from "@/components/admin/calendar/AdminCalendar";
 import AdminCleaningManagement from "@/components/admin/cleaning/AdminCleaningManagement";
+import AdminAnalytics from "@/components/admin/AdminAnalytics";
+import { SiteImageManager } from "@/components/admin/images/SiteImageManager";
 
 const LoginForm = () => {
   const [username, setUsername] = React.useState("");
@@ -118,28 +118,35 @@ const ReservedAreaPage = () => {
   const { isAuthenticated } = useAuth();
   const location = useLocation();
   
-  console.log("ReservedAreaPage - Rendering with auth state:", isAuthenticated);
-  console.log("ReservedAreaPage - Current location:", location.pathname);
-  
   const isAtAdminRoot = location.pathname === '/area-riservata' || location.pathname === '/area-riservata/';
   
   if (isAuthenticated && isAtAdminRoot) {
-    console.log("ReservedAreaPage - Redirecting authenticated user from root to dashboard");
     return <Navigate to="/area-riservata/dashboard" replace />;
   }
   
   if (!isAuthenticated && !isAtAdminRoot) {
-    console.log("ReservedAreaPage - Redirecting unauthenticated user to login");
     return <Navigate to="/area-riservata" replace />;
   }
   
   if (!isAuthenticated && isAtAdminRoot) {
-    console.log("ReservedAreaPage - Showing login form");
     return <LoginForm />;
   }
   
-  console.log("ReservedAreaPage - Showing admin layout");
-  return <AdminLayout />;
+  return (
+    <Routes>
+      <Route path="/*" element={<AdminLayoutNew />}>
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="prenotazioni" element={<AdminReservations />} />
+        <Route path="appartamenti" element={<AdminApartments />} />
+        <Route path="prezzi" element={<AdminPrices />} />
+        <Route path="pulizie" element={<AdminCleaningManagement />} />
+        <Route path="immagini" element={<SiteImageManager />} />
+        <Route path="analytics" element={<AdminAnalytics />} />
+        <Route path="impostazioni" element={<AdminSettings />} />
+        <Route index element={<Navigate to="dashboard" replace />} />
+      </Route>
+    </Routes>
+  );
 };
 
 export default ReservedAreaPage;
