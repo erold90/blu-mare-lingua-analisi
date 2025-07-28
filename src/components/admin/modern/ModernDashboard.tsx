@@ -117,7 +117,11 @@ export function ModernDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      console.log('Fetching dashboard data...');
+      console.log('🏠 Dashboard: Fetching dashboard data...');
+      
+      // Prima verifica se l'utente è autenticato
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('🔐 Current session:', session?.user?.email || 'No session');
       
       // Carica prenotazioni
       const { data: reservations, error: reservationsError } = await supabase
@@ -126,9 +130,11 @@ export function ModernDashboard() {
         .order('created_at', { ascending: false });
 
       if (reservationsError) {
-        console.error('Error fetching reservations:', reservationsError);
+        console.error('❌ Error fetching reservations:', reservationsError);
         return;
       }
+
+      console.log('✅ Reservations loaded:', reservations?.length || 0);
 
       const today = new Date();
       const currentMonth = today.getMonth();
@@ -196,6 +202,7 @@ export function ModernDashboard() {
   };
 
   useEffect(() => {
+    console.log('🏠 Dashboard: fetchDashboardData called');
     fetchDashboardData();
   }, []);
 

@@ -66,18 +66,23 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     // Ascolta i cambiamenti di autenticazione
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔐 Auth state change:', event, 'User:', session?.user?.email, 'Session:', !!session);
+      
       if (event === 'SIGNED_IN' && session?.user) {
-        setUser({
+        const newUser = {
           id: session.user.id,
           email: session.user.email || '',
           username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'admin'
-        });
+        };
+        setUser(newUser);
         setUserRole('admin');
-        setIsLoading(false); // Ferma il caricamento dopo il login
+        setIsLoading(false);
+        console.log('✅ User authenticated:', newUser);
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setUserRole(null);
-        setIsLoading(false); // Ferma il caricamento dopo il logout
+        setIsLoading(false);
+        console.log('🚪 User signed out');
       }
     });
 
