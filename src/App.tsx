@@ -28,6 +28,7 @@ const AppWithRoutes = () => {
       <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicyPage /></AppLayout>} />
       <Route path="/cookie-policy" element={<AppLayout><CookiePolicyPage /></AppLayout>} />
       <Route path="/admin" element={<AdminPage />} />
+      <Route path="/area-riservata" element={<AdminPage />} />
       <Route path="*" element={<AppLayout><NotFound /></AppLayout>} />
     </Routes>
   );
