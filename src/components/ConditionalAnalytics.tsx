@@ -14,7 +14,7 @@ export const ConditionalAnalytics: React.FC = () => {
 
   useEffect(() => {
     console.log('🍪 ConditionalAnalytics check - preferences:', preferences);
-    console.log('🍪 Analytics tracking allowed:', isTrackingAllowed('analytics'));
+    console.log('🍪 Analytics tracking allowed:', preferences?.analytics || false);
     
     // Se non abbiamo ancora le preferenze, blocca solo servizi esterni
     if (!preferences) {
@@ -23,7 +23,7 @@ export const ConditionalAnalytics: React.FC = () => {
     }
 
     // Google Analytics - solo se consentito esplicitamente
-    if (isTrackingAllowed('analytics')) {
+    if (preferences?.analytics) {
       console.log('✅ Analytics tracking enabled');
       
       // Inizializza Google Analytics solo se consentito
@@ -60,7 +60,7 @@ export const ConditionalAnalytics: React.FC = () => {
     }
 
     // Altri servizi di tracking possono essere aggiunti qui
-    if (isTrackingAllowed('marketing')) {
+    if (preferences?.marketing) {
       console.log('✅ Marketing tracking enabled');
       // Inizializza servizi di marketing/advertising
     } else {

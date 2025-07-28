@@ -1,7 +1,7 @@
 
 import React from "react";
 import { apartments } from "@/data/apartments";
-import { ApartmentCard } from "./ApartmentCard";
+import ApartmentCard from "./ApartmentCard";
 
 interface ApartmentGridProps {
   apartmentImages: { [key: string]: string[] };

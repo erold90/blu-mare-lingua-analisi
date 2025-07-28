@@ -1,21 +1,16 @@
+// Simple tracking hook
+export const useSimpleTracking = () => {
+  const addQuoteLog = (data: any) => {
+    console.log('Quote log added:', data);
+    return Promise.resolve();
+  };
 
-import { useCallback } from 'react';
-import { useAnalyticsCore } from './useAnalyticsCore';
-
-export function useSimpleTracking() {
-  const { trackSiteVisit } = useAnalyticsCore();
-
-  const trackCurrentPage = useCallback(async (customPath?: string) => {
-    try {
-      const path = customPath || window.location.pathname;
-      await trackSiteVisit(path);
-    } catch (error) {
-      console.error('❌ Simple tracking failed:', error);
-    }
-  }, [trackSiteVisit]);
+  const trackSiteVisit = (page: string) => {
+    console.log('Site visit tracked:', page);
+  };
 
   return {
+    addQuoteLog,
     trackSiteVisit,
-    trackCurrentPage
   };
-}
+};

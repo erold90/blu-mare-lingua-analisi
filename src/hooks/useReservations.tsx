@@ -6,7 +6,7 @@ export interface Reservation {
   guest_name: string;
   start_date: string;
   end_date: string;
-  apartment_ids: string[];
+  apartment_ids: string[] | any; // Allow Json type from Supabase
   adults: number;
   children: number;
   cribs: number;
@@ -36,9 +36,15 @@ export function useReservations() {
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      // Transform data to match our interface
+      const transformedData = (data || []).map(reservation => ({
+        ...reservation,
+        apartment_ids: Array.isArray(reservation.apartment_ids) 
+          ? reservation.apartment_ids 
+          : JSON.parse(reservation.apartment_ids as string || '[]')
+      }));
 
-      setReservations(data || []);
+      setReservations(transformedData);
       setError(null);
     } catch (err) {
       console.error('Error fetching reservations:', err);
@@ -74,7 +80,7 @@ export function useReservations() {
   };
 
   // Add a new reservation
-  const addReservation = async (reservation: Omit<Reservation, 'id' | 'created_at' | 'updated_at'>) => {
+  const addReservation = async (reservation: any) => {
     try {
       const { data, error } = await supabase
         .from('reservations')

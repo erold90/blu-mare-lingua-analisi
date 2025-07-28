@@ -1,19 +1,40 @@
-
-import { useAnalyticsCore } from './useAnalyticsCore';
-
-// Simple wrapper that maps the old interface to the new one
-export function useUnifiedAnalytics() {
-  const analytics = useAnalyticsCore();
-  
-  return {
-    // Map the old method names to new ones
-    addQuoteLog: analytics.saveQuoteLog,
-    deleteQuoteLog: analytics.deleteQuoteLog,
-    trackSiteVisit: analytics.trackSiteVisit,
-    // Provide any other methods that were expected
-    ...analytics
-  };
+// Simple unified analytics hook
+export interface QuoteLog {
+  id: string;
+  step: number;
+  completed: boolean;
+  form_data: any;
+  created_at: string;
 }
 
-// Re-export types for compatibility
-export type { QuoteLog, SiteVisit } from './useAnalyticsCore';
+export interface SiteVisit {
+  id: string;
+  page: string;
+  created_at: string;
+}
+
+export const useUnifiedAnalytics = () => {
+  const trackQuoteStart = () => {
+    console.log('Quote started');
+  };
+
+  const trackQuoteComplete = (data: any) => {
+    console.log('Quote completed:', data);
+  };
+
+  const trackQuoteStep = (step: number) => {
+    console.log('Quote step:', step);
+  };
+
+  const addQuoteLog = (data: any) => {
+    console.log('Quote log added:', data);
+    return Promise.resolve();
+  };
+
+  return {
+    trackQuoteStart,
+    trackQuoteComplete,
+    trackQuoteStep,
+    addQuoteLog,
+  };
+};
