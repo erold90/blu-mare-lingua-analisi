@@ -1,14 +1,18 @@
 
-import { useContext } from "react";
-import { PricesContext } from "./PricesProvider";
-import { PricesContextType } from "./types";
+import { useContext } from 'react';
+import { useSupabasePricesContext } from './SupabasePricesProvider';
+
+// Simplified interface pointing to Supabase
+export interface PricesContextType {
+  prices: any[];
+  isLoading: boolean;
+  updatePrice: (apartmentId: string, weekStart: string, price: number) => Promise<boolean>;
+  getPriceForWeek: (apartmentId: string, weekStart: string) => number;
+  loadPricesForYear: (year: number) => Promise<any[]>;
+  refreshPrices: () => Promise<void>;
+}
 
 export const usePrices = (): PricesContextType => {
-  const context = useContext(PricesContext);
-  
-  if (context === undefined) {
-    throw new Error("usePrices must be used within a PricesProvider");
-  }
-  
-  return context;
+  // Redirect to the unified Supabase system
+  return useSupabasePricesContext();
 };

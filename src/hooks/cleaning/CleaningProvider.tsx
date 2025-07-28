@@ -1,8 +1,8 @@
 
 import React from "react";
 import { useReservations } from "@/hooks/useReservations";
-import type { CleaningContextType } from "../useCleaningManagement";
-import CleaningContext from "./CleaningContext";
+import type { CleaningContextType } from "./types";
+import { CleaningContext } from "./CleaningContext";
 import { getTasksByDateUtil, getTasksByApartmentIdUtil } from "./cleaningOperations";
 import { useCleaningData } from "./useCleaningData";
 import { useCleaningCrud } from "./useCleaningCrud";

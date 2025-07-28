@@ -1,11 +1,13 @@
 
-// Export del nuovo hook unificato per i prezzi
+// Unified hook exports - cleaned up version
 export { useUnifiedPrices } from './useUnifiedPrices';
 export type { PriceData, UnifiedPricesContextType } from './useUnifiedPrices';
 
-// Export dei vecchi hook per compatibilità (da rimuovere gradualmente)
+// Re-export Supabase hooks
 export { useSupabasePrices } from './useSupabasePrices';
-export { useCompactPrices } from './prices/useCompactPrices';
+
+// Cleaning
+export * from './cleaning';
 
 // Export degli hook analytics semplificati
 export { useSimpleTracking } from './analytics/useSimpleTracking';

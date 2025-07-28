@@ -1,7 +1,5 @@
 
 import { createContext } from "react";
-import type { CleaningContextType } from "../useCleaningManagement";
+import type { CleaningContextType } from "./types";
 
-const CleaningContext = createContext<CleaningContextType | undefined>(undefined);
-
-export default CleaningContext;
+export const CleaningContext = createContext<CleaningContextType | undefined>(undefined);
