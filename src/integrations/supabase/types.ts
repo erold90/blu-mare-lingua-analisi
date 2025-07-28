@@ -185,6 +185,69 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          data: Json | null
+          id: string
+          message: string
+          read: boolean | null
+          title: string
+          type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message: string
+          read?: boolean | null
+          title: string
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      performance_metrics: {
+        Row: {
+          context: Json | null
+          created_at: string
+          id: string
+          metric_name: string
+          metric_unit: string | null
+          metric_value: number
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          metric_name: string
+          metric_unit?: string | null
+          metric_value: number
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          metric_name?: string
+          metric_unit?: string | null
+          metric_value?: number
+        }
+        Relationships: []
+      }
       prices: {
         Row: {
           apartment_id: string
