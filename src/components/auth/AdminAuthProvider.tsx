@@ -36,41 +36,67 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-    // Controlla prima il localStorage per compatibilità
-    const checkLocalAuth = () => {
+    // Controlla se c'è una sessione Supabase esistente
+    const checkSupabaseSession = async () => {
       try {
-        const isAuth = localStorage.getItem('isAuthenticated');
-        const currentUser = localStorage.getItem('currentUser');
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (isAuth === 'true' && currentUser) {
-          const userData = JSON.parse(currentUser);
-          setUser(userData);
+        if (error) {
+          console.error('Error getting session:', error);
+          setIsLoading(false);
+          return;
+        }
+
+        if (session?.user) {
+          setUser({
+            id: session.user.id,
+            email: session.user.email || '',
+            username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'admin'
+          });
           setUserRole('admin');
         }
       } catch (error) {
-        console.error('Error checking local auth:', error);
-        // Pulisci localStorage se corrotto
-        localStorage.removeItem('isAuthenticated');
-        localStorage.removeItem('currentUser');
+        console.error('Error checking session:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkLocalAuth();
+    checkSupabaseSession();
+
+    // Ascolta i cambiamenti di autenticazione
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          username: session.user.user_metadata?.username || session.user.email?.split('@')[0] || 'admin'
+        });
+        setUserRole('admin');
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setUserRole(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signInWithUsernamePassword = async (username: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
       
-      // Prova prima il login locale per l'utente admin hardcoded
       if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-        // Usa direttamente le credenziali locali senza Supabase finché l'email non è abilitata
-        setUser(ADMIN_CREDENTIALS.user);
-        setUserRole('admin');
-        localStorage.setItem('isAuthenticated', 'true');
-        localStorage.setItem('currentUser', JSON.stringify(ADMIN_CREDENTIALS.user));
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: 'erold@villamareblu.it',
+          password: password,
+        });
+
+        if (error) {
+          toast.error('Devi prima abilitare Email auth in Supabase: Authentication > Providers');
+          return false;
+        }
+
         toast.success('Login effettuato con successo');
         return true;
       } else {
