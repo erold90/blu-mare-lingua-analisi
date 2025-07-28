@@ -30,14 +30,22 @@ export const StepDates: React.FC<StepDatesProps> = ({
   const handleDateSelect = (date: Date | undefined) => {
     if (!date) return;
 
+    // Correggo il problema timezone usando toLocaleDateString formato ISO
+    const formatDateToISO = (date: Date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
     if (selectingCheckIn) {
       updateFormData({ 
-        checkIn: date.toISOString().split('T')[0],
+        checkIn: formatDateToISO(date),
         checkOut: '' // Reset checkout quando cambia checkin
       });
       setSelectingCheckIn(false);
     } else {
-      updateFormData({ checkOut: date.toISOString().split('T')[0] });
+      updateFormData({ checkOut: formatDateToISO(date) });
     }
   };
 
@@ -95,12 +103,20 @@ export const StepDates: React.FC<StepDatesProps> = ({
               />
               
               <div className="text-center space-y-2">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm font-medium">
                   {selectingCheckIn 
-                    ? "Scegli la data di arrivo (check-in)" 
-                    : "Scegli la data di partenza (check-out)"
+                    ? "🗓️ Scegli la data di arrivo (check-in)" 
+                    : "🗓️ Scegli la data di partenza (check-out)"
                   }
                 </p>
+                {formData.checkIn && selectingCheckIn === false && (
+                  <div className="p-2 bg-green-50 border border-green-200 rounded-md">
+                    <p className="text-sm text-green-700">
+                      ✅ Check-in: {format(new Date(formData.checkIn), 'dd MMM yyyy', { locale: it })}
+                    </p>
+                    <p className="text-xs text-green-600">Ora seleziona la data di check-out</p>
+                  </div>
+                )}
                 <p className="text-xs text-muted-foreground">
                   Giorni disponibili: Sabato, Domenica, Lunedì
                 </p>
