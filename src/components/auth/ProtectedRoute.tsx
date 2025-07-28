@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from './AuthProvider';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 
@@ -13,10 +12,35 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   requiredRole 
 }) => {
-  const { user, isLoading, userRole } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const location = useLocation();
 
-  if (isLoading) {
+  useEffect(() => {
+    const checkAuth = () => {
+      const authStatus = localStorage.getItem('isAuthenticated');
+      const userData = localStorage.getItem('currentUser');
+      
+      if (authStatus === 'true' && userData) {
+        setIsAuthenticated(true);
+        setCurrentUser(JSON.parse(userData));
+      } else {
+        setIsAuthenticated(false);
+        setCurrentUser(null);
+      }
+    };
+
+    checkAuth();
+
+    // Listener per cambiamenti di storage (per sincronizzare tra tab)
+    const handleStorageChange = () => checkAuth();
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  // Mostra loading mentre verifica l'autenticazione
+  if (isAuthenticated === null) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -29,11 +53,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (requiredRole && userRole !== requiredRole && userRole !== 'admin') {
+  if (requiredRole && currentUser?.role !== requiredRole && currentUser?.role !== 'admin') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="w-full max-w-md">

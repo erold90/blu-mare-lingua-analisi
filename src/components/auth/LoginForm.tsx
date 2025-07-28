@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,65 +35,26 @@ export const LoginForm = () => {
     setIsLoading(true);
     setError(null);
 
-    try {
-      // Se l'username è "erold", usa direttamente l'email
-      if (formData.username.toLowerCase() === 'erold') {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: 'erold@villamareblu.it',
-          password: formData.password
-        });
-
-        if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            throw new Error('Username o password non validi');
-          }
-          throw error;
-        }
-
-        if (data.user) {
-          toast.success('Accesso effettuato con successo');
-          navigate('/area-riservata/dashboard');
-          return;
-        }
-      }
-
-      // Per altri utenti, cerca l'email tramite username
-      const { data: userLookup, error: lookupError } = await supabase
-        .rpc('login_with_username', {
-          username_input: formData.username,
-          password_input: ''
-        });
-
-      if (lookupError || !userLookup || userLookup.length === 0) {
-        throw new Error('Username non trovato');
-      }
-
-      const userEmail = userLookup[0].email;
-
-      // Usa l'email per il login Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: userEmail,
-        password: formData.password
-      });
-
-      if (error) {
-        if (error.message.includes('Invalid login credentials')) {
-          throw new Error('Username o password non validi');
-        }
-        throw error;
-      }
-
-      if (data.user) {
+    // Simuliamo un delay per il login
+    setTimeout(() => {
+      // Credenziali hardcoded per l'accesso
+      if (formData.username === 'erold' && formData.password === '205647') {
+        // Salva lo stato di autenticazione in localStorage
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('currentUser', JSON.stringify({
+          username: 'erold',
+          name: 'Erold Admin',
+          role: 'admin'
+        }));
+        
         toast.success('Accesso effettuato con successo');
         navigate('/area-riservata/dashboard');
+      } else {
+        setError('Username o password non validi');
+        toast.error('Username o password non validi');
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Errore durante l\'accesso';
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
       setIsLoading(false);
-    }
+    }, 500);
   };
 
   return (

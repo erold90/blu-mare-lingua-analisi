@@ -1,11 +1,22 @@
 import * as React from "react";
+import { useNavigate } from "react-router-dom";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 export function AdminHeader() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('currentUser');
+    toast.success('Logout effettuato con successo');
+    navigate('/login');
+  };
+
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center gap-4 px-4">
@@ -27,9 +38,18 @@ export function AdminHeader() {
             <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
           </Button>
           
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={handleLogout}
+            title="Logout"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
+          
           <Avatar className="h-8 w-8">
             <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-              VM
+              E
             </AvatarFallback>
           </Avatar>
         </div>
