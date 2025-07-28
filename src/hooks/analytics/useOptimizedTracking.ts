@@ -19,10 +19,8 @@ export function useOptimizedTracking() {
     if (!page || typeof page !== 'string') return false;
     if (page.length > TRACKING_CONFIG.MAX_PAGE_LENGTH) return false;
     
-    // Skip admin e pagine private
-    if (page.includes('/area-riservata') || 
-        page.includes('/admin') ||
-        page.includes('/login')) {
+    // Skip solo pagine di login (manteniamo tracking delle pagine admin per analytics interni)
+    if (page.includes('/login')) {
       return false;
     }
     
