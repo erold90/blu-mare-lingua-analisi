@@ -83,69 +83,6 @@ export type Database = {
         }
         Relationships: []
       }
-      cleaning_tasks: {
-        Row: {
-          actual_duration: number | null
-          apartment_id: string
-          assignee: string | null
-          created_at: string | null
-          device_id: string | null
-          estimated_duration: number | null
-          id: string
-          notes: string | null
-          priority: string
-          status: string
-          task_date: string
-          task_type: string
-          updated_at: string | null
-        }
-        Insert: {
-          actual_duration?: number | null
-          apartment_id: string
-          assignee?: string | null
-          created_at?: string | null
-          device_id?: string | null
-          estimated_duration?: number | null
-          id?: string
-          notes?: string | null
-          priority?: string
-          status?: string
-          task_date: string
-          task_type?: string
-          updated_at?: string | null
-        }
-        Update: {
-          actual_duration?: number | null
-          apartment_id?: string
-          assignee?: string | null
-          created_at?: string | null
-          device_id?: string | null
-          estimated_duration?: number | null
-          id?: string
-          notes?: string | null
-          priority?: string
-          status?: string
-          task_date?: string
-          task_type?: string
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "cleaning_tasks_apartment_id_fkey"
-            columns: ["apartment_id"]
-            isOneToOne: false
-            referencedRelation: "apartments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "fk_cleaning_tasks_apartment"
-            columns: ["apartment_id"]
-            isOneToOne: false
-            referencedRelation: "apartments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       images: {
         Row: {
           alt_text: string | null
@@ -185,69 +122,6 @@ export type Database = {
         }
         Relationships: []
       }
-      notifications: {
-        Row: {
-          created_at: string
-          data: Json | null
-          id: string
-          message: string
-          read: boolean | null
-          title: string
-          type: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          data?: Json | null
-          id?: string
-          message: string
-          read?: boolean | null
-          title: string
-          type?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          data?: Json | null
-          id?: string
-          message?: string
-          read?: boolean | null
-          title?: string
-          type?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      performance_metrics: {
-        Row: {
-          context: Json | null
-          created_at: string
-          id: string
-          metric_name: string
-          metric_unit: string | null
-          metric_value: number
-        }
-        Insert: {
-          context?: Json | null
-          created_at?: string
-          id?: string
-          metric_name: string
-          metric_unit?: string | null
-          metric_value: number
-        }
-        Update: {
-          context?: Json | null
-          created_at?: string
-          id?: string
-          metric_name?: string
-          metric_unit?: string | null
-          metric_value?: number
-        }
-        Relationships: []
-      }
       prices: {
         Row: {
           apartment_id: string
@@ -275,39 +149,6 @@ export type Database = {
           updated_at?: string | null
           week_start?: string
           year?: number
-        }
-        Relationships: []
-      }
-      quote_logs: {
-        Row: {
-          completed: boolean
-          created_at: string
-          form_data: Json
-          id: string
-          step: number
-          total_price: number | null
-          updated_at: string
-          user_session: string | null
-        }
-        Insert: {
-          completed?: boolean
-          created_at?: string
-          form_data: Json
-          id: string
-          step?: number
-          total_price?: number | null
-          updated_at?: string
-          user_session?: string | null
-        }
-        Update: {
-          completed?: boolean
-          created_at?: string
-          form_data?: Json
-          id?: string
-          step?: number
-          total_price?: number | null
-          updated_at?: string
-          user_session?: string | null
         }
         Relationships: []
       }
@@ -374,150 +215,15 @@ export type Database = {
         }
         Relationships: []
       }
-      site_visits: {
-        Row: {
-          created_at: string
-          id: string
-          ip_address: unknown | null
-          page: string
-          referrer: string | null
-          session_id: string | null
-          user_agent: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          ip_address?: unknown | null
-          page: string
-          referrer?: string | null
-          session_id?: string | null
-          user_agent?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          ip_address?: unknown | null
-          page?: string
-          referrer?: string | null
-          session_id?: string | null
-          user_agent?: string | null
-        }
-        Relationships: []
-      }
-      user_profiles: {
-        Row: {
-          avatar_url: string | null
-          created_at: string
-          email: string | null
-          first_name: string | null
-          id: string
-          last_name: string | null
-          phone: string | null
-          updated_at: string
-          user_id: string
-          username: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          created_at?: string
-          email?: string | null
-          first_name?: string | null
-          id?: string
-          last_name?: string | null
-          phone?: string | null
-          updated_at?: string
-          user_id: string
-          username?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          created_at?: string
-          email?: string | null
-          first_name?: string | null
-          id?: string
-          last_name?: string | null
-          phone?: string | null
-          updated_at?: string
-          user_id?: string
-          username?: string | null
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          granted_at: string
-          granted_by: string | null
-          id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Insert: {
-          granted_at?: string
-          granted_by?: string | null
-          id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
-        }
-        Update: {
-          granted_at?: string
-          granted_by?: string | null
-          id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
-      analytics_summary: {
-        Row: {
-          page: string | null
-          unique_sessions: number | null
-          visit_count: number | null
-          visit_date: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
-      cleanup_old_analytics: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          deleted_visits: number
-          deleted_quotes: number
-        }[]
-      }
-      get_analytics_counts: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          visits_today: number
-          visits_week: number
-          visits_month: number
-          quotes_today: number
-          quotes_completed: number
-        }[]
-      }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: Database["public"]["Enums"]["app_role"]
-      }
-      has_role: {
-        Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["app_role"]
-        }
-        Returns: boolean
-      }
-      login_with_username: {
-        Args: { username_input: string; password_input: string }
-        Returns: {
-          user_id: string
-          email: string
-        }[]
-      }
+      [_ in never]: never
     }
     Enums: {
-      app_role: "admin" | "staff" | "cleaner" | "manager"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -644,8 +350,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["admin", "staff", "cleaner", "manager"],
-    },
+    Enums: {},
   },
 } as const

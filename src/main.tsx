@@ -7,9 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import App from "./App.tsx";
 import "./index.css";
 
-// Import the Supabase providers
-import { SupabaseReservationsProvider } from "@/hooks/useSupabaseReservations";
-import { SupabasePricesProvider } from "@/hooks/useSupabasePrices";
+// Rimosso provider Supabase non necessario
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,11 +24,7 @@ createRoot(document.getElementById("root")!).render(
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <SupabaseReservationsProvider>
-            <SupabasePricesProvider>
-              <App />
-            </SupabasePricesProvider>
-          </SupabaseReservationsProvider>
+          <App />
         </TooltipProvider>
       </QueryClientProvider>
     </HelmetProvider>
