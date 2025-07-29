@@ -68,7 +68,7 @@ export default function AdminPage() {
     has_pets: false,
     linen_option: 'no',
     final_price: '',
-    deposit_amount: 0,
+    deposit_amount: '',
     payment_status: 'notPaid',
     payment_method: 'cash',
     notes: ''
@@ -88,6 +88,7 @@ export default function AdminPage() {
     const result = await addReservation({
       ...newReservation,
       final_price: parseFloat(newReservation.final_price) || 0,
+      deposit_amount: parseFloat(newReservation.deposit_amount) || 0,
       id: `res_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     });
 
@@ -107,7 +108,7 @@ export default function AdminPage() {
         has_pets: false,
         linen_option: 'no',
         final_price: '',
-        deposit_amount: 0,
+        deposit_amount: '',
         payment_status: 'notPaid',
         payment_method: 'cash',
         notes: ''
@@ -461,12 +462,26 @@ export default function AdminPage() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="notPaid">Non Pagato</SelectItem>
-                              <SelectItem value="partiallyPaid">Parzialmente Pagato</SelectItem>
-                              <SelectItem value="paid">Pagato</SelectItem>
+                               <SelectItem value="notPaid">Non Pagato</SelectItem>
+                               <SelectItem value="deposit">Caparra</SelectItem>
+                               <SelectItem value="paid">Pagato</SelectItem>
                             </SelectContent>
                            </Select>
                          </div>
+                         {newReservation.payment_status === 'deposit' && (
+                           <div>
+                             <Label htmlFor="deposit_amount">Importo Caparra €</Label>
+                             <Input
+                               id="deposit_amount"
+                               type="text"
+                               inputMode="numeric"
+                               pattern="[0-9]*"
+                               value={newReservation.deposit_amount}
+                               onChange={(e) => setNewReservation(prev => ({ ...prev, deposit_amount: e.target.value }))}
+                               placeholder="Inserisci importo caparra"
+                             />
+                           </div>
+                         )}
                          <div>
                            <Label htmlFor="payment_method">Metodo Pagamento</Label>
                            <Select 
