@@ -58,9 +58,14 @@ export function SeasonalRevenueAnalytics() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="2024">2024</SelectItem>
-              <SelectItem value="2025">2025</SelectItem>
-              <SelectItem value="2026">2026</SelectItem>
+              {Array.from({ length: 15 }, (_, i) => {
+                const year = new Date().getFullYear() - 2 + i; // 2 anni passati + anno corrente + 12 anni futuri
+                return (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
 
