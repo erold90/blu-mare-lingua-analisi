@@ -348,21 +348,32 @@ export default function AdminPage() {
                 ) : upcomingReservations.length > 0 ? (
                    <div className="space-y-3">
                      {upcomingReservations.map((reservation) => (
-                      <div key={reservation.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 bg-gray-50 rounded-lg space-y-2 sm:space-y-0">
-                         <div className="flex-1">
-                           <div className="font-medium">{reservation.guest_name}</div>
-                           {reservation.guest_phone && (
-                             <div className="text-sm text-primary hover:underline">
-                               <a href={`tel:${reservation.guest_phone}`} className="cursor-pointer">
-                                 📞 {reservation.guest_phone}
-                               </a>
-                             </div>
-                           )}
-                           <div className="text-sm text-gray-500">
-                             {format(new Date(reservation.start_date), 'dd MMMM yyyy', { locale: it })} - {' '}
-                             {format(new Date(reservation.end_date), 'dd MMMM yyyy', { locale: it })}
-                           </div>
-                         </div>
+                       <div key={reservation.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 bg-gray-50 rounded-lg space-y-2 sm:space-y-0">
+                          <div className="flex-1">
+                            <div className="font-medium">{reservation.guest_name}</div>
+                            {reservation.guest_phone && (
+                              <div className="text-sm text-primary hover:underline">
+                                <a href={`tel:${reservation.guest_phone}`} className="cursor-pointer">
+                                  📞 {reservation.guest_phone}
+                                </a>
+                              </div>
+                            )}
+                            <div className="text-sm text-gray-500">
+                              {format(new Date(reservation.start_date), 'dd MMMM yyyy', { locale: it })} - {' '}
+                              {format(new Date(reservation.end_date), 'dd MMMM yyyy', { locale: it })}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1 space-y-1">
+                              {Array.isArray(reservation.apartment_ids) && reservation.apartment_ids.length > 0 && (
+                                <div>🏠 Appartamenti: {reservation.apartment_ids.join(', ')}</div>
+                              )}
+                              {reservation.linen_option && reservation.linen_option !== 'no' && (
+                                <div>🛏️ Biancheria richiesta</div>
+                              )}
+                              {reservation.has_pets && (
+                                <div>🐕 Con animali domestici</div>
+                              )}
+                            </div>
+                          </div>
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="outline" className="text-xs">
                             {reservation.adults} adulti
