@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Users, Home, BarChart, Plus, Edit, Trash2, Euro, ArrowLeft, Receipt, ImageIcon } from 'lucide-react';
+import { Calendar, Users, Home, BarChart, Plus, Edit, Trash2, Euro, ArrowLeft, Receipt, ImageIcon, TrendingUp } from 'lucide-react';
 import { useReservations } from '@/hooks/useReservations';
 import { apartments } from '@/data/apartments';
 import { format } from 'date-fns';
@@ -21,6 +21,7 @@ import { QuoteRequestsManager } from '@/components/admin/QuoteRequestsManager';
 import { ReservationsCalendar } from '@/components/admin/ReservationsCalendar';
 import { ApartmentImageGallery } from '@/components/admin/ApartmentImageGallery';
 import { HomeImageGallery } from '@/components/admin/HomeImageGallery';
+import { SeasonalRevenueAnalytics } from '@/components/admin/SeasonalRevenueAnalytics';
 
 const LOGIN_CREDENTIALS = {
   username: 'admin',
@@ -237,6 +238,10 @@ export default function AdminPage() {
               <BarChart className="h-4 w-4" />
               Visite
             </TabsTrigger>
+            <TabsTrigger value="revenue" className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Ricavi Estivi
+            </TabsTrigger>
             <TabsTrigger value="calendar" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Calendario
@@ -259,6 +264,10 @@ export default function AdminPage() {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="revenue" className="space-y-6">
+            <SeasonalRevenueAnalytics />
+          </TabsContent>
+          
           <TabsContent value="quotes" className="space-y-6">
             <QuoteRequestsManager />
           </TabsContent>
