@@ -224,6 +224,7 @@ class PricingService {
     
     return this.getOrSetCache(cacheKey, async () => {
       console.log(`🔍 Controllo disponibilità appartamento ${apartmentId} dal ${checkin} al ${checkout}`);
+      console.log(`🔍 Cerco conflitti per: appartamento-${apartmentId}`);
       
       // Verifica conflitti con prenotazioni esistenti
       // Una prenotazione è in conflitto se: start_date < checkout AND end_date > checkin
@@ -234,6 +235,23 @@ class PricingService {
         .lt('start_date', checkout)
         .gt('end_date', checkin);
       
+      console.log(`📋 Query conflicts per appartamento ${apartmentId}:`, { 
+        conflicts, 
+        error,
+        searchingFor: `appartamento-${apartmentId}`,
+        checkin,
+        checkout
+      });
+      
+      // Debug: verifica tutte le prenotazioni per questo periodo
+      const { data: allReservations } = await supabase
+        .from('reservations')
+        .select('id, guest_name, start_date, end_date, apartment_ids')
+        .lt('start_date', checkout)
+        .gt('end_date', checkin);
+      
+      console.log(`📅 Tutte le prenotazioni nel periodo ${checkin}-${checkout}:`, allReservations);
+      
       // Verifica anche i blocchi date
       const { data: dateBlocks } = await supabase
         .from('date_blocks')
@@ -242,8 +260,6 @@ class PricingService {
         .or(`apartment_id.eq.${apartmentId},apartment_id.is.null`)
         .lte('start_date', checkout)
         .gte('end_date', checkin);
-      
-      console.log(`📋 Query results per appartamento ${apartmentId}:`, { conflicts, error });
       
       if (error) {
         console.warn(`⚠️ Errore verifica disponibilità: ${error.message}`);
