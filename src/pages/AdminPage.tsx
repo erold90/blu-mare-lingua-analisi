@@ -17,6 +17,7 @@ import { it } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { PricingManagement } from '@/components/admin/PricingManagement';
 import { DynamicPricingDashboard } from '@/components/admin/DynamicPricingDashboard';
+import { ReservationsCalendar } from '@/components/admin/ReservationsCalendar';
 
 const LOGIN_CREDENTIALS = {
   username: 'admin',
@@ -213,8 +214,12 @@ export default function AdminPage() {
               <BarChart className="h-4 w-4" />
               Dashboard
             </TabsTrigger>
-            <TabsTrigger value="reservations" className="flex items-center gap-2">
+            <TabsTrigger value="calendar" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
+              Calendario
+            </TabsTrigger>
+            <TabsTrigger value="reservations" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
               Prenotazioni
             </TabsTrigger>
             <TabsTrigger value="pricing" className="flex items-center gap-2">
@@ -299,6 +304,10 @@ export default function AdminPage() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="calendar" className="space-y-6">
+            <ReservationsCalendar reservations={reservations} />
           </TabsContent>
 
           <TabsContent value="reservations" className="space-y-6">

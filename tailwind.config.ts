@@ -19,6 +19,9 @@ export default {
 			}
 		},
 		extend: {
+			gridTemplateColumns: {
+				'14': 'repeat(14, minmax(0, 1fr))'
+			},
 			fontFamily: {
 				sans: ['Lato', 'sans-serif'],
 				serif: ['Playfair Display', 'serif']
@@ -40,6 +43,14 @@ export default {
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
 					foreground: 'hsl(var(--destructive-foreground))'
+				},
+				warning: {
+					DEFAULT: 'hsl(var(--warning))',
+					foreground: 'hsl(var(--warning-foreground))'
+				},
+				success: {
+					DEFAULT: 'hsl(var(--success))',
+					foreground: 'hsl(var(--success-foreground))'
 				},
 				muted: {
 					DEFAULT: 'hsl(var(--muted))',
