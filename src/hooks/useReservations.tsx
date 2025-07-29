@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface Reservation {
   id: string;
   guest_name: string;
+  guest_phone?: string;
   start_date: string;
   end_date: string;
   apartment_ids: string[] | any; // Allow Json type from Supabase
