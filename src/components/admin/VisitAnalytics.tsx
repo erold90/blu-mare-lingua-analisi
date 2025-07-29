@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Globe, MapPin, Calendar, Users, Eye, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { WorldMap } from './WorldMap';
 
 interface CountryStats {
   country: string;
@@ -157,7 +158,7 @@ export const VisitAnalytics: React.FC = () => {
         </Card>
       </div>
 
-      {/* World Map Placeholder */}
+      {/* World Map */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -166,18 +167,19 @@ export const VisitAnalytics: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-96 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
-            <div className="text-center">
-              <Globe className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Mappa Interattiva</h3>
-              <p className="text-muted-foreground mb-4">
-                Visualizzazione geografica delle visite
-              </p>
-              <p className="text-sm text-muted-foreground">
-                La mappa interattiva sarà implementata in una fase successiva
-              </p>
+          {analytics?.visitsByCountry && analytics.visitsByCountry.length > 0 ? (
+            <WorldMap visitData={analytics.visitsByCountry} />
+          ) : (
+            <div className="h-96 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
+              <div className="text-center">
+                <Globe className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Nessun Dato Geografico</h3>
+                <p className="text-muted-foreground">
+                  Le visite con geolocalizzazione appariranno qui
+                </p>
+              </div>
             </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
