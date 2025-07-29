@@ -53,6 +53,7 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [quoteSaved, setQuoteSaved] = useState(false);
 
   useEffect(() => {
     const loadPriceCalculation = async () => {
@@ -61,6 +62,12 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
         setError(null);
         const result = await calculatePrice();
         setPriceCalculation(result);
+        
+        // Auto-salvataggio del preventivo quando arriva allo step 6
+        if (result && !quoteSaved) {
+          await saveQuoteToDatabase(result);
+          setQuoteSaved(true);
+        }
       } catch (err) {
         console.error('Errore nel calcolo prezzi:', err);
         setError('Non è possibile calcolare il preventivo. Alcune date potrebbero non essere disponibili.');
@@ -71,6 +78,42 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
 
     loadPriceCalculation();
   }, [formData.checkIn, formData.checkOut, formData.selectedApartments]);
+
+  const saveQuoteToDatabase = async (priceData: any) => {
+    try {
+      console.log('💾 Auto-salvataggio preventivo allo step 6...');
+      
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      const { data, error } = await supabase
+        .from('quote_requests')
+        .insert({
+          checkin_date: formData.checkIn,
+          checkout_date: formData.checkOut,
+          adults: formData.adults,
+          children: formData.children,
+          children_no_bed: formData.childrenWithParents.filter(Boolean).length,
+          selected_apartments: formData.selectedApartments,
+          has_pet: formData.hasPets,
+          pet_apartment: formData.petApartment,
+          linen_requested: formData.requestLinen,
+          base_total: priceData.apartmentPrices?.reduce((sum: number, apt: any) => sum + apt.basePrice, 0) || 0,
+          discount_total: priceData.apartmentPrices?.reduce((sum: number, apt: any) => sum + apt.discountAmount, 0) || 0,
+          extras_total: priceData.servicesTotal || 0,
+          final_total: priceData.total || 0,
+          whatsapp_sent: false
+        })
+        .select('id');
+
+      if (error) {
+        console.error('Errore salvataggio preventivo:', error);
+      } else {
+        console.log('✅ Preventivo salvato automaticamente con ID:', data?.[0]?.id);
+      }
+    } catch (err) {
+      console.error('Errore nel salvataggio automatico del preventivo:', err);
+    }
+  };
 
   const nights = getNights();
   const bedsNeeded = getBedsNeeded();
