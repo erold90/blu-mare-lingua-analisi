@@ -70,7 +70,7 @@ export default function AdminPage() {
     final_price: 0,
     deposit_amount: 0,
     payment_status: 'notPaid',
-    payment_method: '',
+    payment_method: 'cash',
     notes: ''
   });
 
@@ -108,7 +108,7 @@ export default function AdminPage() {
         final_price: 0,
         deposit_amount: 0,
         payment_status: 'notPaid',
-        payment_method: '',
+        payment_method: 'cash',
         notes: ''
       });
     }
@@ -461,9 +461,26 @@ export default function AdminPage() {
                               <SelectItem value="partiallyPaid">Parzialmente Pagato</SelectItem>
                               <SelectItem value="paid">Pagato</SelectItem>
                             </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="col-span-2">
+                           </Select>
+                         </div>
+                         <div>
+                           <Label htmlFor="payment_method">Metodo Pagamento</Label>
+                           <Select 
+                             value={newReservation.payment_method} 
+                             onValueChange={(value) => setNewReservation(prev => ({ ...prev, payment_method: value }))}
+                           >
+                             <SelectTrigger>
+                               <SelectValue />
+                             </SelectTrigger>
+                             <SelectContent>
+                               <SelectItem value="cash">Contanti</SelectItem>
+                               <SelectItem value="card">Carta</SelectItem>
+                               <SelectItem value="bank_transfer">Bonifico</SelectItem>
+                               <SelectItem value="paypal">PayPal</SelectItem>
+                             </SelectContent>
+                           </Select>
+                         </div>
+                         <div className="col-span-2">
                           <Label htmlFor="notes">Note</Label>
                           <Textarea
                             id="notes"
