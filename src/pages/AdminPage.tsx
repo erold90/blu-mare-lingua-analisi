@@ -85,6 +85,15 @@ export default function AdminPage() {
       return;
     }
 
+    // Validate dates
+    const startDate = new Date(newReservation.start_date);
+    const endDate = new Date(newReservation.end_date);
+    
+    if (startDate >= endDate) {
+      toast.error('La data di check-out deve essere successiva alla data di check-in');
+      return;
+    }
+
     const result = await addReservation({
       ...newReservation,
       final_price: parseFloat(newReservation.final_price) || 0,
