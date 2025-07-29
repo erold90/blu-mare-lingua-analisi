@@ -52,54 +52,68 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative h-screen flex items-center justify-center overflow-hidden">
-      {/* Clean background image */}
-      <div 
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: `url('${getBackgroundImage()}')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center 30%',
-          backgroundRepeat: 'no-repeat',
-        }}
-      />
-      
-      {/* Subtle overlay */}
-      <div className="absolute inset-0 bg-black/20 z-10" />
-      
-      {/* Content */}
-      <div className="container mx-auto px-8 text-center z-20 relative text-white">
-        <div className="max-w-4xl mx-auto space-y-8">
+    <section className="relative h-screen flex items-center justify-center overflow-hidden bg-[#D4B496]">
+      {/* Arch frame container */}
+      <div className="relative w-full h-full max-w-7xl mx-auto">
+        {/* Arch-shaped frame */}
+        <div 
+          className="absolute inset-x-4 inset-y-12 md:inset-x-8 md:inset-y-16 z-10"
+          style={{
+            background: `url('${getBackgroundImage()}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center center',
+            backgroundRepeat: 'no-repeat',
+            clipPath: 'ellipse(50% 45% at 50% 55%)',
+            borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%'
+          }}
+        >
+          {/* Content overlay */}
+          <div className="absolute inset-0 bg-black/20" />
           
-          {/* Main title - elegant typography */}
-          <div className="space-y-4">
-            <h1 className="text-6xl md:text-7xl lg:text-8xl font-light tracking-wide">
-              Villa MareBlu
-            </h1>
-            <div className="w-24 h-px bg-white/80 mx-auto"></div>
-            <p className="text-xl md:text-2xl font-light text-white/90 max-w-2xl mx-auto leading-relaxed">
-              Eleganza e tranquillità nel Salento
-            </p>
-          </div>
-          
-          {/* Simple CTA */}
-          <div className="pt-8">
-            <Button 
-              size="lg" 
-              onClick={handleQuoteClick}
-              variant="outline"
-              className="bg-transparent border-white/50 text-white hover:bg-white hover:text-black px-12 py-4 text-lg font-light rounded-none transition-all duration-300"
-            >
-              Richiedi Preventivo
-            </Button>
+          {/* Content */}
+          <div className="absolute inset-0 flex items-center justify-center text-center text-white">
+            <div className="max-w-4xl mx-auto space-y-8 px-8">
+              
+              {/* Main title - elegant typography */}
+              <div className="space-y-4">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-light tracking-wide">
+                  Villa MareBlu
+                </h1>
+                <div className="w-24 h-px bg-white/80 mx-auto"></div>
+                <p className="text-lg md:text-xl font-light text-white/90 max-w-2xl mx-auto leading-relaxed">
+                  Eleganza e tranquillità nel Salento
+                </p>
+              </div>
+              
+              {/* Simple CTA */}
+              <div className="pt-4">
+                <Button 
+                  size="lg" 
+                  onClick={handleQuoteClick}
+                  variant="outline"
+                  className="bg-transparent border-white/50 text-white hover:bg-white hover:text-black px-8 py-3 text-base font-light rounded-none transition-all duration-300"
+                >
+                  Richiedi Preventivo
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
+        
+        {/* Arch frame border */}
+        <div 
+          className="absolute inset-x-4 inset-y-12 md:inset-x-8 md:inset-y-16 border-4 border-[#B8956F]"
+          style={{
+            clipPath: 'ellipse(50% 45% at 50% 55%)',
+            borderRadius: '50% 50% 50% 50% / 60% 60% 40% 40%'
+          }}
+        />
       </div>
       
       {/* Minimal scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/60">
-        <div className="w-px h-12 bg-white/30 mx-auto mb-2"></div>
-        <div className="text-xs uppercase tracking-widest">Scroll</div>
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-[#8B6F47] z-20">
+        <div className="w-px h-12 bg-[#8B6F47]/50 mx-auto mb-2"></div>
+        <div className="text-xs uppercase tracking-widest font-medium">Scroll</div>
       </div>
     </section>
   );
