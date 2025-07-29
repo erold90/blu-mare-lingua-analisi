@@ -243,42 +243,42 @@ export default function AdminPage() {
       <div className="p-4 sm:p-6">
         <Tabs defaultValue="dashboard" className="space-y-6">
           <div className="overflow-x-auto">
-            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 min-w-max">
+            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-9 min-w-max">
               <TabsTrigger value="dashboard" className="flex items-center gap-2 text-xs lg:text-sm">
                 <BarChart className="h-4 w-4" />
                 <span className="hidden sm:inline">Dashboard</span>
-              </TabsTrigger>
-              <TabsTrigger value="quotes" className="flex items-center gap-2 text-xs lg:text-sm">
-                <Receipt className="h-4 w-4" />
-                <span className="hidden sm:inline">Preventivi</span>
-              </TabsTrigger>
-              <TabsTrigger value="analytics" className="flex items-center gap-2 text-xs lg:text-sm">
-                <BarChart className="h-4 w-4" />
-                <span className="hidden sm:inline">Visite</span>
-              </TabsTrigger>
-              <TabsTrigger value="revenue" className="flex items-center gap-2 text-xs lg:text-sm">
-                <TrendingUp className="h-4 w-4" />
-                <span className="hidden sm:inline">Ricavi</span>
-              </TabsTrigger>
-              <TabsTrigger value="calendar" className="flex items-center gap-2 text-xs lg:text-sm">
-                <Calendar className="h-4 w-4" />
-                <span className="hidden sm:inline">Calendario</span>
               </TabsTrigger>
               <TabsTrigger value="reservations" className="flex items-center gap-2 text-xs lg:text-sm">
                 <Users className="h-4 w-4" />
                 <span className="hidden sm:inline">Prenotazioni</span>
               </TabsTrigger>
+              <TabsTrigger value="calendar" className="flex items-center gap-2 text-xs lg:text-sm">
+                <Calendar className="h-4 w-4" />
+                <span className="hidden sm:inline">Calendario</span>
+              </TabsTrigger>
+              <TabsTrigger value="quotes" className="flex items-center gap-2 text-xs lg:text-sm">
+                <Receipt className="h-4 w-4" />
+                <span className="hidden sm:inline">Preventivi</span>
+              </TabsTrigger>
+              <TabsTrigger value="revenue" className="flex items-center gap-2 text-xs lg:text-sm">
+                <TrendingUp className="h-4 w-4" />
+                <span className="hidden sm:inline">Ricavi Estivi</span>
+              </TabsTrigger>
               <TabsTrigger value="pricing" className="flex items-center gap-2 text-xs lg:text-sm">
                 <Euro className="h-4 w-4" />
                 <span className="hidden sm:inline">Prezzi</span>
               </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-2 text-xs lg:text-sm">
+                <BarChart className="h-4 w-4" />
+                <span className="hidden sm:inline">Visite</span>
+              </TabsTrigger>
               <TabsTrigger value="gallery" className="flex items-center gap-2 text-xs lg:text-sm">
                 <ImageIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">Galleria</span>
+                <span className="hidden sm:inline">Galleria Appartamenti</span>
               </TabsTrigger>
               <TabsTrigger value="home-gallery" className="flex items-center gap-2 text-xs lg:text-sm">
                 <ImageIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">Home</span>
+                <span className="hidden sm:inline">Galleria Home</span>
               </TabsTrigger>
             </TabsList>
           </div>
