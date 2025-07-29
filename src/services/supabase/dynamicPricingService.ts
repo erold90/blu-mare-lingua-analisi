@@ -91,7 +91,7 @@ class PricingService {
     });
   }
 
-  // Recupera prezzo per periodo specifico
+  // Recupera prezzo per periodo specifico usando weekly_prices
   static async getPriceForPeriod(
     apartmentId: number, 
     checkinDate: string, 
@@ -100,46 +100,56 @@ class PricingService {
     const cacheKey = `price_${apartmentId}_${checkinDate}_${checkoutDate}`;
     
     return this.getOrSetCache(cacheKey, async () => {
-      const { data: periods, error } = await supabase
-        .from('pricing_periods')
+      const checkinYear = new Date(checkinDate).getFullYear();
+      const checkoutYear = new Date(checkoutDate).getFullYear();
+      
+      // Recupera i prezzi settimanali per gli anni coinvolti
+      const { data: weeklyPrices, error } = await supabase
+        .from('weekly_prices')
         .select('*')
-        .eq('apartment_id', apartmentId)
-        .eq('is_active', true)
-        .gte('end_date', checkinDate)
-        .lte('start_date', checkoutDate)
-        .order('start_date');
+        .eq('apartment_id', apartmentId.toString())
+        .in('year', [checkinYear, checkoutYear])
+        .gte('week_end', checkinDate)
+        .lte('week_start', checkoutDate)
+        .order('week_start');
       
       if (error) throw new Error(`Errore nel recupero prezzi: ${error.message}`);
-      if (!periods?.length) {
+      if (!weeklyPrices?.length) {
         throw new Error(`Nessun prezzo trovato per appartamento ${apartmentId} nel periodo ${checkinDate} - ${checkoutDate}`);
       }
       
-      return this.calculateProportionalPrice(periods, checkinDate, checkoutDate);
+      return this.calculateWeeklyPrice(weeklyPrices, checkinDate, checkoutDate);
     });
   }
 
-  // Calcolo prezzo proporzionale per soggiorni multi-periodo
-  static calculateProportionalPrice(
-    periods: PricingPeriod[], 
+  // Calcolo prezzo basato su prezzi settimanali
+  static calculateWeeklyPrice(
+    weeklyPrices: any[], 
     checkin: string, 
     checkout: string
   ): number {
     const checkinDate = new Date(checkin);
     const checkoutDate = new Date(checkout);
+    const totalNights = Math.ceil((checkoutDate.getTime() - checkinDate.getTime()) / (1000 * 60 * 60 * 24));
     
     let totalPrice = 0;
     let currentDate = new Date(checkin);
     
-    for (const period of periods) {
-      const periodStart = new Date(Math.max(currentDate.getTime(), new Date(period.start_date).getTime()));
-      const periodEnd = new Date(Math.min(checkoutDate.getTime(), new Date(period.end_date).getTime()));
+    for (let night = 0; night < totalNights; night++) {
+      // Trova il prezzo settimanale che copre questa data
+      const weekPrice = weeklyPrices.find(price => {
+        const weekStart = new Date(price.week_start);
+        const weekEnd = new Date(price.week_end);
+        return currentDate >= weekStart && currentDate <= weekEnd;
+      });
       
-      if (periodStart < periodEnd) {
-        const nightsInPeriod = Math.ceil((periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24));
-        const dailyRate = period.weekly_price / 7;
-        totalPrice += nightsInPeriod * dailyRate;
-        currentDate = periodEnd;
+      if (weekPrice) {
+        // Calcola il prezzo giornaliero dalla tariffa settimanale
+        const dailyRate = weekPrice.price / 7;
+        totalPrice += dailyRate;
       }
+      
+      currentDate.setDate(currentDate.getDate() + 1);
     }
     
     return Math.round(totalPrice);
@@ -156,13 +166,22 @@ class PricingService {
     return this.getOrSetCache(cacheKey, async () => {
       console.log(`🔍 Controllo disponibilità appartamento ${apartmentId} dal ${checkin} al ${checkout}`);
       
+      // Verifica conflitti con prenotazioni esistenti
       const { data: conflicts, error } = await supabase
-        .from('bookings')
+        .from('reservations')
         .select('id')
-        .eq('apartment_id', apartmentId)
-        .eq('status', 'confirmed')
-        .lt('checkin_date', checkout)
-        .gt('checkout_date', checkin);
+        .contains('apartment_ids', [apartmentId])
+        .lt('start_date', checkout)
+        .gt('end_date', checkin);
+      
+      // Verifica anche i blocchi date
+      const { data: dateBlocks } = await supabase
+        .from('date_blocks')
+        .select('id')
+        .eq('is_active', true)
+        .or(`apartment_id.eq.${apartmentId},apartment_id.is.null`)
+        .lte('start_date', checkout)
+        .gte('end_date', checkin);
       
       console.log(`📋 Query results per appartamento ${apartmentId}:`, { conflicts, error });
       
@@ -172,10 +191,11 @@ class PricingService {
         return true;
       }
       
-      const isAvailable = !conflicts || conflicts.length === 0;
-      console.log(`✅ Appartamento ${apartmentId} ${isAvailable ? 'DISPONIBILE' : 'OCCUPATO'} (${conflicts?.length || 0} conflitti)`);
+      const hasConflicts = (conflicts && conflicts.length > 0) || (dateBlocks && dateBlocks.length > 0);
+      const isAvailable = !hasConflicts;
       
-      // Se non ci sono conflitti, l'appartamento è disponibile
+      console.log(`✅ Appartamento ${apartmentId} ${isAvailable ? 'DISPONIBILE' : 'OCCUPATO'} (${conflicts?.length || 0} prenotazioni, ${dateBlocks?.length || 0} blocchi)`);
+      
       return isAvailable;
     });
   }

@@ -48,6 +48,11 @@ export const usePricing = () => {
   const updateWeeklyPrice = async (id: string, updates: Partial<WeeklyPrice>) => {
     try {
       await pricingService.updateWeeklyPrice(id, updates);
+      
+      // Invalida cache del pricing service per forzare aggiornamento
+      const { PricingService } = await import('@/services/supabase/dynamicPricingService');
+      PricingService.invalidateCache();
+      
       await fetchWeeklyPrices();
       toast.success('Prezzo aggiornato con successo');
       return { success: true, error: null };
@@ -61,6 +66,11 @@ export const usePricing = () => {
     try {
       setLoading(true);
       const weeksCreated = await pricingService.generateWeeklyPricesForYear(targetYear, copyFromYear);
+      
+      // Invalida cache del pricing service
+      const { PricingService } = await import('@/services/supabase/dynamicPricingService');
+      PricingService.invalidateCache();
+      
       await fetchWeeklyPrices(targetYear);
       toast.success(`Prezzi generati per ${targetYear}: ${weeksCreated} settimane create`);
       return { success: true, error: null, weeksCreated };
