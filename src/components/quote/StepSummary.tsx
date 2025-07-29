@@ -461,43 +461,48 @@ Saldo arrivo: €${priceCalculation.balance}
 
           {/* Condizioni Pagamento */}
           <div className="space-y-3">
-            <h4 className="font-semibold">Condizioni di pagamento</h4>
+            <h4 className="font-semibold flex items-center gap-2">
+              <CreditCard className="h-4 w-4" />
+              Condizioni di pagamento
+            </h4>
             
-            <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-              <div className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-blue-600" />
-                <span className="text-blue-900 dark:text-blue-100">Caparra (30%)</span>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between p-2 bg-blue-50 dark:bg-blue-950/20 rounded">
+                <span>Caparra (30%):</span>
+                <span className="font-semibold">€{(priceCalculation.deposit || 0).toFixed(2)}</span>
               </div>
-              <span className="font-bold text-blue-900 dark:text-blue-100">€{priceCalculation.deposit}</span>
+              
+              <div className="flex justify-between p-2 bg-orange-50 dark:bg-orange-950/20 rounded">
+                <span>Saldo all'arrivo:</span>
+                <span className="font-semibold">€{(priceCalculation.balance || 0).toFixed(2)}</span>
+              </div>
+              
+              <div className="flex justify-between p-2 bg-green-50 dark:bg-green-950/20 rounded">
+                <span className="flex items-center gap-1">
+                  <Banknote className="h-3 w-3" />
+                  Caparra al Check-in (contanti):
+                </span>
+                <span className="font-semibold">
+                  200 €{formData.selectedApartments.length > 1 ? ` per appartamento (${formData.selectedApartments.length * 200} € totali)` : ''}
+                </span>
+              </div>
             </div>
             
-            <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
-              <div className="flex items-center gap-2">
-                <Banknote className="h-4 w-4 text-green-600" />
-                <span className="text-green-900 dark:text-green-100">Saldo all'arrivo</span>
-              </div>
-              <span className="font-bold text-green-900 dark:text-green-100">€{priceCalculation.balance}</span>
-            </div>
-            
-            <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-950/20 rounded-lg">
-              <div className="text-yellow-900 dark:text-yellow-100 font-semibold">
-                Cauzione: €200
-              </div>
-              <div className="text-sm text-yellow-800 dark:text-yellow-200">
-                (restituita al check-out se non ci sono danni)
-              </div>
+            <div className="text-xs text-muted-foreground">
+              <p>• La caparra del 30% è richiesta per confermare la prenotazione</p>
+              <p>• Il saldo è dovuto il giorno dell'arrivo</p>
+              <p>• La caparra in contanti è a garanzia dell'appartamento</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Navigation */}
       <div className="flex justify-center gap-4">
         <Button variant="outline" onClick={onPrev} size="lg">
           Indietro
         </Button>
-        <Button onClick={sendWhatsApp} size="lg" className="min-w-[200px]" disabled={loading}>
-          {loading ? 'Caricamento...' : 'Invia su WhatsApp'}
+        <Button onClick={onNext} size="lg" className="min-w-[200px]">
+          Procedi al contatto
         </Button>
       </div>
     </div>

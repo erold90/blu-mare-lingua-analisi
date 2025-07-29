@@ -103,7 +103,7 @@ TOTALE: €${priceCalculation.total}
 💳 *PAGAMENTO:*
 Caparra (30%): €${priceCalculation.deposit}
 Saldo arrivo: €${priceCalculation.balance}
-Caparra al Check-in (contanti): 200 €
+Caparra al Check-in (contanti): 200 €${formData.selectedApartments.length > 1 ? ` per appartamento (${formData.selectedApartments.length * 200} € totali)` : ''}
 
 👤 *CONTATTI:*
 Nome: ${formData.guestName}
