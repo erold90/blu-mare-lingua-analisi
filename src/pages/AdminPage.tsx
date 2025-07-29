@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Users, Home, BarChart, Plus, Edit, Trash2, Euro, ArrowLeft, Receipt } from 'lucide-react';
+import { Calendar, Users, Home, BarChart, Plus, Edit, Trash2, Euro, ArrowLeft, Receipt, ImageIcon } from 'lucide-react';
 import { useReservations } from '@/hooks/useReservations';
 import { apartments } from '@/data/apartments';
 import { format } from 'date-fns';
@@ -19,6 +19,7 @@ import { PricingManagement } from '@/components/admin/PricingManagement';
 import { VisitAnalytics } from '@/components/admin/VisitAnalytics';
 import { QuoteRequestsManager } from '@/components/admin/QuoteRequestsManager';
 import { ReservationsCalendar } from '@/components/admin/ReservationsCalendar';
+import { ApartmentImageGallery } from '@/components/admin/ApartmentImageGallery';
 
 const LOGIN_CREDENTIALS = {
   username: 'admin',
@@ -246,6 +247,10 @@ export default function AdminPage() {
             <TabsTrigger value="pricing" className="flex items-center gap-2">
               <Euro className="h-4 w-4" />
               Prezzi
+            </TabsTrigger>
+            <TabsTrigger value="gallery" className="flex items-center gap-2">
+              <ImageIcon className="h-4 w-4" />
+              Galleria
             </TabsTrigger>
           </TabsList>
 
@@ -624,6 +629,10 @@ export default function AdminPage() {
 
           <TabsContent value="pricing" className="space-y-6">
             <PricingManagement />
+          </TabsContent>
+          
+          <TabsContent value="gallery" className="space-y-6">
+            <ApartmentImageGallery />
           </TabsContent>
         </Tabs>
       </div>
