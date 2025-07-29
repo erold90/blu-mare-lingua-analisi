@@ -12,7 +12,8 @@ import {
   Bed, 
   Euro,
   CreditCard,
-  Banknote
+  Banknote,
+  Send
 } from 'lucide-react';
 import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 import { format } from 'date-fns';
@@ -164,6 +165,7 @@ TOTALE: €${priceCalculation.total}
 💳 *PAGAMENTO:*
 Caparra (30%): €${priceCalculation.deposit}
 Saldo arrivo: €${priceCalculation.balance}
+Caparra al Check-in (contanti): 200 €${formData.selectedApartments.length > 1 ? ` per appartamento (${formData.selectedApartments.length * 200} € totali)` : ''}
 
 *Preventivo senza impegno - Valido 7 giorni*`;
 
@@ -501,8 +503,9 @@ Saldo arrivo: €${priceCalculation.balance}
         <Button variant="outline" onClick={onPrev} size="lg">
           Indietro
         </Button>
-        <Button onClick={onNext} size="lg" className="min-w-[200px]">
-          Procedi al contatto
+        <Button onClick={sendWhatsApp} size="lg" className="min-w-[200px]">
+          <Send className="h-4 w-4 mr-2" />
+          Invia su WhatsApp
         </Button>
       </div>
     </div>
