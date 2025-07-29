@@ -789,6 +789,17 @@ export default function AdminPage() {
                     <Label className="text-sm font-semibold text-gray-600">ID Prenotazione</Label>
                     <p className="text-sm text-gray-500 font-mono">{selectedReservation.id}</p>
                   </div>
+                  {selectedReservation.guest_phone && (
+                    <div className="col-span-1 sm:col-span-2">
+                      <Label className="text-sm font-semibold text-gray-600">Telefono</Label>
+                      <a 
+                        href={`tel:${selectedReservation.guest_phone}`}
+                        className="text-lg font-medium text-primary hover:underline cursor-pointer block mt-1"
+                      >
+                        {selectedReservation.guest_phone}
+                      </a>
+                    </div>
+                  )}
                 </div>
 
                 {/* Date Soggiorno */}

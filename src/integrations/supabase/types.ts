@@ -386,6 +386,7 @@ export type Database = {
           end_date: string
           final_price: number | null
           guest_name: string
+          guest_phone: string | null
           has_pets: boolean | null
           id: string
           linen_option: string | null
@@ -406,6 +407,7 @@ export type Database = {
           end_date: string
           final_price?: number | null
           guest_name: string
+          guest_phone?: string | null
           has_pets?: boolean | null
           id: string
           linen_option?: string | null
@@ -426,6 +428,7 @@ export type Database = {
           end_date?: string
           final_price?: number | null
           guest_name?: string
+          guest_phone?: string | null
           has_pets?: boolean | null
           id?: string
           linen_option?: string | null
