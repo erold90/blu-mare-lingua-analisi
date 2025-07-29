@@ -54,6 +54,7 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quoteSaved, setQuoteSaved] = useState(false);
+  const [savingQuote, setSavingQuote] = useState(false);
 
   useEffect(() => {
     const loadPriceCalculation = async () => {
@@ -64,13 +65,16 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
         setPriceCalculation(result);
         
         // Auto-salvataggio del preventivo quando arriva allo step 6
-        if (result && !quoteSaved) {
+        if (result && !quoteSaved && !savingQuote) {
+          setSavingQuote(true);
           await saveQuoteToDatabase(result);
           setQuoteSaved(true);
+          setSavingQuote(false);
         }
       } catch (err) {
         console.error('Errore nel calcolo prezzi:', err);
         setError('Non è possibile calcolare il preventivo. Alcune date potrebbero non essere disponibili.');
+        setSavingQuote(false);
       } finally {
         setLoading(false);
       }
@@ -118,7 +122,7 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   const nights = getNights();
   const bedsNeeded = getBedsNeeded();
 
-  const sendWhatsApp = () => {
+  const sendWhatsApp = async () => {
     const apartmentNames = {
       "1": "Appartamento 1 (6 posti)",
       "2": "Appartamento 2 (8 posti)", 
@@ -165,6 +169,25 @@ Saldo arrivo: €${priceCalculation.balance}
 
     const whatsappUrl = `https://wa.me/393937767749?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
+    
+    // Aggiorna il preventivo più recente nel database come "inviato"
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      await supabase
+        .from('quote_requests')
+        .update({ whatsapp_sent: true })
+        .eq('checkin_date', formData.checkIn)
+        .eq('checkout_date', formData.checkOut)
+        .eq('adults', formData.adults)
+        .eq('children', formData.children)
+        .eq('whatsapp_sent', false)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      console.log('✅ Preventivo marcato come inviato su WhatsApp');
+    } catch (err) {
+      console.error('Errore aggiornamento preventivo:', err);
+    }
   };
 
   if (loading) {
