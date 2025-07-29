@@ -62,20 +62,29 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
   // Controlla la disponibilità dinamicamente per tutti gli appartamenti
   useEffect(() => {
     const checkAllAvailability = async () => {
-      if (!formData.checkIn || !formData.checkOut) return;
+      console.log('🏠 Controllo disponibilità appartamenti...');
+      console.log('📅 Date:', { checkIn: formData.checkIn, checkOut: formData.checkOut });
+      
+      if (!formData.checkIn || !formData.checkOut) {
+        console.log('❌ Date mancanti, salto controllo disponibilità');
+        return;
+      }
       
       const newStatus: Record<string, boolean> = {};
       
       for (const apartment of apartments) {
         try {
+          console.log(`🔍 Controllo appartamento ${apartment.id}...`);
           const available = await isApartmentAvailable(apartment.id, formData.checkIn, formData.checkOut);
           newStatus[apartment.id] = available;
+          console.log(`✅ Appartamento ${apartment.id}: ${available ? 'DISPONIBILE' : 'OCCUPATO'}`);
         } catch (error) {
-          console.error(`Error checking availability for apartment ${apartment.id}:`, error);
+          console.error(`❌ Errore checking availability for apartment ${apartment.id}:`, error);
           newStatus[apartment.id] = false;
         }
       }
       
+      console.log('📊 Stato finale disponibilità:', newStatus);
       setAvailabilityStatus(newStatus);
     };
 
