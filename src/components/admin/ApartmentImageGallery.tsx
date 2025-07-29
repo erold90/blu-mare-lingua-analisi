@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { Upload, Trash2, Star, Image as ImageIcon, Move } from 'lucide-react';
+import { Upload, Trash2, Star, Image as ImageIcon, Move, GripVertical } from 'lucide-react';
 import { apartments } from '@/data/apartments';
 import { imageService } from '@/services/image';
 import { ImageRecord } from '@/services/image/types';
@@ -70,6 +70,9 @@ export const ApartmentImageGallery: React.FC = () => {
         await loadImages();
         setIsUploadDialogOpen(false);
         setSelectedFiles(null);
+        
+        // Notify other components about image updates
+        window.dispatchEvent(new CustomEvent('apartmentImagesUpdated'));
       }
     } catch (error) {
       console.error('Error uploading images:', error);
@@ -103,6 +106,8 @@ export const ApartmentImageGallery: React.FC = () => {
 
     try {
       await imageService.reorderImages(updates);
+      // Notify other components about image updates
+      window.dispatchEvent(new CustomEvent('apartmentImagesUpdated'));
     } catch (error) {
       console.error('Error reordering images:', error);
       toast.error('Errore nel riordinamento');
@@ -118,6 +123,9 @@ export const ApartmentImageGallery: React.FC = () => {
     try {
       await imageService.deleteImage(image.id, image.file_path);
       await loadImages();
+      
+      // Notify other components about image updates
+      window.dispatchEvent(new CustomEvent('apartmentImagesUpdated'));
     } catch (error) {
       console.error('Error deleting image:', error);
       toast.error('Errore nell\'eliminazione dell\'immagine');
@@ -129,6 +137,9 @@ export const ApartmentImageGallery: React.FC = () => {
     try {
       await imageService.setCoverImage(selectedApartment, image.id);
       await loadImages();
+      
+      // Notify other components about image updates
+      window.dispatchEvent(new CustomEvent('apartmentImagesUpdated'));
     } catch (error) {
       console.error('Error setting cover image:', error);
       toast.error('Errore nell\'impostazione dell\'immagine di copertina');
@@ -246,7 +257,7 @@ export const ApartmentImageGallery: React.FC = () => {
               </div>
             ) : (
               <DragDropContext onDragEnd={handleDragEnd}>
-                <Droppable droppableId="images-gallery" direction="horizontal">
+                <Droppable droppableId="images-gallery">
                   {(provided) => (
                     <div
                       {...provided.droppableProps}
@@ -259,21 +270,27 @@ export const ApartmentImageGallery: React.FC = () => {
                             <div
                               ref={provided.innerRef}
                               {...provided.draggableProps}
-                              className={`relative group bg-white rounded-lg border-2 overflow-hidden ${
-                                snapshot.isDragging ? 'border-primary shadow-lg' : 'border-border'
+                              className={`relative group bg-white rounded-lg border-2 overflow-hidden transition-all ${
+                                snapshot.isDragging ? 'border-primary shadow-lg scale-105 z-50' : 'border-border hover:border-primary/50'
                               } ${image.is_cover ? 'ring-2 ring-yellow-400' : ''}`}
                             >
-                              <div {...provided.dragHandleProps} className="cursor-move">
-                                <img
-                                  src={imageService.getImageUrl(image.file_path)}
-                                  alt={image.alt_text || 'Immagine appartamento'}
-                                  className="w-full h-32 object-cover"
-                                />
+                              {/* Drag Handle */}
+                              <div 
+                                {...provided.dragHandleProps}
+                                className="absolute top-2 left-2 z-10 cursor-move bg-black/50 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <GripVertical className="h-4 w-4" />
                               </div>
+                              
+                              <img
+                                src={imageService.getImageUrl(image.file_path)}
+                                alt={image.alt_text || 'Immagine appartamento'}
+                                className="w-full h-32 object-cover"
+                              />
                               
                               {/* Cover Badge */}
                               {image.is_cover && (
-                                <div className="absolute top-2 left-2">
+                                <div className="absolute top-2 right-2">
                                   <Badge className="bg-yellow-500 text-white">
                                     <Star className="h-3 w-3 mr-1" />
                                     Copertina
@@ -306,7 +323,7 @@ export const ApartmentImageGallery: React.FC = () => {
                               </div>
 
                               {/* Order Number */}
-                              <div className="absolute top-2 right-2">
+                              <div className="absolute bottom-2 right-2">
                                 <Badge variant="outline" className="bg-white/90">
                                   #{index + 1}
                                 </Badge>
