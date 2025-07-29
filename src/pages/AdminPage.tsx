@@ -20,6 +20,7 @@ import { VisitAnalytics } from '@/components/admin/VisitAnalytics';
 import { QuoteRequestsManager } from '@/components/admin/QuoteRequestsManager';
 import { ReservationsCalendar } from '@/components/admin/ReservationsCalendar';
 import { ApartmentImageGallery } from '@/components/admin/ApartmentImageGallery';
+import { HomeImageGallery } from '@/components/admin/HomeImageGallery';
 
 const LOGIN_CREDENTIALS = {
   username: 'admin',
@@ -250,7 +251,11 @@ export default function AdminPage() {
             </TabsTrigger>
             <TabsTrigger value="gallery" className="flex items-center gap-2">
               <ImageIcon className="h-4 w-4" />
-              Galleria
+              Galleria Appartamenti
+            </TabsTrigger>
+            <TabsTrigger value="home-gallery" className="flex items-center gap-2">
+              <ImageIcon className="h-4 w-4" />
+              Galleria Home
             </TabsTrigger>
           </TabsList>
 
@@ -633,6 +638,10 @@ export default function AdminPage() {
           
           <TabsContent value="gallery" className="space-y-6">
             <ApartmentImageGallery />
+          </TabsContent>
+          
+          <TabsContent value="home-gallery" className="space-y-6">
+            <HomeImageGallery />
           </TabsContent>
         </Tabs>
       </div>

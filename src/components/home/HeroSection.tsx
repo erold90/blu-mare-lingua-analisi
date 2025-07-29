@@ -26,6 +26,18 @@ const HeroSection = () => {
     };
 
     loadHeroImage();
+
+    // Listen for home image updates from admin panel
+    const handleHomeImageUpdate = () => {
+      console.log("🔄 Received homeImagesUpdated event, reloading hero image...");
+      loadHeroImage();
+    };
+
+    window.addEventListener('homeImagesUpdated', handleHomeImageUpdate);
+    
+    return () => {
+      window.removeEventListener('homeImagesUpdated', handleHomeImageUpdate);
+    };
   }, []);
 
   const handleQuoteClick = () => {

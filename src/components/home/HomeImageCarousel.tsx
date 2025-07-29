@@ -34,6 +34,18 @@ export const HomeImageCarousel = () => {
     };
 
     loadImages();
+
+    // Listen for home image updates from admin panel
+    const handleHomeImageUpdate = () => {
+      console.log("🔄 Received homeImagesUpdated event, reloading gallery images...");
+      loadImages();
+    };
+
+    window.addEventListener('homeImagesUpdated', handleHomeImageUpdate);
+    
+    return () => {
+      window.removeEventListener('homeImagesUpdated', handleHomeImageUpdate);
+    };
   }, []);
 
   if (loading) {
