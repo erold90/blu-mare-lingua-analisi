@@ -122,7 +122,7 @@ class PricingService {
     });
   }
 
-  // Calcolo prezzo basato su prezzi settimanali
+  // Calcolo prezzo basato su prezzi settimanali con nuove regole proporzionali
   static calculateWeeklyPrice(
     weeklyPrices: any[], 
     checkin: string, 
@@ -132,7 +132,55 @@ class PricingService {
     const checkoutDate = new Date(checkout);
     const totalNights = Math.ceil((checkoutDate.getTime() - checkinDate.getTime()) / (1000 * 60 * 60 * 24));
     
-    let totalPrice = 0;
+    console.log(`📅 Calcolo prezzo per ${totalNights} notti dal ${checkin} al ${checkout}`);
+    
+    // REGOLA 1: Per soggiorni di 5-6 notti, applica sempre il prezzo settimanale completo
+    if (totalNights >= 5 && totalNights <= 6) {
+      console.log(`🎯 Soggiorno 5-6 notti: applico prezzo settimanale completo`);
+      
+      // Trova il periodo dominante (dove cadono più notti)
+      const periodCoverage = this.calculatePeriodCoverage(weeklyPrices, checkin, checkout);
+      const dominantPeriod = periodCoverage.reduce((max, current) => 
+        current.nights > max.nights ? current : max
+      );
+      
+      console.log(`📊 Periodo dominante: ${dominantPeriod.price}€ per ${dominantPeriod.nights} notti su ${totalNights}`);
+      return dominantPeriod.price;
+    }
+    
+    // REGOLA 2: Per soggiorni di 7+ notti, calcola proporzionalmente
+    if (totalNights >= 7) {
+      console.log(`📈 Soggiorno 7+ notti: calcolo proporzionale`);
+      
+      const periodCoverage = this.calculatePeriodCoverage(weeklyPrices, checkin, checkout);
+      let totalPrice = 0;
+      
+      for (const period of periodCoverage) {
+        const proportionalPrice = (period.price / 7) * period.nights;
+        totalPrice += proportionalPrice;
+        console.log(`🧮 Periodo ${period.price}€: ${period.nights} notti × (${period.price}€ ÷ 7) = ${proportionalPrice.toFixed(2)}€`);
+      }
+      
+      console.log(`💰 Prezzo totale prima arrotondamento: ${totalPrice.toFixed(2)}€`);
+      return Math.round(totalPrice);
+    }
+    
+    // Fallback per soggiorni < 5 notti (non dovrebbe succedere con validazione)
+    console.warn(`⚠️ Soggiorno di ${totalNights} notti non supportato (minimo 5 notti)`);
+    return 0;
+  }
+
+  // Calcola la copertura di notti per ogni periodo di prezzo
+  static calculatePeriodCoverage(
+    weeklyPrices: any[], 
+    checkin: string, 
+    checkout: string
+  ): Array<{price: number, nights: number}> {
+    const checkinDate = new Date(checkin);
+    const checkoutDate = new Date(checkout);
+    const totalNights = Math.ceil((checkoutDate.getTime() - checkinDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    const coverage: Array<{price: number, nights: number}> = [];
     let currentDate = new Date(checkin);
     
     for (let night = 0; night < totalNights; night++) {
@@ -144,15 +192,19 @@ class PricingService {
       });
       
       if (weekPrice) {
-        // Calcola il prezzo giornaliero dalla tariffa settimanale
-        const dailyRate = weekPrice.price / 7;
-        totalPrice += dailyRate;
+        // Cerca se abbiamo già questo prezzo nella copertura
+        const existingPeriod = coverage.find(p => p.price === weekPrice.price);
+        if (existingPeriod) {
+          existingPeriod.nights++;
+        } else {
+          coverage.push({ price: weekPrice.price, nights: 1 });
+        }
       }
       
       currentDate.setDate(currentDate.getDate() + 1);
     }
     
-    return Math.round(totalPrice);
+    return coverage;
   }
 
   // Verifica disponibilità appartamento
