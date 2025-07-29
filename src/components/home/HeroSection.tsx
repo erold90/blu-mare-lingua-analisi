@@ -59,20 +59,8 @@ const HeroSection = () => {
         style={{
           backgroundImage: `url('${getBackgroundImage()}')`,
           backgroundSize: 'cover',
-          backgroundPosition: 'center center',
+          backgroundPosition: 'center 30%',
           backgroundRepeat: 'no-repeat',
-        }}
-      />
-      
-      {/* Mobile-optimized background image overlay */}
-      <div 
-        className="absolute inset-0 z-0 md:hidden"
-        style={{
-          backgroundImage: `url('${getBackgroundImage()}')`,
-          backgroundSize: 'contain',
-          backgroundPosition: 'center center',
-          backgroundRepeat: 'no-repeat',
-          backgroundColor: 'hsl(var(--background))',
         }}
       />
       
