@@ -90,7 +90,7 @@ const HeroSection = () => {
               variant="outline"
               className="bg-transparent border-white text-white hover:bg-white hover:text-black px-16 py-6 text-xl font-medium rounded-none transition-all duration-300 border-2"
             >
-              Richiedi Preventivo
+              Calcola Preventivo
             </Button>
           </div>
         </div>
