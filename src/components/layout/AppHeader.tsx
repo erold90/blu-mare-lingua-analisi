@@ -27,14 +27,7 @@ export function AppHeader() {
           </div>
         </div>
         
-        {/* Link discreto per l'area admin */}
-        <Link 
-          to="/admin" 
-          className="text-muted-foreground hover:text-foreground transition-colors"
-          title="Area Riservata"
-        >
-          <Settings className="h-4 w-4" />
-        </Link>
+        {/* Area admin link removed */}
       </div>
     </header>
   );
