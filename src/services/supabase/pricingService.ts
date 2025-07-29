@@ -58,14 +58,23 @@ export const pricingService = {
   },
 
   updateWeeklyPrice: async (id: string, updates: Partial<WeeklyPrice>) => {
+    console.log('🔄 Service: Aggiornamento prezzo con ID:', id, 'Updates:', updates);
+    
     const { data, error } = await supabase
       .from('weekly_prices')
-      .update(updates)
+      .update({ ...updates, updated_at: new Date().toISOString() })
       .eq('id', id)
       .select()
       .single();
     
-    if (error) throw error;
+    console.log('🔍 Service: Risultato query:', { data, error });
+    
+    if (error) {
+      console.error('❌ Service: Errore database:', error);
+      throw error;
+    }
+    
+    console.log('✅ Service: Prezzo aggiornato con successo:', data);
     return data;
   },
 

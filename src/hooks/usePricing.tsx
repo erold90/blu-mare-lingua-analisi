@@ -47,17 +47,26 @@ export const usePricing = () => {
 
   const updateWeeklyPrice = async (id: string, updates: Partial<WeeklyPrice>) => {
     try {
-      await pricingService.updateWeeklyPrice(id, updates);
+      console.log('🔄 Hook: Aggiornamento prezzo nel database...', { id, updates });
+      const updatedPrice = await pricingService.updateWeeklyPrice(id, updates);
+      console.log('✅ Hook: Prezzo aggiornato nel database:', updatedPrice);
       
       // Invalida cache del pricing service per forzare aggiornamento
       const { PricingService } = await import('@/services/supabase/dynamicPricingService');
       PricingService.invalidateCache();
       
-      await fetchWeeklyPrices();
+      // Aggiorna lo stato locale immediatamente
+      setWeeklyPrices(prevPrices => 
+        prevPrices.map(price => 
+          price.id === id ? { ...price, ...updates } : price
+        )
+      );
+      
       toast.success('Prezzo aggiornato con successo');
       return { success: true, error: null };
     } catch (err: any) {
-      toast.error('Errore nell\'aggiornamento del prezzo');
+      console.error('❌ Hook: Errore aggiornamento prezzo:', err);
+      toast.error(`Errore nell'aggiornamento del prezzo: ${err.message}`);
       return { success: false, error: err.message };
     }
   };

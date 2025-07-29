@@ -62,9 +62,15 @@ export const PricingManagement = () => {
   });
 
   const handlePriceUpdate = async (priceId: string, newPrice: number) => {
+    console.log('🔄 Aggiornamento prezzo:', { priceId, newPrice });
     const result = await updateWeeklyPrice(priceId, { price: newPrice });
+    console.log('✅ Risultato aggiornamento:', result);
     if (result.success) {
       setEditingPrice(null);
+      // Forza il refresh dei dati
+      await fetchWeeklyPrices(selectedYear, selectedApartment === 'all' ? undefined : selectedApartment);
+    } else {
+      console.error('❌ Errore aggiornamento prezzo:', result.error);
     }
   };
 
