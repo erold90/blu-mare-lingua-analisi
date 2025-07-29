@@ -4,6 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 export const useVisitTracker = () => {
   useEffect(() => {
     const trackVisit = async () => {
+      // Non tracciare visite nell'area riservata
+      if (window.location.pathname.includes('/area-riservata')) {
+        return;
+      }
       try {
         const visitData = {
           page: window.location.pathname,

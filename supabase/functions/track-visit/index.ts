@@ -35,13 +35,26 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get visitor IP
+    // Get visitor IP first
     const clientIP = req.headers.get('cf-connecting-ip') || 
                     req.headers.get('x-forwarded-for') || 
                     req.headers.get('x-real-ip') || 
                     'unknown';
 
     console.log('📍 Visitor IP:', clientIP);
+
+    const { page, referrer, userAgent }: VisitData = await req.json();
+
+    // Non tracciare visite nell'area riservata
+    if (page.includes('/area-riservata')) {
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Admin area visit not tracked' 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Get geo data from IP
     let geoData: GeoLocationData | null = null;
@@ -68,7 +81,30 @@ serve(async (req) => {
       }
     }
 
-    const { page, referrer, userAgent }: VisitData = await req.json();
+    // Controllo per evitare visite duplicate dello stesso IP nella stessa sessione (30 minuti)
+    const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    
+    const { data: recentVisit, error: checkError } = await supabase
+      .from('website_visits')
+      .select('id')
+      .eq('ip_address', clientIP)
+      .gte('visit_time', thirtyMinutesAgo)
+      .limit(1);
+
+    if (checkError) {
+      console.error('Error checking recent visits:', checkError);
+    } else if (recentVisit && recentVisit.length > 0) {
+      // Visita già tracciata negli ultimi 30 minuti per questo IP
+      console.log('🔄 Visit already tracked for IP:', clientIP, 'in last 30 minutes');
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Visit already tracked in session',
+          duplicate: true
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Save visit to database
     const { data, error } = await supabase
