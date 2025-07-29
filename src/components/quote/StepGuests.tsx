@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Users, Baby, AlertCircle } from 'lucide-react';
+import { Users, Baby, AlertCircle, Plus, Minus } from 'lucide-react';
 import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 
 interface StepGuestsProps {
@@ -64,36 +64,64 @@ export const StepGuests: React.FC<StepGuestsProps> = ({
         <CardContent className="space-y-6">
           {/* Adulti */}
           <div className="space-y-2">
-            <Label htmlFor="adults" className="text-lg font-semibold">
+            <Label className="text-lg font-semibold">
               Adulti (obbligatorio)
             </Label>
-            <Input
-              id="adults"
-              type="number"
-              min="1"
-              max="23"
-              value={formData.adults}
-              onChange={(e) => updateFormData({ adults: parseInt(e.target.value) || 1 })}
-              className="text-lg"
-            />
-            <p className="text-sm text-muted-foreground">
+            <div className="flex items-center justify-center gap-4 p-4 border rounded-lg">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => updateFormData({ adults: Math.max(1, formData.adults - 1) })}
+                disabled={formData.adults <= 1}
+                className="h-10 w-10 p-0"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <div className="text-2xl font-bold min-w-[60px] text-center">
+                {formData.adults}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => updateFormData({ adults: Math.min(23, formData.adults + 1) })}
+                disabled={formData.adults >= 23}
+                className="h-10 w-10 p-0"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground text-center">
               Minimo 1, massimo 23 adulti
             </p>
           </div>
 
           {/* Bambini */}
           <div className="space-y-2">
-            <Label htmlFor="children" className="text-lg font-semibold">
+            <Label className="text-lg font-semibold">
               Bambini
             </Label>
-            <Input
-              id="children"
-              type="number"
-              min="0"
-              value={formData.children}
-              onChange={(e) => handleChildrenChange(parseInt(e.target.value) || 0)}
-              className="text-lg"
-            />
+            <div className="flex items-center justify-center gap-4 p-4 border rounded-lg">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleChildrenChange(formData.children - 1)}
+                disabled={formData.children <= 0}
+                className="h-10 w-10 p-0"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <div className="text-2xl font-bold min-w-[60px] text-center">
+                {formData.children}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleChildrenChange(formData.children + 1)}
+                className="h-10 w-10 p-0"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Checkbox per ogni bambino */}
