@@ -88,7 +88,7 @@ const HeroSection = () => {
               size="lg" 
               onClick={handleQuoteClick}
               variant="outline"
-              className="bg-transparent border-white/50 text-white hover:bg-white hover:text-black px-12 py-4 text-lg font-light rounded-none transition-all duration-300"
+              className="bg-transparent border-white text-white hover:bg-white hover:text-black px-16 py-6 text-xl font-medium rounded-none transition-all duration-300 border-2"
             >
               Richiedi Preventivo
             </Button>
