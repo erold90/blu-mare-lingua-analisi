@@ -408,6 +408,26 @@ Saldo arrivo: €${priceCalculation.balance}
               </span>
             </div>
             
+            
+            {/* Costi Inclusi */}
+            <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
+              <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2">Costi Inclusi</h4>
+              <div className="space-y-1 text-sm text-green-800 dark:text-green-200">
+                <div className="flex items-center gap-2">
+                  <span>•</span>
+                  <span>Utenze</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>•</span>
+                  <span>Spese di Pulizia</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>•</span>
+                  <span>Tassa di Soggiorno</span>
+                </div>
+              </div>
+            </div>
+            
             {priceCalculation.servicesTotal > 0 && (
               <div className="flex justify-between">
                 <span>Servizi aggiuntivi:</span>
