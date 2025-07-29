@@ -231,7 +231,7 @@ class PricingService {
       const { data: conflicts, error } = await supabase
         .from('reservations')
         .select('id, guest_name, start_date, end_date, apartment_ids')
-        .contains('apartment_ids', [`appartamento-${apartmentId}`])
+        .filter('apartment_ids', 'cs', JSON.stringify([`appartamento-${apartmentId}`]))
         .lt('start_date', checkout)
         .gt('end_date', checkin);
       
