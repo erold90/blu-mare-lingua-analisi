@@ -20,13 +20,8 @@ interface WorldMapProps {
 const geoUrl = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson";
 
 export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
-  // Calcola il raggio dei marker in base al numero di visite
-  const getMarkerRadius = (count: number) => {
-    const maxCount = Math.max(...visitData.map(d => d.count));
-    const minRadius = 4;
-    const maxRadius = 20;
-    return minRadius + (count / maxCount) * (maxRadius - minRadius);
-  };
+  // Raggio fisso piccolo per tutti i marker
+  const getMarkerRadius = () => 4;
 
   // Colore del marker in base all'intensità
   const getMarkerColor = (count: number) => {
@@ -86,11 +81,11 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
                 coordinates={[marker.longitude, marker.latitude]}
               >
                 <circle
-                  r={getMarkerRadius(marker.count)}
+                  r={getMarkerRadius()}
                   fill={getMarkerColor(marker.count)}
-                  fillOpacity={0.8}
+                  fillOpacity={0.9}
                   stroke="#ffffff"
-                  strokeWidth={2}
+                  strokeWidth={1}
                   style={{ cursor: "pointer" }}
                 />
                 <title>
@@ -104,19 +99,23 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
       
       {/* Legenda */}
       <div className="absolute bottom-4 left-4 bg-white dark:bg-slate-900 p-3 rounded-lg shadow-lg">
-        <div className="text-sm font-semibold mb-2">Visite per paese</div>
-        <div className="flex items-center gap-4">
+        <div className="text-sm font-semibold mb-2">Intensità visite</div>
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-full bg-green-500"></div>
-            <span className="text-xs">Poche</span>
+            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+            <span className="text-xs">1-25%</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-4 h-4 rounded-full bg-orange-500"></div>
-            <span className="text-xs">Medie</span>
+            <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+            <span className="text-xs">26-40%</span>
           </div>
           <div className="flex items-center gap-1">
-            <div className="w-5 h-5 rounded-full bg-red-500"></div>
-            <span className="text-xs">Molte</span>
+            <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+            <span className="text-xs">41-70%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-red-500"></div>
+            <span className="text-xs">71-100%</span>
           </div>
         </div>
       </div>
