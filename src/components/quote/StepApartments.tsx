@@ -92,8 +92,10 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
               const checkOut = new Date(formData.checkOut);
               const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
               const pricePerNight = Math.round(price / nights);
-              newPrices[apartment.id] = pricePerNight;
-              console.log(`💰 Appartamento ${apartment.id}: €${pricePerNight}/notte`);
+              // Applica sconto del 10% (per sconti finali e arrotondamenti)
+              const discountedPrice = Math.round(pricePerNight * 0.9);
+              newPrices[apartment.id] = discountedPrice;
+              console.log(`💰 Appartamento ${apartment.id}: €${discountedPrice}/notte (scontato dal prezzo base ${pricePerNight})`);
             }
           }
         } catch (error) {
