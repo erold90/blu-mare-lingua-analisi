@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Users, Home, BarChart, Plus, Edit, Trash2, Euro, ArrowLeft } from 'lucide-react';
+import { Calendar, Users, Home, BarChart, Plus, Edit, Trash2, Euro, ArrowLeft, Receipt } from 'lucide-react';
 import { useReservations } from '@/hooks/useReservations';
 import { apartments } from '@/data/apartments';
 import { format } from 'date-fns';
@@ -17,6 +17,7 @@ import { it } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { PricingManagement } from '@/components/admin/PricingManagement';
 import { VisitAnalytics } from '@/components/admin/VisitAnalytics';
+import { QuoteRequestsManager } from '@/components/admin/QuoteRequestsManager';
 import { ReservationsCalendar } from '@/components/admin/ReservationsCalendar';
 
 const LOGIN_CREDENTIALS = {
@@ -226,6 +227,10 @@ export default function AdminPage() {
               <BarChart className="h-4 w-4" />
               Dashboard
             </TabsTrigger>
+            <TabsTrigger value="quotes" className="flex items-center gap-2">
+              <Receipt className="h-4 w-4" />
+              Preventivi
+            </TabsTrigger>
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart className="h-4 w-4" />
               Visite
@@ -244,6 +249,10 @@ export default function AdminPage() {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="quotes" className="space-y-6">
+            <QuoteRequestsManager />
+          </TabsContent>
+          
           <TabsContent value="analytics" className="space-y-6">
             <VisitAnalytics />
           </TabsContent>
