@@ -499,6 +499,36 @@ export default function AdminPage() {
                              </SelectContent>
                            </Select>
                          </div>
+                         <div>
+                           <Label htmlFor="has_pets">Animali Domestici</Label>
+                           <div className="flex items-center space-x-2 mt-2">
+                             <input
+                               type="checkbox"
+                               id="has_pets"
+                               checked={newReservation.has_pets}
+                               onChange={(e) => setNewReservation(prev => ({ ...prev, has_pets: e.target.checked }))}
+                               className="rounded border-gray-300"
+                             />
+                             <Label htmlFor="has_pets" className="text-sm font-normal">
+                               Ha animali domestici
+                             </Label>
+                           </div>
+                         </div>
+                         <div>
+                           <Label htmlFor="linen_option">Biancheria</Label>
+                           <div className="flex items-center space-x-2 mt-2">
+                             <input
+                               type="checkbox"
+                               id="linen_option"
+                               checked={newReservation.linen_option === 'yes'}
+                               onChange={(e) => setNewReservation(prev => ({ ...prev, linen_option: e.target.checked ? 'yes' : 'no' }))}
+                               className="rounded border-gray-300"
+                             />
+                             <Label htmlFor="linen_option" className="text-sm font-normal">
+                               Ha richiesto la biancheria
+                             </Label>
+                           </div>
+                         </div>
                          <div className="col-span-2">
                           <Label htmlFor="notes">Note</Label>
                           <Textarea
