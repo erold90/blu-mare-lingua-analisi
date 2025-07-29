@@ -99,7 +99,7 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
           children_no_bed: formData.childrenWithParents.filter(Boolean).length,
           selected_apartments: formData.selectedApartments,
           has_pet: formData.hasPets,
-          pet_apartment: formData.petApartment,
+          pet_apartment: null,
           linen_requested: formData.requestLinen,
           base_total: priceData.apartmentPrices?.reduce((sum: number, apt: any) => sum + apt.basePrice, 0) || 0,
           discount_total: priceData.apartmentPrices?.reduce((sum: number, apt: any) => sum + apt.discountAmount, 0) || 0,
@@ -152,7 +152,7 @@ ${formData.selectedApartments.map(aptId => {
   return `• ${apartmentNames[aptId as keyof typeof apartmentNames]} - Occupazione: ${apt?.occupation}`;
 }).join('\n')}
 
-${formData.hasPets ? `🐕 *ANIMALE:* Sì${formData.petApartment ? ` - ${apartmentNames[formData.petApartment as keyof typeof apartmentNames]}` : ''}` : '🐕 *ANIMALE:* No'}
+${formData.hasPets ? `🐕 *ANIMALE:* Sì - ${formData.petCount || 1} animale${(formData.petCount || 1) > 1 ? 'i' : ''}` : '🐕 *ANIMALE:* No'}
 ${formData.requestLinen ? `🛏️ *BIANCHERIA:* Sì - ${bedsNeeded} ospiti` : '🛏️ *BIANCHERIA:* No'}
 
 💰 *PREVENTIVO:*
@@ -372,14 +372,9 @@ Saldo arrivo: €${priceCalculation.balance}
               <div className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-2">
                   <Heart className="h-4 w-4" />
-                  <span>Animale domestico</span>
-                  {formData.selectedApartments.length > 1 && formData.petApartment && (
-                    <Badge variant="outline" className="ml-2">
-                      {apartmentNames[formData.petApartment as keyof typeof apartmentNames]}
-                    </Badge>
-                  )}
+                  <span>Animali domestici ({formData.petCount || 1})</span>
                 </div>
-                <span className="font-semibold">€50</span>
+                <span className="font-semibold">€{(formData.petCount || 1) * 50}</span>
               </div>
             )}
             

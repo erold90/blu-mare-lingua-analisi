@@ -16,7 +16,7 @@ export interface QuoteFormData {
   
   // Step 4: Animali
   hasPets: boolean;
-  petApartment?: string;
+  petCount?: number;
   
   // Step 5: Biancheria
   requestLinen: boolean;
@@ -156,7 +156,7 @@ export const useMultiStepQuote = () => {
         children: formData.children,
         childrenNoBed: formData.childrenWithParents.filter(Boolean).length,
         hasPet: formData.hasPets,
-        petApartment: formData.petApartment ? parseInt(formData.petApartment) : undefined,
+        petApartment: undefined,
         needsLinen: formData.requestLinen
       };
 
@@ -209,7 +209,7 @@ export const useMultiStepQuote = () => {
       children: formData.children,
       childrenNoBed: formData.childrenWithParents.filter(Boolean).length,
       hasPet: formData.hasPets,
-      petApartment: formData.petApartment ? parseInt(formData.petApartment) : undefined,
+      petApartment: undefined,
       needsLinen: formData.requestLinen,
       guestName: formData.guestName,
       guestEmail: formData.email,

@@ -3,9 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Heart, Euro } from 'lucide-react';
+import { Heart, Euro, Plus, Minus } from 'lucide-react';
 import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 
 interface StepPetsProps {
@@ -14,13 +14,6 @@ interface StepPetsProps {
   onNext: () => void;
   onPrev: () => void;
 }
-
-const apartmentNames = {
-  "appartamento-1": "Appartamento 1",
-  "appartamento-2": "Appartamento 2", 
-  "appartamento-3": "Appartamento 3",
-  "appartamento-4": "Appartamento 4"
-};
 
 export const StepPets: React.FC<StepPetsProps> = ({
   formData,
@@ -31,17 +24,22 @@ export const StepPets: React.FC<StepPetsProps> = ({
   const handlePetsChange = (hasPets: boolean) => {
     updateFormData({ 
       hasPets,
-      petApartment: hasPets && formData.selectedApartments.length === 1 
-        ? formData.selectedApartments[0] 
-        : undefined 
+      petCount: hasPets ? (formData.petCount || 1) : 0
     });
+  };
+
+  const handlePetCountChange = (count: number) => {
+    if (count >= 0) {
+      updateFormData({ petCount: count });
+    }
   };
 
   const canProceed = () => {
     if (!formData.hasPets) return true;
-    if (formData.selectedApartments.length === 1) return true;
-    return !!formData.petApartment;
+    return (formData.petCount || 0) > 0;
   };
+
+  const totalPetCost = (formData.petCount || 0) * 50;
 
   return (
     <div className="space-y-6">
@@ -71,44 +69,59 @@ export const StepPets: React.FC<StepPetsProps> = ({
             <Label htmlFor="has_pets" className="flex-1 cursor-pointer">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="font-semibold">Viaggio con un animale domestico</div>
+                  <div className="font-semibold">Viaggio con animali domestici</div>
                   <div className="text-sm text-muted-foreground">
                     Cani, gatti e altri animali domestici sono benvenuti
                   </div>
                 </div>
                 <Badge variant="outline" className="ml-4">
                   <Euro className="h-3 w-3 mr-1" />
-                  €50
+                  €50 cad.
                 </Badge>
               </div>
             </Label>
           </div>
 
-          {/* Selezione appartamento se più di uno selezionato */}
-          {formData.hasPets && formData.selectedApartments.length > 1 && (
+          {/* Contatore animali */}
+          {formData.hasPets && (
             <div className="space-y-4 p-4 bg-muted/30 rounded-lg">
               <Label className="text-lg font-semibold">
-                In quale appartamento alloggerà l'animale?
+                Quanti animali domestici porti?
               </Label>
               <p className="text-sm text-muted-foreground">
-                Il costo di €50 si applica all'appartamento selezionato
+                Il costo è di €50 per ogni animale domestico
               </p>
               
-              <Select 
-                value={formData.petApartment} 
-                onValueChange={(value) => updateFormData({ petApartment: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona appartamento" />
-                </SelectTrigger>
-                <SelectContent>
-                  {formData.selectedApartments.map(aptId => (
-                    <SelectItem key={aptId} value={aptId}>
-                      {apartmentNames[aptId as keyof typeof apartmentNames]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handlePetCountChange((formData.petCount || 1) - 1)}
+                  disabled={(formData.petCount || 1) <= 1}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                
+                <Input
+                  type="number"
+                  min="1"
+                  max="10"
+                  value={formData.petCount || 1}
+                  onChange={(e) => handlePetCountChange(parseInt(e.target.value) || 1)}
+                  className="w-20 text-center"
+                />
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handlePetCountChange((formData.petCount || 1) + 1)}
+                  disabled={(formData.petCount || 1) >= 10}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
 
@@ -118,7 +131,7 @@ export const StepPets: React.FC<StepPetsProps> = ({
               Informazioni importanti
             </h4>
             <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-              <li>• Costo: €50 per appartamento con animale</li>
+              <li>• Costo: €50 per ogni animale domestico</li>
               <li>• Gli animali devono essere sempre controllati</li>
               <li>• È richiesta la pulizia extra in caso di danni</li>
               <li>• Portare guinzaglio, ciotole e cuccia propri</li>
@@ -129,14 +142,9 @@ export const StepPets: React.FC<StepPetsProps> = ({
           {/* Riepilogo costi */}
           {formData.hasPets && (
             <div className="text-center p-4 bg-primary/5 rounded-lg">
-              <div className="text-2xl font-bold text-primary">€50</div>
+              <div className="text-2xl font-bold text-primary">€{totalPetCost}</div>
               <div className="text-sm text-muted-foreground">
-                Costo animale domestico
-                {formData.selectedApartments.length > 1 && formData.petApartment && (
-                  <div className="mt-1">
-                    per {apartmentNames[formData.petApartment as keyof typeof apartmentNames]}
-                  </div>
-                )}
+                Costo per {formData.petCount || 1} animale{(formData.petCount || 1) > 1 ? 'i' : ''} domestico{(formData.petCount || 1) > 1 ? 'i' : ''}
               </div>
             </div>
           )}

@@ -91,7 +91,7 @@ ${formData.selectedApartments.map(aptId => {
   return `• ${apartmentNames[aptId as keyof typeof apartmentNames]} - Occupazione: ${apt?.occupation}`;
 }).join('\n')}
 
-${formData.hasPets ? `🐕 *ANIMALE:* Sì${formData.petApartment ? ` - ${apartmentNames[formData.petApartment as keyof typeof apartmentNames]}` : ''}` : '🐕 *ANIMALE:* No'}
+${formData.hasPets ? `🐕 *ANIMALE:* Sì - ${formData.petCount || 1} animale${(formData.petCount || 1) > 1 ? 'i' : ''}` : '🐕 *ANIMALE:* No'}
 ${formData.requestLinen ? `🛏️ *BIANCHERIA:* Sì - ${bedsNeeded} ospiti` : '🛏️ *BIANCHERIA:* No'}
 
 💰 *PREVENTIVO:*
