@@ -67,7 +67,7 @@ export default function AdminPage() {
     cribs: 0,
     has_pets: false,
     linen_option: 'no',
-    final_price: 0,
+    final_price: '',
     deposit_amount: 0,
     payment_status: 'notPaid',
     payment_method: 'cash',
@@ -87,6 +87,7 @@ export default function AdminPage() {
 
     const result = await addReservation({
       ...newReservation,
+      final_price: parseFloat(newReservation.final_price) || 0,
       id: `res_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     });
 
@@ -105,7 +106,7 @@ export default function AdminPage() {
         cribs: 0,
         has_pets: false,
         linen_option: 'no',
-        final_price: 0,
+        final_price: '',
         deposit_amount: 0,
         payment_status: 'notPaid',
         payment_method: 'cash',
@@ -442,9 +443,12 @@ export default function AdminPage() {
                           <Label htmlFor="final_price">Prezzo Finale €</Label>
                           <Input
                             id="final_price"
-                            type="number"
+                            type="text"
+                            inputMode="numeric"
+                            pattern="[0-9]*"
                             value={newReservation.final_price}
-                            onChange={(e) => setNewReservation(prev => ({ ...prev, final_price: parseFloat(e.target.value) || 0 }))}
+                            onChange={(e) => setNewReservation(prev => ({ ...prev, final_price: e.target.value }))}
+                            placeholder="Inserisci l'importo"
                           />
                         </div>
                         <div>
