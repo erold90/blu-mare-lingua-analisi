@@ -1,5 +1,5 @@
 
-export type ImageCategory = 'apartment' | 'hero' | 'home_gallery' | 'social' | 'favicon';
+export type ImageCategory = 'apartment' | 'hero' | 'home_gallery' | 'introduction' | 'social' | 'favicon';
 
 export interface ImageRecord {
   id: string;

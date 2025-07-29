@@ -15,24 +15,27 @@ import { toast } from 'sonner';
 export const HomeImageGallery: React.FC = () => {
   const [heroImages, setHeroImages] = useState<ImageRecord[]>([]);
   const [galleryImages, setGalleryImages] = useState<ImageRecord[]>([]);
+  const [introImages, setIntroImages] = useState<ImageRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
-  const [activeTab, setActiveTab] = useState<'hero' | 'gallery'>('hero');
+  const [activeTab, setActiveTab] = useState<'hero' | 'gallery' | 'introduction'>('hero');
 
   // Load images for both categories
   const loadImages = useCallback(async () => {
     setLoading(true);
     try {
-      const [heroImgs, galleryImgs] = await Promise.all([
+      const [heroImgs, galleryImgs, introImgs] = await Promise.all([
         imageService.getImagesByCategory('hero'),
-        imageService.getImagesByCategory('home_gallery')
+        imageService.getImagesByCategory('home_gallery'),
+        imageService.getImagesByCategory('introduction')
       ]);
       
       setHeroImages(heroImgs);
       setGalleryImages(galleryImgs);
-      console.log(`Loaded ${heroImgs.length} hero images and ${galleryImgs.length} gallery images`);
+      setIntroImages(introImgs);
+      console.log(`Loaded ${heroImgs.length} hero, ${galleryImgs.length} gallery, and ${introImgs.length} intro images`);
     } catch (error) {
       console.error('Error loading images:', error);
       toast.error('Errore nel caricamento delle immagini');
@@ -51,16 +54,16 @@ export const HomeImageGallery: React.FC = () => {
 
     setUploading(true);
     try {
-      const category = activeTab === 'hero' ? 'hero' : 'home_gallery';
-      const existingImages = activeTab === 'hero' ? heroImages : galleryImages;
+      const category = activeTab === 'hero' ? 'hero' : activeTab === 'gallery' ? 'home_gallery' : 'introduction';
+      const existingImages = activeTab === 'hero' ? heroImages : activeTab === 'gallery' ? galleryImages : introImages;
       
       const uploadPromises = Array.from(selectedFiles).map(async (file, index) => {
         const uploadData = {
-          category: category as 'hero' | 'home_gallery',
+          category: category as 'hero' | 'home_gallery' | 'introduction',
           file,
-          alt_text: `Villa MareBlu - ${category === 'hero' ? 'Hero Image' : 'Gallery Image'} ${existingImages.length + index + 1}`,
+          alt_text: `Villa MareBlu - ${category === 'hero' ? 'Hero Image' : category === 'home_gallery' ? 'Gallery Image' : 'Introduction Image'} ${existingImages.length + index + 1}`,
           display_order: existingImages.length + index,
-          is_cover: category === 'hero' && existingImages.length === 0 // First hero image is cover by default
+          is_cover: (category === 'hero' || category === 'introduction') && existingImages.length === 0 // First hero/intro image is cover by default
         };
         
         return await imageService.uploadImage(uploadData);
@@ -95,7 +98,7 @@ export const HomeImageGallery: React.FC = () => {
 
     if (sourceIndex === destinationIndex) return;
 
-    const images = activeTab === 'hero' ? heroImages : galleryImages;
+    const images = activeTab === 'hero' ? heroImages : activeTab === 'gallery' ? galleryImages : introImages;
     const reorderedImages = Array.from(images);
     const [movedImage] = reorderedImages.splice(sourceIndex, 1);
     reorderedImages.splice(destinationIndex, 0, movedImage);
@@ -103,8 +106,10 @@ export const HomeImageGallery: React.FC = () => {
     // Update local state immediately for better UX
     if (activeTab === 'hero') {
       setHeroImages(reorderedImages);
-    } else {
+    } else if (activeTab === 'gallery') {
       setGalleryImages(reorderedImages);
+    } else {
+      setIntroImages(reorderedImages);
     }
 
     // Prepare updates for database
@@ -156,8 +161,8 @@ export const HomeImageGallery: React.FC = () => {
     }
   };
 
-  const currentImages = activeTab === 'hero' ? heroImages : galleryImages;
-  const categoryTitle = activeTab === 'hero' ? 'Immagine Hero' : 'Galleria Homepage';
+  const currentImages = activeTab === 'hero' ? heroImages : activeTab === 'gallery' ? galleryImages : introImages;
+  const categoryTitle = activeTab === 'hero' ? 'Immagine Hero' : activeTab === 'gallery' ? 'Galleria Homepage' : 'Immagine Introduzione';
 
   return (
     <div className="space-y-6">
@@ -169,15 +174,19 @@ export const HomeImageGallery: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'hero' | 'gallery')}>
-            <TabsList className="grid w-full grid-cols-2">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'hero' | 'gallery' | 'introduction')}>
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="hero" className="flex items-center gap-2">
                 <Star className="h-4 w-4" />
-                Immagine Hero
+                Hero
+              </TabsTrigger>
+              <TabsTrigger value="introduction" className="flex items-center gap-2">
+                <ImageIcon className="h-4 w-4" />
+                Introduzione
               </TabsTrigger>
               <TabsTrigger value="gallery" className="flex items-center gap-2">
                 <Eye className="h-4 w-4" />
-                Galleria Homepage
+                Galleria
               </TabsTrigger>
             </TabsList>
 
@@ -186,14 +195,14 @@ export const HomeImageGallery: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-semibold">Immagine Hero Principale</h3>
                   <p className="text-sm text-muted-foreground">
-                    {heroImages.length} immagini caricate • Usa la prima come immagine principale
+                    {heroImages.length} immagini caricate • Sfondo della homepage
                   </p>
                 </div>
                 <Dialog open={isUploadDialogOpen && activeTab === 'hero'} onOpenChange={setIsUploadDialogOpen}>
                   <DialogTrigger asChild>
                     <Button className="flex items-center gap-2">
                       <Upload className="h-4 w-4" />
-                      Carica Immagine Hero
+                      Carica Hero
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
@@ -228,6 +237,53 @@ export const HomeImageGallery: React.FC = () => {
               </div>
             </TabsContent>
 
+            <TabsContent value="introduction" className="space-y-4 mt-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-semibold">Immagine Sezione Introduzione</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {introImages.length} immagini caricate • Immagine della sezione "Chi Siamo"
+                  </p>
+                </div>
+                <Dialog open={isUploadDialogOpen && activeTab === 'introduction'} onOpenChange={setIsUploadDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="flex items-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      Carica Introduzione
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Carica Immagine Introduzione</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="intro-upload">Seleziona File</Label>
+                        <Input
+                          id="intro-upload"
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={(e) => setSelectedFiles(e.target.files)}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Supporta: JPG, PNG, WEBP. Dimensioni consigliate: 800x600px
+                        </p>
+                      </div>
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setIsUploadDialogOpen(false)}>
+                          Annulla
+                        </Button>
+                        <Button onClick={handleFileUpload} disabled={!selectedFiles || uploading}>
+                          {uploading ? 'Caricamento...' : 'Carica'}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </TabsContent>
+
             <TabsContent value="gallery" className="space-y-4 mt-4">
               <div className="flex justify-between items-center">
                 <div>
@@ -240,7 +296,7 @@ export const HomeImageGallery: React.FC = () => {
                   <DialogTrigger asChild>
                     <Button className="flex items-center gap-2">
                       <Upload className="h-4 w-4" />
-                      Carica Immagini Galleria
+                      Carica Galleria
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
@@ -335,7 +391,7 @@ export const HomeImageGallery: React.FC = () => {
                             />
                             
                             {/* Cover Badge */}
-                            {image.is_cover && activeTab === 'hero' && (
+                            {image.is_cover && (activeTab === 'hero' || activeTab === 'introduction') && (
                               <div className="absolute top-2 right-2">
                                 <Badge className="bg-yellow-500 text-white">
                                   <Star className="h-3 w-3 mr-1" />
@@ -346,7 +402,7 @@ export const HomeImageGallery: React.FC = () => {
 
                             {/* Action Buttons */}
                             <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                              {activeTab === 'hero' && !image.is_cover && (
+                              {(activeTab === 'hero' || activeTab === 'introduction') && !image.is_cover && (
                                 <Button
                                   size="sm"
                                   variant="secondary"

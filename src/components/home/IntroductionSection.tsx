@@ -1,11 +1,39 @@
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle, Waves, Home, TreePine } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { imageService, ImageRecord } from "@/services/imageService";
 
-import * as React from "react";
-import { useEffect, useRef, useState } from "react";
-import { Separator } from "@/components/ui/separator";
-
-export const IntroductionSection = () => {
+const IntroductionSection = () => {
+  const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
-  const sectionRef = useRef<HTMLDivElement>(null);
+  const [introImage, setIntroImage] = useState<ImageRecord | null>(null);
+
+  useEffect(() => {
+    const loadIntroImage = async () => {
+      try {
+        const introImages = await imageService.getImagesByCategory('introduction');
+        const primaryImage = introImages.find(img => img.is_cover) || introImages[0] || null;
+        setIntroImage(primaryImage);
+      } catch (error) {
+        console.error('Error loading introduction image:', error);
+      }
+    };
+
+    loadIntroImage();
+
+    // Listen for home image updates from admin panel
+    const handleHomeImageUpdate = () => {
+      console.log("🔄 Received homeImagesUpdated event, reloading introduction image...");
+      loadIntroImage();
+    };
+
+    window.addEventListener('homeImagesUpdated', handleHomeImageUpdate);
+    
+    return () => {
+      window.removeEventListener('homeImagesUpdated', handleHomeImageUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -14,19 +42,24 @@ export const IntroductionSection = () => {
           setIsVisible(true);
         }
       },
-      { threshold: 0.3 }
+      { threshold: 0.1 }
     );
 
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
+    const element = document.getElementById('introduction-section');
+    if (element) {
+      observer.observe(element);
     }
 
     return () => observer.disconnect();
   }, []);
 
+  const handleApartmentsClick = () => {
+    navigate("/appartamenti");
+  };
+
   return (
-    <section className="py-32 bg-white">
-      <div ref={sectionRef} className="container mx-auto px-8">
+    <section id="introduction-section" className="py-32 bg-white">
+      <div className="container mx-auto px-8">
         
         {/* Section header */}
         <div className={`max-w-3xl mx-auto text-center mb-20 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
@@ -48,8 +81,8 @@ export const IntroductionSection = () => {
           <div className={`relative transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`}>
             <div className="aspect-[4/3] bg-gray-100 rounded-sm overflow-hidden">
               <img 
-                src="/images/hero/hero.jpg" 
-                alt="Villa MareBlu"
+                src={introImage ? imageService.getImageUrl(introImage.file_path) : "/images/hero/hero.jpg"}
+                alt="Villa MareBlu - Introduzione"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -87,11 +120,23 @@ export const IntroductionSection = () => {
               <h3 className="text-2xl font-light text-gray-900 mb-6 tracking-wide">
                 L'esperienza autentica
               </h3>
-              <p className="text-gray-600 leading-relaxed">
+              <p className="text-gray-600 leading-relaxed mb-6">
                 Vivere Villa MareBlu significa immergersi nella cultura salentina, 
                 tra tramonti mozzafiato, sapori genuini e l'ospitalità calorosa 
                 del Sud Italia.
               </p>
+              <div className="w-12 h-px bg-gray-300"></div>
+            </div>
+
+            {/* Call to action */}
+            <div className="pt-8">
+              <Button 
+                onClick={handleApartmentsClick}
+                variant="outline"
+                className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-3 rounded-none font-light"
+              >
+                Scopri i nostri appartamenti
+              </Button>
             </div>
 
           </div>
@@ -100,3 +145,5 @@ export const IntroductionSection = () => {
     </section>
   );
 };
+
+export default IntroductionSection;
