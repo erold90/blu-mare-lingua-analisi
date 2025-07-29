@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { PricingManagement } from '@/components/admin/PricingManagement';
+import { VisitAnalytics } from '@/components/admin/VisitAnalytics';
 import { ReservationsCalendar } from '@/components/admin/ReservationsCalendar';
 
 const LOGIN_CREDENTIALS = {
@@ -225,6 +226,10 @@ export default function AdminPage() {
               <BarChart className="h-4 w-4" />
               Dashboard
             </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart className="h-4 w-4" />
+              Visite
+            </TabsTrigger>
             <TabsTrigger value="calendar" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Calendario
@@ -239,6 +244,10 @@ export default function AdminPage() {
             </TabsTrigger>
           </TabsList>
 
+          <TabsContent value="analytics" className="space-y-6">
+            <VisitAnalytics />
+          </TabsContent>
+          
           <TabsContent value="dashboard" className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

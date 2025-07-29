@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import AppLayout from "@/components/layout/AppLayout";
 import Index from "@/pages/Index";
 import ApartmentsPage from "@/pages/ApartmentsPage";
+import { useVisitTracker } from '@/hooks/useVisitTracker';
 import ServicesPage from "@/pages/ServicesPage";
 import ContactsPage from "@/pages/ContactsPage";
 import AboutPage from "@/pages/AboutPage";
@@ -35,6 +36,9 @@ const AppWithRoutes = () => {
 };
 
 function App() {
+  // Tracciamento visite automatico
+  useVisitTracker();
+  
   return (
     <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <Router>

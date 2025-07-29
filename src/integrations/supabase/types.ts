@@ -473,6 +473,57 @@ export type Database = {
         }
         Relationships: []
       }
+      website_visits: {
+        Row: {
+          city: string | null
+          country: string | null
+          country_code: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          latitude: number | null
+          longitude: number | null
+          page: string
+          referrer: string | null
+          region: string | null
+          user_agent: string | null
+          visit_date: string
+          visit_time: string
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          country_code?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          page: string
+          referrer?: string | null
+          region?: string | null
+          user_agent?: string | null
+          visit_date?: string
+          visit_time?: string
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          country_code?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          page?: string
+          referrer?: string | null
+          region?: string | null
+          user_agent?: string | null
+          visit_date?: string
+          visit_time?: string
+        }
+        Relationships: []
+      }
       weekly_prices: {
         Row: {
           apartment_id: string
