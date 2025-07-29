@@ -117,7 +117,7 @@ export const PricingManagement = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Gestione Prezzi e Disponibilità</h2>
+        <h2 className="text-2xl font-bold">Gestione Prezzi</h2>
         <div className="flex gap-2">
           <Dialog open={showCopyDialog} onOpenChange={setShowCopyDialog}>
             <DialogTrigger asChild>
