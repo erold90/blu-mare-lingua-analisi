@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Users, Home, BarChart, Plus, Edit, Trash2, Euro, ArrowLeft, Receipt, ImageIcon, TrendingUp } from 'lucide-react';
+import { Calendar, Users, Home, BarChart, Plus, Edit, Trash2, Euro, ArrowLeft, Receipt, ImageIcon, TrendingUp, Eye } from 'lucide-react';
 import { useReservations } from '@/hooks/useReservations';
 import { apartments } from '@/data/apartments';
 import { format } from 'date-fns';
@@ -75,8 +75,10 @@ export default function AdminPage() {
   });
 
   const [editingReservation, setEditingReservation] = useState<any>(null);
+  const [selectedReservation, setSelectedReservation] = useState<any>(null);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
 
   // Handle add reservation
   const handleAddReservation = async () => {
@@ -354,6 +356,16 @@ export default function AdminPage() {
                           {reservation.final_price && (
                             <Badge>€{reservation.final_price}</Badge>
                           )}
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedReservation(reservation);
+                              setShowDetailsDialog(true);
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -728,6 +740,136 @@ export default function AdminPage() {
             <HomeImageGallery />
           </TabsContent>
         </Tabs>
+
+        {/* Dialog dettagli prenotazione */}
+        <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Dettagli Prenotazione</DialogTitle>
+            </DialogHeader>
+            {selectedReservation && (
+              <div className="space-y-6">
+                {/* Informazioni Ospite */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-600">Nome Ospite</Label>
+                    <p className="text-lg font-medium">{selectedReservation.guest_name}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-600">ID Prenotazione</Label>
+                    <p className="text-sm text-gray-500 font-mono">{selectedReservation.id}</p>
+                  </div>
+                </div>
+
+                {/* Date Soggiorno */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-600">Check-in</Label>
+                    <p className="text-lg">{format(new Date(selectedReservation.start_date), 'dd MMMM yyyy', { locale: it })}</p>
+                    <p className="text-sm text-gray-500">{format(new Date(selectedReservation.start_date), 'EEEE', { locale: it })}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-600">Check-out</Label>
+                    <p className="text-lg">{format(new Date(selectedReservation.end_date), 'dd MMMM yyyy', { locale: it })}</p>
+                    <p className="text-sm text-gray-500">{format(new Date(selectedReservation.end_date), 'EEEE', { locale: it })}</p>
+                  </div>
+                </div>
+
+                {/* Ospiti e Appartamento */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-600">Ospiti</Label>
+                    <div className="flex gap-2 mt-1">
+                      <Badge variant="outline">
+                        {selectedReservation.adults} adulti
+                      </Badge>
+                      {selectedReservation.children > 0 && (
+                        <Badge variant="outline">
+                          {selectedReservation.children} bambini
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-600">Appartamento</Label>
+                    <p className="text-lg">
+                      {selectedReservation.apartment_ids?.map((id: string) => 
+                        apartments.find(apt => apt.id === id)?.name || `Appartamento ${id}`
+                      ).join(', ') || 'Non specificato'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Servizi Aggiuntivi */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-600">Animali Domestici</Label>
+                    <Badge variant={selectedReservation.has_pets ? "default" : "secondary"}>
+                      {selectedReservation.has_pets ? 'Sì' : 'No'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-semibold text-gray-600">Biancheria</Label>
+                    <Badge variant={selectedReservation.linen_option === 'yes' ? "default" : "secondary"}>
+                      {selectedReservation.linen_option === 'yes' ? 'Richiesta' : 'Non richiesta'}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Informazioni Pagamento */}
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold text-gray-800 mb-3">Informazioni Pagamento</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-sm font-semibold text-gray-600">Prezzo Totale</Label>
+                      <p className="text-xl font-bold text-green-600">
+                        €{selectedReservation.final_price || 'Non specificato'}
+                      </p>
+                    </div>
+                    <div>
+                      <Label className="text-sm font-semibold text-gray-600">Stato Pagamento</Label>
+                      <div className="mt-1">
+                        <Badge 
+                          variant={selectedReservation.payment_status === 'paid' ? 'default' : 
+                                   selectedReservation.payment_status === 'deposit' ? 'secondary' : 'outline'}
+                        >
+                          {selectedReservation.payment_status === 'paid' ? 'Pagato' :
+                           selectedReservation.payment_status === 'deposit' ? 'Caparra' : 
+                           selectedReservation.payment_status === 'notPaid' ? 'Non Pagato' : 
+                           selectedReservation.payment_status}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {selectedReservation.deposit_amount && (
+                    <div className="mt-3">
+                      <Label className="text-sm font-semibold text-gray-600">Importo Caparra</Label>
+                      <p className="text-lg font-medium">€{selectedReservation.deposit_amount}</p>
+                    </div>
+                  )}
+                  
+                  {selectedReservation.payment_method && (
+                    <div className="mt-3">
+                      <Label className="text-sm font-semibold text-gray-600">Metodo di Pagamento</Label>
+                      <p className="text-lg capitalize">{selectedReservation.payment_method}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Note */}
+                {selectedReservation.notes && (
+                  <div className="border-t pt-4">
+                    <Label className="text-sm font-semibold text-gray-600">Note</Label>
+                    <p className="mt-1 text-gray-700 bg-gray-50 p-3 rounded-lg">
+                      {selectedReservation.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
