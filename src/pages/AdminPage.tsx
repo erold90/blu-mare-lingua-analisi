@@ -215,67 +215,73 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b px-6 py-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
+      <div className="bg-white border-b px-4 sm:px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <Button 
               onClick={() => navigate('/')} 
               variant="outline" 
               size="sm"
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 w-fit"
             >
               <ArrowLeft className="h-4 w-4" />
-              Torna alla Home
+              <span className="hidden sm:inline">Torna alla Home</span>
+              <span className="sm:hidden">Home</span>
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">Area Riservata Villa MareBlu</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+              <span className="hidden sm:inline">Area Riservata Villa MareBlu</span>
+              <span className="sm:hidden">Area Riservata</span>
+            </h1>
           </div>
-          <Button onClick={handleLogout} variant="outline">
+          <Button onClick={handleLogout} variant="outline" size="sm">
             Logout
           </Button>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <BarChart className="h-4 w-4" />
-              Dashboard
-            </TabsTrigger>
-            <TabsTrigger value="quotes" className="flex items-center gap-2">
-              <Receipt className="h-4 w-4" />
-              Preventivi
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <BarChart className="h-4 w-4" />
-              Visite
-            </TabsTrigger>
-            <TabsTrigger value="revenue" className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Ricavi Estivi
-            </TabsTrigger>
-            <TabsTrigger value="calendar" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Calendario
-            </TabsTrigger>
-            <TabsTrigger value="reservations" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Prenotazioni
-            </TabsTrigger>
-            <TabsTrigger value="pricing" className="flex items-center gap-2">
-              <Euro className="h-4 w-4" />
-              Prezzi
-            </TabsTrigger>
-            <TabsTrigger value="gallery" className="flex items-center gap-2">
-              <ImageIcon className="h-4 w-4" />
-              Galleria Appartamenti
-            </TabsTrigger>
-            <TabsTrigger value="home-gallery" className="flex items-center gap-2">
-              <ImageIcon className="h-4 w-4" />
-              Galleria Home
-            </TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 min-w-max">
+              <TabsTrigger value="dashboard" className="flex items-center gap-2 text-xs lg:text-sm">
+                <BarChart className="h-4 w-4" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </TabsTrigger>
+              <TabsTrigger value="quotes" className="flex items-center gap-2 text-xs lg:text-sm">
+                <Receipt className="h-4 w-4" />
+                <span className="hidden sm:inline">Preventivi</span>
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-2 text-xs lg:text-sm">
+                <BarChart className="h-4 w-4" />
+                <span className="hidden sm:inline">Visite</span>
+              </TabsTrigger>
+              <TabsTrigger value="revenue" className="flex items-center gap-2 text-xs lg:text-sm">
+                <TrendingUp className="h-4 w-4" />
+                <span className="hidden sm:inline">Ricavi</span>
+              </TabsTrigger>
+              <TabsTrigger value="calendar" className="flex items-center gap-2 text-xs lg:text-sm">
+                <Calendar className="h-4 w-4" />
+                <span className="hidden sm:inline">Calendario</span>
+              </TabsTrigger>
+              <TabsTrigger value="reservations" className="flex items-center gap-2 text-xs lg:text-sm">
+                <Users className="h-4 w-4" />
+                <span className="hidden sm:inline">Prenotazioni</span>
+              </TabsTrigger>
+              <TabsTrigger value="pricing" className="flex items-center gap-2 text-xs lg:text-sm">
+                <Euro className="h-4 w-4" />
+                <span className="hidden sm:inline">Prezzi</span>
+              </TabsTrigger>
+              <TabsTrigger value="gallery" className="flex items-center gap-2 text-xs lg:text-sm">
+                <ImageIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Galleria</span>
+              </TabsTrigger>
+              <TabsTrigger value="home-gallery" className="flex items-center gap-2 text-xs lg:text-sm">
+                <ImageIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Home</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="revenue" className="space-y-6">
             <SeasonalRevenueAnalytics />
@@ -338,23 +344,23 @@ export default function AdminPage() {
                 {loading ? (
                   <p>Caricamento...</p>
                 ) : upcomingReservations.length > 0 ? (
-                  <div className="space-y-3">
-                    {upcomingReservations.map((reservation) => (
-                      <div key={reservation.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                        <div>
+                   <div className="space-y-3">
+                     {upcomingReservations.map((reservation) => (
+                      <div key={reservation.id} className="flex flex-col sm:flex-row sm:justify-between sm:items-center p-3 bg-gray-50 rounded-lg space-y-2 sm:space-y-0">
+                        <div className="flex-1">
                           <div className="font-medium">{reservation.guest_name}</div>
                           <div className="text-sm text-gray-500">
                             {format(new Date(reservation.start_date), 'dd MMMM yyyy', { locale: it })} - {' '}
                             {format(new Date(reservation.end_date), 'dd MMMM yyyy', { locale: it })}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
                             {reservation.adults} adulti
                             {reservation.children > 0 && `, ${reservation.children} bambini`}
                           </Badge>
                           {reservation.final_price && (
-                            <Badge>€{reservation.final_price}</Badge>
+                            <Badge className="text-xs">€{reservation.final_price}</Badge>
                           )}
                           <Button 
                             variant="outline" 
@@ -393,11 +399,11 @@ export default function AdminPage() {
                         Nuova Prenotazione
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                    <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto m-2">
                       <DialogHeader>
                         <DialogTitle>Aggiungi Nuova Prenotazione</DialogTitle>
                       </DialogHeader>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="guest_name">Nome Ospite *</Label>
                           <Input
@@ -577,9 +583,9 @@ export default function AdminPage() {
                   <p>Caricamento...</p>
                 ) : reservations.length > 0 ? (
                   <div className="space-y-3">
-                    {reservations.map((reservation) => (
-                      <div key={reservation.id} className="flex justify-between items-center p-4 border rounded-lg">
-                        <div>
+                     {reservations.map((reservation) => (
+                      <div key={reservation.id} className="flex flex-col lg:flex-row lg:justify-between lg:items-center p-4 border rounded-lg space-y-3 lg:space-y-0">
+                        <div className="flex-1">
                           <div className="font-medium">{reservation.guest_name}</div>
                           <div className="text-sm text-gray-500">
                             {format(new Date(reservation.start_date), 'dd/MM/yyyy')} - {' '}
@@ -589,16 +595,16 @@ export default function AdminPage() {
                             ID: {reservation.id}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <div className="text-right mr-4">
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 mr-0 sm:mr-4">
+                            <div className="flex flex-wrap gap-1">
+                              <Badge variant="outline" className="text-xs">
                                 {reservation.adults} adulti
                                 {reservation.children > 0 && `, ${reservation.children} bambini`}
                               </Badge>
                             </div>
                             {reservation.final_price && (
-                              <div className="font-medium">€{reservation.final_price}</div>
+                              <div className="font-medium text-sm">€{reservation.final_price}</div>
                             )}
                             {reservation.payment_status && (
                               <Badge 
@@ -609,33 +615,35 @@ export default function AdminPage() {
                               </Badge>
                             )}
                           </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              setSelectedReservation(reservation);
-                              setShowDetailsDialog(true);
-                            }}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setEditingReservation({...reservation});
-                              setShowEditDialog(true);
-                            }}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeleteReservation(reservation.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedReservation(reservation);
+                                setShowDetailsDialog(true);
+                              }}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditingReservation({...reservation});
+                                setShowEditDialog(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteReservation(reservation.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -648,12 +656,12 @@ export default function AdminPage() {
 
             {/* Edit Dialog */}
             <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto m-2">
                 <DialogHeader>
                   <DialogTitle>Modifica Prenotazione</DialogTitle>
                 </DialogHeader>
                 {editingReservation && (
-                  <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="edit_guest_name">Nome Ospite</Label>
                       <Input
@@ -753,14 +761,14 @@ export default function AdminPage() {
 
         {/* Dialog dettagli prenotazione */}
         <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto m-2">
             <DialogHeader>
               <DialogTitle>Dettagli Prenotazione</DialogTitle>
             </DialogHeader>
             {selectedReservation && (
               <div className="space-y-6">
                 {/* Informazioni Ospite */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-semibold text-gray-600">Nome Ospite</Label>
                     <p className="text-lg font-medium">{selectedReservation.guest_name}</p>
@@ -772,7 +780,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* Date Soggiorno */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-semibold text-gray-600">Check-in</Label>
                     <p className="text-lg">{format(new Date(selectedReservation.start_date), 'dd MMMM yyyy', { locale: it })}</p>
@@ -786,7 +794,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* Ospiti e Appartamento */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-semibold text-gray-600">Ospiti</Label>
                     <div className="flex gap-2 mt-1">
@@ -811,7 +819,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* Servizi Aggiuntivi */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label className="text-sm font-semibold text-gray-600">Animali Domestici</Label>
                     <Badge variant={selectedReservation.has_pets ? "default" : "secondary"}>
@@ -829,7 +837,7 @@ export default function AdminPage() {
                 {/* Informazioni Pagamento */}
                 <div className="border-t pt-4">
                   <h4 className="font-semibold text-gray-800 mb-3">Informazioni Pagamento</h4>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label className="text-sm font-semibold text-gray-600">Prezzo Totale</Label>
                       <p className="text-xl font-bold text-green-600">
