@@ -84,6 +84,10 @@ const IntroductionSection = () => {
                 src={introImage ? imageService.getImageUrl(introImage.file_path) : "/images/hero/hero.jpg"}
                 alt="Villa MareBlu - Introduzione"
                 className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+                fetchPriority="low"
+                style={{ contentVisibility: 'auto' }}
               />
             </div>
             <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-gray-50 rounded-sm -z-10"></div>

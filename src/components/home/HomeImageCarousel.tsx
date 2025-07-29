@@ -119,17 +119,23 @@ export const HomeImageCarousel = () => {
                   <div className="p-1">
                     <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
                       <CardContent className="p-0">
-                        <div className="aspect-[4/3] relative overflow-hidden">
-                          <img
-                            src={imageService.getImageUrl(image.file_path)}
-                            alt={image.alt_text || `Villa MareBlu - Immagine ${index + 1}`}
-                            className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
-                            loading={index < 2 ? "eager" : "lazy"}
-                            onError={(e) => {
-                              console.error('Gallery image failed to load:', image.file_path);
-                              e.currentTarget.src = "/placeholder.svg";
-                            }}
-                          />
+                         <div className="aspect-[4/3] relative overflow-hidden">
+                           <img
+                             src={imageService.getImageUrl(image.file_path)}
+                             alt={image.alt_text || `Villa MareBlu - Immagine ${index + 1}`}
+                             className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
+                             loading={index < 3 ? "eager" : "lazy"}
+                             decoding={index < 3 ? "sync" : "async"}
+                             fetchPriority={index < 2 ? "high" : "low"}
+                             style={{ 
+                               willChange: index < 3 ? 'transform' : 'auto',
+                               contentVisibility: index >= 3 ? 'auto' : 'visible'
+                             }}
+                             onError={(e) => {
+                               console.error('Gallery image failed to load:', image.file_path);
+                               e.currentTarget.src = "/placeholder.svg";
+                             }}
+                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />
                         </div>
                       </CardContent>

@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { Toaster } from "@/components/ui/sonner";
 import { Toaster as UIToaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "next-themes";
+import { HelmetProvider } from 'react-helmet-async';
+import PerformanceOptimizer from "@/components/PerformanceOptimizer";
 import AppLayout from "@/components/layout/AppLayout";
 import Index from "@/pages/Index";
 import ApartmentsPage from "@/pages/ApartmentsPage";
@@ -40,13 +42,16 @@ function App() {
   useVisitTracker();
   
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <Router>
-        <AppWithRoutes />
-        <Toaster />
-        <UIToaster />
-      </Router>
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        <PerformanceOptimizer />
+        <Router>
+          <AppWithRoutes />
+          <Toaster />
+          <UIToaster />
+        </Router>
+      </ThemeProvider>
+    </HelmetProvider>
   );
 }
 

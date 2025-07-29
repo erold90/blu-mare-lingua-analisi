@@ -52,7 +52,17 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative h-screen flex items-center justify-center overflow-hidden">
+    <section className="hero-section relative h-screen flex items-center justify-center overflow-hidden">
+      {/* Preload hero image for faster LCP */}
+      {!loading && heroImage && (
+        <link 
+          rel="preload" 
+          as="image" 
+          href={getBackgroundImage()} 
+          fetchPriority="high"
+        />
+      )}
+      
       {/* Clean background image */}
       <div 
         className="absolute inset-0 z-0"
@@ -61,6 +71,7 @@ const HeroSection = () => {
           backgroundSize: 'cover',
           backgroundPosition: 'center 35%',
           backgroundRepeat: 'no-repeat',
+          willChange: 'transform', // GPU acceleration
         }}
       />
       
