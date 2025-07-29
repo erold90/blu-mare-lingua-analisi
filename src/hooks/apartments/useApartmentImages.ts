@@ -18,13 +18,19 @@ export const useApartmentImages = () => {
           const supabaseImages = await imageService.getImagesByCategory('apartment', apartment.id);
           
           if (supabaseImages && supabaseImages.length > 0) {
-            // Convert to URLs and sort by display_order
-            const imageUrls = supabaseImages
-              .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-              .map(img => imageService.getImageUrl(img.file_path));
+            // Find cover image first, then sort the rest by display_order
+            const coverImage = supabaseImages.find(img => img.is_cover);
+            const otherImages = supabaseImages
+              .filter(img => !img.is_cover)
+              .sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+            
+            // Put cover image first, then the rest
+            const orderedImages = coverImage ? [coverImage, ...otherImages] : otherImages;
+            
+            const imageUrls = orderedImages.map(img => imageService.getImageUrl(img.file_path));
             
             imagesMap[apartment.id] = imageUrls;
-            console.log(`📸 Loaded ${imageUrls.length} images for ${apartment.name} from Supabase`);
+            console.log(`📸 Loaded ${imageUrls.length} images for ${apartment.name} from Supabase (cover: ${coverImage ? 'YES' : 'NO'})`);
           } else {
             console.log(`⚠️ No images found for ${apartment.name} in Supabase, using placeholder`);
             imagesMap[apartment.id] = ["/placeholder.svg"];
