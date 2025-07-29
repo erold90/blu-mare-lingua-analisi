@@ -102,7 +102,7 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
           extras_total: priceData.servicesTotal || 0,
           final_total: priceData.total || 0,
           whatsapp_sent: false
-        })
+        } as any)
         .select('id');
 
       if (error) {
