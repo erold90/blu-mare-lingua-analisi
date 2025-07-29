@@ -27,7 +27,7 @@ export const StepDates: React.FC<StepDatesProps> = ({
 }) => {
 
   const canProceed = () => {
-    return formData.checkIn && formData.checkOut && getNights() >= 5;
+    return formData.checkIn && formData.checkOut && getNights() >= 5 && getNights() <= 28;
   };
 
   const nights = getNights();
@@ -184,7 +184,13 @@ export const StepDates: React.FC<StepDatesProps> = ({
                     <span className="text-sm">Minimo 5 notti richieste</span>
                   </div>
                 )}
-                {nights >= 5 && (
+                {nights > 28 && (
+                  <div className="flex items-center justify-center gap-2 mt-2 text-destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-sm">Massimo 28 notti consentite</span>
+                  </div>
+                )}
+                {nights >= 5 && nights <= 28 && (
                   <div className="flex items-center justify-center gap-2 mt-2 text-green-600">
                     <CheckCircle2 className="h-4 w-4" />
                     <span className="text-sm">Durata valida</span>
@@ -197,6 +203,7 @@ export const StepDates: React.FC<StepDatesProps> = ({
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>• Solo check-in/out: Sabato, Domenica, Lunedì</p>
               <p>• Soggiorno minimo: 5 notti</p>
+              <p>• Soggiorno massimo: 28 notti</p>
               <p>• Check-in: ore 16:00</p>
               <p>• Check-out: ore 10:00</p>
             </div>
