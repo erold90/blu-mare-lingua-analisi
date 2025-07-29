@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Home, Users, MapPin, Eye, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Home, Users, MapPin, Eye, AlertCircle, CheckCircle2, Euro } from 'lucide-react';
 import { QuoteFormData } from '@/hooks/useMultiStepQuote';
+import { useDynamicQuote } from '@/hooks/useDynamicQuote';
 
 interface StepApartmentsProps {
   formData: QuoteFormData;
@@ -57,7 +58,9 @@ const apartments = [
 
 export default function StepApartments({ formData, updateFormData, onNext, onPrev, getBedsNeeded, isApartmentAvailable, prenotazioni }: StepApartmentsProps) {
   const [availabilityStatus, setAvailabilityStatus] = useState<Record<string, boolean>>({});
+  const [apartmentPrices, setApartmentPrices] = useState<Record<string, number>>({});
   const bedsNeeded = getBedsNeeded();
+  const { getPriceForPeriod } = useDynamicQuote();
 
   // Controlla la disponibilità dinamicamente per tutti gli appartamenti
   useEffect(() => {
@@ -71,6 +74,7 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
       }
       
       const newStatus: Record<string, boolean> = {};
+      const newPrices: Record<string, number> = {};
       
       for (const apartment of apartments) {
         try {
@@ -78,6 +82,20 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
           const available = await isApartmentAvailable(apartment.id, formData.checkIn, formData.checkOut);
           newStatus[apartment.id] = available;
           console.log(`✅ Appartamento ${apartment.id}: ${available ? 'DISPONIBILE' : 'OCCUPATO'}`);
+          
+          // Calcola il prezzo solo se l'appartamento è disponibile
+          if (available) {
+            const price = await getPriceForPeriod(parseInt(apartment.id), formData.checkIn, formData.checkOut);
+            if (price) {
+              // Calcola prezzo per notte
+              const checkIn = new Date(formData.checkIn);
+              const checkOut = new Date(formData.checkOut);
+              const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+              const pricePerNight = Math.round(price / nights);
+              newPrices[apartment.id] = pricePerNight;
+              console.log(`💰 Appartamento ${apartment.id}: €${pricePerNight}/notte`);
+            }
+          }
         } catch (error) {
           console.error(`❌ Errore checking availability for apartment ${apartment.id}:`, error);
           newStatus[apartment.id] = false;
@@ -85,11 +103,13 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
       }
       
       console.log('📊 Stato finale disponibilità:', newStatus);
+      console.log('💰 Prezzi per notte:', newPrices);
       setAvailabilityStatus(newStatus);
+      setApartmentPrices(newPrices);
     };
 
     checkAllAvailability();
-  }, [formData.checkIn, formData.checkOut, isApartmentAvailable]);
+  }, [formData.checkIn, formData.checkOut, isApartmentAvailable, getPriceForPeriod]);
   
   const handleApartmentToggle = (apartmentId: string) => {
     const isSelected = formData.selectedApartments.includes(apartmentId);
@@ -258,9 +278,17 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
                 )}
 
                 {isAvailable && (
-                  <div className="flex items-center gap-2 text-green-600">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span className="text-sm font-medium">Disponibile</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-green-600">
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span className="text-sm font-medium">Disponibile</span>
+                    </div>
+                    {apartmentPrices[apartment.id] && (
+                      <div className="flex items-center gap-1 text-primary font-semibold">
+                        <Euro className="h-4 w-4" />
+                        <span>{apartmentPrices[apartment.id]}/notte</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
