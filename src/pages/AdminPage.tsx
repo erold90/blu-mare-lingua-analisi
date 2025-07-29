@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Users, Home, BarChart, Plus, Edit, Trash2, Euro } from 'lucide-react';
+import { Calendar, Users, Home, BarChart, Plus, Edit, Trash2, Euro, ArrowLeft } from 'lucide-react';
 import { useReservations } from '@/hooks/useReservations';
 import { apartments } from '@/data/apartments';
 import { format } from 'date-fns';
@@ -24,6 +24,7 @@ const LOGIN_CREDENTIALS = {
 };
 
 export default function AdminPage() {
+  const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(() => 
     localStorage.getItem('admin-auth') === 'true'
   );
@@ -198,7 +199,18 @@ export default function AdminPage() {
       {/* Header */}
       <div className="bg-white border-b px-6 py-4">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Area Riservata Villa MareBlu</h1>
+          <div className="flex items-center gap-4">
+            <Button 
+              onClick={() => navigate('/')} 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Torna alla Home
+            </Button>
+            <h1 className="text-2xl font-bold text-gray-900">Area Riservata Villa MareBlu</h1>
+          </div>
           <Button onClick={handleLogout} variant="outline">
             Logout
           </Button>
