@@ -204,7 +204,7 @@ export const StepDates: React.FC<StepDatesProps> = ({
               <p>• Solo check-in/out: Sabato, Domenica, Lunedì</p>
               <p>• Soggiorno minimo: 5 notti</p>
               <p>• Soggiorno massimo: 28 notti</p>
-              <p>• Check-in: ore 16:00</p>
+              <p>• Check-in: dalle 14:00 alle 17:00</p>
               <p>• Check-out: ore 10:00</p>
             </div>
           </CardContent>
