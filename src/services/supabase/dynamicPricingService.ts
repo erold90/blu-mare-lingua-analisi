@@ -226,9 +226,10 @@ class PricingService {
       console.log(`🔍 Controllo disponibilità appartamento ${apartmentId} dal ${checkin} al ${checkout}`);
       
       // Verifica conflitti con prenotazioni esistenti
+      // Una prenotazione è in conflitto se: start_date < checkout AND end_date > checkin
       const { data: conflicts, error } = await supabase
         .from('reservations')
-        .select('id')
+        .select('id, guest_name, start_date, end_date, apartment_ids')
         .contains('apartment_ids', [`appartamento-${apartmentId}`])
         .lt('start_date', checkout)
         .gt('end_date', checkin);
