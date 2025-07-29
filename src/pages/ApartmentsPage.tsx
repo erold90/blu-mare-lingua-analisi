@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { apartments } from "@/data/apartments";
 import SEOHead from "@/components/seo/SEOHead";
 import { getApartmentSchema, getBreadcrumbSchema } from "@/components/seo/StructuredData";
@@ -10,7 +10,21 @@ import { ApartmentGrid } from "@/components/apartments/ApartmentGrid";
 import { WhyChooseSection } from "@/components/apartments/WhyChooseSection";
 
 const ApartmentsPage = () => {
-  const { apartmentImages, isLoading } = useApartmentImages();
+  const { apartmentImages, isLoading, reloadImages } = useApartmentImages();
+
+  // Listen for image updates from admin panel
+  useEffect(() => {
+    const handleImageUpdate = () => {
+      console.log("🔄 Received apartmentImagesUpdated event, reloading images...");
+      reloadImages();
+    };
+
+    window.addEventListener('apartmentImagesUpdated', handleImageUpdate);
+    
+    return () => {
+      window.removeEventListener('apartmentImagesUpdated', handleImageUpdate);
+    };
+  }, [reloadImages]);
 
   // Prepare data for structured data
   const apartmentsWithImages = apartments.map(apt => ({
