@@ -3,6 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { 
   Receipt, 
   Calendar, 
@@ -14,11 +25,14 @@ import {
   MessageCircle,
   Filter,
   Eye,
-  TrendingDown
+  TrendingDown,
+  Trash2,
+  X
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { toast } from '@/hooks/use-toast';
 
 interface QuoteRequest {
   id: number;
@@ -46,6 +60,10 @@ export const QuoteRequestsManager: React.FC = () => {
   const [quotes, setQuotes] = useState<QuoteRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'completed' | 'abandoned'>('all');
+  const [selectedQuotes, setSelectedQuotes] = useState<number[]>([]);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<'single' | 'multiple'>('single');
+  const [singleDeleteId, setSingleDeleteId] = useState<number | null>(null);
 
   const apartmentNames = {
     1: "Appartamento 1 (6 posti)",
@@ -112,6 +130,66 @@ export const QuoteRequestsManager: React.FC = () => {
   };
 
   const stats = getConversionStats();
+
+  // Funzioni di selezione
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedQuotes(quotes.map(q => q.id));
+    } else {
+      setSelectedQuotes([]);
+    }
+  };
+
+  const handleSelectQuote = (quoteId: number, checked: boolean) => {
+    if (checked) {
+      setSelectedQuotes(prev => [...prev, quoteId]);
+    } else {
+      setSelectedQuotes(prev => prev.filter(id => id !== quoteId));
+    }
+  };
+
+  // Funzioni di eliminazione
+  const handleDeleteSingle = (quoteId: number) => {
+    setSingleDeleteId(quoteId);
+    setDeleteTarget('single');
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteMultiple = () => {
+    setDeleteTarget('multiple');
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      const idsToDelete = deleteTarget === 'single' ? [singleDeleteId!] : selectedQuotes;
+      
+      const { error } = await supabase
+        .from('quote_requests')
+        .delete()
+        .in('id', idsToDelete);
+
+      if (error) throw error;
+
+      toast({
+        title: "Preventivi eliminati",
+        description: `${idsToDelete.length} preventivo${idsToDelete.length > 1 ? 'i' : ''} eliminato${idsToDelete.length > 1 ? 'i' : ''} con successo`,
+      });
+
+      // Aggiorna la lista
+      await loadQuotes();
+      setSelectedQuotes([]);
+      setShowDeleteDialog(false);
+      setSingleDeleteId(null);
+    } catch (err: any) {
+      console.error('Errore eliminazione:', err);
+      toast({
+        title: "Errore",
+        description: "Impossibile eliminare i preventivi",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (loading) {
     return (
@@ -190,6 +268,46 @@ export const QuoteRequestsManager: React.FC = () => {
         </Card>
       </div>
 
+      {/* Toolbar */}
+      {quotes.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Checkbox 
+                  checked={selectedQuotes.length === quotes.length && quotes.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+                <span className="text-sm text-muted-foreground">
+                  {selectedQuotes.length > 0 ? `${selectedQuotes.length} selezionati` : 'Seleziona tutto'}
+                </span>
+              </div>
+              
+              {selectedQuotes.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSelectedQuotes([])}
+                  >
+                    <X className="h-4 w-4 mr-1" />
+                    Deseleziona
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm"
+                    onClick={handleDeleteMultiple}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Elimina selezionati ({selectedQuotes.length})
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Quotes List */}
       <div className="space-y-4">
         {quotes.map((quote) => (
@@ -197,6 +315,10 @@ export const QuoteRequestsManager: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-4">
+                  <Checkbox 
+                    checked={selectedQuotes.includes(quote.id)}
+                    onCheckedChange={(checked) => handleSelectQuote(quote.id, checked as boolean)}
+                  />
                   <div className="text-sm text-muted-foreground">
                     #{quote.id}
                   </div>
@@ -205,10 +327,20 @@ export const QuoteRequestsManager: React.FC = () => {
                   </div>
                   {getStatusBadge(quote)}
                 </div>
-                <div className="text-right">
-                  <div className="text-xl font-bold text-primary">€{quote.final_total}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {calculateNights(quote.checkin_date, quote.checkout_date)} notti
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleDeleteSingle(quote.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  <div className="text-right">
+                    <div className="text-xl font-bold text-primary">€{quote.final_total}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {calculateNights(quote.checkin_date, quote.checkout_date)} notti
+                    </div>
                   </div>
                 </div>
               </div>
@@ -307,6 +439,30 @@ export const QuoteRequestsManager: React.FC = () => {
           </Card>
         )}
       </div>
+
+      {/* Dialog di conferma eliminazione */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Conferma eliminazione</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget === 'single' 
+                ? "Sei sicuro di voler eliminare questo preventivo? Questa azione non può essere annullata."
+                : `Sei sicuro di voler eliminare ${selectedQuotes.length} preventivi selezionati? Questa azione non può essere annullata.`
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Elimina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
