@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -55,15 +55,32 @@ const apartments = [
   }
 ];
 
-export const StepApartments: React.FC<StepApartmentsProps> = ({
-  formData,
-  updateFormData,
-  onNext,
-  onPrev,
-  getBedsNeeded,
-  prenotazioni
-}) => {
+export default function StepApartments({ formData, updateFormData, onNext, onPrev, getBedsNeeded, isApartmentAvailable, prenotazioni }: StepApartmentsProps) {
+  const [availabilityStatus, setAvailabilityStatus] = useState<Record<string, boolean>>({});
   const bedsNeeded = getBedsNeeded();
+
+  // Controlla la disponibilità dinamicamente per tutti gli appartamenti
+  useEffect(() => {
+    const checkAllAvailability = async () => {
+      if (!formData.checkIn || !formData.checkOut) return;
+      
+      const newStatus: Record<string, boolean> = {};
+      
+      for (const apartment of apartments) {
+        try {
+          const available = await isApartmentAvailable(apartment.id, formData.checkIn, formData.checkOut);
+          newStatus[apartment.id] = available;
+        } catch (error) {
+          console.error(`Error checking availability for apartment ${apartment.id}:`, error);
+          newStatus[apartment.id] = false;
+        }
+      }
+      
+      setAvailabilityStatus(newStatus);
+    };
+
+    checkAllAvailability();
+  }, [formData.checkIn, formData.checkOut, isApartmentAvailable]);
   
   const handleApartmentToggle = (apartmentId: string) => {
     const isSelected = formData.selectedApartments.includes(apartmentId);
@@ -141,14 +158,8 @@ export const StepApartments: React.FC<StepApartmentsProps> = ({
       {/* Apartments Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
         {apartments.map(apartment => {
-          // Verifica disponibilità usando la logica statica per ora
-          const isAvailable = !prenotazioni.some(p => 
-            p.apt === apartment.id && 
-            formData.checkIn && 
-            formData.checkOut &&
-            (new Date(formData.checkIn) < new Date(p.checkout) && 
-             new Date(formData.checkOut) > new Date(p.checkin))
-          );
+          // Usa la disponibilità dinamica dal database
+          const isAvailable = availabilityStatus[apartment.id] ?? true;
           
           const isSelected = formData.selectedApartments.includes(apartment.id);
           const bookingInfo = getBookingInfo(apartment.id);

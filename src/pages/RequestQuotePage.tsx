@@ -3,7 +3,7 @@ import { Progress } from '@/components/ui/progress';
 import { useMultiStepQuote } from '@/hooks/useMultiStepQuote';
 import { StepGuests } from '@/components/quote/StepGuests';
 import { StepDates } from '@/components/quote/StepDates';
-import { StepApartments } from '@/components/quote/StepApartments';
+import StepApartments from '@/components/quote/StepApartments';
 import { StepPets } from '@/components/quote/StepPets';
 import { StepLinen } from '@/components/quote/StepLinen';
 import { StepSummary } from '@/components/quote/StepSummary';
