@@ -103,19 +103,26 @@ class PricingService {
       const checkinYear = new Date(checkinDate).getFullYear();
       const checkoutYear = new Date(checkoutDate).getFullYear();
       
+      // Converti l'ID numerico in formato stringa corretto per il database
+      const apartmentStringId = `appartamento-${apartmentId}`;
+      
+      console.log(`🔍 Cercando prezzi per appartamento: ${apartmentStringId} nel periodo ${checkinDate} - ${checkoutDate}`);
+      
       // Recupera i prezzi settimanali per gli anni coinvolti
       const { data: weeklyPrices, error } = await supabase
         .from('weekly_prices')
         .select('*')
-        .eq('apartment_id', apartmentId.toString())
+        .eq('apartment_id', apartmentStringId)
         .in('year', [checkinYear, checkoutYear])
         .gte('week_end', checkinDate)
         .lte('week_start', checkoutDate)
         .order('week_start');
       
+      console.log(`📊 Prezzi trovati per ${apartmentStringId}:`, weeklyPrices);
+      
       if (error) throw new Error(`Errore nel recupero prezzi: ${error.message}`);
       if (!weeklyPrices?.length) {
-        throw new Error(`Nessun prezzo trovato per appartamento ${apartmentId} nel periodo ${checkinDate} - ${checkoutDate}`);
+        throw new Error(`Nessun prezzo trovato per appartamento ${apartmentId} (${apartmentStringId}) nel periodo ${checkinDate} - ${checkoutDate}`);
       }
       
       return this.calculateWeeklyPrice(weeklyPrices, checkinDate, checkoutDate);
@@ -222,7 +229,7 @@ class PricingService {
       const { data: conflicts, error } = await supabase
         .from('reservations')
         .select('id')
-        .contains('apartment_ids', [apartmentId])
+        .contains('apartment_ids', [`appartamento-${apartmentId}`])
         .lt('start_date', checkout)
         .gt('end_date', checkin);
       
