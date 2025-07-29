@@ -59,6 +59,7 @@ export default function AdminPage() {
   // New reservation form state
   const [newReservation, setNewReservation] = useState({
     guest_name: '',
+    guest_phone: '',
     start_date: '',
     end_date: '',
     apartment_ids: [] as string[],
@@ -110,6 +111,7 @@ export default function AdminPage() {
       setShowAddDialog(false);
       setNewReservation({
         guest_name: '',
+        guest_phone: '',
         start_date: '',
         end_date: '',
         apartment_ids: [],
@@ -411,6 +413,16 @@ export default function AdminPage() {
                             value={newReservation.guest_name}
                             onChange={(e) => setNewReservation(prev => ({ ...prev, guest_name: e.target.value }))}
                             placeholder="Nome completo"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="guest_phone">Telefono</Label>
+                          <Input
+                            id="guest_phone"
+                            type="tel"
+                            value={newReservation.guest_phone}
+                            onChange={(e) => setNewReservation(prev => ({ ...prev, guest_phone: e.target.value }))}
+                            placeholder="+39 xxx xxx xxxx"
                           />
                         </div>
                         <div>
