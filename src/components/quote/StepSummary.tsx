@@ -163,9 +163,9 @@ Servizi extra: €${priceCalculation.servicesTotal}
 TOTALE: €${priceCalculation.total}
 
 💳 *PAGAMENTO:*
-Caparra (30%): €${priceCalculation.deposit}
-Saldo arrivo: €${priceCalculation.balance}
-Caparra al Check-in (contanti): 200 €${formData.selectedApartments.length > 1 ? ` per appartamento (${formData.selectedApartments.length * 200} € totali)` : ''}
+💰 Caparra (30%): €${priceCalculation.deposit}
+💰 Saldo arrivo: €${priceCalculation.balance}
+🔐 Cauzione al Check-in (contanti): 200 €${formData.selectedApartments.length > 1 ? ` per appartamento (${formData.selectedApartments.length * 200} € totali)` : ''}
 
 *Preventivo senza impegno - Valido 7 giorni*`;
 
@@ -482,7 +482,7 @@ Caparra al Check-in (contanti): 200 €${formData.selectedApartments.length > 1 
               <div className="flex justify-between p-2 bg-green-50 dark:bg-green-950/20 rounded">
                 <span className="flex items-center gap-1">
                   <Banknote className="h-3 w-3" />
-                  Caparra al Check-in (contanti):
+                  🔐 Cauzione al Check-in (contanti):
                 </span>
                 <span className="font-semibold">
                   200 €{formData.selectedApartments.length > 1 ? ` per appartamento (${formData.selectedApartments.length * 200} € totali)` : ''}
@@ -493,7 +493,7 @@ Caparra al Check-in (contanti): 200 €${formData.selectedApartments.length > 1 
             <div className="text-xs text-muted-foreground">
               <p>• La caparra del 30% è richiesta per confermare la prenotazione</p>
               <p>• Il saldo è dovuto il giorno dell'arrivo</p>
-              <p>• La caparra in contanti è a garanzia dell'appartamento</p>
+              <p>• La cauzione in contanti è a garanzia dell'appartamento</p>
             </div>
           </div>
         </CardContent>
