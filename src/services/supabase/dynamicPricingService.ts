@@ -375,8 +375,10 @@ class PricingService {
       
       // Calcola costi extra
       let extrasTotal = 0;
-      if (params.hasPet && params.petApartment) {
-        extrasTotal += 50;
+      if (params.hasPet) {
+        // Usa petCount se disponibile, altrimenti default a 1
+        const petCount = (params as any).petCount || 1;
+        extrasTotal += petCount * 50;
       }
       if (params.needsLinen) {
         extrasTotal += totalGuestsInBeds * 15;

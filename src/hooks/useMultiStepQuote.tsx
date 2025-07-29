@@ -157,6 +157,7 @@ export const useMultiStepQuote = () => {
         childrenNoBed: formData.childrenWithParents.filter(Boolean).length,
         hasPet: formData.hasPets,
         petApartment: undefined,
+        petCount: formData.petCount || 1,
         needsLinen: formData.requestLinen
       };
 
@@ -210,6 +211,7 @@ export const useMultiStepQuote = () => {
       childrenNoBed: formData.childrenWithParents.filter(Boolean).length,
       hasPet: formData.hasPets,
       petApartment: undefined,
+      petCount: formData.petCount || 1,
       needsLinen: formData.requestLinen,
       guestName: formData.guestName,
       guestEmail: formData.email,
