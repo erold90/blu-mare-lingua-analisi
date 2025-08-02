@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar, Euro, Copy, Plus, Edit, Trash2, Ban, Settings, RefreshCw } from 'lucide-react';
+import { Calendar, Euro, Copy, Plus, Edit, Trash2, Ban, Settings, RefreshCw, Save, Check } from 'lucide-react';
 import { usePricing } from '@/hooks/usePricing';
 import { useDynamicQuote } from '@/hooks/useDynamicQuote';
 import { apartments } from '@/data/apartments';
@@ -51,6 +51,10 @@ export const PricingManagement = () => {
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [copyFromYear, setCopyFromYear] = useState<number>(selectedYear - 1);
   const [copyToYear, setCopyToYear] = useState<number>(selectedYear + 1);
+  
+  // Stato per le modifiche locali
+  const [localChanges, setLocalChanges] = useState<{[key: string]: number}>({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Generate next 10 years
   const currentYear = new Date().getFullYear();
@@ -66,6 +70,9 @@ export const PricingManagement = () => {
 
   useEffect(() => {
     fetchWeeklyPrices(selectedYear, selectedApartment === 'all' ? undefined : selectedApartment);
+    // Reset delle modifiche locali quando cambiano i filtri
+    setLocalChanges({});
+    setHasUnsavedChanges(false);
   }, [selectedYear, selectedApartment]);
 
   const filteredPrices = weeklyPrices.filter(price => {
@@ -74,17 +81,63 @@ export const PricingManagement = () => {
     return yearMatch && apartmentMatch;
   });
 
-  const handlePriceUpdate = async (priceId: string, newPrice: number) => {
-    console.log('🔄 Aggiornamento prezzo:', { priceId, newPrice });
-    const result = await updateWeeklyPrice(priceId, { price: newPrice });
-    console.log('✅ Risultato aggiornamento:', result);
-    if (result.success) {
-      setEditingPrice(null);
-      // Forza il refresh dei dati
-      await fetchWeeklyPrices(selectedYear, selectedApartment === 'all' ? undefined : selectedApartment);
-    } else {
-      console.error('❌ Errore aggiornamento prezzo:', result.error);
+  // Gestisce le modifiche locali senza salvare immediatamente
+  const handleLocalPriceChange = (priceId: string, newPrice: number) => {
+    setLocalChanges(prev => ({
+      ...prev,
+      [priceId]: newPrice
+    }));
+    setHasUnsavedChanges(true);
+    setEditingPrice(null);
+  };
+
+  // Salva tutte le modifiche in batch
+  const handleSaveAllChanges = async () => {
+    if (Object.keys(localChanges).length === 0) return;
+    
+    toast.loading('Salvando le modifiche...');
+    
+    try {
+      const promises = Object.entries(localChanges).map(([priceId, newPrice]) =>
+        updateWeeklyPrice(priceId, { price: newPrice })
+      );
+      
+      const results = await Promise.all(promises);
+      const successes = results.filter(r => r.success).length;
+      const failures = results.filter(r => !r.success).length;
+      
+      if (failures === 0) {
+        toast.dismiss();
+        toast.success(`${successes} prezzi aggiornati con successo!`);
+        setLocalChanges({});
+        setHasUnsavedChanges(false);
+        await fetchWeeklyPrices(selectedYear, selectedApartment === 'all' ? undefined : selectedApartment);
+      } else {
+        toast.dismiss();
+        toast.error(`${successes} aggiornati, ${failures} errori`);
+      }
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Errore durante il salvataggio');
+      console.error('Errore batch update:', error);
     }
+  };
+
+  // Annulla tutte le modifiche locali
+  const handleCancelChanges = () => {
+    setLocalChanges({});
+    setHasUnsavedChanges(false);
+    setEditingPrice(null);
+  };
+
+  // Ottiene il prezzo da visualizzare (modificato localmente o originale)
+  const getDisplayPrice = (price: any) => {
+    return localChanges[price.id] !== undefined ? localChanges[price.id] : price.price;
+  };
+
+  // Verifica se un prezzo è stato modificato localmente
+  const isPriceModified = (priceId: string) => {
+    return localChanges[priceId] !== undefined;
   };
 
   const handleGeneratePrices = async () => {
@@ -269,6 +322,37 @@ export const PricingManagement = () => {
         </TabsList>
 
         <TabsContent value="prices" className="space-y-6">
+          {/* Pulsanti di salvataggio */}
+          {hasUnsavedChanges && (
+            <Card className="border-orange-200 bg-orange-50">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="text-orange-700 font-medium">
+                      {Object.keys(localChanges).length} modifiche non salvate
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={handleCancelChanges}
+                      className="flex items-center gap-2"
+                    >
+                      Annulla
+                    </Button>
+                    <Button
+                      onClick={handleSaveAllChanges}
+                      className="flex items-center gap-2"
+                    >
+                      <Save className="h-4 w-4" />
+                      Salva tutte le modifiche
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Filters */}
           <Card>
             <CardContent className="pt-6">
@@ -323,59 +407,66 @@ export const PricingManagement = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {prices.map((price) => (
-                        <Card key={price.id} className="relative">
-                          <CardContent className="p-4">
-                            <div className="space-y-2">
-                              <div className="text-sm text-muted-foreground">
-                                Settimana {price.week_number}
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {format(new Date(price.week_start), 'dd MMM', { locale: it })} - {' '}
-                                {format(new Date(price.week_end), 'dd MMM', { locale: it })}
-                              </div>
-                              <div className="flex items-center justify-between">
-                                {editingPrice?.id === price.id ? (
-                                  <div className="flex items-center gap-2">
-                                    <Input
-                                      type="number"
-                                      value={editingPrice.price}
-                                      onChange={(e) => setEditingPrice(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
-                                      className="w-20"
-                                    />
-                                    <Button
-                                      size="sm"
-                                      onClick={() => handlePriceUpdate(price.id, editingPrice.price)}
-                                    >
-                                      ✓
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => setEditingPrice(null)}
-                                    >
-                                      ✕
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <>
-                                    <div className="text-lg font-bold">€{price.price}</div>
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      onClick={() => setEditingPrice({ id: price.id, price: price.price })}
-                                    >
-                                      <Edit className="h-3 w-3" />
-                                    </Button>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                       {prices.map((price) => (
+                         <Card key={price.id} className={`relative ${isPriceModified(price.id) ? 'border-green-500 bg-green-50' : ''}`}>
+                           {isPriceModified(price.id) && (
+                             <div className="absolute -top-2 -right-2 bg-green-500 text-white rounded-full p-1">
+                               <Check className="h-3 w-3" />
+                             </div>
+                           )}
+                           <CardContent className="p-4">
+                             <div className="space-y-2">
+                               <div className="text-sm text-muted-foreground">
+                                 Settimana {price.week_number}
+                               </div>
+                               <div className="text-xs text-muted-foreground">
+                                 {format(new Date(price.week_start), 'dd MMM', { locale: it })} - {' '}
+                                 {format(new Date(price.week_end), 'dd MMM', { locale: it })}
+                               </div>
+                               <div className="flex items-center justify-between">
+                                 {editingPrice?.id === price.id ? (
+                                   <div className="flex items-center gap-2">
+                                     <Input
+                                       type="number"
+                                       value={editingPrice.price}
+                                       onChange={(e) => setEditingPrice(prev => ({ ...prev, price: parseFloat(e.target.value) }))}
+                                       className="w-20"
+                                     />
+                                     <Button
+                                       size="sm"
+                                       onClick={() => handleLocalPriceChange(price.id, editingPrice.price)}
+                                     >
+                                       ✓
+                                     </Button>
+                                     <Button
+                                       size="sm"
+                                       variant="outline"
+                                       onClick={() => setEditingPrice(null)}
+                                     >
+                                       ✕
+                                     </Button>
+                                   </div>
+                                 ) : (
+                                   <>
+                                     <div className={`text-lg font-bold ${isPriceModified(price.id) ? 'text-green-600' : ''}`}>
+                                       €{getDisplayPrice(price)}
+                                     </div>
+                                     <Button
+                                       size="sm"
+                                       variant="ghost"
+                                       onClick={() => setEditingPrice({ id: price.id, price: getDisplayPrice(price) })}
+                                     >
+                                       <Edit className="h-3 w-3" />
+                                     </Button>
+                                   </>
+                                 )}
+                               </div>
+                             </div>
+                           </CardContent>
+                         </Card>
+                       ))}
+                     </div>
                   </CardContent>
                 </Card>
               ))}
