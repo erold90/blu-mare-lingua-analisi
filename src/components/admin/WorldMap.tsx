@@ -27,6 +27,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
   const [center, setCenter] = useState<[number, number]>([0, 20]);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [hoveredMarker, setHoveredMarker] = useState<number | null>(null);
+  const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // Raggio fisso per tutti i marker
   const getMarkerRadius = () => 5;
@@ -70,7 +71,16 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
   };
 
   return (
-    <div className="relative w-full h-96 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-950 rounded-lg overflow-hidden border border-border">
+    <div 
+      className="relative w-full h-96 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-950 rounded-lg overflow-hidden border border-border"
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setMousePosition({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        });
+      }}
+    >
       {/* Controlli mappa */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
         <Button 
@@ -109,6 +119,23 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
             <Globe className="h-4 w-4 mr-2" />
             {selectedCountry}
           </Badge>
+        </div>
+      )}
+
+      {/* Tooltip per marker al hover */}
+      {hoveredMarker !== null && (
+        <div 
+          className="absolute z-20 pointer-events-none bg-background/95 backdrop-blur-sm border border-border rounded-lg px-3 py-2 shadow-lg transition-all duration-200"
+          style={{
+            left: mousePosition.x + 10,
+            top: mousePosition.y - 40,
+            transform: mousePosition.x > 300 ? 'translateX(-100%)' : 'translateX(0)'
+          }}
+        >
+          <div className="text-sm font-semibold">{visitData[hoveredMarker]?.country}</div>
+          <div className="text-xs text-muted-foreground">
+            {visitData[hoveredMarker]?.count} visite
+          </div>
         </div>
       )}
 
@@ -189,11 +216,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
                     filter: hoveredMarker === index ? "drop-shadow(0 2px 4px rgba(0,0,0,0.5))" : "none"
                   }}
                 />
-                
-                {/* Tooltip migliorato */}
-                <title>
-                  {`${marker.country}\n${marker.count} visite\n${((marker.count / visitData.reduce((sum, d) => sum + d.count, 0)) * 100).toFixed(1)}% del totale`}
-                </title>
               </Marker>
             ))
           }
@@ -208,7 +230,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
         </div>
         <div className="grid grid-cols-2 gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+            <div className="w-3 h-3 rounded-full bg-green-500"></div>
             <span className="text-xs">Bassa</span>
           </div>
           <div className="flex items-center gap-2">
@@ -220,7 +242,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
             <span className="text-xs">Alta</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded-full" style={{ backgroundColor: "hsl(var(--destructive))" }}></div>
+            <div className="w-3 h-3 rounded-full bg-red-500"></div>
             <span className="text-xs">Massima</span>
           </div>
         </div>
@@ -231,14 +253,6 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
           <div>Paesi visitatori: {visitData.length}</div>
         </div>
       </div>
-
-      {/* CSS per animazioni */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 0.1; transform: scale(1.2); }
-        }
-      `}</style>
     </div>
   );
 };
