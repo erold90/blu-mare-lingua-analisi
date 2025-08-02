@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Home, Users, MapPin, Eye, AlertCircle, CheckCircle2, Euro } from 'lucide-react';
 import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 import { useDynamicQuote } from '@/hooks/useDynamicQuote';
+import { PricingService } from '@/services/supabase/dynamicPricingService';
 
 interface StepApartmentsProps {
   formData: QuoteFormData;
@@ -72,6 +73,10 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
         console.log('❌ Date mancanti, salto controllo disponibilità');
         return;
       }
+      
+      // Invalida la cache dei prezzi per ottenere dati aggiornati
+      console.log('🔄 Invalidando cache prezzi per selezione appartamenti...');
+      PricingService.invalidateCache();
       
       const newStatus: Record<string, boolean> = {};
       const newPrices: Record<string, number> = {};
