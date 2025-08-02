@@ -79,12 +79,23 @@ export const pricingService = {
   },
 
   generateWeeklyPricesForYear: async (targetYear: number, copyFromYear?: number) => {
+    console.log('🔄 Service: Chiamando RPC generate_weekly_prices_for_year con parametri:', {
+      target_year: targetYear,
+      copy_from_year: copyFromYear || null
+    });
+    
     const { data, error } = await supabase.rpc('generate_weekly_prices_for_year', {
       target_year: targetYear,
       copy_from_year: copyFromYear || null
     });
     
-    if (error) throw error;
+    console.log('🔍 Service: Risultato RPC:', { data, error });
+    
+    if (error) {
+      console.error('❌ Service: Errore RPC:', error);
+      throw new Error(`Database error: ${error.message} (${error.code})`);
+    }
+    
     return data;
   },
 

@@ -74,7 +74,9 @@ export const usePricing = () => {
   const generatePricesForYear = async (targetYear: number, copyFromYear?: number) => {
     try {
       setLoading(true);
+      console.log('🔄 Generando prezzi per anno:', { targetYear, copyFromYear });
       const weeksCreated = await pricingService.generateWeeklyPricesForYear(targetYear, copyFromYear);
+      console.log('✅ Prezzi generati con successo:', weeksCreated);
       
       // Invalida cache del pricing service
       const { PricingService } = await import('@/services/supabase/dynamicPricingService');
@@ -84,7 +86,8 @@ export const usePricing = () => {
       toast.success(`Prezzi generati per ${targetYear}: ${weeksCreated} settimane create`);
       return { success: true, error: null, weeksCreated };
     } catch (err: any) {
-      toast.error('Errore nella generazione prezzi');
+      console.error('❌ Errore nella generazione prezzi:', err);
+      toast.error(`Errore nella generazione prezzi: ${err.message || err}`);
       return { success: false, error: err.message, weeksCreated: 0 };
     } finally {
       setLoading(false);
