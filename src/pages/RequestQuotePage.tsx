@@ -22,6 +22,7 @@ export default function RequestQuotePage() {
     isApartmentAvailable,
     isValidDay,
     calculatePrice,
+    getDateBlockInfo,
     prenotazioni
   } = useMultiStepQuote();
 
@@ -55,6 +56,7 @@ export default function RequestQuotePage() {
             onPrev={prevStep}
             getNights={getNights}
             isValidDay={isValidDay}
+            getDateBlockInfo={getDateBlockInfo}
           />
         );
       case 3:

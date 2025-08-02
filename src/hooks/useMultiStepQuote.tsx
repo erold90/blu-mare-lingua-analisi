@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDynamicQuote } from './useDynamicQuote';
+import { pricingService } from '@/services/supabase/pricingService';
 
 export interface QuoteFormData {
   // Step 1: Ospiti
@@ -49,6 +50,7 @@ const prenotazioniStatiche = [
 
 export const useMultiStepQuote = () => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [dateBlocks, setDateBlocks] = useState<any[]>([]);
   const [formData, setFormData] = useState<QuoteFormData>({
     adults: 1,
     children: 0,
@@ -62,6 +64,20 @@ export const useMultiStepQuote = () => {
     email: '',
     phone: ''
   });
+
+  // Load date blocks on mount
+  useEffect(() => {
+    const loadDateBlocks = async () => {
+      try {
+        const blocks = await pricingService.getDateBlocks();
+        setDateBlocks(blocks);
+      } catch (error) {
+        console.error('Error loading date blocks:', error);
+      }
+    };
+    
+    loadDateBlocks();
+  }, []);
 
   // Hook per gestione dinamica prezzi
   const { 
@@ -221,6 +237,22 @@ export const useMultiStepQuote = () => {
     return await saveQuote(params);
   }, [formData, quoteResult, saveQuote]);
 
+  // Check if a date is blocked and return block reason
+  const getDateBlockInfo = useCallback((date: Date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    
+    for (const block of dateBlocks) {
+      if (dateStr >= block.start_date && dateStr <= block.end_date) {
+        return {
+          isBlocked: true,
+          reason: block.block_reason || 'Periodo non disponibile'
+        };
+      }
+    }
+    
+    return { isBlocked: false, reason: '' };
+  }, [dateBlocks]);
+
   return {
     currentStep,
     formData,
@@ -234,6 +266,7 @@ export const useMultiStepQuote = () => {
     isValidDay,
     calculatePrice,
     saveQuoteToDatabase,
+    getDateBlockInfo,
     priceLoading,
     prenotazioni: prenotazioniStatiche
   };

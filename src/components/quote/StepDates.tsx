@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Badge } from '@/components/ui/badge';
-import { CalendarIcon, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { CalendarIcon, AlertCircle, CheckCircle2, Ban } from 'lucide-react';
 import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -15,6 +16,7 @@ interface StepDatesProps {
   onPrev: () => void;
   getNights: () => number;
   isValidDay: (date: Date) => boolean;
+  getDateBlockInfo: (date: Date) => { isBlocked: boolean; reason: string };
 }
 
 export const StepDates: React.FC<StepDatesProps> = ({
@@ -23,7 +25,8 @@ export const StepDates: React.FC<StepDatesProps> = ({
   onNext,
   onPrev,
   getNights,
-  isValidDay
+  isValidDay,
+  getDateBlockInfo
 }) => {
 
   const canProceed = () => {
@@ -42,10 +45,37 @@ export const StepDates: React.FC<StepDatesProps> = ({
     // Non permettere date passate
     if (date < new Date()) return true;
     
-    // Se stiamo selezionando checkout, deve essere dopo checkin
-    // Per il range selector, non abbiamo più questo controllo
+    // Controllo se la data è bloccata
+    const blockInfo = getDateBlockInfo(date);
+    if (blockInfo.isBlocked) return true;
     
     return false;
+  };
+
+  // Custom day renderer with tooltip for blocked dates
+  const customDayRenderer = (date: Date, displayMonth: Date) => {
+    const blockInfo = getDateBlockInfo(date);
+    const isDisabled = isDateDisabled(date);
+    
+    if (blockInfo.isBlocked) {
+      return (
+        <TooltipProvider key={date.toISOString()}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="relative w-full h-full flex items-center justify-center cursor-not-allowed">
+                <span className="text-muted-foreground line-through">{date.getDate()}</span>
+                <Ban className="absolute top-0 right-0 h-3 w-3 text-destructive" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-sm">{blockInfo.reason}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+
+    return null; // Use default rendering for other dates
   };
 
   return (
@@ -68,39 +98,61 @@ export const StepDates: React.FC<StepDatesProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <Calendar
-                mode="range"
-                selected={
-                  formData.checkIn && formData.checkOut 
-                    ? { from: new Date(formData.checkIn), to: new Date(formData.checkOut) }
-                    : formData.checkIn 
-                    ? { from: new Date(formData.checkIn), to: undefined }
-                    : undefined
-                }
-                onSelect={(range) => {
-                  if (!range?.from) return;
-                  
-                  const formatDateToISO = (date: Date) => {
-                    const year = date.getFullYear();
-                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                    const day = String(date.getDate()).padStart(2, '0');
-                    return `${year}-${month}-${day}`;
-                  };
+            <TooltipProvider>
+              <div className="space-y-4">
+                <Calendar
+                  mode="range"
+                  selected={
+                    formData.checkIn && formData.checkOut 
+                      ? { from: new Date(formData.checkIn), to: new Date(formData.checkOut) }
+                      : formData.checkIn 
+                      ? { from: new Date(formData.checkIn), to: undefined }
+                      : undefined
+                  }
+                  onSelect={(range) => {
+                    if (!range?.from) return;
+                    
+                    const formatDateToISO = (date: Date) => {
+                      const year = date.getFullYear();
+                      const month = String(date.getMonth() + 1).padStart(2, '0');
+                      const day = String(date.getDate()).padStart(2, '0');
+                      return `${year}-${month}-${day}`;
+                    };
 
-                  const checkInISO = formatDateToISO(range.from);
-                  const checkOutISO = range.to ? formatDateToISO(range.to) : '';
+                    const checkInISO = formatDateToISO(range.from);
+                    const checkOutISO = range.to ? formatDateToISO(range.to) : '';
 
-                  updateFormData({ 
-                    checkIn: checkInISO,
-                    checkOut: checkOutISO
-                  });
-                }}
-                disabled={isDateDisabled}
-                locale={it}
-                className="rounded-md border pointer-events-auto"
-                showOutsideDays={false}
-              />
+                    updateFormData({ 
+                      checkIn: checkInISO,
+                      checkOut: checkOutISO
+                    });
+                  }}
+                  disabled={isDateDisabled}
+                  locale={it}
+                  className="rounded-md border pointer-events-auto"
+                  showOutsideDays={false}
+                  formatters={{
+                    formatDay: (date) => {
+                      const blockInfo = getDateBlockInfo(date);
+                      if (blockInfo.isBlocked) {
+                        return (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="relative w-full h-full flex items-center justify-center cursor-not-allowed text-muted-foreground">
+                                <span className="line-through">{date.getDate()}</span>
+                                <Ban className="absolute top-0 right-0 h-2 w-2 text-destructive" />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p className="text-sm">{blockInfo.reason}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        );
+                      }
+                      return <span>{date.getDate()}</span>;
+                    }
+                  }}
+                />
               
                <div className="text-center space-y-2">
                  <p className="text-sm font-medium">
@@ -116,8 +168,9 @@ export const StepDates: React.FC<StepDatesProps> = ({
                  <p className="text-xs text-muted-foreground">
                    Giorni disponibili: Sabato, Domenica, Lunedì
                  </p>
-               </div>
-            </div>
+                </div>
+              </div>
+            </TooltipProvider>
           </CardContent>
         </Card>
 
