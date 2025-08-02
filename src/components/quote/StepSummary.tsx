@@ -18,6 +18,7 @@ import {
 import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { PricingService } from '@/services/supabase/dynamicPricingService';
 
 interface StepSummaryProps {
   formData: QuoteFormData;
@@ -62,6 +63,11 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
       try {
         setLoading(true);
         setError(null);
+        
+        // Invalida la cache dei prezzi per ottenere dati aggiornati
+        console.log('🔄 Invalidando cache prezzi prima del calcolo...');
+        PricingService.invalidateCache();
+        
         const result = await calculatePrice();
         setPriceCalculation(result);
         
