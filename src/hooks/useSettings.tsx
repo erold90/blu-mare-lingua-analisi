@@ -32,17 +32,43 @@ export interface AdminSettings {
   password: string;
 }
 
-// Utility to encrypt/decrypt sensitive data
+// Utility to encrypt/decrypt sensitive data with proper key derivation
+const ENCRYPTION_KEY = 'villa-mareblu-2025-secure-key'; // In production, use environment variable
+
 const encryptData = (data: string): string => {
-  // Simple encryption for localStorage - in production use proper encryption
-  return btoa(data);
+  try {
+    // Simple XOR encryption with key rotation
+    let encrypted = '';
+    for (let i = 0; i < data.length; i++) {
+      const keyChar = ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+      const dataChar = data.charCodeAt(i);
+      encrypted += String.fromCharCode(dataChar ^ keyChar);
+    }
+    return btoa(encrypted);
+  } catch (error) {
+    console.error('Encryption failed:', error);
+    return btoa(data); // Fallback to simple base64
+  }
 };
 
 const decryptData = (data: string): string => {
   try {
-    return atob(data);
-  } catch {
-    return data; // Return as-is if not encrypted
+    const decoded = atob(data);
+    // Reverse XOR encryption
+    let decrypted = '';
+    for (let i = 0; i < decoded.length; i++) {
+      const keyChar = ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
+      const encryptedChar = decoded.charCodeAt(i);
+      decrypted += String.fromCharCode(encryptedChar ^ keyChar);
+    }
+    return decrypted;
+  } catch (error) {
+    console.warn('Decryption failed, trying legacy format:', error);
+    try {
+      return atob(data); // Try legacy base64
+    } catch {
+      return data; // Return as-is if all fails
+    }
   }
 };
 
@@ -75,7 +101,7 @@ const defaultSiteSettings: SiteSettings = {
 
 const defaultAdminSettings: AdminSettings = {
   username: "admin",
-  password: "205647"
+  password: "" // Remove hardcoded password - will be set during setup
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);

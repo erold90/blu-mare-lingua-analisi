@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { MapPin, Mail, Phone } from "lucide-react";
-import emailjs from 'emailjs-com';
+import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/seo/SEOHead";
 import { getBreadcrumbSchema } from "@/components/seo/StructuredData";
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
@@ -50,32 +50,34 @@ const ContactsPage = () => {
     setIsSubmitting(true);
 
     try {
-      // EmailJS configuration
-      const serviceId = "service_ul8o9ys";
-      const templateId = "template_1x33ckb";
-      const publicKey = "F6q-jHsB19AHMtNwW";
-
-      console.log("Invio email tramite EmailJS...");
+      console.log("Invio email tramite Supabase Edge Function...");
       
-      const result = await emailjs.sendForm(
-        serviceId,
-        templateId,
-        event.currentTarget,
-        publicKey
-      );
+      const formData = new FormData(event.currentTarget);
+      const contactData = {
+        firstName: formData.get('firstName') as string,
+        lastName: formData.get('lastName') as string,
+        email: formData.get('email') as string,
+        phone: formData.get('phone') as string,
+        subject: formData.get('subject') as string,
+        message: formData.get('message') as string,
+      };
 
-      console.log("Risultato invio email:", result);
+      const { data, error } = await supabase.functions.invoke('send-contact-email', {
+        body: contactData
+      });
 
-      if (result.text === "OK") {
-        // Traccia la conversione Google Ads SOLO se l'email è stata inviata con successo
-        // e solo se l'utente ha acconsentito ai cookie di marketing
-        trackGoogleAdsConversion();
-        
-        toast.success("Messaggio inviato con successo! Ti risponderemo al più presto.");
-        formRef.current?.reset();
-      } else {
-        throw new Error("Errore nell'invio del messaggio");
+      if (error) {
+        throw new Error(error.message);
       }
+
+      console.log("Email inviata con successo:", data);
+
+      // Traccia la conversione Google Ads SOLO se l'email è stata inviata con successo
+      // e solo se l'utente ha acconsentito ai cookie di marketing
+      trackGoogleAdsConversion();
+      
+      toast.success("Messaggio inviato con successo! Ti risponderemo al più presto.");
+      formRef.current?.reset();
     } catch (error) {
       console.error("Errore invio email:", error);
       toast.error("Si è verificato un errore. Puoi contattarci direttamente a macchiaforcato@gmail.com o al +39 3937767749");
