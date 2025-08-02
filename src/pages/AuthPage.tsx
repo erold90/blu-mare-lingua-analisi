@@ -41,7 +41,7 @@ export default function AuthPage() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Area Amministrativa</CardTitle>
           <CardDescription>
-            Accedi alla tua area amministrativa
+            Area riservata agli amministratori del sito
           </CardDescription>
         </CardHeader>
         <CardContent>
