@@ -52,7 +52,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email to villa owner
     const ownerEmailResponse = await resend.emails.send({
-      from: "Villa MareBlu <onboarding@resend.dev>",
+      from: "Villa MareBlu <info@villamareblu.it>",
       to: ["macchiaforcato@gmail.com"],
       replyTo: formData.email,
       subject: `Nuova richiesta da Villa MareBlu: ${formData.subject}`,
@@ -72,7 +72,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send confirmation email to customer
     const confirmationEmailResponse = await resend.emails.send({
-      from: "Villa MareBlu <onboarding@resend.dev>",
+      from: "Villa MareBlu <info@villamareblu.it>",
       to: [formData.email],
       subject: "Conferma ricezione richiesta - Villa MareBlu",
       html: `
