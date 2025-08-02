@@ -30,7 +30,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
 
   // Raggio fisso per tutti i marker
-  const getMarkerRadius = () => 5;
+  const getMarkerRadius = () => 3;
 
   // Colore del marker con gradiente più sofisticato
   const getMarkerColor = (count: number) => {
