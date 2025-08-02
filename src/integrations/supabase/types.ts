@@ -568,6 +568,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_apartment_specific_weeks: {
+        Args: { target_year: number; copy_from_year?: number }
+        Returns: number
+      }
       generate_saturday_weeks_for_year: {
         Args: { target_year: number; copy_from_year?: number }
         Returns: number
