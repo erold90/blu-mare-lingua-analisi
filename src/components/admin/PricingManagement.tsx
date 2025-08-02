@@ -119,6 +119,14 @@ export const PricingManagement = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Gestione Prezzi</h2>
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => fetchWeeklyPrices(selectedYear, selectedApartment === 'all' ? undefined : selectedApartment)}
+            className="flex items-center gap-2"
+          >
+            <Calendar className="h-4 w-4" />
+            Ricarica
+          </Button>
           <Dialog open={showCopyDialog} onOpenChange={setShowCopyDialog}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
