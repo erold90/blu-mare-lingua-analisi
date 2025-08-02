@@ -27,7 +27,15 @@ export function AppHeader() {
           </div>
         </div>
         
-        {/* Area admin link removed */}
+        <div className="flex items-center gap-2">
+          <Link 
+            to="/auth" 
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            title="Area Amministrativa"
+          >
+            <Settings className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </header>
   );
