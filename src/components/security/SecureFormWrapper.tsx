@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import { sanitizeInput, rateLimiter, RATE_LIMITS } from '@/utils/securityConfig';
+import { validateSecureForm, advancedRateLimiter, getBrowserFingerprint, SecurityMonitor } from '@/utils/securityMiddleware';
 
 interface SecureFormWrapperProps {
   children: React.ReactNode;
@@ -38,13 +39,16 @@ export const SecureFormWrapper: React.FC<SecureFormWrapperProps> = ({
     
     if (isSubmitting) return;
 
-    // Rate limiting check
-    const userKey = `${formType}_${window.navigator.userAgent}_${Date.now()}`;
+    // Enhanced rate limiting with browser fingerprinting
+    const browserFingerprint = getBrowserFingerprint();
+    const userKey = `${formType}_${browserFingerprint}`;
     const rateConfig = getRateLimitConfig();
     
-    if (rateLimiter.isRateLimited(userKey, rateConfig.maxAttempts, rateConfig.windowMs)) {
-      toast.error('Troppi tentativi. Riprova più tardi.');
-      return;
+    // Use both old and new rate limiting for extra security
+    if (rateLimiter.isRateLimited(userKey, rateConfig.maxAttempts, rateConfig.windowMs) ||
+        advancedRateLimiter.isRateLimited(browserFingerprint, formType, rateConfig.maxAttempts, rateConfig.windowMs)) {
+      SecurityMonitor.logViolation('RATE_LIMIT_EXCEEDED', `Form: ${formType}, User: ${browserFingerprint}`);
+      return; // Error already shown by rate limiter
     }
 
     setIsSubmitting(true);
@@ -52,15 +56,20 @@ export const SecureFormWrapper: React.FC<SecureFormWrapperProps> = ({
     try {
       const formData = new FormData(event.currentTarget);
       
-      // Sanitize all form inputs
-      const sanitizedData = new FormData();
-      for (const [key, value] of formData.entries()) {
-        if (typeof value === 'string') {
-          sanitizedData.set(key, sanitizeInput(value));
-        } else {
-          sanitizedData.set(key, value);
-        }
+      // Advanced form validation and sanitization
+      const validation = validateSecureForm(formData);
+      
+      if (!validation.isValid) {
+        validation.errors.forEach(error => toast.error(error));
+        setIsSubmitting(false);
+        return;
       }
+      
+      // Create sanitized FormData from validated data
+      const sanitizedData = new FormData();
+      Object.entries(validation.sanitizedData).forEach(([key, value]) => {
+        sanitizedData.set(key, value);
+      });
 
       await onSubmit(sanitizedData);
     } catch (error) {

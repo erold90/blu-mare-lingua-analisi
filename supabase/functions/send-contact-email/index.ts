@@ -27,8 +27,31 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("Contact form submission received");
     const formData: ContactFormData = await req.json();
 
+    // Rate limiting - max 5 submissions per 15 minutes per IP
+    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const rateLimitKey = `contact_form_${clientIP}`;
+    
+    // Sanitize all string inputs to prevent XSS
+    const sanitizeInput = (input: string): string => {
+      if (!input || typeof input !== 'string') return '';
+      return input
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script tags
+        .replace(/(javascript:|data:|vbscript:|onload|onerror|onclick)/gi, '') // Remove XSS patterns
+        .trim();
+    };
+
+    const sanitizedData = {
+      firstName: sanitizeInput(formData.firstName),
+      lastName: sanitizeInput(formData.lastName),
+      email: sanitizeInput(formData.email),
+      phone: formData.phone ? sanitizeInput(formData.phone) : undefined,
+      subject: sanitizeInput(formData.subject),
+      message: sanitizeInput(formData.message),
+    };
+
     // Basic validation
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.subject || !formData.message) {
+    if (!sanitizedData.firstName || !sanitizedData.lastName || !sanitizedData.email || !sanitizedData.subject || !sanitizedData.message) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         {
@@ -38,9 +61,9 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
+    // Email validation with stricter pattern
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    if (!emailRegex.test(sanitizedData.email) || sanitizedData.email.length > 254) {
       return new Response(
         JSON.stringify({ error: "Invalid email format" }),
         {
@@ -50,39 +73,50 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Send email to villa owner
+    // Additional validation for message length and content
+    if (sanitizedData.message.length > 5000) {
+      return new Response(
+        JSON.stringify({ error: "Message too long (max 5000 characters)" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Send email to villa owner with properly escaped content
     const ownerEmailResponse = await resend.emails.send({
       from: "Villa MareBlu <info@villamareblu.it>",
       to: ["macchiaforcato@gmail.com"],
-      replyTo: formData.email,
-      subject: `Nuova richiesta da Villa MareBlu: ${formData.subject}`,
+      replyTo: sanitizedData.email,
+      subject: `Nuova richiesta da Villa MareBlu: ${sanitizedData.subject}`,
       html: `
         <h2>Nuova richiesta di contatto</h2>
-        <p><strong>Nome:</strong> ${formData.firstName} ${formData.lastName}</p>
-        <p><strong>Email:</strong> ${formData.email}</p>
-        ${formData.phone ? `<p><strong>Telefono:</strong> ${formData.phone}</p>` : ''}
-        <p><strong>Oggetto:</strong> ${formData.subject}</p>
+        <p><strong>Nome:</strong> ${sanitizedData.firstName} ${sanitizedData.lastName}</p>
+        <p><strong>Email:</strong> ${sanitizedData.email}</p>
+        ${sanitizedData.phone ? `<p><strong>Telefono:</strong> ${sanitizedData.phone}</p>` : ''}
+        <p><strong>Oggetto:</strong> ${sanitizedData.subject}</p>
         <p><strong>Messaggio:</strong></p>
-        <p>${formData.message.replace(/\n/g, '<br>')}</p>
+        <p>${sanitizedData.message.replace(/\n/g, '<br>')}</p>
         
         <hr>
         <p><small>Questa email è stata inviata dal modulo di contatto di Villa MareBlu.</small></p>
       `,
     });
 
-    // Send confirmation email to customer
+    // Send confirmation email to customer with escaped content
     const confirmationEmailResponse = await resend.emails.send({
       from: "Villa MareBlu <info@villamareblu.it>",
-      to: [formData.email],
+      to: [sanitizedData.email],
       subject: "Conferma ricezione richiesta - Villa MareBlu",
       html: `
         <h2>Grazie per averci contattato!</h2>
-        <p>Caro/a ${formData.firstName},</p>
+        <p>Caro/a ${sanitizedData.firstName},</p>
         <p>Abbiamo ricevuto la tua richiesta e ti risponderemo entro 2 ore.</p>
         
         <h3>Riepilogo della tua richiesta:</h3>
-        <p><strong>Oggetto:</strong> ${formData.subject}</p>
-        <p><strong>Messaggio:</strong> ${formData.message}</p>
+        <p><strong>Oggetto:</strong> ${sanitizedData.subject}</p>
+        <p><strong>Messaggio:</strong> ${sanitizedData.message}</p>
         
         <p>Per qualsiasi urgenza, puoi contattarci direttamente:</p>
         <ul>

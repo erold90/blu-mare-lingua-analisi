@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, Home, BarChart, Euro, LogOut, UserCog } from 'lucide-react';
+import { Calendar, Users, Home, BarChart, Euro, LogOut, UserCog, Shield } from 'lucide-react';
 import { useReservations } from '@/hooks/useReservations';
 import { apartments } from '@/data/apartments';
 import { format } from 'date-fns';
@@ -16,6 +16,7 @@ import { ReservationsCalendar } from '@/components/admin/ReservationsCalendar';
 import { ApartmentImageGallery } from '@/components/admin/ApartmentImageGallery';
 import { HomeImageGallery } from '@/components/admin/HomeImageGallery';
 import { SeasonalRevenueAnalytics } from '@/components/admin/SeasonalRevenueAnalytics';
+import { SecurityDashboard } from '@/components/admin/SecurityDashboard';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function AdminPage() {
@@ -104,7 +105,7 @@ export default function AdminPage() {
 
       <div className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8">
+          <TabsList className="grid w-full grid-cols-9">
             <TabsTrigger value="dashboard" className="flex items-center gap-2">
               <Home className="h-4 w-4" />
               Dashboard
@@ -132,6 +133,10 @@ export default function AdminPage() {
             <TabsTrigger value="analytics" className="flex items-center gap-2">
               <BarChart className="h-4 w-4" />
               Analytics
+            </TabsTrigger>
+            <TabsTrigger value="security" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              Sicurezza
             </TabsTrigger>
             <TabsTrigger value="gallery" className="flex items-center gap-2">
               <Home className="h-4 w-4" />
@@ -281,6 +286,11 @@ export default function AdminPage() {
           {/* Visit Analytics */}
           <TabsContent value="analytics">
             <VisitAnalytics />
+          </TabsContent>
+
+          {/* Security Dashboard */}
+          <TabsContent value="security">
+            <SecurityDashboard />
           </TabsContent>
 
           {/* Gallery Management */}
