@@ -576,6 +576,10 @@ export type Database = {
         Args: { target_year: number; copy_from_year?: number }
         Returns: number
       }
+      generate_weekly_prices_by_date_mapping: {
+        Args: { target_year: number; copy_from_year?: number }
+        Returns: number
+      }
       generate_weekly_prices_for_year: {
         Args: { target_year: number; copy_from_year?: number }
         Returns: number
