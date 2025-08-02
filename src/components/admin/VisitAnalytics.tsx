@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Globe, MapPin, Calendar, Users, Eye, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { WorldMap } from './WorldMap';
+import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Line } from 'recharts';
 
 interface CountryStats {
   country: string;
@@ -222,7 +223,7 @@ export const VisitAnalytics: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Timeline Chart Placeholder */}
+      {/* Timeline Chart */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -231,17 +232,41 @@ export const VisitAnalytics: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
-            <div className="text-center">
-              <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">
-                Grafico timeline delle visite
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                {analytics?.timeline?.length || 0} giorni di dati disponibili
-              </p>
+          {analytics?.timeline && analytics.timeline.length > 0 ? (
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={analytics.timeline}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="date" 
+                    tickFormatter={(value) => new Date(value).toLocaleDateString('it-IT', { month: 'short', day: 'numeric' })}
+                  />
+                  <YAxis />
+                  <Tooltip 
+                    labelFormatter={(value) => new Date(value).toLocaleDateString('it-IT')}
+                    formatter={(value) => [value, 'Visite']}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="visits" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2}
+                    dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
-          </div>
+          ) : (
+            <div className="h-64 bg-slate-100 dark:bg-slate-800 rounded-lg flex items-center justify-center">
+              <div className="text-center">
+                <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  Nessun dato timeline disponibile
+                </p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
