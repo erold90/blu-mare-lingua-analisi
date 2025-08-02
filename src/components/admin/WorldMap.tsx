@@ -28,25 +28,19 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [hoveredMarker, setHoveredMarker] = useState<number | null>(null);
 
-  // Calcola raggio in base al numero di visite
-  const getMarkerRadius = (count: number) => {
-    const maxCount = Math.max(...visitData.map(d => d.count));
-    const minRadius = 3;
-    const maxRadius = 12;
-    const normalizedCount = count / maxCount;
-    return minRadius + (normalizedCount * (maxRadius - minRadius));
-  };
+  // Raggio fisso per tutti i marker
+  const getMarkerRadius = () => 5;
 
   // Colore del marker con gradiente più sofisticato
   const getMarkerColor = (count: number) => {
     const maxCount = Math.max(...visitData.map(d => d.count));
     const intensity = count / maxCount;
     
-    if (intensity > 0.8) return "hsl(var(--destructive))"; // Rosso intenso
+    if (intensity > 0.8) return "hsl(0, 84%, 60%)"; // Rosso intenso
     if (intensity > 0.6) return "hsl(25, 95%, 53%)"; // Arancione
     if (intensity > 0.4) return "hsl(45, 93%, 47%)"; // Giallo
     if (intensity > 0.2) return "hsl(142, 76%, 36%)"; // Verde
-    return "hsl(var(--primary))"; // Colore primario
+    return "hsl(210, 40%, 50%)"; // Blu grigio
   };
 
   const handleZoomIn = () => {
@@ -76,7 +70,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
   };
 
   return (
-    <div className="relative w-full h-96 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-lg overflow-hidden border border-border">
+    <div className="relative w-full h-96 bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-950 rounded-lg overflow-hidden border border-border">
       {/* Controlli mappa */}
       <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
         <Button 
@@ -142,13 +136,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
                     geography={geo}
                     fill={
                       isSelected 
-                        ? "hsl(var(--primary) / 0.3)"
+                        ? "hsl(220, 90%, 56%)" // Blu acceso per selezione
                         : countryData 
-                          ? "hsl(var(--primary) / 0.1)" 
-                          : "hsl(var(--muted) / 0.5)"
+                          ? "hsl(210, 20%, 85%)" // Grigio chiaro per paesi visitati
+                          : "hsl(210, 15%, 75%)" // Grigio più scuro per paesi non visitati
                     }
-                    stroke="hsl(var(--border))"
-                    strokeWidth={isSelected ? 1.5 : 0.5}
+                    stroke="hsl(210, 25%, 25%)" // Bordo scuro per contrasto
+                    strokeWidth={isSelected ? 2 : 0.8}
                     onClick={() => handleCountryClick(geo)}
                     style={{
                       default: { 
@@ -158,14 +152,13 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
                       hover: { 
                         outline: "none", 
                         fill: countryData 
-                          ? "hsl(var(--primary) / 0.2)" 
-                          : "hsl(var(--muted) / 0.3)",
-                        cursor: countryData ? "pointer" : "default",
-                        transform: "scale(1.005)"
+                          ? "hsl(210, 30%, 90%)" // Più chiaro al hover
+                          : "hsl(210, 20%, 80%)",
+                        cursor: countryData ? "pointer" : "default"
                       },
                       pressed: { 
                         outline: "none",
-                        fill: "hsl(var(--primary) / 0.4)"
+                        fill: "hsl(220, 80%, 60%)"
                       }
                     }}
                   />
@@ -174,7 +167,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
             }
           </Geographies>
           
-          {/* Marker con animazioni */}
+          {/* Marker fissi solo colorati */}
           {visitData
             .filter(d => d.latitude && d.longitude)
             .map((marker, index) => (
@@ -185,30 +178,17 @@ export const WorldMap: React.FC<WorldMapProps> = ({ visitData }) => {
                 onMouseLeave={() => setHoveredMarker(null)}
               >
                 <circle
-                  r={getMarkerRadius(marker.count)}
+                  r={getMarkerRadius()}
                   fill={getMarkerColor(marker.count)}
-                  fillOpacity={hoveredMarker === index ? 1 : 0.8}
-                  stroke="hsl(var(--background))"
+                  fillOpacity={hoveredMarker === index ? 1 : 0.9}
+                  stroke="white"
                   strokeWidth={2}
                   style={{ 
                     cursor: "pointer",
-                    transition: "all 0.3s ease",
-                    transform: hoveredMarker === index ? "scale(1.3)" : "scale(1)",
-                    filter: hoveredMarker === index ? "drop-shadow(0 4px 8px rgba(0,0,0,0.3))" : "none"
+                    transition: "all 0.2s ease",
+                    filter: hoveredMarker === index ? "drop-shadow(0 2px 4px rgba(0,0,0,0.5))" : "none"
                   }}
                 />
-                
-                {/* Cerchio pulsante per i marker più importanti */}
-                {marker.count >= Math.max(...visitData.map(d => d.count)) * 0.5 && (
-                  <circle
-                    r={getMarkerRadius(marker.count) + 3}
-                    fill={getMarkerColor(marker.count)}
-                    fillOpacity={0.3}
-                    style={{
-                      animation: "pulse 2s infinite"
-                    }}
-                  />
-                )}
                 
                 {/* Tooltip migliorato */}
                 <title>
