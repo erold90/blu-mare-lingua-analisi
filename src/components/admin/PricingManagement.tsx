@@ -34,7 +34,17 @@ export const PricingManagement = () => {
 
   const { invalidateCache } = useDynamicQuote();
 
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  // Logica per determinare l'anno di default basato sulla stagione
+  const getDefaultYear = () => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1; // getMonth() returns 0-11
+    
+    // Se siamo da ottobre in poi (fine stagione estiva), mostra l'anno successivo
+    return currentMonth >= 10 ? currentYear + 1 : currentYear;
+  };
+
+  const [selectedYear, setSelectedYear] = useState(getDefaultYear());
   const [selectedApartment, setSelectedApartment] = useState<string>('all');
   const [editingPrice, setEditingPrice] = useState<any>(null);
   const [showCopyDialog, setShowCopyDialog] = useState(false);
