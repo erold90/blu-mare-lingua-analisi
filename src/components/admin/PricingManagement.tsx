@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar, Euro, Copy, Plus, Edit, Trash2, Ban, Settings } from 'lucide-react';
+import { Calendar, Euro, Copy, Plus, Edit, Trash2, Ban, Settings, RefreshCw } from 'lucide-react';
 import { usePricing } from '@/hooks/usePricing';
+import { useDynamicQuote } from '@/hooks/useDynamicQuote';
 import { apartments } from '@/data/apartments';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -30,6 +31,8 @@ export const PricingManagement = () => {
     createSeasonConfig,
     updateSeasonConfig
   } = usePricing();
+
+  const { invalidateCache } = useDynamicQuote();
 
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedApartment, setSelectedApartment] = useState<string>('all');
@@ -126,6 +129,14 @@ export const PricingManagement = () => {
           >
             <Calendar className="h-4 w-4" />
             Ricarica
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={invalidateCache}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Aggiorna Cache
           </Button>
           <Dialog open={showCopyDialog} onOpenChange={setShowCopyDialog}>
             <DialogTrigger asChild>

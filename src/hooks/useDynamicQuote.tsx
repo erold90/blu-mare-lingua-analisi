@@ -106,6 +106,12 @@ export const useDynamicQuote = () => {
     setError(null);
   }, []);
 
+  const invalidateCache = useCallback(() => {
+    PricingService.invalidateCache();
+    console.log('🔄 Cache prezzi invalidata');
+    toast.success('Cache prezzi aggiornata');
+  }, []);
+
   return {
     loading,
     error,
@@ -115,6 +121,7 @@ export const useDynamicQuote = () => {
     checkMultipleAvailability,
     saveQuote,
     getPriceForPeriod,
-    resetQuote
+    resetQuote,
+    invalidateCache
   };
 };
