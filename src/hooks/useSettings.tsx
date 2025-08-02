@@ -32,6 +32,20 @@ export interface AdminSettings {
   password: string;
 }
 
+// Utility to encrypt/decrypt sensitive data
+const encryptData = (data: string): string => {
+  // Simple encryption for localStorage - in production use proper encryption
+  return btoa(data);
+};
+
+const decryptData = (data: string): string => {
+  try {
+    return atob(data);
+  } catch {
+    return data; // Return as-is if not encrypted
+  }
+};
+
 interface SettingsContextType {
   siteSettings: SiteSettings;
   adminSettings: AdminSettings;
@@ -90,7 +104,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const savedSettings = localStorage.getItem("adminSettings");
     if (savedSettings) {
       try {
-        return JSON.parse(savedSettings);
+        const decryptedSettings = decryptData(savedSettings);
+        return JSON.parse(decryptedSettings);
       } catch (error) {
         console.error("Failed to parse saved admin settings:", error);
         return defaultAdminSettings;
@@ -200,7 +215,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   
   useEffect(() => {
     try {
-      localStorage.setItem("adminSettings", JSON.stringify(adminSettings));
+      const encryptedSettings = encryptData(JSON.stringify(adminSettings));
+      localStorage.setItem("adminSettings", encryptedSettings);
     } catch (error) {
       console.error("Failed to save admin settings to localStorage:", error);
       toast.error("Errore nel salvataggio delle impostazioni admin");
