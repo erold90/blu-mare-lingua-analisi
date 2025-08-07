@@ -105,42 +105,42 @@ export default function AdminPage() {
 
       <div className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-9">
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <Home className="h-4 w-4" />
-              Dashboard
+          <TabsList className="w-full overflow-x-auto overflow-y-hidden flex md:grid md:grid-cols-9 gap-1 p-1">
+            <TabsTrigger value="dashboard" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
+              <Home className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Dashboard</span>
             </TabsTrigger>
-            <TabsTrigger value="reservations" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Prenotazioni
+            <TabsTrigger value="reservations" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
+              <Calendar className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Prenotazioni</span>
             </TabsTrigger>
-            <TabsTrigger value="calendar" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              Calendario
+            <TabsTrigger value="calendar" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
+              <Calendar className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Calendario</span>
             </TabsTrigger>
-            <TabsTrigger value="quotes" className="flex items-center gap-2">
-              <Euro className="h-4 w-4" />
-              Preventivi
+            <TabsTrigger value="quotes" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
+              <Euro className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Preventivi</span>
             </TabsTrigger>
-            <TabsTrigger value="revenue" className="flex items-center gap-2">
-              <BarChart className="h-4 w-4" />
-              Ricavi
+            <TabsTrigger value="revenue" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
+              <BarChart className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Ricavi</span>
             </TabsTrigger>
-            <TabsTrigger value="pricing" className="flex items-center gap-2">
-              <Euro className="h-4 w-4" />
-              Prezzi
+            <TabsTrigger value="pricing" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
+              <Euro className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Prezzi</span>
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <BarChart className="h-4 w-4" />
-              Analytics
+            <TabsTrigger value="analytics" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
+              <BarChart className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Analisi</span>
             </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center gap-2">
-              <Shield className="h-4 w-4" />
-              Sicurezza
+            <TabsTrigger value="security" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
+              <Shield className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Sicurezza</span>
             </TabsTrigger>
-            <TabsTrigger value="gallery" className="flex items-center gap-2">
-              <Home className="h-4 w-4" />
-              Gallerie
+            <TabsTrigger value="gallery" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
+              <Home className="h-3 w-3 md:h-4 md:w-4" />
+              <span className="hidden sm:inline">Gallerie</span>
             </TabsTrigger>
           </TabsList>
 
