@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, Home, BarChart, Euro, LogOut, UserCog, Shield } from 'lucide-react';
 import { useReservations } from '@/hooks/useReservations';
@@ -18,11 +19,13 @@ import { HomeImageGallery } from '@/components/admin/HomeImageGallery';
 import { SeasonalRevenueAnalytics } from '@/components/admin/SeasonalRevenueAnalytics';
 import { SecurityDashboard } from '@/components/admin/SecurityDashboard';
 import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function AdminPage() {
   const { user, isAdmin, loading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const { reservations, loading: reservationsLoading } = useReservations();
+  const isMobile = useIsMobile();
 
   // Redirect if not authenticated or not admin
   if (loading) {
@@ -76,6 +79,18 @@ export default function AdminPage() {
 
   const totalReservations = reservations.length;
 
+  const tabOptions = [
+    { value: 'dashboard', label: 'Dashboard', icon: Home },
+    { value: 'reservations', label: 'Prenotazioni', icon: Calendar },
+    { value: 'calendar', label: 'Calendario', icon: Calendar },
+    { value: 'quotes', label: 'Preventivi', icon: Euro },
+    { value: 'revenue', label: 'Ricavi', icon: BarChart },
+    { value: 'pricing', label: 'Prezzi', icon: Euro },
+    { value: 'analytics', label: 'Analisi', icon: BarChart },
+    { value: 'security', label: 'Sicurezza', icon: Shield },
+    { value: 'gallery', label: 'Gallerie', icon: Home },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -105,44 +120,71 @@ export default function AdminPage() {
 
       <div className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="w-full overflow-x-auto overflow-y-hidden flex md:grid md:grid-cols-9 gap-1 p-1">
-            <TabsTrigger value="dashboard" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
-              <Home className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Dashboard</span>
-            </TabsTrigger>
-            <TabsTrigger value="reservations" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
-              <Calendar className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Prenotazioni</span>
-            </TabsTrigger>
-            <TabsTrigger value="calendar" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
-              <Calendar className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Calendario</span>
-            </TabsTrigger>
-            <TabsTrigger value="quotes" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
-              <Euro className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Preventivi</span>
-            </TabsTrigger>
-            <TabsTrigger value="revenue" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
-              <BarChart className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Ricavi</span>
-            </TabsTrigger>
-            <TabsTrigger value="pricing" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
-              <Euro className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Prezzi</span>
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
-              <BarChart className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Analisi</span>
-            </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
-              <Shield className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Sicurezza</span>
-            </TabsTrigger>
-            <TabsTrigger value="gallery" className="flex items-center gap-1 flex-shrink-0 text-xs md:text-sm">
-              <Home className="h-3 w-3 md:h-4 md:w-4" />
-              <span className="hidden sm:inline">Gallerie</span>
-            </TabsTrigger>
-          </TabsList>
+          {/* Mobile Dropdown */}
+          {isMobile ? (
+            <div className="w-full">
+              <Select value={activeTab} onValueChange={setActiveTab}>
+                <SelectTrigger className="w-full bg-background border-border">
+                  <SelectValue>
+                    {tabOptions.find(tab => tab.value === activeTab)?.label}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border z-50">
+                  {tabOptions.map((tab) => {
+                    const IconComponent = tab.icon;
+                    return (
+                      <SelectItem key={tab.value} value={tab.value} className="cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          <IconComponent className="h-4 w-4" />
+                          {tab.label}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            /* Desktop Tabs */
+            <TabsList className="grid w-full grid-cols-9">
+              <TabsTrigger value="dashboard" className="flex items-center gap-2">
+                <Home className="h-4 w-4" />
+                Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="reservations" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Prenotazioni
+              </TabsTrigger>
+              <TabsTrigger value="calendar" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Calendario
+              </TabsTrigger>
+              <TabsTrigger value="quotes" className="flex items-center gap-2">
+                <Euro className="h-4 w-4" />
+                Preventivi
+              </TabsTrigger>
+              <TabsTrigger value="revenue" className="flex items-center gap-2">
+                <BarChart className="h-4 w-4" />
+                Ricavi
+              </TabsTrigger>
+              <TabsTrigger value="pricing" className="flex items-center gap-2">
+                <Euro className="h-4 w-4" />
+                Prezzi
+              </TabsTrigger>
+              <TabsTrigger value="analytics" className="flex items-center gap-2">
+                <BarChart className="h-4 w-4" />
+                Analisi
+              </TabsTrigger>
+              <TabsTrigger value="security" className="flex items-center gap-2">
+                <Shield className="h-4 w-4" />
+                Sicurezza
+              </TabsTrigger>
+              <TabsTrigger value="gallery" className="flex items-center gap-2">
+                <Home className="h-4 w-4" />
+                Gallerie
+              </TabsTrigger>
+            </TabsList>
+          )}
 
           {/* Dashboard Overview */}
           <TabsContent value="dashboard" className="space-y-6">
