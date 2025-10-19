@@ -112,6 +112,78 @@ export type Database = {
         }
         Relationships: []
       }
+      archived_reservations: {
+        Row: {
+          adults: number
+          apartment_ids: Json
+          archived_at: string | null
+          archived_year: number
+          children: number | null
+          created_at: string | null
+          cribs: number | null
+          deposit_amount: number | null
+          device_id: string | null
+          end_date: string
+          final_price: number | null
+          guest_name: string
+          guest_phone: string | null
+          has_pets: boolean | null
+          id: string
+          linen_option: string | null
+          notes: string | null
+          payment_method: string | null
+          payment_status: string | null
+          start_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          adults?: number
+          apartment_ids: Json
+          archived_at?: string | null
+          archived_year: number
+          children?: number | null
+          created_at?: string | null
+          cribs?: number | null
+          deposit_amount?: number | null
+          device_id?: string | null
+          end_date: string
+          final_price?: number | null
+          guest_name: string
+          guest_phone?: string | null
+          has_pets?: boolean | null
+          id: string
+          linen_option?: string | null
+          notes?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          start_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          adults?: number
+          apartment_ids?: Json
+          archived_at?: string | null
+          archived_year?: number
+          children?: number | null
+          created_at?: string | null
+          cribs?: number | null
+          deposit_amount?: number | null
+          device_id?: string | null
+          end_date?: string
+          final_price?: number | null
+          guest_name?: string
+          guest_phone?: string | null
+          has_pets?: boolean | null
+          id?: string
+          linen_option?: string | null
+          notes?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          start_date?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           apartment_id: number | null
@@ -574,6 +646,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      archive_reservations_by_year: {
+        Args: { target_year: number }
+        Returns: number
+      }
       generate_apartment_specific_weeks: {
         Args: { copy_from_year?: number; target_year: number }
         Returns: number

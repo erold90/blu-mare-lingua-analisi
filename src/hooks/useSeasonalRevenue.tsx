@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useReservations } from '@/hooks/useReservations';
+import { useArchivedReservations } from '@/hooks/useArchivedReservations';
 
 export interface SeasonalRevenueData {
   totalReservations: number;
@@ -27,6 +28,7 @@ export interface SeasonalFilters {
 
 export function useSeasonalRevenue() {
   const { reservations } = useReservations();
+  const { getAllReservationsForRevenue } = useArchivedReservations();
   const [data, setData] = useState<SeasonalRevenueData>({
     totalReservations: 0,
     totalRevenue: 0,
@@ -36,7 +38,7 @@ export function useSeasonalRevenue() {
   });
   const [loading, setLoading] = useState(false);
   
-  const calculateSeasonalRevenue = useCallback((filters: SeasonalFilters) => {
+  const calculateSeasonalRevenue = useCallback(async (filters: SeasonalFilters) => {
     setLoading(true);
     
     try {
@@ -45,8 +47,11 @@ export function useSeasonalRevenue() {
       const seasonStart = new Date(currentYear, 5, 1); // 1 giugno (mese 5 = giugno)
       const seasonEnd = new Date(currentYear, 8, 30); // 30 settembre (mese 8 = settembre)
       
+      // Get ALL reservations (active + archived) for this year
+      const allReservations = await getAllReservationsForRevenue(currentYear);
+      
       // Filtra le prenotazioni della stagione estiva
-      let filteredReservations = reservations.filter(reservation => {
+      let filteredReservations = allReservations.filter(reservation => {
         const startDate = new Date(reservation.start_date);
         const endDate = new Date(reservation.end_date);
         
@@ -143,7 +148,7 @@ export function useSeasonalRevenue() {
     } finally {
       setLoading(false);
     }
-  }, [reservations]);
+  }, [reservations, getAllReservationsForRevenue]);
 
   return {
     data,

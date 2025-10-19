@@ -15,6 +15,7 @@ import { VisitAnalytics } from '@/components/admin/VisitAnalytics';
 import { QuoteRequestsManager } from '@/components/admin/QuoteRequestsManager';
 import { ReservationsCalendar } from '@/components/admin/ReservationsCalendar';
 import { ReservationsList } from '@/components/admin/ReservationsList';
+import { ArchiveManager } from '@/components/admin/ArchiveManager';
 import { ApartmentImageGallery } from '@/components/admin/ApartmentImageGallery';
 import { HomeImageGallery } from '@/components/admin/HomeImageGallery';
 import { SeasonalRevenueAnalytics } from '@/components/admin/SeasonalRevenueAnalytics';
@@ -267,7 +268,7 @@ export default function AdminPage() {
           </TabsContent>
 
           {/* Reservations Management */}
-          <TabsContent value="reservations">
+          <TabsContent value="reservations" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Gestione Prenotazioni</CardTitle>
@@ -276,6 +277,8 @@ export default function AdminPage() {
                 <ReservationsList />
               </CardContent>
             </Card>
+
+            <ArchiveManager />
           </TabsContent>
 
           {/* Calendar View */}
