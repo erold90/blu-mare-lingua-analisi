@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useReservations } from '@/hooks/useReservations';
 import { useArchivedReservations } from '@/hooks/useArchivedReservations';
 
 export interface SeasonalRevenueData {
@@ -27,7 +26,6 @@ export interface SeasonalFilters {
 }
 
 export function useSeasonalRevenue() {
-  const { reservations } = useReservations();
   const { getAllReservationsForRevenue } = useArchivedReservations();
   const [data, setData] = useState<SeasonalRevenueData>({
     totalReservations: 0,
@@ -148,7 +146,7 @@ export function useSeasonalRevenue() {
     } finally {
       setLoading(false);
     }
-  }, [reservations, getAllReservationsForRevenue]);
+  }, [getAllReservationsForRevenue]);
 
   return {
     data,

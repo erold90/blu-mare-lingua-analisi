@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ArchivedReservation {
@@ -30,7 +30,7 @@ export function useArchivedReservations(year?: number) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchArchivedReservations = async () => {
+  const fetchArchivedReservations = useCallback(async () => {
     try {
       setLoading(true);
       let query = supabase
@@ -61,10 +61,10 @@ export function useArchivedReservations(year?: number) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [year]);
 
   // Get all reservations (active + archived) for revenue calculations
-  const getAllReservationsForRevenue = async (filterYear?: number) => {
+  const getAllReservationsForRevenue = useCallback(async (filterYear?: number) => {
     try {
       // Fetch active reservations
       let activeQuery = supabase
@@ -107,11 +107,11 @@ export function useArchivedReservations(year?: number) {
       console.error('Error fetching all reservations:', err);
       return [];
     }
-  };
+  }, []); // No dependencies - function is stable
 
   useEffect(() => {
     fetchArchivedReservations();
-  }, [year]);
+  }, [year, fetchArchivedReservations]);
 
   return {
     archivedReservations,
