@@ -14,7 +14,10 @@ export function SeasonalRevenueAnalytics() {
   });
 
   useEffect(() => {
-    calculateSeasonalRevenue(filters);
+    const loadData = async () => {
+      await calculateSeasonalRevenue(filters);
+    };
+    loadData();
   }, [filters, calculateSeasonalRevenue]);
 
   const formatCurrency = (amount: number) => {
