@@ -14,6 +14,7 @@ import { PricingManagement } from '@/components/admin/PricingManagement';
 import { VisitAnalytics } from '@/components/admin/VisitAnalytics';
 import { QuoteRequestsManager } from '@/components/admin/QuoteRequestsManager';
 import { ReservationsCalendar } from '@/components/admin/ReservationsCalendar';
+import { ReservationsList } from '@/components/admin/ReservationsList';
 import { ApartmentImageGallery } from '@/components/admin/ApartmentImageGallery';
 import { HomeImageGallery } from '@/components/admin/HomeImageGallery';
 import { SeasonalRevenueAnalytics } from '@/components/admin/SeasonalRevenueAnalytics';
@@ -272,35 +273,7 @@ export default function AdminPage() {
                 <CardTitle>Gestione Prenotazioni</CardTitle>
               </CardHeader>
               <CardContent>
-                {reservationsLoading ? (
-                  <div className="flex justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  </div>
-                ) : reservations.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    Nessuna prenotazione trovata
-                  </p>
-                ) : (
-                  <div className="space-y-4">
-                    {reservations.map((reservation) => (
-                      <div key={reservation.id} className="border rounded-lg p-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-semibold">{reservation.guest_name}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(reservation.start_date), 'dd MMM yyyy', { locale: it })} - 
-                              {format(new Date(reservation.end_date), 'dd MMM yyyy', { locale: it })}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-bold">€{reservation.final_price}</p>
-                            <Badge>{reservation.adults + (reservation.children || 0)} ospiti</Badge>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <ReservationsList />
               </CardContent>
             </Card>
           </TabsContent>
