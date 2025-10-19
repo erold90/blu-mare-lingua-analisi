@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -575,19 +575,19 @@ export type Database = {
     }
     Functions: {
       generate_apartment_specific_weeks: {
-        Args: { target_year: number; copy_from_year?: number }
+        Args: { copy_from_year?: number; target_year: number }
         Returns: number
       }
       generate_saturday_weeks_for_year: {
-        Args: { target_year: number; copy_from_year?: number }
+        Args: { copy_from_year?: number; target_year: number }
         Returns: number
       }
       generate_weekly_prices_by_date_mapping: {
-        Args: { target_year: number; copy_from_year?: number }
+        Args: { copy_from_year?: number; target_year: number }
         Returns: number
       }
       generate_weekly_prices_for_year: {
-        Args: { target_year: number; copy_from_year?: number }
+        Args: { copy_from_year?: number; target_year: number }
         Returns: number
       }
       is_admin: {
