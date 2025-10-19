@@ -62,7 +62,6 @@ const AboutPage = () => {
             <li>Cucina completamente attrezzata per <strong>casa vacanze bambini Puglia</strong></li>
             <li>Terrazza panoramica di 80 mq perfetta per <strong>weekend romantico Salento</strong></li>
             <li>Giardino mediterraneo di 300 mq con piante autoctone</li>
-            <li>Piscina privata a sfioro con vista mare</li>
             <li>Area barbecue e zona pranzo esterna per <strong>vacanze gruppo amici Salento</strong></li>
           </ul>
           
@@ -81,7 +80,7 @@ const AboutPage = () => {
           <h2 className="text-2xl font-semibold mt-8 mb-4">Perché Scegliere Villa MareBlu</h2>
           <p>
             Se stai cercando <strong>dove dormire Salento mare</strong> in un ambiente di lusso e comfort, Villa MareBlu rappresenta 
-            la scelta ideale. La nostra <strong>villa con piscina Puglia</strong> offre privacy, eleganza e tutti i servizi necessari 
+            la scelta ideale. La nostra <strong>villa fronte mare Puglia</strong> offre privacy, eleganza e tutti i servizi necessari 
             per una <strong>vacanza famiglia Puglia</strong> indimenticabile o per un <strong>weekend romantico Salento</strong> da sogno.
           </p>
         </div>

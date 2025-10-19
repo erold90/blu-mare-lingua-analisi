@@ -35,11 +35,6 @@ const ServicesPage = () => {
       icon: "🚗"
     },
     {
-      title: "Piscina Privata",
-      description: "Piscina a sfioro con vista sul mare, lettini, ombrelloni e area relax esclusiva.",
-      icon: "🏊‍♂️"
-    },
-    {
       title: "Servizio Concierge",
       description: "Il nostro staff è a disposizione per aiutarti con prenotazioni ristoranti e informazioni turistiche del Salento.",
       icon: "👨‍💼"
@@ -65,12 +60,12 @@ const ServicesPage = () => {
     <div className="container px-4 py-8 md:py-12">
       <SEOHead
         title="Servizi Villa MareBlu - Villa Lusso Salento Mare | Casa Vacanze Bambini Puglia"
-        description="Scopri i servizi esclusivi di Villa MareBlu: villa lusso Salento mare con piscina privata, concierge, transfer, attrezzature spiaggia. Perfetta casa vacanze bambini Puglia con tutti i comfort."
+        description="Scopri i servizi esclusivi di Villa MareBlu: villa lusso Salento mare con concierge, transfer, attrezzature spiaggia. Perfetta casa vacanze bambini Puglia con tutti i comfort."
         keywords={getPageSpecificKeywords('services')}
         canonicalUrl="/servizi"
         structuredData={structuredData}
         ogTitle="Servizi Esclusivi Villa MareBlu - Villa Lusso Salento"
-        ogDescription="Servizi di lusso per la tua vacanza in Salento: piscina privata, concierge, transfer e tanto altro"
+        ogDescription="Servizi di lusso per la tua vacanza in Salento: concierge, transfer, attrezzature spiaggia e tanto altro"
       />
 
       <h1 className="text-3xl md:text-4xl font-bold mb-6">I Nostri Servizi Esclusivi</h1>

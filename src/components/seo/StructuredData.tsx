@@ -5,7 +5,7 @@ export const getLocalBusinessSchema = () => ({
   "@context": "https://schema.org",
   "@type": "LodgingBusiness",
   "name": "Villa MareBlu",
-  "description": "Appartamenti vacanze di lusso sul mare in Salento, Puglia. Villa con piscina privata, vista mare e giardino mediterraneo.",
+  "description": "Appartamenti vacanze di lusso sul mare in Salento, Puglia. Villa con vista mare e giardino mediterraneo.",
   "url": "https://www.villamareblu.it",
   "telephone": "+39 3937767749",
   "email": "macchiaforcato@gmail.com",
@@ -27,11 +27,6 @@ export const getLocalBusinessSchema = () => ({
   "amenityFeature": [
     {
       "@type": "LocationFeatureSpecification",
-      "name": "Piscina privata",
-      "value": true
-    },
-    {
-      "@type": "LocationFeatureSpecification", 
       "name": "Vista mare",
       "value": true
     },
