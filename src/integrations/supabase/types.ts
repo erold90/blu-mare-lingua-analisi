@@ -666,10 +666,7 @@ export type Database = {
         Args: { copy_from_year?: number; target_year: number }
         Returns: number
       }
-      is_admin: {
-        Args: { user_id?: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { user_id?: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
