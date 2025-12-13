@@ -241,7 +241,7 @@ export default function SecurityPolicyPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-medium">Telefono:</span>
-                    <span>+39 393 7767749 (emergenze)</span>
+                    <span>+39 379 0038730 (emergenze)</span>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground mt-4">
