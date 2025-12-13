@@ -4,7 +4,7 @@ import React from 'react';
 const WhatsAppButton = () => {
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent("Ciao! Vorrei informazioni sui vostri appartamenti vacanze a Villa MareBlu.");
-    const whatsappUrl = `https://wa.me/393937767749?text=${message}`;
+    const whatsappUrl = `https://wa.me/393790038730?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };
 

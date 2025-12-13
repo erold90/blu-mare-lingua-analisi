@@ -175,7 +175,7 @@ TOTALE: €${priceCalculation.total}
 
 *Preventivo senza impegno - Valido 7 giorni*`;
 
-    const whatsappUrl = `https://wa.me/393937767749?text=${encodeURIComponent(message)}`;
+    const whatsappUrl = `https://wa.me/393790038730?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
     
     // Aggiorna il preventivo più recente nel database come "inviato"
