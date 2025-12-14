@@ -7,7 +7,7 @@ export const getLocalBusinessSchema = () => ({
   "name": "Villa MareBlu",
   "description": "Appartamenti vacanze di lusso sul mare in Salento, Puglia. Villa con vista mare e giardino mediterraneo.",
   "url": "https://www.villamareblu.it",
-  "telephone": "+39 3790038730",
+  "telephone": "+39 378 0038730",
   "email": "macchiaforcato@gmail.com",
   "address": {
     "@type": "PostalAddress",

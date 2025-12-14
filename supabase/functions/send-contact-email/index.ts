@@ -120,7 +120,7 @@ const handler = async (req: Request): Promise<Response> => {
         
         <p>Per qualsiasi urgenza, puoi contattarci direttamente:</p>
         <ul>
-          <li>Telefono: +39 3790038730</li>
+          <li>Telefono: +39 378 0038730</li>
           <li>Email: macchiaforcato@gmail.com</li>
         </ul>
         
