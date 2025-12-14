@@ -80,7 +80,7 @@ const ContactsPage = () => {
       formRef.current?.reset();
     } catch (error) {
       console.error("Errore invio email:", error);
-      toast.error("Si è verificato un errore. Puoi contattarci direttamente a macchiaforcato@gmail.com o al +39 3790038730");
+      toast.error("Si è verificato un errore. Puoi contattarci direttamente a macchiaforcato@gmail.com o al +39 378 0038730");
     } finally {
       setIsSubmitting(false);
     }
@@ -90,7 +90,7 @@ const ContactsPage = () => {
     <div className="container px-4 py-8 md:py-12">
       <SEOHead
         title="Contatti Villa MareBlu Salento - Affitto Settimanale Puglia"
-        description="Contatta Villa MareBlu per il tuo soggiorno in Salento. Informazioni, prenotazioni e disponibilità per la tua vacanza in Puglia. Tel: +39 3790038730"
+        description="Contatta Villa MareBlu per il tuo soggiorno in Salento. Informazioni, prenotazioni e disponibilità per la tua vacanza in Puglia. Tel: +39 378 0038730"
         keywords={getPageSpecificKeywords('contact')}
         canonicalUrl="/contatti"
         structuredData={structuredData}
@@ -133,7 +133,7 @@ const ContactsPage = () => {
               <Phone className="h-6 w-6 text-primary shrink-0 mt-1" />
               <div>
                 <h3 className="font-medium">Telefono Villa MareBlu</h3>
-                <p className="text-muted-foreground">+39 3790038730</p>
+                <p className="text-muted-foreground">+39 378 0038730</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Disponibile tutti i giorni
                 </p>

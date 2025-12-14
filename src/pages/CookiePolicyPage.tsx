@@ -233,7 +233,7 @@ const CookiePolicyPage = () => {
             </p>
             <div className="space-y-2">
               <p><strong>Email:</strong> <a href="mailto:macchiaforcato@gmail.com" className="text-primary underline">macchiaforcato@gmail.com</a></p>
-              <p><strong>Telefono:</strong> <a href="tel:+393790038730" className="text-primary underline">+39 3790038730</a></p>
+              <p><strong>Telefono:</strong> <a href="tel:+393780038730" className="text-primary underline">+39 378 0038730</a></p>
               <p><strong>Indirizzo:</strong> Via Marco Polo 112, 73053 Patù (LE), Italia</p>
             </div>
           </section>
