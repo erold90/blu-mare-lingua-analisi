@@ -23,6 +23,7 @@ export default function RequestQuotePage() {
     isValidDay,
     calculatePrice,
     getDateBlockInfo,
+    requiresTwoWeeksMinimum,
     prenotazioni
   } = useMultiStepQuote();
 
@@ -57,6 +58,7 @@ export default function RequestQuotePage() {
             getNights={getNights}
             isValidDay={isValidDay}
             getDateBlockInfo={getDateBlockInfo}
+            requiresTwoWeeksMinimum={requiresTwoWeeksMinimum}
           />
         );
       case 3:
