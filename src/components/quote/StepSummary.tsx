@@ -427,7 +427,7 @@ _Preventivo senza impegno - Valido 7 giorni_`;
                 <span>
                   {priceCalculation.discountType === 'occupancy'
                     ? 'Sconto occupazione:'
-                    : 'Arrotondamento cortesia:'}
+                    : 'Arrotondamento:'}
                 </span>
                 <span className="font-semibold">-€{(priceCalculation.finalDiscount || 0).toFixed(2)}</span>
               </div>

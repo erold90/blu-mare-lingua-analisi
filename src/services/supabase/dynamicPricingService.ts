@@ -354,13 +354,17 @@ class PricingService {
       const discountTotal = rawTotal - finalTotal;
 
       // Determina il tipo di sconto
+      // Se lo sconto è < €20 o < 1% del totale, è solo un arrotondamento
       let discountType: 'occupancy' | 'courtesy' | 'none';
+      const discountPercent = rawTotal > 0 ? (discountTotal / rawTotal) * 100 : 0;
+      const isSignificantDiscount = discountTotal >= 20 && discountPercent >= 1;
+
       if (discountTotal === 0) {
         discountType = 'none';
-      } else if (hasPartialOccupancy) {
+      } else if (hasPartialOccupancy && isSignificantDiscount) {
         discountType = 'occupancy';
       } else {
-        discountType = 'courtesy';
+        discountType = 'courtesy'; // Arrotondamento per sconti irrisori
       }
 
       // Aggiorna i dettagli appartamento con lo sconto distribuito proporzionalmente
