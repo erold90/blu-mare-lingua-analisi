@@ -118,6 +118,20 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   const bedsNeeded = getBedsNeeded();
 
   const sendWhatsApp = async () => {
+    // Costruisci sezioni opzionali
+    const servicesLines = [];
+    if (formData.hasPets) {
+      servicesLines.push(`🐕 Animali: ${formData.petCount || 1}`);
+    }
+    if (formData.requestLinen) {
+      servicesLines.push(`🛏️ Biancheria: ${bedsNeeded} ospiti`);
+    }
+
+    const cauzioneTotal = formData.selectedApartments.length * 200;
+    const cauzioneText = formData.selectedApartments.length > 1
+      ? `€${cauzioneTotal} (€200 × ${formData.selectedApartments.length})`
+      : `€200`;
+
     const message = `🏖️ *RICHIESTA PREVENTIVO VILLA MAREBLU*
 
 📅 *SOGGIORNO:*
@@ -127,30 +141,26 @@ Durata: ${nights} notti
 
 👥 *OSPITI:*
 Adulti: ${formData.adults}
-Bambini: ${formData.children}${formData.children > 0 ? ` (di cui ${formData.childrenWithParents.filter(Boolean).length} non occupano posto letto)` : ''}
-Totale posti letto: ${bedsNeeded}
+Bambini: ${formData.children}${formData.children > 0 ? ` (${formData.childrenWithParents.filter(Boolean).length} con genitori)` : ''}
+Posti letto: ${bedsNeeded}
 
 🏠 *APPARTAMENTI:*
-${formData.selectedApartments.map((aptId, index) => {
+${formData.selectedApartments.map((aptId) => {
   const apt = priceCalculation.apartmentPrices.find((p: any) => p.apartmentId === aptId.toString());
-  return `• Appartamento ${aptId} - Occupazione: ${apt?.occupation || 'N/D'}`;
+  return `• Appartamento ${aptId} (${apt?.occupation || 'N/D'} posti)`;
 }).join('\n')}
-
-${formData.hasPets ? `🐕 *ANIMALE:* Sì - ${formData.petCount || 1} animale${(formData.petCount || 1) > 1 ? 'i' : ''}` : '🐕 *ANIMALE:* No'}
-${formData.requestLinen ? `🛏️ *BIANCHERIA:* Sì - ${bedsNeeded} ospiti` : '🛏️ *BIANCHERIA:* No'}
+${servicesLines.length > 0 ? `\n*SERVIZI:*\n${servicesLines.join('\n')}` : ''}
 
 💰 *PREVENTIVO:*
-Prezzo base: €${priceCalculation.apartmentPrices.reduce((sum: number, apt: any) => sum + apt.basePrice, 0)}
-${priceCalculation.finalDiscount > 0 ? `${priceCalculation.discountType === 'occupancy' ? 'Sconto occupazione' : 'Arrotondamento cortesia'}: -€${priceCalculation.finalDiscount}` : ''}
-Servizi extra: €${priceCalculation.servicesTotal}
-TOTALE: €${priceCalculation.total}
+Appartamenti: €${priceCalculation.apartmentPrices.reduce((sum: number, apt: any) => sum + apt.basePrice, 0)}${priceCalculation.finalDiscount > 0 ? `\n${priceCalculation.discountType === 'occupancy' ? 'Sconto occupazione' : 'Arrotondamento'}: -€${priceCalculation.finalDiscount}` : ''}${priceCalculation.servicesTotal > 0 ? `\nServizi extra: €${priceCalculation.servicesTotal}` : ''}
+*TOTALE: €${priceCalculation.total}*
 
 💳 *PAGAMENTO:*
-💰 Caparra (30%): €${priceCalculation.deposit}
-💰 Saldo arrivo: €${priceCalculation.balance}
-🔐 Cauzione al Check-in (contanti): 200 €${formData.selectedApartments.length > 1 ? ` per appartamento (${formData.selectedApartments.length * 200} € totali)` : ''}
+Caparra (30%): €${priceCalculation.deposit}
+Saldo arrivo: €${priceCalculation.balance}
+Cauzione (contanti): ${cauzioneText}
 
-*Preventivo senza impegno - Valido 7 giorni*`;
+_Preventivo senza impegno - Valido 7 giorni_`;
 
     const whatsappUrl = `https://wa.me/393780038730?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
