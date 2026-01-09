@@ -275,17 +275,17 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[80vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+      <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[80vh] sm:max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-xl sm:text-2xl font-serif text-primary">
             {apartment.name}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 sm:space-y-6">
+        <div className="space-y-4 sm:space-y-6 overflow-hidden">
           {/* Image Gallery */}
-          <div className="relative">
-            <Carousel className="w-full" setApi={setApi}>
+          <div className="relative overflow-hidden">
+            <Carousel className="w-full overflow-hidden" setApi={setApi}>
               <CarouselContent>
                 {images.map((image, index) => (
                   <CarouselItem key={index}>
@@ -350,7 +350,7 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
             <div className="space-y-3 sm:space-y-4">
               <div>
                 <h3 className="text-base sm:text-lg font-serif font-semibold mb-1 sm:mb-2">Descrizione</h3>
-                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed break-words">
                   {apartment.longDescription || apartment.description}
                 </p>
               </div>
