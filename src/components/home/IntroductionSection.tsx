@@ -78,8 +78,8 @@ const IntroductionSection = () => {
           {/* Left: Image placeholder */}
           <div className={`relative transition-all duration-1000 delay-300 ${isVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-8'}`}>
             <div className="aspect-[4/3] bg-gray-100 rounded-sm overflow-hidden">
-              <img 
-                src={introImage ? imageService.getImageUrl(introImage.file_path) : "/images/hero/hero.jpg"}
+              <img
+                src={introImage ? imageService.getGalleryUrl(introImage.file_path) : "/images/hero/hero.jpg"}
                 alt="Villa MareBlu - Introduzione"
                 className="w-full h-full object-cover"
                 loading="lazy"

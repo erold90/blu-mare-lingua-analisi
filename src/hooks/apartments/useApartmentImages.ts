@@ -26,7 +26,7 @@ export const useApartmentImages = () => {
             // Put cover image first, then the rest
             const orderedImages = coverImage ? [coverImage, ...otherImages] : otherImages;
             
-            const imageUrls = orderedImages.map(img => imageService.getImageUrl(img.file_path));
+            const imageUrls = orderedImages.map(img => imageService.getGalleryUrl(img.file_path));
             
             imagesMap[apartment.id] = imageUrls;
           } else {

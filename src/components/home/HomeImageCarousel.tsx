@@ -19,8 +19,8 @@ export const HomeImageCarousel = () => {
         
         // Preload ottimizzato - solo le prime 2 immagini
         if (galleryImages.length > 0) {
-          const firstTwoImages = galleryImages.slice(0, 2).map(img => 
-            imageService.getImageUrl(img.file_path)
+          const firstTwoImages = galleryImages.slice(0, 2).map(img =>
+            imageService.getGalleryUrl(img.file_path)
           );
           // Usa il servizio corretto per il preload
           imageUtilService.preloadImages(firstTwoImages, 1); // Ridotta concorrenza
@@ -119,7 +119,7 @@ export const HomeImageCarousel = () => {
                       <CardContent className="p-0">
                          <div className="aspect-[4/3] relative overflow-hidden">
                            <img
-                             src={imageService.getImageUrl(image.file_path)}
+                             src={imageService.getGalleryUrl(image.file_path)}
                              alt={image.alt_text || `Villa MareBlu - Immagine ${index + 1}`}
                              className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
                              loading={index < 3 ? "eager" : "lazy"}

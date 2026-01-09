@@ -379,7 +379,7 @@ export const HomeImageGallery: React.FC = () => {
                             </div>
                             
                             <img
-                              src={imageService.getImageUrl(image.file_path)}
+                              src={imageService.getThumbnailUrl(image.file_path)}
                               alt={image.alt_text || 'Immagine homepage'}
                               className="w-full h-32 object-cover"
                             />

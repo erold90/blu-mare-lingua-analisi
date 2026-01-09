@@ -44,8 +44,8 @@ const HeroSection = () => {
 
   const getBackgroundImage = () => {
     if (heroImage) {
-      // Use direct image URL (transformations require Supabase Pro plan)
-      return imageService.getImageUrl(heroImage.file_path);
+      // Use hero-optimized URL (ImageKit applies transformations, Supabase returns original)
+      return imageService.getHeroUrl(heroImage.file_path);
     }
     return "/images/hero/hero.jpg"; // Fallback image
   };
