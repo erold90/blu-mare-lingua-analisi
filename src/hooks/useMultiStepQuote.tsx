@@ -66,6 +66,7 @@ export const useMultiStepQuote = () => {
   const hasTrackedStart = useRef(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [dateBlocks, setDateBlocks] = useState<any[]>([]);
+  const [seasonConfigs, setSeasonConfigs] = useState<any[]>([]);
   const [formData, setFormData] = useState<QuoteFormData>({
     adults: 1,
     children: 0,
@@ -80,18 +81,22 @@ export const useMultiStepQuote = () => {
     phone: ''
   });
 
-  // Load date blocks on mount
+  // Load date blocks and season configs on mount
   useEffect(() => {
-    const loadDateBlocks = async () => {
+    const loadData = async () => {
       try {
-        const blocks = await pricingService.getDateBlocks();
+        const [blocks, seasons] = await Promise.all([
+          pricingService.getDateBlocks(),
+          pricingService.getSeasonConfigs()
+        ]);
         setDateBlocks(blocks);
+        setSeasonConfigs(seasons);
       } catch (error) {
-        // Silently handle error loading date blocks
+        // Silently handle error loading data
       }
     };
 
-    loadDateBlocks();
+    loadData();
   }, []);
 
   // Track form start
@@ -309,10 +314,38 @@ export const useMultiStepQuote = () => {
   const getDateBlockInfo = useCallback((date: Date) => {
     // Usa formato locale per evitare problemi di timezone con toISOString()
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const dateStr = `${year}-${month}-${day}`;
+    const month = date.getMonth() + 1; // 1-12
+    const dayOfMonth = date.getDate();
+    const monthStr = String(month).padStart(2, '0');
+    const dayStr = String(dayOfMonth).padStart(2, '0');
+    const dateStr = `${year}-${monthStr}-${dayStr}`;
 
+    // Check if date is within season
+    const seasonConfig = seasonConfigs.find(s => s.year === year && s.is_active);
+    if (seasonConfig) {
+      const seasonStart = new Date(year, seasonConfig.season_start_month - 1, seasonConfig.season_start_day);
+      const seasonEnd = new Date(year, seasonConfig.season_end_month - 1, seasonConfig.season_end_day);
+
+      if (date < seasonStart || date > seasonEnd) {
+        return {
+          isBlocked: true,
+          reason: 'Fuori stagione estiva'
+        };
+      }
+    } else {
+      // Fallback: default season June 1 - October 31
+      const defaultSeasonStart = new Date(year, 5, 1); // June 1
+      const defaultSeasonEnd = new Date(year, 9, 31); // October 31
+
+      if (date < defaultSeasonStart || date > defaultSeasonEnd) {
+        return {
+          isBlocked: true,
+          reason: 'Fuori stagione estiva'
+        };
+      }
+    }
+
+    // Check date blocks
     for (const block of dateBlocks) {
       if (dateStr >= block.start_date && dateStr <= block.end_date) {
         return {
@@ -323,7 +356,7 @@ export const useMultiStepQuote = () => {
     }
 
     return { isBlocked: false, reason: '' };
-  }, [dateBlocks]);
+  }, [dateBlocks, seasonConfigs]);
 
   return {
     currentStep,
