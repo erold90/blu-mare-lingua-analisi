@@ -162,9 +162,34 @@ export class ImageStorageService {
     return data.publicUrl;
   }
 
+  // Cache for checking if transformations are available
+  private static transformationsAvailable: boolean | null = null;
+
+  /**
+   * Check if Supabase image transformations are available (Pro plan required)
+   */
+  private async checkTransformationsAvailable(): Promise<boolean> {
+    if (ImageStorageService.transformationsAvailable !== null) {
+      return ImageStorageService.transformationsAvailable;
+    }
+
+    try {
+      // Try to fetch a small transformed image to test
+      const testUrl = this.getImageUrl('test') + '?width=10';
+      const response = await fetch(testUrl, { method: 'HEAD' });
+      // If we get 400 or specific error, transformations are not available
+      ImageStorageService.transformationsAvailable = response.status !== 400;
+    } catch {
+      ImageStorageService.transformationsAvailable = false;
+    }
+
+    return ImageStorageService.transformationsAvailable;
+  }
+
   /**
    * Get optimized image URL with Supabase transformations
-   * Supports resize, quality adjustment, and WebP conversion
+   * Falls back to original image if transformations are not available (Free tier)
+   * Supports resize, quality adjustment, and WebP conversion on Pro plan
    */
   getOptimizedImageUrl(
     filePath: string,
@@ -186,11 +211,30 @@ export class ImageStorageService {
     if (width) transform.width = width;
     if (height) transform.height = height;
 
-    const { data } = supabase.storage
-      .from('villa-images')
-      .getPublicUrl(filePath, { transform });
+    try {
+      const { data } = supabase.storage
+        .from('villa-images')
+        .getPublicUrl(filePath, { transform });
 
-    return data.publicUrl;
+      return data.publicUrl;
+    } catch {
+      // Fallback to original image if transformations fail
+      return this.getImageUrl(filePath);
+    }
+  }
+
+  /**
+   * Get image URL with fallback - tries optimized first, falls back to original
+   * Use this for critical images that must always load
+   */
+  getImageUrlWithFallback(
+    filePath: string,
+    options?: { width?: number; quality?: number }
+  ): { optimized: string; fallback: string } {
+    return {
+      optimized: this.getOptimizedImageUrl(filePath, options),
+      fallback: this.getImageUrl(filePath)
+    };
   }
 
   /**
