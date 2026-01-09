@@ -1,6 +1,6 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -12,13 +12,35 @@ export function AppHeader() {
   const { open } = useSidebar();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+  const scrollThreshold = 10; // Minimo scroll per attivare hide/show
 
-  const { scrollY } = useScroll();
-
-  // Track scroll position
+  // Track scroll position and direction
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      const currentScrollY = window.scrollY;
+
+      // Determina se siamo scrollati
+      setIsScrolled(currentScrollY > 50);
+
+      // Determina la direzione dello scroll
+      const scrollDiff = currentScrollY - lastScrollY.current;
+
+      // Se siamo in cima alla pagina, mostra sempre l'header
+      if (currentScrollY < 100) {
+        setIsVisible(true);
+      }
+      // Se scrolliamo verso il basso di più di threshold, nascondi
+      else if (scrollDiff > scrollThreshold) {
+        setIsVisible(false);
+      }
+      // Se scrolliamo verso l'alto di più di threshold, mostra
+      else if (scrollDiff < -scrollThreshold) {
+        setIsVisible(true);
+      }
+
+      lastScrollY.current = currentScrollY;
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -36,9 +58,9 @@ export function AppHeader() {
 
   return (
     <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+      initial={{ y: 0 }}
+      animate={{ y: isVisible ? 0 : -headerHeight - 10 }}
+      transition={{ duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
       className={`sticky top-0 z-40 w-full border-b transition-all duration-300 ${
         isScrolled
           ? "bg-background/98 backdrop-blur-lg shadow-sm border-border"
