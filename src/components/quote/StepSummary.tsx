@@ -29,11 +29,16 @@ interface StepSummaryProps {
   calculatePrice: () => any;
 }
 
-const apartmentNames = {
-  "appartamento-1": "Appartamento 1 (6 posti letto)",
-  "appartamento-2": "Appartamento 2 (8 posti letto)", 
-  "appartamento-3": "Appartamento 3 (4 posti letto)",
-  "appartamento-4": "Appartamento 4 (5 posti letto)"
+// Mapping unificato per tutti i formati di ID appartamento
+const apartmentNames: Record<string, string> = {
+  "1": "Appartamento 1 (6 posti)",
+  "2": "Appartamento 2 (8 posti)",
+  "3": "Appartamento 3 (4 posti)",
+  "4": "Appartamento 4 (5 posti)",
+  "appartamento-1": "Appartamento 1 (6 posti)",
+  "appartamento-2": "Appartamento 2 (8 posti)",
+  "appartamento-3": "Appartamento 3 (4 posti)",
+  "appartamento-4": "Appartamento 4 (5 posti)"
 };
 
 export const StepSummary: React.FC<StepSummaryProps> = ({
@@ -65,7 +70,6 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
         setError(null);
         
         // Invalida la cache dei prezzi per ottenere dati aggiornati
-        console.log('🔄 Invalidando cache prezzi prima del calcolo...');
         PricingService.invalidateCache();
         
         const result = await calculatePrice();
@@ -92,8 +96,6 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
 
   const saveQuoteToDatabase = async (priceData: any) => {
     try {
-      console.log('💾 Auto-salvataggio preventivo allo step 6...');
-      
       const { supabase } = await import('@/integrations/supabase/client');
       
       const { data, error } = await supabase
@@ -117,12 +119,10 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
         .select('id');
 
       if (error) {
-        console.error('Errore salvataggio preventivo:', error);
-      } else {
-        console.log('✅ Preventivo salvato automaticamente con ID:', data?.[0]?.id);
+        // Errore silenzioso nel salvataggio
       }
     } catch (err) {
-      console.error('Errore nel salvataggio automatico del preventivo:', err);
+      // Errore silenzioso nel salvataggio automatico
     }
   };
 
@@ -130,17 +130,6 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   const bedsNeeded = getBedsNeeded();
 
   const sendWhatsApp = async () => {
-    const apartmentNames = {
-      "1": "Appartamento 1 (6 posti)",
-      "2": "Appartamento 2 (8 posti)", 
-      "3": "Appartamento 3 (4 posti)",
-      "4": "Appartamento 4 (5 posti)",
-      "appartamento-1": "Appartamento 1 (6 posti)",
-      "appartamento-2": "Appartamento 2 (8 posti)", 
-      "appartamento-3": "Appartamento 3 (4 posti)",
-      "appartamento-4": "Appartamento 4 (5 posti)"
-    };
-
     const message = `🏖️ *RICHIESTA PREVENTIVO VILLA MAREBLU*
 
 📅 *SOGGIORNO:*
@@ -192,9 +181,8 @@ TOTALE: €${priceCalculation.total}
         .order('created_at', { ascending: false })
         .limit(1);
       
-      console.log('✅ Preventivo marcato come inviato su WhatsApp');
     } catch (err) {
-      console.error('Errore aggiornamento preventivo:', err);
+      // Errore silenzioso nell'aggiornamento
     }
   };
 

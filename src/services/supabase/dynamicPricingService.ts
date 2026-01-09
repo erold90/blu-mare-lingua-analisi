@@ -254,8 +254,12 @@ class PricingService {
   ): number {
     if (targetApartmentId) {
       // Se richiesto per un appartamento specifico, calcola la sua porzione
-      const apartmentCapacities = {
-        1: 6, 2: 8, 3: 4, 4: 5
+      // NOTA: Capacità devono corrispondere a src/data/apartments.ts
+      const apartmentCapacities: Record<number, number> = {
+        1: 6,  // appartamento-1
+        2: 8,  // appartamento-2
+        3: 4,  // appartamento-3
+        4: 5   // appartamento-4
       };
       
       const totalCapacity = selectedApartments.reduce((sum, id) => 

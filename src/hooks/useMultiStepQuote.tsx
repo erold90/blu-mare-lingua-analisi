@@ -28,7 +28,8 @@ export interface QuoteFormData {
   phone: string;
 }
 
-// Prenotazioni esistenti ora vengono caricate dal database
+// FALLBACK: Prenotazioni statiche usate solo per UI quando il database non è disponibile
+// Le verifiche di disponibilità reali usano il database tramite PricingService.checkAvailability()
 const prenotazioniStatiche = [
   // Appartamento 1
   { apt: "1", checkin: '2025-07-12', checkout: '2025-07-26', ospite: 'Stanila Livia' },

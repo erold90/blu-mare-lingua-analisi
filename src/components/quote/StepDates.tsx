@@ -41,14 +41,18 @@ export const StepDates: React.FC<StepDatesProps> = ({
   const isDateDisabled = (date: Date) => {
     // Solo sabato, domenica, lunedì selezionabili
     if (!isValidDay(date)) return true;
-    
-    // Non permettere date passate
-    if (date < new Date()) return true;
-    
+
+    // Non permettere date passate (confronto solo data, senza ora)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const compareDate = new Date(date);
+    compareDate.setHours(0, 0, 0, 0);
+    if (compareDate < today) return true;
+
     // Controllo se la data è bloccata
     const blockInfo = getDateBlockInfo(date);
     if (blockInfo.isBlocked) return true;
-    
+
     return false;
   };
 
