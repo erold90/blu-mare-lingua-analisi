@@ -34,11 +34,14 @@ const setTranslateCookie = (targetLang: string) => {
   const domains = ['', hostname, '.' + hostname];
 
   if (targetLang === 'it') {
-    // Clear cookies to reset to Italian
+    // Clear ALL googtrans cookies thoroughly
     domains.forEach(domain => {
       const domainStr = domain ? `; domain=${domain}` : '';
       document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/${domainStr}`;
+      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;${domainStr}`;
     });
+    // Also try without any domain specification
+    document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
   } else {
     // Set cookie for target language
     const value = `/it/${targetLang}`;
@@ -50,24 +53,29 @@ const setTranslateCookie = (targetLang: string) => {
   }
 };
 
-// Detect current language from cookie
-const detectLanguageFromCookie = (): string => {
-  const match = document.cookie.match(/googtrans=\/it\/([a-z]{2})/);
-  return match ? match[1] : 'it';
+// Detect current language - localStorage is the source of truth
+const detectCurrentLanguage = (): Language => {
+  // localStorage is our source of truth
+  const savedLang = localStorage.getItem(STORAGE_KEY);
+
+  // If nothing in localStorage, it means Italian (default)
+  if (!savedLang) {
+    return languages[0]; // Italian
+  }
+
+  // Find the saved language
+  const found = languages.find(l => l.googleCode === savedLang);
+  return found || languages[0];
 };
 
 export function LanguageSelector() {
   const [currentLang, setCurrentLang] = useState<Language>(languages[0]);
   const [isOpen, setIsOpen] = useState(false);
 
-  // Initialize: detect current language
+  // Initialize: detect current language from localStorage only
   useEffect(() => {
-    // Check localStorage first, then cookie
-    const savedLang = localStorage.getItem(STORAGE_KEY) || detectLanguageFromCookie();
-    const found = languages.find(l => l.googleCode === savedLang);
-    if (found) {
-      setCurrentLang(found);
-    }
+    const detected = detectCurrentLanguage();
+    setCurrentLang(detected);
   }, []);
 
   const changeLanguage = useCallback((lang: Language) => {
@@ -81,20 +89,20 @@ export function LanguageSelector() {
     setCurrentLang(lang);
     setIsOpen(false);
 
-    // Save preference
+    // Save preference to localStorage FIRST (source of truth)
     if (lang.googleCode === 'it') {
       localStorage.removeItem(STORAGE_KEY);
     } else {
       localStorage.setItem(STORAGE_KEY, lang.googleCode);
     }
 
-    // Set cookie and reload page for translation
+    // Set/clear cookie for Google Translate
     setTranslateCookie(lang.googleCode);
 
-    // Small delay to ensure cookie is set, then reload
+    // Small delay to ensure everything is set, then reload
     setTimeout(() => {
       window.location.reload();
-    }, 50);
+    }, 100);
   }, [currentLang.googleCode]);
 
   return (
