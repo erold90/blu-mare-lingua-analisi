@@ -19,7 +19,6 @@ import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { PricingService } from '@/services/supabase/dynamicPricingService';
-import { APARTMENT_NAMES } from '@/config/apartments';
 
 interface StepSummaryProps {
   formData: QuoteFormData;
@@ -132,9 +131,9 @@ Bambini: ${formData.children}${formData.children > 0 ? ` (di cui ${formData.chil
 Totale posti letto: ${bedsNeeded}
 
 🏠 *APPARTAMENTI:*
-${formData.selectedApartments.map(aptId => {
-  const apt = priceCalculation.apartmentPrices.find((p: any) => p.apartmentId === aptId);
-  return `• ${APARTMENT_NAMES[aptId] || `Appartamento ${aptId}`} - Occupazione: ${apt?.occupation}`;
+${formData.selectedApartments.map((aptId, index) => {
+  const apt = priceCalculation.apartmentPrices.find((p: any) => p.apartmentId === aptId.toString());
+  return `• Appartamento ${aptId} - Occupazione: ${apt?.occupation || 'N/D'}`;
 }).join('\n')}
 
 ${formData.hasPets ? `🐕 *ANIMALE:* Sì - ${formData.petCount || 1} animale${(formData.petCount || 1) > 1 ? 'i' : ''}` : '🐕 *ANIMALE:* No'}
@@ -291,17 +290,21 @@ TOTALE: €${priceCalculation.total}
               </div>
             </div>
 
-            {formData.children > 0 && (
-              <div className="text-sm text-muted-foreground">
-                <div className="font-semibold mb-1">Dettagli bambini:</div>
-                {formData.childrenWithParents.map((withParents, index) => (
-                  <div key={index} className="flex justify-between">
-                    <span>Bambino {index + 1}:</span>
-                    <span>{withParents ? 'Con genitori/culla' : 'Posto letto proprio'}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {formData.children > 0 && (() => {
+              const withParentsCount = formData.childrenWithParents.filter(Boolean).length;
+              const ownBedCount = formData.children - withParentsCount;
+              return (
+                <div className="text-sm text-muted-foreground p-2 bg-muted/50 rounded-lg">
+                  {ownBedCount > 0 && withParentsCount > 0 ? (
+                    <span>{ownBedCount} con posto letto, {withParentsCount} con genitori</span>
+                  ) : ownBedCount > 0 ? (
+                    <span>Tutti con posto letto proprio</span>
+                  ) : (
+                    <span>Tutti con genitori/culla</span>
+                  )}
+                </div>
+              );
+            })()}
           </CardContent>
         </Card>
       </div>
@@ -388,22 +391,11 @@ TOTALE: €${priceCalculation.total}
             
             
             {/* Costi Inclusi */}
-            <div className="p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
-              <h4 className="font-semibold text-green-900 dark:text-green-100 mb-2">Costi Inclusi</h4>
-              <div className="space-y-1 text-sm text-green-800 dark:text-green-200">
-                <div className="flex items-center gap-2">
-                  <span>•</span>
-                  <span>Utenze</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span>•</span>
-                  <span>Spese di Pulizia</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span>•</span>
-                  <span>Tassa di Soggiorno</span>
-                </div>
-              </div>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span>Inclusi:</span>
+              <Badge variant="secondary" className="font-normal">Utenze</Badge>
+              <Badge variant="secondary" className="font-normal">Pulizia</Badge>
+              <Badge variant="secondary" className="font-normal">Tassa di Soggiorno</Badge>
             </div>
             
             {priceCalculation.servicesTotal > 0 && (
@@ -459,13 +451,18 @@ TOTALE: €${priceCalculation.total}
                 <span className="font-semibold">€{(priceCalculation.balance || 0).toFixed(2)}</span>
               </div>
               
-              <div className="flex justify-between p-2 bg-green-50 dark:bg-green-950/20 rounded">
+              <div className="flex justify-between p-2 bg-gray-50 dark:bg-gray-950/20 rounded">
                 <span className="flex items-center gap-1">
                   <Banknote className="h-3 w-3" />
-                  🔐 Cauzione al Check-in (contanti):
+                  Cauzione (contanti):
                 </span>
                 <span className="font-semibold">
-                  200 €{formData.selectedApartments.length > 1 ? ` per appartamento (${formData.selectedApartments.length * 200} € totali)` : ''}
+                  €{formData.selectedApartments.length * 200}.00
+                  {formData.selectedApartments.length > 1 && (
+                    <span className="text-xs font-normal text-muted-foreground ml-1">
+                      (€200 × {formData.selectedApartments.length})
+                    </span>
+                  )}
                 </span>
               </div>
             </div>

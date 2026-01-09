@@ -241,7 +241,7 @@ export const useMultiStepQuote = () => {
         return {
           apartmentPrices: result.apartmentDetails.map(detail => ({
             apartmentId: detail.apartmentId.toString(),
-            name: detail.apartment.name,
+            name: `Appartamento ${detail.apartmentId}`,
             capacity: detail.apartment.beds,
             basePrice: detail.basePrice,
             occupation: `${detail.occupiedBeds}/${detail.apartment.beds}`,
