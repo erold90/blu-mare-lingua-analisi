@@ -61,7 +61,7 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton asChild>
-                  <Link to="/preventivo" onClick={handleLinkClick} className="flex items-center">
+                  <Link to="/richiedi-preventivo" onClick={handleLinkClick} className="flex items-center">
                     <Calculator className="shrink-0 text-sidebar-primary" />
                     <span className="ml-2">Preventivo</span>
                   </Link>

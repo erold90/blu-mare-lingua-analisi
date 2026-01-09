@@ -72,7 +72,7 @@ export const useMultiStepQuote = () => {
         const blocks = await pricingService.getDateBlocks();
         setDateBlocks(blocks);
       } catch (error) {
-        console.error('Error loading date blocks:', error);
+        // Silently handle error loading date blocks
       }
     };
     
@@ -140,7 +140,6 @@ export const useMultiStepQuote = () => {
       const numericId = parseInt(apartmentId);
       return await checkAvailability(numericId, checkIn, checkOut);
     } catch (error) {
-      console.error('Error checking availability:', error);
       return false;
     }
   }, [checkAvailability]);
@@ -201,7 +200,7 @@ export const useMultiStepQuote = () => {
         };
       }
     } catch (error) {
-      console.error('Error calculating price:', error);
+      // Handle error silently
     }
 
     return { 

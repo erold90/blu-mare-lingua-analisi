@@ -58,11 +58,11 @@ export const CtaSection = () => {
                   Ricevi un preventivo su misura per le tue esigenze 
                   e scopri le migliori offerte disponibili.
                 </p>
-                <Button 
+                <Button
                   className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-none py-3 transition-all duration-300"
                   asChild
                 >
-                  <Link to="/preventivo" className="font-light tracking-wide">
+                  <Link to="/richiedi-preventivo" className="font-light tracking-wide">
                     Calcola Preventivo
                   </Link>
                 </Button>

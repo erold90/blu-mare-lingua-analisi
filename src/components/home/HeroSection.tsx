@@ -18,7 +18,6 @@ const HeroSection = () => {
         const primaryImage = heroImages.find(img => img.is_cover) || heroImages[0] || null;
         setHeroImage(primaryImage);
       } catch (error) {
-        console.error('Error loading hero image:', error);
         // Fallback veloce senza immagine da Supabase
       } finally {
         setLoading(false);
@@ -29,7 +28,6 @@ const HeroSection = () => {
 
     // Listen for home image updates from admin panel
     const handleHomeImageUpdate = () => {
-      console.log("🔄 Received homeImagesUpdated event, reloading hero image...");
       loadHeroImage();
     };
 
@@ -41,7 +39,7 @@ const HeroSection = () => {
   }, []);
 
   const handleQuoteClick = () => {
-    navigate("/preventivo");
+    navigate("/richiedi-preventivo");
   };
 
   const getBackgroundImage = () => {

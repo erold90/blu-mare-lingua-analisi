@@ -35,7 +35,7 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
 
   const handleBookNow = () => {
     onClose();
-    navigate('/preventivo');
+    navigate('/richiedi-preventivo');
   };
 
   if (!apartment) return null;
