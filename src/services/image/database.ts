@@ -57,27 +57,47 @@ export class ImageDatabaseService {
   }
 
   /**
-   * Set cover image for apartment
+   * Set cover image for apartment or category (hero, introduction)
    */
   async setCoverImage(apartmentId: string, imageId: string): Promise<boolean> {
     try {
-      // First, remove cover status from all apartment images
-      await supabase
+      // First, get the image to determine its category
+      const { data: targetImage, error: fetchError } = await supabase
         .from('images')
-        .update({ is_cover: false })
-        .eq('apartment_id', apartmentId)
-        .eq('category', 'apartment');
-        
+        .select('category, apartment_id')
+        .eq('id', imageId)
+        .single();
+
+      if (fetchError || !targetImage) {
+        throw new Error('Immagine non trovata');
+      }
+
+      // Remove cover status based on category type
+      if (targetImage.category === 'apartment' && apartmentId) {
+        // For apartment images, filter by apartment_id
+        await supabase
+          .from('images')
+          .update({ is_cover: false })
+          .eq('apartment_id', apartmentId)
+          .eq('category', 'apartment');
+      } else {
+        // For hero, introduction, etc. - filter by category only
+        await supabase
+          .from('images')
+          .update({ is_cover: false })
+          .eq('category', targetImage.category);
+      }
+
       // Then set the new cover image
       const { error } = await supabase
         .from('images')
         .update({ is_cover: true })
         .eq('id', imageId);
-        
+
       if (error) {
         throw error;
       }
-      
+
       toast.success("Immagine di copertina impostata");
       return true;
     } catch (error) {
