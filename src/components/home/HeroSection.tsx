@@ -2,71 +2,32 @@
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { imageService, ImageRecord } from "@/services/imageService";
 
 const HeroSection = () => {
   const navigate = useNavigate();
-  const [heroImage, setHeroImage] = useState<ImageRecord | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const loadHeroImage = async () => {
-      try {
-        // Timeout disabilitato per evitare errori, gestita con try/catch
-        const heroImages = await imageService.getImagesByCategory('hero');
-        const primaryImage = heroImages.find(img => img.is_cover) || heroImages[0] || null;
-        setHeroImage(primaryImage);
-      } catch (error) {
-        // Fallback veloce senza immagine da Supabase
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadHeroImage();
-
-    // Listen for home image updates from admin panel
-    const handleHomeImageUpdate = () => {
-      loadHeroImage();
-    };
-
-    window.addEventListener('homeImagesUpdated', handleHomeImageUpdate);
-    
-    return () => {
-      window.removeEventListener('homeImagesUpdated', handleHomeImageUpdate);
-    };
-  }, []);
 
   const handleQuoteClick = () => {
     navigate("/richiedi-preventivo");
   };
 
-  const getBackgroundImage = () => {
-    if (heroImage) {
-      // Use hero-optimized URL (ImageKit applies transformations, Supabase returns original)
-      return imageService.getHeroUrl(heroImage.file_path);
-    }
-    return "/images/hero/hero.jpg"; // Fallback image
-  };
+  // Usa sempre l'immagine locale con i fiori
+  const heroImageUrl = "/images/hero/hero.jpg";
 
   return (
     <section className="hero-section relative h-screen flex items-center justify-center overflow-hidden">
       {/* Preload hero image for faster LCP */}
-      {!loading && heroImage && (
-        <link 
-          rel="preload" 
-          as="image" 
-          href={getBackgroundImage()} 
-          fetchPriority="high"
-        />
-      )}
-      
+      <link
+        rel="preload"
+        as="image"
+        href={heroImageUrl}
+        fetchPriority="high"
+      />
+
       {/* Clean background image */}
-      <div 
+      <div
         className="absolute inset-0 z-0"
         style={{
-          backgroundImage: `url('${getBackgroundImage()}')`,
+          backgroundImage: `url('${heroImageUrl}')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center 35%',
           backgroundRepeat: 'no-repeat',
