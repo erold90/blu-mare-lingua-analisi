@@ -319,15 +319,17 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
 
             {/* Dot Indicators */}
             {count > 1 && (
-              <div className="flex justify-center gap-1 sm:gap-2 mt-2 sm:mt-4">
+              <div className="flex justify-center items-center gap-1.5 sm:gap-2 mt-2 sm:mt-4">
                 {Array.from({ length: count }).map((_, index) => (
-                  <button
+                  <span
                     key={index}
                     onClick={() => api?.scrollTo(index)}
-                    className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
+                    role="button"
+                    tabIndex={0}
+                    className={`block p-0 rounded-full transition-all duration-300 cursor-pointer ${
                       index === current
-                        ? 'bg-primary w-4 sm:w-6'
-                        : 'bg-gray-300 hover:bg-gray-400 w-1.5 sm:w-2'
+                        ? 'bg-primary w-3 h-1.5 sm:w-5 sm:h-2'
+                        : 'bg-gray-300 hover:bg-gray-400 w-1.5 h-1.5 sm:w-2 sm:h-2'
                     }`}
                     aria-label={`Vai all'immagine ${index + 1}`}
                   />
