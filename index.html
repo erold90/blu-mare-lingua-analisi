@@ -163,12 +163,26 @@
 
     <!-- GTranslate - Traduzione automatica multilingua -->
     <style>
-      /* Hide GTranslate default floating widget - we use our own UI */
-      .gtranslate_wrapper { display: none !important; opacity: 0 !important; visibility: hidden !important; }
-      .gt_float_switcher { display: none !important; }
+      /* Position GTranslate widget off-screen but keep it functional */
+      .gtranslate_wrapper {
+        position: fixed !important;
+        left: -9999px !important;
+        top: -9999px !important;
+        opacity: 0.01 !important;
+        pointer-events: none !important;
+      }
+      .gt_float_switcher {
+        position: fixed !important;
+        left: -9999px !important;
+        top: -9999px !important;
+      }
       /* Hide Google Translate banner/frame */
       .goog-te-banner-frame, .skiptranslate { display: none !important; }
       body { top: 0 !important; }
+      /* Fix for translated content layout */
+      .goog-te-spinner-pos { display: none !important; }
+      .goog-tooltip, .goog-tooltip:hover { display: none !important; }
+      .goog-text-highlight { background: none !important; box-shadow: none !important; }
     </style>
     <script>
       window.gtranslateSettings = {

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Globe } from "lucide-react";
 import {
   DropdownMenu,
@@ -26,6 +26,8 @@ const languages: Language[] = [
   { code: "POL", label: "Polski", gtCode: "pl" },
 ];
 
+const STORAGE_KEY = 'villamareblu_language';
+
 // Declare window extension for GTranslate
 declare global {
   interface Window {
@@ -38,113 +40,91 @@ declare global {
 }
 
 export function LanguageSelector() {
-  const [currentLang, setCurrentLang] = useState<Language>(languages[0]);
+  const [currentLang, setCurrentLang] = useState<Language>(() => {
+    // Initialize from localStorage
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const found = languages.find(l => l.gtCode === saved);
+        if (found) return found;
+      }
+    }
+    return languages[0];
+  });
   const [isOpen, setIsOpen] = useState(false);
   const [isGTranslateReady, setIsGTranslateReady] = useState(false);
+  const isChangingLanguage = useRef(false);
 
   // Check if GTranslate is ready
-  const checkGTranslateReady = useCallback(() => {
-    if (typeof window.doGTranslate === 'function') {
-      setIsGTranslateReady(true);
-      return true;
-    }
-    return false;
-  }, []);
-
-  // Detect current language from cookies or DOM
-  const detectCurrentLanguage = useCallback(() => {
-    // Method 1: Check googtrans cookie
-    const cookies = document.cookie.split(';');
-    for (const cookie of cookies) {
-      const [name, value] = cookie.trim().split('=');
-      if (name === 'googtrans' && value) {
-        const match = value.match(/\/[a-z]{2}\/([a-z]{2})/);
-        if (match) {
-          const langCode = match[1];
-          const found = languages.find(l => l.gtCode === langCode);
-          if (found) {
-            return found;
-          }
-        }
-      }
-    }
-
-    // Method 2: Check for Google Translate select element
-    const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-    if (select && select.value) {
-      const found = languages.find(l => l.gtCode === select.value);
-      if (found) {
-        return found;
-      }
-    }
-
-    // Method 3: Check html lang attribute changes
-    const htmlLang = document.documentElement.lang;
-    if (htmlLang && htmlLang !== 'it') {
-      const found = languages.find(l => l.gtCode === htmlLang.split('-')[0]);
-      if (found) {
-        return found;
-      }
-    }
-
-    return languages[0]; // Default to Italian
-  }, []);
-
-  // Initialize and detect language on mount
   useEffect(() => {
-    // Check for GTranslate readiness periodically
-    const checkInterval = setInterval(() => {
-      if (checkGTranslateReady()) {
-        clearInterval(checkInterval);
+    const checkReady = () => {
+      if (typeof window.doGTranslate === 'function') {
+        setIsGTranslateReady(true);
+
+        // If we have a saved language different from Italian, apply it
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved && saved !== 'it' && !isChangingLanguage.current) {
+          isChangingLanguage.current = true;
+          setTimeout(() => {
+            window.doGTranslate?.(`it|${saved}`);
+            isChangingLanguage.current = false;
+          }, 500);
+        }
+        return true;
       }
-    }, 100);
+      return false;
+    };
 
-    // Stop checking after 10 seconds
+    if (checkReady()) return;
+
+    const interval = setInterval(() => {
+      if (checkReady()) {
+        clearInterval(interval);
+      }
+    }, 200);
+
     const timeout = setTimeout(() => {
-      clearInterval(checkInterval);
-    }, 10000);
-
-    // Initial language detection
-    const detected = detectCurrentLanguage();
-    setCurrentLang(detected);
-
-    // Monitor for language changes
-    const detectInterval = setInterval(() => {
-      const detected = detectCurrentLanguage();
-      setCurrentLang(detected);
-    }, 2000);
+      clearInterval(interval);
+    }, 15000);
 
     return () => {
-      clearInterval(checkInterval);
-      clearInterval(detectInterval);
+      clearInterval(interval);
       clearTimeout(timeout);
     };
-  }, [checkGTranslateReady, detectCurrentLanguage]);
+  }, []);
 
   const changeLanguage = useCallback((lang: Language) => {
+    if (isChangingLanguage.current) return;
+
+    isChangingLanguage.current = true;
     setCurrentLang(lang);
     setIsOpen(false);
 
-    // Try to use GTranslate's doGTranslate function
-    if (typeof window.doGTranslate === 'function') {
-      // GTranslate expects format: "source|target"
-      window.doGTranslate(`it|${lang.gtCode}`);
-    } else {
-      // Fallback: Set cookies and reload
-      // Clear existing googtrans cookies
+    // Save to localStorage
+    localStorage.setItem(STORAGE_KEY, lang.gtCode);
+
+    if (lang.gtCode === 'it') {
+      // Reset to Italian - clear cookies and reload
       document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
       document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + window.location.hostname;
       document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + window.location.hostname;
+      window.location.reload();
+      return;
+    }
 
-      if (lang.gtCode !== 'it') {
-        // Set new cookie for non-Italian languages
-        const cookieValue = `/it/${lang.gtCode}`;
-        document.cookie = `googtrans=${cookieValue}; path=/`;
-        document.cookie = `googtrans=${cookieValue}; path=/; domain=${window.location.hostname}`;
-        document.cookie = `googtrans=${cookieValue}; path=/; domain=.${window.location.hostname}`;
-      }
-
-      // Reload to apply translation
+    // Try to use GTranslate's doGTranslate function
+    if (typeof window.doGTranslate === 'function') {
+      window.doGTranslate(`it|${lang.gtCode}`);
+      // Give GTranslate time to apply
+      setTimeout(() => {
+        isChangingLanguage.current = false;
+      }, 2000);
+    } else {
+      // Fallback: Set cookies and reload
+      const cookieValue = `/it/${lang.gtCode}`;
+      document.cookie = `googtrans=${cookieValue}; path=/`;
+      document.cookie = `googtrans=${cookieValue}; path=/; domain=${window.location.hostname}`;
+      document.cookie = `googtrans=${cookieValue}; path=/; domain=.${window.location.hostname}`;
       window.location.reload();
     }
   }, []);
