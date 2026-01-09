@@ -26,6 +26,7 @@ export interface QuoteResult {
   apartmentDetails: ApartmentQuoteDetail[];
   baseTotal: number;
   discountTotal: number;
+  discountType: 'occupancy' | 'courtesy' | 'none';  // Tipo di sconto applicato
   extrasTotal: number;
   finalTotal: number;
   deposit: number;
@@ -276,9 +277,9 @@ class PricingService {
     return Math.ceil(totalGuests / selectedApartments.length);
   }
 
-  // Arrotondamento intelligente a multipli di 50 (al più vicino, non al ribasso)
+  // Arrotondamento a multipli di 50 (sempre per difetto, a favore del cliente)
   static roundToMultipleOf50(price: number): number {
-    return Math.round(price / 50) * 50;
+    return Math.floor(price / 50) * 50;
   }
 
   // Calcolo preventivo totale
@@ -294,70 +295,103 @@ class PricingService {
       if (availabilityChecks.some(available => !available)) {
         throw new Error('Uno o più appartamenti non sono disponibili nelle date selezionate');
       }
-      
+
       let baseTotal = 0;
-      let discountTotal = 0;
       const apartmentDetails: ApartmentQuoteDetail[] = [];
-      
       const totalGuestsInBeds = params.adults + params.children - params.childrenNoBed;
-      
-      // Calcola prezzo per ogni appartamento
+
+      // Traccia se c'è almeno un appartamento con occupazione < 100%
+      let hasPartialOccupancy = false;
+
+      // Calcola prezzo base per ogni appartamento (senza sconto percentuale)
       for (const apartmentId of params.apartments) {
         const apartment = await this.getApartmentDetails(apartmentId);
         const basePrice = await this.getPriceForPeriod(apartmentId, params.checkin, params.checkout);
-        
+
         // Calcola occupazione per questo appartamento
         const occupiedBeds = this.distributeGuestsAcrossApartments(
           totalGuestsInBeds,
           params.apartments,
           apartmentId
         );
-        
-        const discountPercent = this.calculateOccupancyDiscount(occupiedBeds, apartment.beds);
-        const discountAmount = (basePrice * discountPercent) / 100;
-        const finalPrice = basePrice - discountAmount;
-        
+
+        // Verifica se occupazione è parziale
+        if (occupiedBeds < apartment.beds) {
+          hasPartialOccupancy = true;
+        }
+
+        // Per ora salviamo i dettagli senza sconto (verrà calcolato dopo)
         apartmentDetails.push({
           apartmentId,
           apartment,
           basePrice,
           occupiedBeds,
-          discountPercent,
-          discountAmount,
-          finalPrice
+          discountPercent: 0,  // Verrà aggiornato
+          discountAmount: 0,   // Verrà aggiornato
+          finalPrice: basePrice  // Verrà aggiornato
         });
-        
+
         baseTotal += basePrice;
-        discountTotal += discountAmount;
       }
-      
+
       // Calcola costi extra
       let extrasTotal = 0;
       if (params.hasPet) {
-        // Usa petCount se disponibile, altrimenti default a 1
         const petCount = (params as any).petCount || 1;
         extrasTotal += petCount * 50;
       }
       if (params.needsLinen) {
         extrasTotal += totalGuestsInBeds * 15;
       }
-      
-      const subtotal = baseTotal - discountTotal + extrasTotal;
-      const finalTotal = this.roundToMultipleOf50(subtotal);
-      const finalDiscount = subtotal - finalTotal;
-      
+
+      // Calcola il totale grezzo e il target arrotondato per difetto
+      const rawTotal = baseTotal + extrasTotal;
+      const finalTotal = this.roundToMultipleOf50(rawTotal);
+
+      // Lo sconto è la differenza (sempre >= 0 perché arrotondiamo per difetto)
+      const discountTotal = rawTotal - finalTotal;
+
+      // Determina il tipo di sconto
+      let discountType: 'occupancy' | 'courtesy' | 'none';
+      if (discountTotal === 0) {
+        discountType = 'none';
+      } else if (hasPartialOccupancy) {
+        discountType = 'occupancy';
+      } else {
+        discountType = 'courtesy';
+      }
+
+      // Aggiorna i dettagli appartamento con lo sconto distribuito proporzionalmente
+      if (discountTotal > 0) {
+        for (const detail of apartmentDetails) {
+          const proportion = detail.basePrice / baseTotal;
+          detail.discountAmount = Math.round(discountTotal * proportion);
+          detail.discountPercent = Math.round((detail.discountAmount / detail.basePrice) * 100);
+          detail.finalPrice = detail.basePrice - detail.discountAmount;
+        }
+
+        // Correggi eventuali errori di arrotondamento sull'ultimo appartamento
+        const totalDistributed = apartmentDetails.reduce((sum, d) => sum + d.discountAmount, 0);
+        if (totalDistributed !== discountTotal && apartmentDetails.length > 0) {
+          const lastDetail = apartmentDetails[apartmentDetails.length - 1];
+          lastDetail.discountAmount += (discountTotal - totalDistributed);
+          lastDetail.finalPrice = lastDetail.basePrice - lastDetail.discountAmount;
+          lastDetail.discountPercent = Math.round((lastDetail.discountAmount / lastDetail.basePrice) * 100);
+        }
+      }
+
       return {
         apartmentDetails,
         baseTotal,
-        discountTotal: discountTotal + finalDiscount,
+        discountTotal,
+        discountType,
         extrasTotal,
         finalTotal,
         deposit: this.roundToMultipleOf50(Math.round(finalTotal * 0.3)),
         balance: finalTotal - this.roundToMultipleOf50(Math.round(finalTotal * 0.3))
       };
-      
+
     } catch (error) {
-      console.error('Errore nel calcolo preventivo:', error);
       throw error;
     }
   }

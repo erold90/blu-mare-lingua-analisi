@@ -161,11 +161,12 @@ export const useMultiStepQuote = () => {
 
   const calculatePrice = useCallback(async () => {
     if (!formData.selectedApartments.length || !formData.checkIn || !formData.checkOut) {
-      return { 
-        apartmentPrices: [], 
-        servicesTotal: 0, 
-        subtotal: 0, 
-        finalDiscount: 0, 
+      return {
+        apartmentPrices: [],
+        servicesTotal: 0,
+        subtotal: 0,
+        finalDiscount: 0,
+        discountType: 'none' as const,
         total: 0,
         deposit: 0,
         balance: 0
@@ -204,6 +205,7 @@ export const useMultiStepQuote = () => {
           servicesTotal: result.extrasTotal,
           subtotal: result.apartmentDetails.reduce((sum, d) => sum + d.finalPrice, 0) + result.extrasTotal,
           finalDiscount: result.discountTotal,
+          discountType: result.discountType,
           total: result.finalTotal,
           deposit: result.deposit,
           balance: result.balance
@@ -213,11 +215,12 @@ export const useMultiStepQuote = () => {
       // Handle error silently
     }
 
-    return { 
-      apartmentPrices: [], 
-      servicesTotal: 0, 
-      subtotal: 0, 
-      finalDiscount: 0, 
+    return {
+      apartmentPrices: [],
+      servicesTotal: 0,
+      subtotal: 0,
+      finalDiscount: 0,
+      discountType: 'none' as const,
       total: 0,
       deposit: 0,
       balance: 0

@@ -54,6 +54,7 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
     servicesTotal: 0,
     subtotal: 0,
     finalDiscount: 0,
+    discountType: 'none' as 'occupancy' | 'courtesy' | 'none',
     total: 0,
     deposit: 0,
     balance: 0
@@ -153,7 +154,7 @@ ${formData.requestLinen ? `🛏️ *BIANCHERIA:* Sì - ${bedsNeeded} ospiti` : '
 
 💰 *PREVENTIVO:*
 Prezzo base: €${priceCalculation.apartmentPrices.reduce((sum: number, apt: any) => sum + apt.basePrice, 0)}
-Sconti occupazione: -€${priceCalculation.apartmentPrices.reduce((sum: number, apt: any) => sum + apt.discountAmount, 0)}
+${priceCalculation.finalDiscount > 0 ? `${priceCalculation.discountType === 'occupancy' ? 'Sconto occupazione' : 'Arrotondamento cortesia'}: -€${priceCalculation.finalDiscount}` : ''}
 Servizi extra: €${priceCalculation.servicesTotal}
 TOTALE: €${priceCalculation.total}
 
@@ -341,15 +342,8 @@ TOTALE: €${priceCalculation.total}
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Prezzo base:</span>
-                    <span className="float-right">€{apt.basePrice}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Sconto occupazione ({apt.discount}%):</span>
-                    <span className="float-right text-green-600">-€{apt.discountAmount}</span>
-                  </div>
+                <div className="text-sm text-muted-foreground">
+                  Prezzo settimanale: €{apt.basePrice}
                 </div>
               </div>
             ))}
@@ -440,7 +434,11 @@ TOTALE: €${priceCalculation.total}
             
             {priceCalculation.finalDiscount > 0 && (
               <div className="flex justify-between text-green-600">
-                <span>Sconto finale:</span>
+                <span>
+                  {priceCalculation.discountType === 'occupancy'
+                    ? 'Sconto occupazione:'
+                    : 'Arrotondamento cortesia:'}
+                </span>
                 <span className="font-semibold">-€{(priceCalculation.finalDiscount || 0).toFixed(2)}</span>
               </div>
             )}
