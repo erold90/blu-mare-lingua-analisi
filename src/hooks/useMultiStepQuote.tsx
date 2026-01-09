@@ -250,7 +250,7 @@ export const useMultiStepQuote = () => {
         if (!copreEntrambeSettimane) {
           return {
             required: true,
-            message: `Per il periodo di Ferragosto ${year} (15 Agosto cade di Sabato) è necessario prenotare entrambe le settimane (${sabatoPrima.getDate()}/${sabatoPrima.getMonth() + 1} - ${sabatoDopo.getDate()}/${sabatoDopo.getMonth() + 1}). Il check-in deve essere entro il ${sabatoPrima.getDate()} agosto e il check-out dal ${sabatoDopo.getDate()} agosto.`
+            message: `Per Ferragosto ${year} (sabato 15 agosto) è richiesta la prenotazione di entrambe le settimane: check-in entro l'${sabatoPrima.getDate()} agosto, check-out dal ${sabatoDopo.getDate()} agosto.`
           };
         }
       }
