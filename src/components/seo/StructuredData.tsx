@@ -26,7 +26,7 @@ export const getLocalBusinessSchema = () => ({
     "latitude": 39.823534,
     "longitude": 18.292820
   },
-  "hasMap": "https://maps.app.goo.gl/MSrp991xGGpaPhdM8",
+  "hasMap": "https://maps.app.goo.gl/7crsN8yaLjjjibxMA",
   "openingHoursSpecification": [
     {
       "@type": "OpeningHoursSpecification",
