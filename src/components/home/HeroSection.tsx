@@ -2,30 +2,47 @@
 import { Button } from "@/components/ui/button";
 import { ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { imageService, ImageRecord } from "@/services/imageService";
+
+const HERO_CACHE_KEY = 'villamareblu_hero_url';
 
 const HeroSection = () => {
   const navigate = useNavigate();
   const [heroImage, setHeroImage] = useState<ImageRecord | null>(null);
-  const [imageLoaded, setImageLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Get cached URL immediately (no flash)
+  const cachedUrl = useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(HERO_CACHE_KEY);
+    }
+    return null;
+  }, []);
 
   useEffect(() => {
     const loadHeroImage = async () => {
       try {
-        // Carica le immagini hero dal database (quelle impostate nell'area admin)
         const heroImages = await imageService.getImagesByCategory('hero');
-        // Usa l'immagine con is_cover=true oppure la prima disponibile
         const primaryImage = heroImages.find(img => img.is_cover) || heroImages[0] || null;
         setHeroImage(primaryImage);
+
+        // Cache the URL for next page load
+        if (primaryImage) {
+          const url = imageService.getHeroUrl(primaryImage.file_path);
+          localStorage.setItem(HERO_CACHE_KEY, url);
+        } else {
+          localStorage.removeItem(HERO_CACHE_KEY);
+        }
       } catch (error) {
         console.error('Errore caricamento immagine hero:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     loadHeroImage();
 
-    // Ascolta gli aggiornamenti delle immagini dall'area admin
     const handleHomeImageUpdate = () => {
       loadHeroImage();
     };
@@ -41,12 +58,15 @@ const HeroSection = () => {
     navigate("/richiedi-preventivo");
   };
 
-  // Usa l'immagine dal database se disponibile, altrimenti fallback
-  const getHeroImageUrl = () => {
+  // Priority: database image > cached URL > fallback
+  const getHeroImageUrl = (): string => {
     if (heroImage) {
       return imageService.getHeroUrl(heroImage.file_path);
     }
-    return "/images/hero/hero.jpg"; // Fallback solo se database vuoto
+    if (cachedUrl) {
+      return cachedUrl;
+    }
+    return "/images/hero/hero.jpg";
   };
 
   const heroImageUrl = getHeroImageUrl();
@@ -63,13 +83,13 @@ const HeroSection = () => {
 
       {/* Clean background image */}
       <div
-        className="absolute inset-0 z-0"
+        className="absolute inset-0 z-0 transition-opacity duration-300"
         style={{
           backgroundImage: `url('${heroImageUrl}')`,
           backgroundSize: 'cover',
           backgroundPosition: 'center 35%',
           backgroundRepeat: 'no-repeat',
-          willChange: 'transform', // GPU acceleration
+          willChange: 'transform',
         }}
       />
 
