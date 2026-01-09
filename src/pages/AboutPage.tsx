@@ -28,9 +28,9 @@ const AboutPage = () => {
         <h1 className="text-3xl md:text-4xl font-bold mb-6">Chi Siamo - Villa MareBlu</h1>
         
         <div className="w-full h-64 md:h-96 bg-blue-200 mb-6 rounded-lg overflow-hidden">
-          <div 
-            className="w-full h-full bg-cover bg-center" 
-            style={{backgroundImage: "url('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80')"}}
+          <div
+            className="w-full h-full bg-cover bg-center"
+            style={{backgroundImage: "url('/images/hero/hero.jpg')"}}
             role="img"
             aria-label="Villa MareBlu - Vista esterna della villa fronte mare in Salento"
           />

@@ -161,19 +161,16 @@
     <div id="root"></div>
     <script type="module" src="./src/main.tsx"></script>
 
-    <!-- GTranslate - Traduzione automatica multilingua -->
+    <!-- GTranslate - Traduzione automatica multilingua (hidden widget, controlled via header) -->
+    <div id="gtranslate_wrapper" style="display:none;"></div>
     <script>
       window.gtranslateSettings = {
         "default_language": "it",
         "detect_browser_language": true,
         "languages": ["it", "en", "de", "fr", "es", "nl", "ru", "pl"],
-        "wrapper_selector": ".gtranslate_wrapper",
-        "flag_size": 24,
-        "horizontal_position": "right",
-        "vertical_position": "bottom",
-        "alt_flags": {"en": "usa"}
+        "wrapper_selector": "#gtranslate_wrapper"
       };
     </script>
-    <script src="https://cdn.gtranslate.net/widgets/latest/float.js" defer></script>
+    <script src="https://cdn.gtranslate.net/widgets/latest/dropdown.js" defer></script>
   </body>
 </html>

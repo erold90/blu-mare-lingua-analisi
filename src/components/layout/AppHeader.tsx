@@ -1,9 +1,9 @@
-
 import * as React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useLocation } from "react-router-dom";
+import { LanguageSelector } from "./LanguageSelector";
 
 export function AppHeader() {
   const isMobile = useIsMobile();
@@ -23,6 +23,9 @@ export function AppHeader() {
           <div className="hidden sm:block">
             <h1 className="text-lg font-semibold">Villa MareBlu</h1>
           </div>
+        </div>
+        <div className="flex items-center">
+          <LanguageSelector />
         </div>
       </div>
     </header>
