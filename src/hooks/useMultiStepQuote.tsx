@@ -213,7 +213,7 @@ export const useMultiStepQuote = () => {
     return ferragosto.getDay() === 6; // 6 = Sabato
   }, []);
 
-  // Verifica se il soggiorno richiede minimo 2 settimane (Ferragosto di sabato)
+  // Verifica se il soggiorno deve coprire le due settimane di Ferragosto (quando cade di sabato)
   const requiresTwoWeeksMinimum = useCallback((checkIn: string, checkOut: string): { required: boolean; message: string } => {
     if (!checkIn || !checkOut) return { required: false, message: '' };
 
@@ -232,17 +232,25 @@ export const useMultiStepQuote = () => {
       if (!isFerragostoOnSaturday(year)) continue;
 
       const ferragosto = new Date(year, 7, 15);
+      // Sabato prima di Ferragosto (es. 8 agosto 2026)
+      const sabatoPrima = new Date(year, 7, 15 - 7);
+      // Sabato dopo Ferragosto (es. 22 agosto 2026)
+      const sabatoDopo = new Date(year, 7, 15 + 7);
 
-      // Il soggiorno include o termina su Ferragosto? (check-in <= 15/08 E check-out >= 15/08)
-      // Nota: >= invece di > per catturare anche soggiorni che terminano esattamente il 15/08
-      if (checkInDate <= ferragosto && checkOutDate >= ferragosto) {
-        // Calcola le notti
-        const nights = Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+      // Il soggiorno tocca il periodo delle due settimane di Ferragosto?
+      // (check-in prima del sabato dopo E check-out dopo il sabato prima)
+      const toccaPeriodoFerragosto = checkInDate < sabatoDopo && checkOutDate > sabatoPrima;
 
-        if (nights < 14) {
+      if (toccaPeriodoFerragosto) {
+        // Per essere valido, deve coprire ENTRAMBE le settimane:
+        // - Check-in deve essere <= sabato prima (8 agosto)
+        // - Check-out deve essere >= sabato dopo (22 agosto)
+        const copreEntrambeSettimane = checkInDate <= sabatoPrima && checkOutDate >= sabatoDopo;
+
+        if (!copreEntrambeSettimane) {
           return {
             required: true,
-            message: `Per il periodo di Ferragosto ${year} (15 Agosto cade di Sabato) è richiesto un soggiorno minimo di 2 settimane (14 notti). Attualmente hai selezionato ${nights} notti.`
+            message: `Per il periodo di Ferragosto ${year} (15 Agosto cade di Sabato) è necessario prenotare entrambe le settimane (${sabatoPrima.getDate()}/${sabatoPrima.getMonth() + 1} - ${sabatoDopo.getDate()}/${sabatoDopo.getMonth() + 1}). Il check-in deve essere entro il ${sabatoPrima.getDate()} agosto e il check-out dal ${sabatoDopo.getDate()} agosto.`
           };
         }
       }
