@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useDynamicQuote } from './useDynamicQuote';
 import { pricingService } from '@/services/supabase/pricingService';
+import { useSession } from '@/contexts/SessionContext';
 
 export interface QuoteFormData {
   // Step 1: Ospiti
@@ -49,7 +50,20 @@ const prenotazioniStatiche = [
   { apt: "4", checkin: '2025-08-09', checkout: '2025-08-23', ospite: 'Salvatore Somma' }
 ];
 
+// Mapping step number to funnel event type
+const STEP_EVENT_MAP: Record<number, string> = {
+  1: 'step_guests',
+  2: 'step_dates',
+  3: 'step_apartments',
+  4: 'step_extras',
+  5: 'step_extras',
+  6: 'step_summary',
+  7: 'step_contact'
+};
+
 export const useMultiStepQuote = () => {
+  const { trackFunnelEvent, getSessionId } = useSession();
+  const hasTrackedStart = useRef(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [dateBlocks, setDateBlocks] = useState<any[]>([]);
   const [formData, setFormData] = useState<QuoteFormData>({
@@ -76,9 +90,17 @@ export const useMultiStepQuote = () => {
         // Silently handle error loading date blocks
       }
     };
-    
+
     loadDateBlocks();
   }, []);
+
+  // Track form start
+  useEffect(() => {
+    if (!hasTrackedStart.current && getSessionId()) {
+      hasTrackedStart.current = true;
+      trackFunnelEvent('form_start', { step: 1, step_name: 'guests' });
+    }
+  }, [trackFunnelEvent, getSessionId]);
 
   // Hook per gestione dinamica prezzi
   const { 
@@ -95,12 +117,33 @@ export const useMultiStepQuote = () => {
   }, []);
 
   const nextStep = useCallback(() => {
-    setCurrentStep(prev => Math.min(prev + 1, 7));
-  }, []);
+    setCurrentStep(prev => {
+      const newStep = Math.min(prev + 1, 7);
+      const eventType = STEP_EVENT_MAP[newStep] as any;
+      if (eventType) {
+        trackFunnelEvent(eventType, {
+          from_step: prev,
+          to_step: newStep,
+          form_data_snapshot: {
+            adults: formData.adults,
+            children: formData.children,
+            apartments_selected: formData.selectedApartments.length,
+            has_dates: !!(formData.checkIn && formData.checkOut)
+          }
+        });
+      }
+      return newStep;
+    });
+  }, [trackFunnelEvent, formData]);
 
   const prevStep = useCallback(() => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
-  }, []);
+    setCurrentStep(prev => {
+      const newStep = Math.max(prev - 1, 1);
+      // Track going back as an abandonment signal
+      trackFunnelEvent('step_back', { from_step: prev, to_step: newStep });
+      return newStep;
+    });
+  }, [trackFunnelEvent]);
 
   const resetForm = useCallback(() => {
     setCurrentStep(1);
@@ -243,11 +286,24 @@ export const useMultiStepQuote = () => {
       needsLinen: formData.requestLinen,
       guestName: formData.guestName,
       guestEmail: formData.email,
-      guestPhone: formData.phone
+      guestPhone: formData.phone,
+      sessionId: getSessionId() || undefined
     };
 
-    return await saveQuote(params);
-  }, [formData, quoteResult, saveQuote]);
+    const result = await saveQuote(params);
+
+    // Track form completion
+    if (result) {
+      trackFunnelEvent('form_complete', {
+        quote_id: result.id,
+        total_amount: quoteResult.finalTotal,
+        apartments: formData.selectedApartments,
+        nights: quoteResult.nights
+      });
+    }
+
+    return result;
+  }, [formData, quoteResult, saveQuote, trackFunnelEvent, getSessionId]);
 
   // Check if a date is blocked and return block reason
   const getDateBlockInfo = useCallback((date: Date) => {

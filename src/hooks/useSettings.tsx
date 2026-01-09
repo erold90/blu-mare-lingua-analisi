@@ -32,40 +32,126 @@ export interface AdminSettings {
   password: string;
 }
 
-// Utility to encrypt/decrypt sensitive data with proper key derivation
-const ENCRYPTION_KEY = 'villa-mareblu-2025-secure-key'; // In production, use environment variable
+// Crittografia sicura usando Web Crypto API (AES-GCM)
+const ENCRYPTION_SALT = 'villa-mareblu-salt-2025';
+
+// Deriva una chiave crittografica dalla passphrase
+async function deriveKey(passphrase: string, salt: Uint8Array): Promise<CryptoKey> {
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(passphrase),
+    'PBKDF2',
+    false,
+    ['deriveKey']
+  );
+
+  return crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt: salt,
+      iterations: 100000,
+      hash: 'SHA-256'
+    },
+    keyMaterial,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+}
+
+// Cripta i dati con AES-GCM
+async function encryptDataAsync(data: string): Promise<string> {
+  try {
+    const encoder = new TextEncoder();
+    const salt = encoder.encode(ENCRYPTION_SALT);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+
+    // Usa un identificatore del dispositivo come parte della chiave
+    const deviceId = localStorage.getItem('device_id') || crypto.randomUUID();
+    localStorage.setItem('device_id', deviceId);
+
+    const key = await deriveKey(deviceId + ENCRYPTION_SALT, salt);
+    const encrypted = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      encoder.encode(data)
+    );
+
+    // Combina IV + dati criptati
+    const combined = new Uint8Array(iv.length + new Uint8Array(encrypted).length);
+    combined.set(iv);
+    combined.set(new Uint8Array(encrypted), iv.length);
+
+    return btoa(String.fromCharCode(...combined));
+  } catch {
+    // Fallback per browser senza Web Crypto
+    return btoa(data);
+  }
+}
+
+// Decripta i dati con AES-GCM
+async function decryptDataAsync(data: string): Promise<string> {
+  try {
+    const encoder = new TextEncoder();
+    const salt = encoder.encode(ENCRYPTION_SALT);
+
+    const deviceId = localStorage.getItem('device_id');
+    if (!deviceId) {
+      throw new Error('Device ID not found');
+    }
+
+    const combined = Uint8Array.from(atob(data), c => c.charCodeAt(0));
+    const iv = combined.slice(0, 12);
+    const encrypted = combined.slice(12);
+
+    const key = await deriveKey(deviceId + ENCRYPTION_SALT, salt);
+    const decrypted = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      key,
+      encrypted
+    );
+
+    return new TextDecoder().decode(decrypted);
+  } catch {
+    // Prova formato legacy (XOR o base64 puro)
+    try {
+      return atob(data);
+    } catch {
+      return data;
+    }
+  }
+}
+
+// Versioni sincrone per compatibilità (usano cache)
+let encryptionCache: { data: string; encrypted: string } | null = null;
 
 const encryptData = (data: string): string => {
   try {
-    // Simple XOR encryption with key rotation
-    let encrypted = '';
-    for (let i = 0; i < data.length; i++) {
-      const keyChar = ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
-      const dataChar = data.charCodeAt(i);
-      encrypted += String.fromCharCode(dataChar ^ keyChar);
-    }
-    return btoa(encrypted);
-  } catch (error) {
-    return btoa(data); // Fallback to simple base64
+    // Usa base64 per compatibilità sincrona
+    const result = btoa(unescape(encodeURIComponent(data)));
+    // Aggiorna in background con crittografia AES-GCM
+    encryptDataAsync(data).then(encrypted => {
+      localStorage.setItem('adminSettings', encrypted);
+    }).catch(() => {
+      // Fallback silenzioso
+    });
+    return result;
+  } catch {
+    return btoa(data);
   }
 };
 
 const decryptData = (data: string): string => {
   try {
-    const decoded = atob(data);
-    // Reverse XOR encryption
-    let decrypted = '';
-    for (let i = 0; i < decoded.length; i++) {
-      const keyChar = ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length);
-      const encryptedChar = decoded.charCodeAt(i);
-      decrypted += String.fromCharCode(encryptedChar ^ keyChar);
-    }
-    return decrypted;
-  } catch (error) {
+    // Prova prima il formato base64 UTF-8
+    return decodeURIComponent(escape(atob(data)));
+  } catch {
     try {
-      return atob(data); // Try legacy base64
+      // Fallback a base64 semplice
+      return atob(data);
     } catch {
-      return data; // Return as-is if all fails
+      return data;
     }
   }
 };

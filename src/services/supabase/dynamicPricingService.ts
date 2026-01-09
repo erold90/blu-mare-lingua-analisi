@@ -219,11 +219,13 @@ class PricingService {
         .gt('end_date', checkin);
 
       // Verifica anche i blocchi date
+      // NOTA: date_blocks.apartment_id usa formato stringa "appartamento-X"
+      const apartmentStringIdForBlocks = `appartamento-${apartmentId}`;
       const { data: dateBlocks } = await supabase
         .from('date_blocks')
         .select('id')
         .eq('is_active', true)
-        .or(`apartment_id.eq.${apartmentId},apartment_id.is.null`)
+        .or(`apartment_id.eq.${apartmentStringIdForBlocks},apartment_id.is.null`)
         .lte('start_date', checkout)
         .gte('end_date', checkin);
 

@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { APARTMENTS } from '@/config/apartments';
 
 interface PricingPeriod {
   id: number;
@@ -41,12 +42,8 @@ export const DynamicPricingDashboard: React.FC = () => {
     season_name: ''
   });
 
-  const apartments = [
-    { id: 1, name: "Appartamento 1 (6 posti)", beds: 6 },
-    { id: 2, name: "Appartamento 2 (8 posti)", beds: 8 },
-    { id: 3, name: "Appartamento 3 (4 posti)", beds: 4 },
-    { id: 4, name: "Appartamento 4 (5 posti)", beds: 5 }
-  ];
+  // Usa configurazione centralizzata degli appartamenti
+  const apartments = APARTMENTS;
 
   const seasonTypes = [
     { value: 'Bassa', label: 'Bassa Stagione', color: 'bg-blue-100 text-blue-800' },
@@ -95,6 +92,7 @@ export const DynamicPricingDashboard: React.FC = () => {
         recentQuotes: quotes?.slice(0, 5) || []
       });
     } catch (error: any) {
+      toast.error('Errore nel caricamento delle statistiche: ' + error.message);
     }
   };
 

@@ -7,6 +7,7 @@ import { Globe, MapPin, Calendar, Users, Eye, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { WorldMap } from './WorldMap';
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Line } from 'recharts';
+import { toast } from 'sonner';
 
 interface CountryStats {
   country: string;
@@ -49,6 +50,7 @@ export const VisitAnalytics: React.FC = () => {
         throw new Error(data?.error || 'Failed to load analytics');
       }
     } catch (err: any) {
+      toast.error('Errore nel caricamento delle statistiche visite');
     } finally {
       setLoading(false);
     }

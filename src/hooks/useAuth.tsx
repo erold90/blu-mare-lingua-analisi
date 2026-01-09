@@ -114,10 +114,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // Verifica sessione esistente
+    // Verifica sessione esistente con error handling
     const initializeAuth = async () => {
       try {
-        const { data: { session: existingSession } } = await supabase.auth.getSession();
+        const { data: { session: existingSession }, error } = await supabase.auth.getSession();
+
+        if (error) {
+          console.error('Error getting session:', error);
+          if (mounted) {
+            setLoading(false);
+          }
+          return;
+        }
 
         if (!mounted) return;
 
@@ -130,6 +138,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setIsAdmin(adminStatus);
           }
         }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
       } finally {
         if (mounted) {
           setLoading(false);
@@ -139,9 +149,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initializeAuth();
 
+    // Fallback: ensure loading is false after 5 seconds max
+    const fallbackTimeout = setTimeout(() => {
+      if (mounted && loading) {
+        setLoading(false);
+      }
+    }, 5000);
+
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      clearTimeout(fallbackTimeout);
     };
   }, [checkAdminStatus]);
 

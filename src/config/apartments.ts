@@ -87,6 +87,11 @@ export const APARTMENT_NAMES: Record<string, string> = {
   ...APARTMENT_NAMES_BY_STRING_ID
 };
 
+// Mapping per i letti
+export const APARTMENT_BEDS: Record<number, number> = Object.fromEntries(
+  APARTMENTS.map(apt => [apt.id, apt.beds])
+);
+
 // Capacità totale
 export const TOTAL_CAPACITY = APARTMENTS.reduce((sum, apt) => sum + apt.beds, 0);
 

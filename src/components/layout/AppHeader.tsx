@@ -3,17 +3,15 @@ import * as React from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSidebar } from "@/components/ui/sidebar";
-import { useLocation, Link } from "react-router-dom";
-import { Settings } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 export function AppHeader() {
   const isMobile = useIsMobile();
   const { open } = useSidebar();
   const location = useLocation();
-  
 
   // Non renderizzare l'header nell'area admin
-  if (location.pathname.startsWith('/admin')) {
+  if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/area-riservata')) {
     return null;
   }
 
@@ -25,16 +23,6 @@ export function AppHeader() {
           <div className="hidden sm:block">
             <h1 className="text-lg font-semibold">Villa MareBlu</h1>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Link 
-            to="/auth" 
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            title="Area Amministrativa"
-          >
-            <Settings className="h-4 w-4" />
-          </Link>
         </div>
       </div>
     </header>

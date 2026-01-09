@@ -8,7 +8,6 @@ import PerformanceOptimizer from "@/components/PerformanceOptimizer";
 import AppLayout from "@/components/layout/AppLayout";
 import Index from "@/pages/Index";
 import ApartmentsPage from "@/pages/ApartmentsPage";
-import { useVisitTracker } from '@/hooks/useVisitTracker';
 import ContactsPage from "@/pages/ContactsPage";
 import AboutPage from "@/pages/AboutPage";
 import RequestQuotePage from "@/pages/RequestQuotePage";
@@ -18,6 +17,7 @@ import NotFound from "@/pages/NotFound";
 import AdminPage from "@/pages/AdminPage";
 import AuthPage from "@/pages/AuthPage";
 import { AuthProvider } from "@/hooks/useAuth";
+import { SessionProvider } from "@/contexts/SessionContext";
 
 const AppWithRoutes = () => {
   return (
@@ -39,18 +39,17 @@ const AppWithRoutes = () => {
 };
 
 function App() {
-  // Tracciamento visite automatico
-  useVisitTracker();
-  
   return (
     <HelmetProvider>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
         <AuthProvider>
           <PerformanceOptimizer />
           <Router>
-            <AppWithRoutes />
-            <Toaster />
-            <UIToaster />
+            <SessionProvider>
+              <AppWithRoutes />
+              <Toaster />
+              <UIToaster />
+            </SessionProvider>
           </Router>
         </AuthProvider>
       </ThemeProvider>
