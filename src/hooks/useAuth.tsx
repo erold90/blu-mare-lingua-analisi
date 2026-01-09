@@ -52,31 +52,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        setTimeout(async () => {
-          try {
-            const { data: adminProfile } = await supabase
-              .from('admin_profiles')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .single();
-            
-            setIsAdmin(!!adminProfile);
-          } catch (error) {
-            setIsAdmin(false);
-          }
-          setLoading(false);
-        }, 0);
-      } else {
-        setLoading(false);
-      }
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
 
-    return () => subscription.unsubscribe();
+        if (session?.user) {
+          // Check admin profile
+          supabase
+            .from('admin_profiles')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .single()
+            .then(({ data: adminProfile }) => {
+              setIsAdmin(!!adminProfile);
+              setLoading(false);
+            })
+            .catch(() => {
+              setIsAdmin(false);
+              setLoading(false);
+            });
+        } else {
+          setLoading(false);
+        }
+      })
+      .catch((error) => {
+        console.error('Error getting session:', error);
+        setLoading(false);
+      });
+
+    // Fallback: ensure loading is false after 5 seconds max
+    const timeout = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
