@@ -7,6 +7,7 @@ import { Globe, MapPin, Calendar, Users, Eye, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { WorldMap } from './WorldMap';
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Line } from 'recharts';
+import { toast } from 'sonner';
 
 interface CountryStats {
   country: string;
@@ -36,7 +37,6 @@ export const VisitAnalytics: React.FC = () => {
     try {
       setLoading(true);
       
-      console.log('📊 Loading analytics for period:', period);
       
       const { data, error } = await supabase.functions.invoke('get-visit-analytics', {
         body: { period }
@@ -46,12 +46,11 @@ export const VisitAnalytics: React.FC = () => {
 
       if (data?.success) {
         setAnalytics(data.data);
-        console.log('✅ Analytics loaded:', data.data);
       } else {
         throw new Error(data?.error || 'Failed to load analytics');
       }
     } catch (err: any) {
-      console.error('Error loading analytics:', err);
+      toast.error('Errore nel caricamento delle statistiche visite');
     } finally {
       setLoading(false);
     }

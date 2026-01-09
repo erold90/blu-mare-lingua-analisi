@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useArchivedReservations } from '@/hooks/useArchivedReservations';
+import { toast } from 'sonner';
+import { APARTMENT_NAMES_BY_STRING_ID } from '@/config/apartments';
 
 export interface SeasonalRevenueData {
   totalReservations: number;
@@ -102,28 +104,22 @@ export function useSeasonalRevenue() {
 
       // Calcola breakdown per appartamento
       const apartmentMap = new Map();
-      const apartmentNames = {
-        'appartamento-1': 'Appartamento 1',
-        'appartamento-2': 'Appartamento 2', 
-        'appartamento-3': 'Appartamento 3',
-        'appartamento-4': 'Appartamento 4'
-      };
 
       filteredReservations.forEach(reservation => {
-        const apartmentIds = Array.isArray(reservation.apartment_ids) 
-          ? reservation.apartment_ids 
+        const apartmentIds = Array.isArray(reservation.apartment_ids)
+          ? reservation.apartment_ids
           : JSON.parse(reservation.apartment_ids || '[]');
-        
+
         apartmentIds.forEach((aptId: string) => {
           if (!apartmentMap.has(aptId)) {
             apartmentMap.set(aptId, {
               apartmentId: aptId,
-              apartmentName: apartmentNames[aptId as keyof typeof apartmentNames] || aptId,
+              apartmentName: APARTMENT_NAMES_BY_STRING_ID[aptId] || aptId,
               revenue: 0,
               reservations: 0
             });
           }
-          
+
           const aptData = apartmentMap.get(aptId);
           aptData.revenue += reservation.final_price || 0;
           aptData.reservations += 1;
@@ -140,9 +136,9 @@ export function useSeasonalRevenue() {
         monthlyData,
         apartmentBreakdown
       });
-      
+
     } catch (error) {
-      console.error('Error calculating seasonal revenue:', error);
+      toast.error('Errore nel calcolo dei ricavi stagionali');
     } finally {
       setLoading(false);
     }
