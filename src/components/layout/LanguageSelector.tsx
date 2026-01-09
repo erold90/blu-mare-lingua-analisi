@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Globe } from "lucide-react";
+import { Globe, Check } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,121 +12,132 @@ import { Button } from "@/components/ui/button";
 interface Language {
   code: string;
   label: string;
-  gtCode: string;
+  googleCode: string;
 }
 
 const languages: Language[] = [
-  { code: "ITA", label: "Italiano", gtCode: "it" },
-  { code: "ENG", label: "English", gtCode: "en" },
-  { code: "DEU", label: "Deutsch", gtCode: "de" },
-  { code: "FRA", label: "Français", gtCode: "fr" },
-  { code: "ESP", label: "Español", gtCode: "es" },
-  { code: "NLD", label: "Nederlands", gtCode: "nl" },
-  { code: "RUS", label: "Русский", gtCode: "ru" },
-  { code: "POL", label: "Polski", gtCode: "pl" },
+  { code: "ITA", label: "Italiano", googleCode: "it" },
+  { code: "ENG", label: "English", googleCode: "en" },
+  { code: "DEU", label: "Deutsch", googleCode: "de" },
+  { code: "FRA", label: "Français", googleCode: "fr" },
+  { code: "ESP", label: "Español", googleCode: "es" },
+  { code: "NLD", label: "Nederlands", googleCode: "nl" },
+  { code: "RUS", label: "Русский", googleCode: "ru" },
+  { code: "POL", label: "Polski", googleCode: "pl" },
 ];
 
 const STORAGE_KEY = 'villamareblu_language';
 
-// Declare window extension for GTranslate
-declare global {
-  interface Window {
-    doGTranslate?: (lang_pair: string) => void;
-    gtranslateSettings?: {
-      default_language: string;
-      languages: string[];
-    };
-  }
-}
-
 export function LanguageSelector() {
-  const [currentLang, setCurrentLang] = useState<Language>(() => {
-    // Initialize from localStorage
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const found = languages.find(l => l.gtCode === saved);
-        if (found) return found;
+  const [currentLang, setCurrentLang] = useState<Language>(languages[0]);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isTranslateReady, setIsTranslateReady] = useState(false);
+
+  // Detect current language from cookie
+  const detectCurrentLanguage = useCallback(() => {
+    // Check googtrans cookie
+    const match = document.cookie.match(/googtrans=\/it\/([a-z]{2})/);
+    if (match) {
+      const langCode = match[1];
+      const found = languages.find(l => l.googleCode === langCode);
+      if (found) {
+        return found;
       }
     }
-    return languages[0];
-  });
-  const [isOpen, setIsOpen] = useState(false);
-  const [isGTranslateReady, setIsGTranslateReady] = useState(false);
-  const isChangingLanguage = useRef(false);
+    return languages[0]; // Default Italian
+  }, []);
 
-  // Check if GTranslate is ready
+  // Initialize
   useEffect(() => {
+    // Check if Google Translate is ready
     const checkReady = () => {
-      if (typeof window.doGTranslate === 'function') {
-        setIsGTranslateReady(true);
+      const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+      if (select) {
+        setIsTranslateReady(true);
 
-        // If we have a saved language different from Italian, apply it
+        // Restore language from localStorage or cookie
         const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved && saved !== 'it' && !isChangingLanguage.current) {
-          isChangingLanguage.current = true;
-          setTimeout(() => {
-            window.doGTranslate?.(`it|${saved}`);
-            isChangingLanguage.current = false;
-          }, 500);
+        const detected = detectCurrentLanguage();
+
+        if (saved && saved !== 'it') {
+          const found = languages.find(l => l.googleCode === saved);
+          if (found) {
+            setCurrentLang(found);
+            // Apply saved language
+            setTimeout(() => {
+              triggerTranslation(saved);
+            }, 100);
+          }
+        } else {
+          setCurrentLang(detected);
         }
         return true;
       }
       return false;
     };
 
-    if (checkReady()) return;
+    // Listen for Google Translate ready event
+    const handleReady = () => {
+      setTimeout(checkReady, 500);
+    };
 
+    window.addEventListener('googleTranslateReady', handleReady);
+
+    // Also poll for readiness
     const interval = setInterval(() => {
       if (checkReady()) {
         clearInterval(interval);
       }
-    }, 200);
+    }, 500);
 
     const timeout = setTimeout(() => {
       clearInterval(interval);
-    }, 15000);
+    }, 10000);
 
     return () => {
+      window.removeEventListener('googleTranslateReady', handleReady);
       clearInterval(interval);
       clearTimeout(timeout);
     };
-  }, []);
+  }, [detectCurrentLanguage]);
+
+  // Trigger translation via Google Translate select
+  const triggerTranslation = (langCode: string) => {
+    const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+    if (select) {
+      select.value = langCode;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  };
 
   const changeLanguage = useCallback((lang: Language) => {
-    if (isChangingLanguage.current) return;
-
-    isChangingLanguage.current = true;
     setCurrentLang(lang);
     setIsOpen(false);
+    localStorage.setItem(STORAGE_KEY, lang.googleCode);
 
-    // Save to localStorage
-    localStorage.setItem(STORAGE_KEY, lang.gtCode);
-
-    if (lang.gtCode === 'it') {
-      // Reset to Italian - clear cookies and reload
+    if (lang.googleCode === 'it') {
+      // Reset to Italian - need to restore original page
+      // Clear the googtrans cookie and reload
       document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
       document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + window.location.hostname;
       document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + window.location.hostname;
-      window.location.reload();
+
+      // Try to use Google Translate's reset function
+      const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+      if (select) {
+        select.value = '';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      // Reload to ensure clean state
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
       return;
     }
 
-    // Try to use GTranslate's doGTranslate function
-    if (typeof window.doGTranslate === 'function') {
-      window.doGTranslate(`it|${lang.gtCode}`);
-      // Give GTranslate time to apply
-      setTimeout(() => {
-        isChangingLanguage.current = false;
-      }, 2000);
-    } else {
-      // Fallback: Set cookies and reload
-      const cookieValue = `/it/${lang.gtCode}`;
-      document.cookie = `googtrans=${cookieValue}; path=/`;
-      document.cookie = `googtrans=${cookieValue}; path=/; domain=${window.location.hostname}`;
-      document.cookie = `googtrans=${cookieValue}; path=/; domain=.${window.location.hostname}`;
-      window.location.reload();
-    }
+    // Trigger translation
+    triggerTranslation(lang.googleCode);
   }, []);
 
   return (
@@ -136,23 +147,26 @@ export function LanguageSelector() {
           variant="ghost"
           size="sm"
           className="flex items-center gap-1.5 px-2 h-8 text-muted-foreground hover:text-foreground transition-colors"
-          title={isGTranslateReady ? "Seleziona lingua" : "Caricamento traduttore..."}
+          title="Seleziona lingua"
         >
           <Globe className="h-4 w-4" strokeWidth={1.5} />
           <span className="text-xs font-medium">{currentLang.code}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
+      <DropdownMenuContent align="end" className="w-44">
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
             onClick={() => changeLanguage(lang)}
-            className={`flex items-center justify-between cursor-pointer ${
-              currentLang.code === lang.code ? "bg-accent" : ""
-            }`}
+            className="flex items-center justify-between cursor-pointer"
           >
             <span className="text-sm">{lang.label}</span>
-            <span className="text-xs text-muted-foreground font-mono">{lang.code}</span>
+            <div className="flex items-center gap-2">
+              {currentLang.code === lang.code && (
+                <Check className="h-4 w-4 text-primary" />
+              )}
+              <span className="text-xs text-muted-foreground font-mono">{lang.code}</span>
+            </div>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

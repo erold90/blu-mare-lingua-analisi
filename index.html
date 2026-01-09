@@ -161,40 +161,42 @@
     <div id="root"></div>
     <script type="module" src="./src/main.tsx"></script>
 
-    <!-- GTranslate - Traduzione automatica multilingua -->
+    <!-- Google Translate - Traduzione automatica multilingua -->
     <style>
-      /* Position GTranslate widget off-screen but keep it functional */
-      .gtranslate_wrapper {
-        position: fixed !important;
+      /* Hide Google Translate default elements */
+      #google_translate_element {
+        position: absolute !important;
         left: -9999px !important;
-        top: -9999px !important;
-        opacity: 0.01 !important;
-        pointer-events: none !important;
+        top: 0 !important;
+        visibility: hidden !important;
       }
-      .gt_float_switcher {
-        position: fixed !important;
-        left: -9999px !important;
-        top: -9999px !important;
-      }
-      /* Hide Google Translate banner/frame */
-      .goog-te-banner-frame, .skiptranslate { display: none !important; }
-      body { top: 0 !important; }
-      /* Fix for translated content layout */
+      .goog-te-banner-frame { display: none !important; }
+      .skiptranslate { display: none !important; }
+      body { top: 0 !important; position: static !important; }
       .goog-te-spinner-pos { display: none !important; }
       .goog-tooltip, .goog-tooltip:hover { display: none !important; }
       .goog-text-highlight { background: none !important; box-shadow: none !important; }
+      /* Fix iframe spacing issue */
+      .goog-te-menu-frame { box-shadow: none !important; }
     </style>
-    <script>
-      window.gtranslateSettings = {
-        "default_language": "it",
-        "detect_browser_language": false,
-        "languages": ["it", "en", "de", "fr", "es", "nl", "ru", "pl"],
-        "wrapper_selector": ".gtranslate_wrapper",
-        "switcher_horizontal_position": "right",
-        "float_switcher_open_direction": "bottom"
-      };
+
+    <!-- Google Translate Element container (hidden) -->
+    <div id="google_translate_element"></div>
+
+    <script type="text/javascript">
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+          pageLanguage: 'it',
+          includedLanguages: 'en,de,fr,es,nl,ru,pl',
+          layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+          autoDisplay: false,
+          multilanguagePage: false
+        }, 'google_translate_element');
+
+        // Notify React that Google Translate is ready
+        window.dispatchEvent(new Event('googleTranslateReady'));
+      }
     </script>
-    <div class="gtranslate_wrapper"></div>
-    <script src="https://cdn.gtranslate.net/widgets/latest/float.js" defer></script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   </body>
 </html>
