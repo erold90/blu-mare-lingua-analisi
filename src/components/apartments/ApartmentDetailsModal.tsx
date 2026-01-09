@@ -298,19 +298,14 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
                           <img
                             src={image}
                             alt={`${apartment.name} - Immagine ${index + 1}`}
-                            className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
+                            className="w-full h-full object-cover rounded-lg"
                             onError={(e) => {
                               e.currentTarget.src = "/placeholder.svg";
                             }}
                           />
-                          {/* Hover overlay */}
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 rounded-lg flex items-center justify-center">
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
-                              <span className="text-sm font-medium text-gray-800 flex items-center gap-2">
-                                <Eye className="w-4 h-4" />
-                                Clicca per ingrandire
-                              </span>
-                            </div>
+                          {/* Small zoom icon in corner */}
+                          <div className="absolute bottom-3 right-3 p-2 rounded-full bg-black/40 backdrop-blur-sm opacity-70 group-hover:opacity-100 transition-opacity">
+                            <Eye className="w-4 h-4 text-white" />
                           </div>
                         </div>
                       </CardContent>
