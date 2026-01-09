@@ -58,43 +58,52 @@ const HeroSection = () => {
     navigate("/richiedi-preventivo");
   };
 
-  // Priority: database image > cached URL > fallback
-  const getHeroImageUrl = (): string => {
+  // Priority: database image > cached URL (no fallback - tutto gestito da admin)
+  const getHeroImageUrl = (): string | null => {
     if (heroImage) {
       return imageService.getHeroUrl(heroImage.file_path);
     }
     if (cachedUrl) {
       return cachedUrl;
     }
-    return "/images/hero/hero.jpg";
+    return null;
   };
 
   const heroImageUrl = getHeroImageUrl();
+  const hasHeroImage = heroImageUrl !== null;
 
   return (
     <section className="hero-section relative h-screen flex items-center justify-center overflow-hidden">
       {/* Preload hero image for faster LCP */}
-      <link
-        rel="preload"
-        as="image"
-        href={heroImageUrl}
-        fetchPriority="high"
-      />
+      {hasHeroImage && (
+        <link
+          rel="preload"
+          as="image"
+          href={heroImageUrl}
+          fetchPriority="high"
+        />
+      )}
 
-      {/* Clean background image */}
-      <div
-        className="absolute inset-0 z-0 transition-opacity duration-300"
-        style={{
-          backgroundImage: `url('${heroImageUrl}')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center 35%',
-          backgroundRepeat: 'no-repeat',
-          willChange: 'transform',
-        }}
-      />
+      {/* Background: immagine da admin oppure gradiente elegante */}
+      {hasHeroImage ? (
+        <div
+          className="absolute inset-0 z-0 transition-opacity duration-300"
+          style={{
+            backgroundImage: `url('${heroImageUrl}')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 35%',
+            backgroundRepeat: 'no-repeat',
+            willChange: 'transform',
+          }}
+        />
+      ) : (
+        <div
+          className="absolute inset-0 z-0 bg-gradient-to-br from-slate-800 via-slate-700 to-blue-900"
+        />
+      )}
 
       {/* Subtle overlay */}
-      <div className="absolute inset-0 bg-black/20 z-10" />
+      <div className={`absolute inset-0 z-10 ${hasHeroImage ? 'bg-black/20' : 'bg-black/10'}`} />
 
       {/* Content */}
       <div className="container mx-auto px-8 text-center z-20 relative text-white">
