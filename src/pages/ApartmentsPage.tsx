@@ -10,7 +10,7 @@ import { ApartmentGrid } from "@/components/apartments/ApartmentGrid";
 import { WhyChooseSection } from "@/components/apartments/WhyChooseSection";
 
 const ApartmentsPage = () => {
-  const { apartmentImages, isLoading, reloadImages } = useApartmentImages();
+  const { apartmentImages, reloadImages } = useApartmentImages();
 
   // Listen for image updates from admin panel
   useEffect(() => {
@@ -43,16 +43,6 @@ const ApartmentsPage = () => {
 
   const handleApartmentDetailsClick = (apartmentId: string) => {
   };
-
-  if (isLoading) {
-    return (
-      <div className="container px-4 py-8 md:py-12">
-        <div className="text-center">
-          <div className="text-xl">Caricamento appartamenti...</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="container px-4 py-8 md:py-12">
