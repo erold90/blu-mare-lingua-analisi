@@ -106,27 +106,27 @@ const HeroSection = () => {
       <div className={`absolute inset-0 z-10 ${hasHeroImage ? 'bg-black/20' : 'bg-black/10'}`} />
 
       {/* Content */}
-      <div className="container mx-auto px-8 text-center z-20 relative text-white">
-        <div className="max-w-4xl mx-auto space-y-8">
+      <div className="container mx-auto px-6 sm:px-8 text-center z-20 relative text-white">
+        <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8">
 
           {/* Main title - elegant typography */}
-          <div className="space-y-4">
-            <h1 className="text-6xl md:text-7xl lg:text-8xl font-light tracking-wide">
+          <div className="space-y-3 sm:space-y-4">
+            <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-light tracking-wide">
               Villa MareBlu
             </h1>
-            <div className="w-24 h-px bg-white/80 mx-auto"></div>
-            <p className="text-xl md:text-2xl font-light text-white/90 max-w-2xl mx-auto leading-relaxed">
+            <div className="w-16 sm:w-24 h-px bg-white/80 mx-auto"></div>
+            <p className="text-lg sm:text-xl md:text-2xl font-light text-white/90 max-w-2xl mx-auto leading-relaxed px-4 sm:px-0">
               Eleganza e tranquillità nel Salento
             </p>
           </div>
 
-          {/* Simple CTA */}
-          <div className="pt-8">
+          {/* Simple CTA - Mobile optimized */}
+          <div className="pt-6 sm:pt-8 px-4 sm:px-0">
             <Button
               size="lg"
               onClick={handleQuoteClick}
               variant="outline"
-              className="bg-transparent border-white text-white hover:bg-white hover:text-black px-16 py-6 text-xl font-medium rounded-none transition-all duration-300 border-2"
+              className="bg-transparent border-white text-white hover:bg-white hover:text-black px-8 sm:px-16 py-5 sm:py-6 text-base sm:text-xl font-medium rounded-none transition-all duration-300 border-2 w-full sm:w-auto touch-manipulation"
             >
               Calcola Preventivo
             </Button>
@@ -134,9 +134,9 @@ const HeroSection = () => {
         </div>
       </div>
 
-      {/* Minimal scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white/60">
-        <div className="w-px h-12 bg-white/30 mx-auto mb-2"></div>
+      {/* Minimal scroll indicator - hidden on very small screens */}
+      <div className="absolute bottom-6 sm:bottom-8 left-1/2 transform -translate-x-1/2 text-white/60 hidden sm:block">
+        <div className="w-px h-10 sm:h-12 bg-white/30 mx-auto mb-2"></div>
         <div className="text-xs uppercase tracking-widest">Scroll</div>
       </div>
     </section>

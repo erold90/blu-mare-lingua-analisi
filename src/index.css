@@ -233,10 +233,110 @@
     background-attachment: fixed;
     will-change: transform;
   }
-  
+
   @media (max-width: 768px) {
     .hero-section {
       background-attachment: scroll; /* Better performance on mobile */
     }
+  }
+}
+
+/* Mobile-First Optimizations */
+@layer utilities {
+  /* Touch-friendly targets (minimum 44x44px) */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent text selection on interactive elements */
+  .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Safe area insets for notched phones */
+  .safe-area-inset-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Smooth momentum scrolling on iOS */
+  .momentum-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 640px) {
+  /* Larger touch targets on mobile */
+  button,
+  [role="button"],
+  a,
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better form inputs on mobile */
+  input,
+  textarea,
+  select {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+
+  /* Sticky elements spacing */
+  .sticky {
+    position: -webkit-sticky;
+    position: sticky;
+  }
+
+  /* Full-width buttons on mobile */
+  .btn-mobile-full {
+    width: 100%;
+  }
+}
+
+/* Improved focus states for accessibility */
+@layer base {
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Prevent layout shift from scrollbar */
+  html {
+    overflow-y: scroll;
+  }
+}
+
+/* Calendar mobile optimizations */
+@media (max-width: 640px) {
+  .rdp {
+    --rdp-cell-size: 40px !important;
+  }
+
+  .rdp-caption {
+    padding: 0.5rem !important;
+  }
+
+  .rdp-nav_button {
+    width: 44px !important;
+    height: 44px !important;
   }
 }

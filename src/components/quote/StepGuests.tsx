@@ -45,81 +45,77 @@ export const StepGuests: React.FC<StepGuestsProps> = ({
   const bedsNeeded = getBedsNeeded();
 
   return (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <Users className="h-12 w-12 text-primary mx-auto mb-4" />
-        <h2 className="text-3xl font-bold mb-2">Quanti ospiti?</h2>
-        <p className="text-muted-foreground">
-          Inserisci il numero di adulti e bambini per il tuo soggiorno
+    <div className="space-y-4 sm:space-y-6">
+      <div className="text-center mb-6 sm:mb-8">
+        <Users className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto mb-3 sm:mb-4" />
+        <h2 className="text-2xl sm:text-3xl font-bold mb-2">Quanti ospiti?</h2>
+        <p className="text-sm sm:text-base text-muted-foreground px-4">
+          Inserisci il numero di adulti e bambini
         </p>
       </div>
 
       <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
+        <CardHeader className="pb-4 sm:pb-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Users className="h-4 w-4 sm:h-5 sm:w-5" />
             Composizione gruppo
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-5 sm:space-y-6">
           {/* Adulti */}
           <div className="space-y-2">
-            <Label className="text-lg font-semibold">
+            <Label className="text-base sm:text-lg font-semibold">
               Adulti (obbligatorio)
             </Label>
-            <div className="flex items-center justify-center gap-4 p-4 border rounded-lg">
+            <div className="flex items-center justify-center gap-6 sm:gap-4 p-4 border rounded-lg">
               <Button
                 variant="outline"
-                size="sm"
                 onClick={() => updateFormData({ adults: Math.max(1, formData.adults - 1) })}
                 disabled={formData.adults <= 1}
-                className="h-10 w-10 p-0"
+                className="h-12 w-12 sm:h-10 sm:w-10 p-0 text-lg touch-manipulation"
               >
-                <Minus className="h-4 w-4" />
+                <Minus className="h-5 w-5 sm:h-4 sm:w-4" />
               </Button>
-              <div className="text-2xl font-bold min-w-[60px] text-center">
+              <div className="text-3xl sm:text-2xl font-bold min-w-[60px] text-center tabular-nums">
                 {formData.adults}
               </div>
               <Button
                 variant="outline"
-                size="sm"
                 onClick={() => updateFormData({ adults: Math.min(23, formData.adults + 1) })}
                 disabled={formData.adults >= 23}
-                className="h-10 w-10 p-0"
+                className="h-12 w-12 sm:h-10 sm:w-10 p-0 text-lg touch-manipulation"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-5 w-5 sm:h-4 sm:w-4" />
               </Button>
             </div>
-            <p className="text-sm text-muted-foreground text-center">
+            <p className="text-xs sm:text-sm text-muted-foreground text-center">
               Minimo 1, massimo 23 adulti
             </p>
           </div>
 
           {/* Bambini */}
           <div className="space-y-2">
-            <Label className="text-lg font-semibold">
+            <Label className="text-base sm:text-lg font-semibold">
               Bambini
             </Label>
-            <div className="flex items-center justify-center gap-4 p-4 border rounded-lg">
+            <div className="flex items-center justify-center gap-6 sm:gap-4 p-4 border rounded-lg">
               <Button
                 variant="outline"
-                size="sm"
                 onClick={() => handleChildrenChange(formData.children - 1)}
                 disabled={formData.children <= 0}
-                className="h-10 w-10 p-0"
+                className="h-12 w-12 sm:h-10 sm:w-10 p-0 text-lg touch-manipulation"
               >
-                <Minus className="h-4 w-4" />
+                <Minus className="h-5 w-5 sm:h-4 sm:w-4" />
               </Button>
-              <div className="text-2xl font-bold min-w-[60px] text-center">
+              <div className="text-3xl sm:text-2xl font-bold min-w-[60px] text-center tabular-nums">
                 {formData.children}
               </div>
               <Button
                 variant="outline"
-                size="sm"
                 onClick={() => handleChildrenChange(formData.children + 1)}
-                className="h-10 w-10 p-0"
+                className="h-12 w-12 sm:h-10 sm:w-10 p-0 text-lg touch-manipulation"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-5 w-5 sm:h-4 sm:w-4" />
               </Button>
             </div>
           </div>
@@ -153,43 +149,43 @@ export const StepGuests: React.FC<StepGuestsProps> = ({
           )}
 
           {/* Riepilogo */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-4 border-t">
             <div className="text-center">
-              <div className="text-2xl font-bold text-primary">{totalGuests}</div>
-              <div className="text-sm text-muted-foreground">Ospiti totali</div>
+              <div className="text-xl sm:text-2xl font-bold text-primary tabular-nums">{totalGuests}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Ospiti</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-primary">{bedsNeeded}</div>
-              <div className="text-sm text-muted-foreground">Posti letto</div>
+              <div className="text-xl sm:text-2xl font-bold text-primary tabular-nums">{bedsNeeded}</div>
+              <div className="text-xs sm:text-sm text-muted-foreground">Posti letto</div>
             </div>
-            <div className="text-center">
-              <Badge 
+            <div className="text-center flex items-center justify-center">
+              <Badge
                 variant={bedsNeeded <= 23 ? "default" : "destructive"}
-                className="text-sm px-3 py-1"
+                className="text-xs sm:text-sm px-2 sm:px-3 py-1"
               >
-                {bedsNeeded <= 23 ? "✓ Valido" : "✗ Troppi"}
+                {bedsNeeded <= 23 ? "✓ OK" : "✗ Troppi"}
               </Badge>
             </div>
           </div>
 
           {bedsNeeded > 23 && (
-            <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-              <AlertCircle className="h-5 w-5 text-destructive" />
-              <p className="text-sm text-destructive">
-                Il numero di posti letto richiesti ({bedsNeeded}) supera la capacità massima (23). 
-                Riduci il numero di ospiti o aumenta i bambini che dormono con i genitori.
+            <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+              <p className="text-xs sm:text-sm text-destructive">
+                Posti letto richiesti ({bedsNeeded}) superiori alla capacità massima (23).
               </p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      <div className="flex justify-center">
+      {/* Sticky bottom button on mobile */}
+      <div className="flex justify-center pb-4 sm:pb-0">
         <Button
           onClick={onNext}
           disabled={!canProceed()}
           size="lg"
-          className="min-w-[200px]"
+          className="w-full sm:w-auto sm:min-w-[200px] h-12 sm:h-11 text-base touch-manipulation"
         >
           Continua
         </Button>

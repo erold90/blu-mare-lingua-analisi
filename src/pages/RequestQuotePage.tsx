@@ -120,7 +120,7 @@ export default function RequestQuotePage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="min-h-screen bg-background">
       <SEOHead
         title="Preventivo Casa Vacanze Torre Vado | Calcola Prezzo Appartamento Salento | Villa MareBlu"
         description="Calcola il preventivo per la tua vacanza a Torre Vado, Salento. Appartamenti vista mare da 4 a 8 posti. Vicino Pescoluse e Leuca. Prezzi trasparenti, prenota diretto!"
@@ -128,25 +128,36 @@ export default function RequestQuotePage() {
         ogTitle="Calcola Preventivo Vacanza Salento | Villa MareBlu Torre Vado"
         ogDescription="Preventivo istantaneo per appartamenti vacanza a Torre Vado. Vista mare, vicino Pescoluse. Prezzi chiari!"
       />
-      
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4">Richiedi il tuo preventivo</h1>
-          <p className="text-muted-foreground">
-            Sistema intelligente di preventivazione per Villa MareBlu
-          </p>
-        </div>
 
-        {/* Progress */}
-        <div className="mb-8">
-          <div className="flex justify-between text-sm text-muted-foreground mb-2">
-            <span>Step {currentStep} di {steps.length}: {steps[currentStep - 1]}</span>
-            <span>{Math.round((currentStep / steps.length) * 100)}% completato</span>
+      {/* Sticky Progress Bar - Mobile Optimized */}
+      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-sm border-b">
+        <div className="container mx-auto px-4 py-3">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground mb-2">
+              <span className="font-medium">
+                <span className="hidden sm:inline">Step </span>{currentStep}/{steps.length}: {steps[currentStep - 1]}
+              </span>
+              <span className="tabular-nums">{Math.round((currentStep / steps.length) * 100)}%</span>
+            </div>
+            <Progress value={(currentStep / steps.length) * 100} className="h-1.5 sm:h-2" />
           </div>
-          <Progress value={(currentStep / steps.length) * 100} className="h-2" />
         </div>
+      </div>
 
-        {renderStepContent()}
+      <div className="container mx-auto px-4 py-4 sm:py-8">
+        <div className="max-w-6xl mx-auto">
+          {/* Header - Responsive */}
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">
+              Richiedi il tuo preventivo
+            </h1>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Sistema intelligente di preventivazione
+            </p>
+          </div>
+
+          {renderStepContent()}
+        </div>
       </div>
     </div>
   );

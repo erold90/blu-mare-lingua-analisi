@@ -96,25 +96,28 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <UserCog className="h-6 w-6 text-primary" />
-              <h1 className="text-2xl font-bold">Area Amministrativa</h1>
+      {/* Header - Mobile Optimized */}
+      <header className="border-b bg-card sticky top-0 z-40">
+        <div className="container mx-auto px-4 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <UserCog className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
+              <h1 className="text-lg sm:text-2xl font-bold truncate">
+                {isMobile ? 'Admin' : 'Area Amministrativa'}
+              </h1>
             </div>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">
-                Benvenuto, {user.email}
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+              <span className="text-xs sm:text-sm text-muted-foreground hidden sm:block truncate max-w-[200px]">
+                {user.email}
               </span>
               <Button
                 onClick={signOut}
                 variant="outline"
-                className="flex items-center gap-2"
+                size={isMobile ? "sm" : "default"}
+                className="flex items-center gap-1 sm:gap-2 touch-manipulation"
               >
                 <LogOut className="h-4 w-4" />
-                Logout
+                <span className="hidden sm:inline">Logout</span>
               </Button>
             </div>
           </div>

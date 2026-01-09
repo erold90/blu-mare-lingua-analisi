@@ -88,16 +88,16 @@ export const StepDates: React.FC<StepDatesProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center mb-8">
-        <CalendarIcon className="h-12 w-12 text-primary mx-auto mb-4" />
-        <h2 className="text-3xl font-bold mb-2">Quando vuoi soggiornare?</h2>
-        <p className="text-muted-foreground">
-          Seleziona le date di check-in e check-out. Solo sabato, domenica e lunedì disponibili.
+    <div className="space-y-4 sm:space-y-6">
+      <div className="text-center mb-6 sm:mb-8">
+        <CalendarIcon className="h-10 w-10 sm:h-12 sm:w-12 text-primary mx-auto mb-3 sm:mb-4" />
+        <h2 className="text-2xl sm:text-3xl font-bold mb-2">Quando vuoi soggiornare?</h2>
+        <p className="text-sm sm:text-base text-muted-foreground px-4">
+          Seleziona le date di check-in e check-out
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 max-w-6xl mx-auto">
         {/* Selezione Date */}
         <Card>
           <CardHeader>
@@ -279,16 +279,21 @@ export const StepDates: React.FC<StepDatesProps> = ({
         </Card>
       </div>
 
-      {/* Navigation */}
-      <div className="flex justify-center gap-4">
-        <Button variant="outline" onClick={onPrev} size="lg">
+      {/* Navigation - Mobile optimized */}
+      <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pb-4 sm:pb-0">
+        <Button
+          variant="outline"
+          onClick={onPrev}
+          size="lg"
+          className="w-full sm:w-auto h-12 sm:h-11 text-base touch-manipulation order-2 sm:order-1"
+        >
           Indietro
         </Button>
         <Button
           onClick={onNext}
           disabled={!canProceed()}
           size="lg"
-          className="min-w-[200px]"
+          className="w-full sm:w-auto sm:min-w-[200px] h-12 sm:h-11 text-base touch-manipulation order-1 sm:order-2"
         >
           Continua
         </Button>
