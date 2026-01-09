@@ -4,7 +4,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Users, Wifi, Car, Tv, Wind, Building, Home, Eye, Images, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { MapPin, Users, Wifi, Car, Tv, Wind, Building, Home, Eye, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { Apartment } from '@/data/apartments';
 import { useNavigate } from 'react-router-dom';
 
@@ -155,22 +155,11 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
                 </div>
               )}
 
-              {/* Image Counter & View All Button */}
-              <div className="flex justify-between items-center mt-3">
+              {/* Image Counter */}
+              <div className="flex justify-center mt-3">
                 <span className="text-sm text-muted-foreground">
                   {current + 1} / {count} foto
                 </span>
-                {images.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => openFullscreen(0)}
-                    className="text-sm text-primary hover:text-primary/80"
-                  >
-                    <Images className="w-4 h-4 mr-2" />
-                    Vedi tutte le foto
-                  </Button>
-                )}
               </div>
             </div>
 
