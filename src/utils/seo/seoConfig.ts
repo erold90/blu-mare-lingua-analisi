@@ -1,74 +1,121 @@
 
 export const seoKeywords = {
+  // Keywords primarie per località specifiche
   primary: [
+    "villa mareblu",
     "villa salento mare",
-    "appartamenti vacanze puglia", 
-    "casa vacanza vista mare",
-    "affitto vacanze salento",
-    "villa mareblu salento"
+    "appartamenti vacanze puglia",
+    "casa vacanza vista mare salento",
+    "affitto vacanze salento"
+  ],
+  // Keywords località specifiche (MOLTO IMPORTANTE per local SEO)
+  local: [
+    // Torre Vado
+    "casa vacanze torre vado",
+    "appartamento torre vado mare",
+    "affitto villa torre vado",
+    "vacanze torre vado salento",
+    // Pescoluse - Maldive del Salento
+    "casa vacanze pescoluse",
+    "appartamento pescoluse maldive salento",
+    "affitto vacanze pescoluse",
+    "maldive del salento appartamento",
+    "vacanze pescoluse spiaggia",
+    // Santa Maria di Leuca
+    "casa vacanze santa maria di leuca",
+    "appartamento leuca mare",
+    "affitto villa leuca",
+    "vacanze leuca salento",
+    "de finibus terrae leuca",
+    // Marina di San Gregorio
+    "vacanze san gregorio salento",
+    "appartamento san gregorio mare",
+    // Patù
+    "casa vacanze patù",
+    "appartamento patù salento",
+    // Generale Salento
+    "casa vacanze salento",
+    "appartamenti salento sul mare",
+    "villa salento vista mare",
+    "affitto casa salento mare",
+    "vacanze salento appartamenti",
+    "salento casa vacanze fronte mare",
+    // Puglia generale
+    "casa vacanze puglia mare",
+    "appartamenti puglia sul mare",
+    "villa puglia vacanze",
+    "affitto vacanze puglia"
   ],
   secondary: [
-    "casa vacanze santa maria di leuca",
-    "appartamenti salento sul mare",
-    "villa vacanze capo di leuca", 
-    "affitto casa puglia mare",
-    "vacanze salento appartamenti",
-    "casa vacanze sul mare",
     "villa fronte mare puglia",
-    "appartamenti vista mare",
+    "appartamenti vista mare salento",
     "vacanze famiglia puglia",
-    "affitto vacanze estate"
+    "affitto settimanale salento",
+    "casa vacanze sul mare",
+    "villa vacanze capo di leuca",
+    "affitto casa puglia mare"
   ],
   longTail: [
-    "casa vacanze vicino spiaggia",
-    "villa fronte mare",
-    "appartamenti ammobiliati puglia",
+    "casa vacanze vicino spiaggia salento",
+    "villa fronte mare torre vado",
+    "appartamenti ammobiliati puglia mare",
     "dove dormire salento mare",
-    "migliori case vacanze puglia",
-    "villa con giardino salento",
-    "appartamenti 4 persone puglia",
-    "casa vacanze bambini puglia",
+    "migliori case vacanze salento",
+    "villa con giardino salento mare",
+    "appartamenti 4 persone salento",
+    "appartamenti 6 persone torre vado",
+    "appartamenti 8 persone leuca",
+    "casa vacanze bambini salento",
     "villa lusso salento mare",
-    "affitto settimanale puglia",
-    "vacanze gruppo amici salento"
+    "affitto settimanale torre vado",
+    "vacanze gruppo amici salento",
+    "casa vacanze con terrazza mare",
+    "appartamento con vista mare salento",
+    "affitto breve salento estate"
   ],
   seasonal: [
-    "vacanze estate salento",
-    "casa vacanze agosto puglia",
+    "vacanze estate salento 2025",
+    "casa vacanze agosto salento",
     "weekend romantico salento",
     "vacanze pasqua puglia",
     "ferragosto salento appartamenti",
-    "vacanze ponte maggio puglia"
+    "vacanze ponte maggio salento",
+    "settembre salento mare",
+    "vacanze giugno salento"
+  ],
+  experiences: [
+    "vacanze mare cristallino salento",
+    "spiagge sabbia salento appartamento",
+    "vacanze relax salento",
+    "mare ionico salento casa",
+    "costa ionica puglia vacanze",
+    "baia torre vado",
+    "scogliera salento appartamento"
   ],
   competitive: [
     "alternativa airbnb salento",
-    "booking villa puglia",
-    "vrbo salento appartamenti"
+    "alternativa booking salento",
+    "prenota diretto villa salento",
+    "miglior prezzo casa vacanze salento"
   ],
-  // Nuovi titoli ottimizzati per Google Ads (max 30 caratteri)
+  // Titoli Google Ads ottimizzati
   adTitles: [
-    "Villa MareBlu Vista Mare",      // 25 caratteri
-    "Appartamenti Mare Salento",     // 25 caratteri
-    "Casa Vacanze Sul Mare",         // 21 caratteri
-    "Affitto Villa Salento",         // 21 caratteri
-    "Villa Fronte Mare Puglia",      // 26 caratteri
-    "Vacanze Lusso Salento",         // 21 caratteri
-    "Appartamenti Vista Mare",       // 23 caratteri
-    "Casa Mare Puglia",              // 16 caratteri
-    "Villa Sul Mare",                // 14 caratteri
-    "Vacanze Salento Mare",          // 20 caratteri
-    "Lusso Vista Mare",              // 17 caratteri
-    "Villa Vacanze Puglia",          // 21 caratteri
-    "Casa Fronte Mare",              // 17 caratteri
-    "Appartamenti Lusso",            // 19 caratteri
-    "Salento Villa Mare"             // 19 caratteri
+    "Villa MareBlu Torre Vado",
+    "Casa Vacanze Pescoluse",
+    "Appartamenti Leuca Mare",
+    "Villa Salento Vista Mare",
+    "Maldive del Salento",
+    "Vacanze Torre Vado",
+    "Casa Mare Salento",
+    "Villa Fronte Mare Puglia",
+    "Appartamenti Salento",
+    "Affitto Villa Leuca"
   ],
-  // Descrizioni ottimizzate per Google Ads (max 90 caratteri)
   adDescriptions: [
-    "Appartamenti vacanze lusso con vista mare Salento. A 100m dalla spiaggia. Prenota ora!", // 89 caratteri
-    "Villa MareBlu: casa vacanze fronte mare Puglia. Vista panoramica mozzafiato sul mare!", // 87 caratteri
-    "Vacanze da sogno in Salento! Appartamenti vista mare, giardino, tutti i comfort inclusi.", // 89 caratteri
-    "La tua villa fronte mare in Puglia ti aspetta. Lusso, comfort e vista mare indimenticabile!" // 90 caratteri
+    "Villa MareBlu: appartamenti vista mare a Torre Vado. A 100m dalle Maldive del Salento. Prenota ora!",
+    "Casa vacanze fronte mare nel Salento. Vista panoramica, giardino, parcheggio. Prenota diretto!",
+    "Vacanze da sogno vicino Pescoluse e Leuca. Appartamenti 4-8 persone con terrazza sul mare.",
+    "La tua villa sul mare a Torre Vado. Spiagge cristalline del Salento a 2 minuti a piedi!"
   ]
 };
 
@@ -77,32 +124,56 @@ export const getAllKeywords = (): string => {
 };
 
 export const getPageSpecificKeywords = (page: string): string => {
-  const baseKeywords = [...seoKeywords.primary, ...seoKeywords.secondary];
-  
+  const baseKeywords = [...seoKeywords.primary, ...seoKeywords.local.slice(0, 15)];
+
   switch (page) {
     case 'home':
-      return [...baseKeywords, ...seoKeywords.longTail.slice(0, 10)].join(", ");
+      return [...baseKeywords, ...seoKeywords.secondary, ...seoKeywords.experiences].join(", ");
     case 'apartments':
-      return [...baseKeywords, "appartamenti ammobiliati puglia", "villa con giardino salento", "appartamenti 4 persone puglia"].join(", ");
-    case 'services':
-      return [...baseKeywords, "villa lusso salento mare", "casa vacanze bambini puglia", "vacanze famiglia puglia"].join(", ");
+      return [...baseKeywords, ...seoKeywords.longTail.filter(k => k.includes('appartament') || k.includes('persone'))].join(", ");
     case 'about':
-      return [...baseKeywords, "villa fronte mare", "dove dormire salento mare", "migliori case vacanze puglia"].join(", ");
+      return [...baseKeywords, ...seoKeywords.local.filter(k => k.includes('salento') || k.includes('puglia'))].join(", ");
     case 'contact':
-      return [...baseKeywords, "affitto settimanale puglia", "weekend romantico salento"].join(", ");
+      return [...baseKeywords, "prenota diretto villa salento", "contatti villa mareblu", "prenotazione diretta salento"].join(", ");
     case 'quote':
-      return [...baseKeywords, ...seoKeywords.competitive, ...seoKeywords.seasonal.slice(0, 3)].join(", ");
+      return [...baseKeywords, ...seoKeywords.competitive, ...seoKeywords.seasonal].join(", ");
     default:
       return baseKeywords.join(", ");
   }
 };
 
-// Funzione per ottenere i titoli Google Ads
-export const getGoogleAdsTitles = (): string[] => {
-  return seoKeywords.adTitles;
+// Keywords specifiche per località
+export const getLocationKeywords = (location: string): string => {
+  const locationMap: Record<string, string[]> = {
+    'torre-vado': [
+      "casa vacanze torre vado",
+      "appartamento torre vado mare",
+      "affitto villa torre vado",
+      "vacanze torre vado salento",
+      "spiaggia torre vado"
+    ],
+    'pescoluse': [
+      "casa vacanze pescoluse",
+      "maldive del salento appartamento",
+      "pescoluse spiaggia sabbia",
+      "vacanze pescoluse salento"
+    ],
+    'leuca': [
+      "casa vacanze santa maria di leuca",
+      "appartamento leuca mare",
+      "de finibus terrae vacanze",
+      "capo di leuca villa"
+    ],
+    'salento': [
+      "casa vacanze salento mare",
+      "appartamenti salento sul mare",
+      "villa salento vista mare",
+      "vacanze salento puglia"
+    ]
+  };
+
+  return locationMap[location]?.join(", ") || seoKeywords.primary.join(", ");
 };
 
-// Funzione per ottenere le descrizioni Google Ads
-export const getGoogleAdsDescriptions = (): string[] => {
-  return seoKeywords.adDescriptions;
-};
+export const getGoogleAdsTitles = (): string[] => seoKeywords.adTitles;
+export const getGoogleAdsDescriptions = (): string[] => seoKeywords.adDescriptions;

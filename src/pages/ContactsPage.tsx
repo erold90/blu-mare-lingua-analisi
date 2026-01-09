@@ -89,13 +89,13 @@ const ContactsPage = () => {
   return (
     <div className="container px-4 py-8 md:py-12">
       <SEOHead
-        title="Contatti Villa MareBlu Salento - Affitto Settimanale Puglia"
-        description="Contatta Villa MareBlu per il tuo soggiorno in Salento. Informazioni, prenotazioni e disponibilità per la tua vacanza in Puglia. Tel: +39 378 0038730"
+        title="Contatti Villa MareBlu Torre Vado | Prenota Casa Vacanze Salento | Tel +39 378 0038730"
+        description="Contatta Villa MareBlu per prenotare la tua vacanza a Torre Vado, Salento. Vicino Pescoluse e Leuca. Tel: +39 378 0038730. Risposta garantita entro 2 ore. Prenota diretto e risparmia!"
         keywords={getPageSpecificKeywords('contact')}
         canonicalUrl="/contatti"
         structuredData={structuredData}
-        ogTitle="Contatti Villa MareBlu - Prenota la Tua Vacanza in Salento"
-        ogDescription="Contattaci per prenotare la tua villa in Salento. Soggiorni settimanali nel cuore della Puglia"
+        ogTitle="Contatti Villa MareBlu Torre Vado | Prenota Diretto"
+        ogDescription="Prenota direttamente a Villa MareBlu Torre Vado. Appartamenti vista mare nel Salento. Risposta in 2 ore!"
       />
 
       <h1 className="text-3xl md:text-4xl font-bold mb-6">Contatti Villa MareBlu</h1>

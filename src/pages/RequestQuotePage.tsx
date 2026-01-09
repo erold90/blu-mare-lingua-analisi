@@ -120,8 +120,11 @@ export default function RequestQuotePage() {
   return (
     <div className="container mx-auto py-8">
       <SEOHead
-        title="Richiedi Preventivo - Villa MareBlu Puglia"
-        description="Richiedi un preventivo personalizzato per il tuo soggiorno a Villa MareBlu, Torre Vado. Appartamenti fronte mare in Salento."
+        title="Preventivo Casa Vacanze Torre Vado | Calcola Prezzo Appartamento Salento | Villa MareBlu"
+        description="Calcola il preventivo per la tua vacanza a Torre Vado, Salento. Appartamenti vista mare da 4 a 8 posti. Vicino Pescoluse e Leuca. Prezzi trasparenti, prenota diretto!"
+        canonicalUrl="/richiedi-preventivo"
+        ogTitle="Calcola Preventivo Vacanza Salento | Villa MareBlu Torre Vado"
+        ogDescription="Preventivo istantaneo per appartamenti vacanza a Torre Vado. Vista mare, vicino Pescoluse. Prezzi chiari!"
       />
       
       <div className="max-w-6xl mx-auto">

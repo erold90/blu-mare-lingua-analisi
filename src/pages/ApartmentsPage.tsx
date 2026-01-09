@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { apartments } from "@/data/apartments";
 import SEOHead from "@/components/seo/SEOHead";
-import { getApartmentSchema, getBreadcrumbSchema } from "@/components/seo/StructuredData";
+import { getVacationRentalSchema, getBreadcrumbSchema } from "@/components/seo/StructuredData";
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
 import { useApartmentImages } from "@/hooks/apartments/useApartmentImages";
 import { ApartmentPageHeader } from "@/components/apartments/ApartmentPageHeader";
@@ -39,7 +39,7 @@ const ApartmentsPage = () => {
 
   const structuredData = [
     getBreadcrumbSchema(breadcrumbItems),
-    ...apartmentsWithImages.map(apt => getApartmentSchema(apt))
+    ...apartmentsWithImages.map(apt => getVacationRentalSchema(apt))
   ];
 
   const handleApartmentDetailsClick = (apartmentId: string) => {
@@ -59,13 +59,13 @@ const ApartmentsPage = () => {
   return (
     <div className="container px-4 py-8 md:py-12">
       <SEOHead
-        title="Appartamenti Vacanze Vista Mare Salento - Villa MareBlu Puglia | Casa Vacanze Sul Mare"
-        description="Scopri i nostri appartamenti vacanze con vista mare in Salento: villa fronte mare, giardino, 4-8 persone. Appartamenti ammobiliati Puglia, Santa Maria di Leuca. Prenota ora!"
+        title="Appartamenti Vacanze Torre Vado Salento | Casa Vacanze Pescoluse Leuca | 4-8 Posti Vista Mare"
+        description="4 appartamenti vacanze a Torre Vado, Salento: da 4 a 8 posti letto con vista mare. Vicino Pescoluse (Maldive del Salento) e Leuca. Terrazza panoramica, Wi-Fi, parcheggio. Prenota diretto!"
         keywords={getPageSpecificKeywords('apartments')}
         canonicalUrl="/appartamenti"
         structuredData={structuredData}
-        ogTitle="Appartamenti Vacanze Vista Mare Salento - Villa MareBlu"
-        ogDescription="Appartamenti vacanze con vista mare in Salento. La tua casa vacanze fronte mare ideale in Puglia!"
+        ogTitle="Appartamenti Vacanze Torre Vado Salento | Vista Mare"
+        ogDescription="4 appartamenti da 4 a 8 posti con vista mare a Torre Vado. Vicino Pescoluse e Leuca. Terrazza, Wi-Fi, parcheggio incluso!"
       />
 
       <ApartmentPageHeader />
