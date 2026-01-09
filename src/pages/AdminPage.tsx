@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { PricingManagement } from '@/components/admin/PricingManagement';
 import { VisitAnalytics } from '@/components/admin/VisitAnalytics';
+import { UnifiedAnalyticsDashboard } from '@/components/admin/UnifiedAnalyticsDashboard';
 import { QuoteRequestsManager } from '@/components/admin/QuoteRequestsManager';
 import { ReservationsCalendar } from '@/components/admin/ReservationsCalendar';
 import { ReservationsList } from '@/components/admin/ReservationsList';
@@ -301,9 +302,20 @@ export default function AdminPage() {
             <PricingManagement />
           </TabsContent>
 
-          {/* Visit Analytics */}
-          <TabsContent value="analytics">
-            <VisitAnalytics />
+          {/* Analytics */}
+          <TabsContent value="analytics" className="space-y-6">
+            <Tabs defaultValue="unified" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="unified">Sessioni & Funnel</TabsTrigger>
+                <TabsTrigger value="visits">Visite Geografiche</TabsTrigger>
+              </TabsList>
+              <TabsContent value="unified">
+                <UnifiedAnalyticsDashboard />
+              </TabsContent>
+              <TabsContent value="visits">
+                <VisitAnalytics />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
           {/* Security Dashboard */}
