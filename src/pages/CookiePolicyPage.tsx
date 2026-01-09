@@ -150,6 +150,60 @@ const CookiePolicyPage = () => {
           </section>
           
           <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">Elenco cookie utilizzati</h2>
+            <p className="mb-4">Di seguito l'elenco dettagliato dei cookie utilizzati su questo sito:</p>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full border border-gray-200 rounded-lg">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-sm font-semibold">Nome Cookie</th>
+                    <th className="px-4 py-2 text-left text-sm font-semibold">Tipo</th>
+                    <th className="px-4 py-2 text-left text-sm font-semibold">Durata</th>
+                    <th className="px-4 py-2 text-left text-sm font-semibold">Scopo</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-4 py-2 text-sm font-mono">villamareblu_cookie_consent</td>
+                    <td className="px-4 py-2 text-sm">Necessario</td>
+                    <td className="px-4 py-2 text-sm">6 mesi</td>
+                    <td className="px-4 py-2 text-sm">Memorizza le preferenze cookie dell'utente</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 text-sm font-mono">sb-*-auth-token</td>
+                    <td className="px-4 py-2 text-sm">Necessario</td>
+                    <td className="px-4 py-2 text-sm">Sessione</td>
+                    <td className="px-4 py-2 text-sm">Autenticazione Supabase (area riservata)</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 text-sm font-mono">_ga</td>
+                    <td className="px-4 py-2 text-sm">Statistico</td>
+                    <td className="px-4 py-2 text-sm">2 anni</td>
+                    <td className="px-4 py-2 text-sm">Google Analytics - Distingue gli utenti</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 text-sm font-mono">_ga_*</td>
+                    <td className="px-4 py-2 text-sm">Statistico</td>
+                    <td className="px-4 py-2 text-sm">2 anni</td>
+                    <td className="px-4 py-2 text-sm">Google Analytics 4 - Mantiene lo stato della sessione</td>
+                  </tr>
+                  <tr>
+                    <td className="px-4 py-2 text-sm font-mono">_gcl_au</td>
+                    <td className="px-4 py-2 text-sm">Marketing</td>
+                    <td className="px-4 py-2 text-sm">3 mesi</td>
+                    <td className="px-4 py-2 text-sm">Google Ads - Tracciamento conversioni</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="text-sm text-muted-foreground mt-4">
+              I cookie statistici e di marketing vengono installati solo previo consenso esplicito dell'utente.
+              Google Analytics è configurato con anonimizzazione IP attiva.
+            </p>
+          </section>
+
+          <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">Gestione tramite browser</h2>
             <p className="mb-4">
               Puoi anche impostare il tuo browser per rifiutare tutti o alcuni cookie, o per avvisarti quando i siti web impostano o accedono ai cookie. 

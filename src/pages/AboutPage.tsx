@@ -7,7 +7,7 @@ import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
 const AboutPage = () => {
   const breadcrumbItems = [
     { name: "Home", url: "/" },
-    { name: "La Villa", url: "/la-villa" }
+    { name: "Chi Siamo", url: "/chi-siamo" }
   ];
 
   const structuredData = [getBreadcrumbSchema(breadcrumbItems)];
