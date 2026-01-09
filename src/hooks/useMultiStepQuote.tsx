@@ -233,8 +233,9 @@ export const useMultiStepQuote = () => {
 
       const ferragosto = new Date(year, 7, 15);
 
-      // Il soggiorno include Ferragosto? (check-in <= 15/08 E check-out > 15/08)
-      if (checkInDate <= ferragosto && checkOutDate > ferragosto) {
+      // Il soggiorno include o termina su Ferragosto? (check-in <= 15/08 E check-out >= 15/08)
+      // Nota: >= invece di > per catturare anche soggiorni che terminano esattamente il 15/08
+      if (checkInDate <= ferragosto && checkOutDate >= ferragosto) {
         // Calcola le notti
         const nights = Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
 
