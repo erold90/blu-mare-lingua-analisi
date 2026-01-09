@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,6 +15,163 @@ interface ApartmentDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+// Fullscreen Gallery Component (rendered via Portal)
+const FullscreenGallery: React.FC<{
+  images: string[];
+  currentIndex: number;
+  apartmentName: string;
+  onClose: () => void;
+  onNext: () => void;
+  onPrev: () => void;
+  onSelectIndex: (index: number) => void;
+}> = ({ images, currentIndex, apartmentName, onClose, onNext, onPrev, onSelectIndex }) => {
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  // Minimum swipe distance
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) {
+      onNext();
+    } else if (isRightSwipe) {
+      onPrev();
+    }
+  };
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') onNext();
+      if (e.key === 'ArrowLeft') onPrev();
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onClose, onNext, onPrev]);
+
+  return createPortal(
+    <div
+      className="fixed inset-0 bg-black flex items-center justify-center"
+      style={{ zIndex: 99999 }}
+      onClick={onClose}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* Close button */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        className="absolute top-4 right-4 z-10 p-3 rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 transition-colors"
+        aria-label="Chiudi"
+      >
+        <X className="w-7 h-7 text-white" />
+      </button>
+
+      {/* Image counter */}
+      <div className="absolute top-4 left-4 z-10 px-4 py-2 rounded-full bg-black/50 backdrop-blur-sm">
+        <span className="text-white text-sm font-medium">
+          {currentIndex + 1} / {images.length}
+        </span>
+      </div>
+
+      {/* Navigation buttons */}
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onPrev();
+            }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 transition-colors"
+            aria-label="Immagine precedente"
+          >
+            <ChevronLeft className="w-8 h-8 text-white" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onNext();
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 transition-colors"
+            aria-label="Immagine successiva"
+          >
+            <ChevronRight className="w-8 h-8 text-white" />
+          </button>
+        </>
+      )}
+
+      {/* Main image */}
+      <img
+        src={images[currentIndex]}
+        alt={`${apartmentName} - Immagine ${currentIndex + 1}`}
+        className="max-w-[95vw] max-h-[80vh] object-contain select-none"
+        onClick={(e) => e.stopPropagation()}
+        draggable={false}
+      />
+
+      {/* Thumbnail strip */}
+      {images.length > 1 && (
+        <div
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/60 backdrop-blur-sm rounded-lg max-w-[95vw] overflow-x-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {images.map((image, index) => (
+            <button
+              key={index}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectIndex(index);
+              }}
+              className={`flex-shrink-0 w-14 h-10 rounded overflow-hidden transition-all ${
+                index === currentIndex
+                  ? 'ring-2 ring-white opacity-100 scale-110'
+                  : 'opacity-50 hover:opacity-75 active:opacity-100'
+              }`}
+            >
+              <img
+                src={image}
+                alt={`Miniatura ${index + 1}`}
+                className="w-full h-full object-cover"
+                draggable={false}
+              />
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Swipe hint (shown briefly) */}
+      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 text-white/50 text-xs md:hidden">
+        Scorri per navigare
+      </div>
+    </div>,
+    document.body
+  );
+};
 
 export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
   apartment,
@@ -70,20 +228,6 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
   const prevFullscreenImage = useCallback(() => {
     setFullscreenIndex((prev) => (prev - 1 + images.length) % images.length);
   }, [images.length]);
-
-  // Handle keyboard navigation in fullscreen
-  useEffect(() => {
-    if (!fullscreenOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') closeFullscreen();
-      if (e.key === 'ArrowRight') nextFullscreenImage();
-      if (e.key === 'ArrowLeft') prevFullscreenImage();
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [fullscreenOpen, nextFullscreenImage, prevFullscreenImage]);
 
   if (!apartment) return null;
 
@@ -243,88 +387,17 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
         </DialogContent>
       </Dialog>
 
-      {/* Fullscreen Gallery Modal */}
-      {fullscreenOpen && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
-          onClick={closeFullscreen}
-        >
-          {/* Close button */}
-          <button
-            onClick={closeFullscreen}
-            className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-            aria-label="Chiudi"
-          >
-            <X className="w-6 h-6 text-white" />
-          </button>
-
-          {/* Image counter */}
-          <div className="absolute top-4 left-4 z-10 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm">
-            <span className="text-white text-sm font-medium">
-              {fullscreenIndex + 1} / {images.length}
-            </span>
-          </div>
-
-          {/* Navigation buttons */}
-          {images.length > 1 && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  prevFullscreenImage();
-                }}
-                className="absolute left-4 z-10 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                aria-label="Immagine precedente"
-              >
-                <ChevronLeft className="w-8 h-8 text-white" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  nextFullscreenImage();
-                }}
-                className="absolute right-4 z-10 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
-                aria-label="Immagine successiva"
-              >
-                <ChevronRight className="w-8 h-8 text-white" />
-              </button>
-            </>
-          )}
-
-          {/* Main image */}
-          <img
-            src={images[fullscreenIndex]}
-            alt={`${apartment.name} - Immagine ${fullscreenIndex + 1}`}
-            className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          />
-
-          {/* Thumbnail strip */}
-          {images.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/50 backdrop-blur-sm rounded-lg max-w-[90vw] overflow-x-auto">
-              {images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setFullscreenIndex(index);
-                  }}
-                  className={`flex-shrink-0 w-16 h-12 rounded overflow-hidden transition-all ${
-                    index === fullscreenIndex
-                      ? 'ring-2 ring-white opacity-100'
-                      : 'opacity-50 hover:opacity-75'
-                  }`}
-                >
-                  <img
-                    src={image}
-                    alt={`Miniatura ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* Fullscreen Gallery (rendered via Portal) */}
+      {fullscreenOpen && apartment && (
+        <FullscreenGallery
+          images={images}
+          currentIndex={fullscreenIndex}
+          apartmentName={apartment.name}
+          onClose={closeFullscreen}
+          onNext={nextFullscreenImage}
+          onPrev={prevFullscreenImage}
+          onSelectIndex={setFullscreenIndex}
+        />
       )}
     </>
   );
