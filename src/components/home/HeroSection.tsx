@@ -44,9 +44,24 @@ const HeroSection = () => {
 
   const getBackgroundImage = () => {
     if (heroImage) {
-      return imageService.getImageUrl(heroImage.file_path);
+      // Use optimized image with WebP and appropriate size for hero
+      return imageService.getOptimizedImageUrl(heroImage.file_path, {
+        width: 1920,
+        quality: 85
+      });
     }
     return "/images/hero/hero.jpg"; // Fallback image
+  };
+
+  // Get smaller version for mobile
+  const getMobileBackgroundImage = () => {
+    if (heroImage) {
+      return imageService.getOptimizedImageUrl(heroImage.file_path, {
+        width: 800,
+        quality: 80
+      });
+    }
+    return "/images/hero/hero.jpg";
   };
 
   return (

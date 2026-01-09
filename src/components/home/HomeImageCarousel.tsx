@@ -119,18 +119,20 @@ export const HomeImageCarousel = () => {
                       <CardContent className="p-0">
                          <div className="aspect-[4/3] relative overflow-hidden">
                            <img
-                             src={imageService.getImageUrl(image.file_path)}
+                             src={imageService.getOptimizedImageUrl(image.file_path, { width: 600, quality: 80 })}
+                             srcSet={`
+                               ${imageService.getOptimizedImageUrl(image.file_path, { width: 400 })} 400w,
+                               ${imageService.getOptimizedImageUrl(image.file_path, { width: 600 })} 600w,
+                               ${imageService.getOptimizedImageUrl(image.file_path, { width: 800 })} 800w
+                             `}
+                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                              alt={image.alt_text || `Villa MareBlu - Immagine ${index + 1}`}
                              className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
                              loading={index < 3 ? "eager" : "lazy"}
                              decoding={index < 3 ? "sync" : "async"}
                              fetchPriority={index < 2 ? "high" : "low"}
-                             style={{ 
-                               willChange: index < 3 ? 'transform' : 'auto',
-                               contentVisibility: index >= 3 ? 'auto' : 'visible'
-                             }}
                              onError={(e) => {
-                               e.currentTarget.src = "/placeholder.svg";
+                               e.currentTarget.src = imageService.getImageUrl(image.file_path);
                              }}
                            />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300" />

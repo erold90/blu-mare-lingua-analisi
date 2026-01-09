@@ -1,5 +1,4 @@
 import { imageCacheService } from "./cache";
-import { imageSessionService } from "./session";
 
 /**
  * Handles image loading and verification with improved performance
@@ -28,17 +27,10 @@ export class ImageLoaderService {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 3000); // Reduced from 8s to 3s
         
-        const urlWithTimestamp = `${path}?t=${imageSessionService.getSessionTimestamp()}`;
-        
-        // Use fetch with HEAD to verify existence
-        const response = await fetch(urlWithTimestamp, { 
+        // Use fetch with HEAD to verify existence (allow caching)
+        const response = await fetch(path, {
           method: 'HEAD',
-          signal: controller.signal,
-          cache: 'no-store',
-          headers: { 
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache'
-          }
+          signal: controller.signal
         });
         
         clearTimeout(timeoutId);
@@ -118,11 +110,12 @@ export class ImageLoaderService {
   }
   
   /**
-   * Get full URL for a path with optimized cache busting
+   * Get full URL for a path (no cache busting - rely on browser cache)
    */
   getImageUrl(path: string): string {
-    const sessionTimestamp = imageSessionService.getSessionTimestamp();
-    return `${path}?t=${sessionTimestamp}`;
+    // Return path directly - let browser cache handle it
+    // Images are immutable with unique filenames, so caching is safe
+    return path;
   }
   
   /**

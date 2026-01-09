@@ -29,7 +29,7 @@ export class ImageStorageService {
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('villa-images')
         .upload(filePath, file, {
-          cacheControl: '3600',
+          cacheControl: '31536000', // 1 year cache - images are immutable
           upsert: false
         });
 
@@ -54,17 +54,19 @@ export class ImageStorageService {
 
       // Test Supabase connection first
       await this.testSupabaseConnection();
-      
+
+      // Optimize image before upload (resize and compress)
+      const optimizedFile = await this.optimizeImageForUpload(file);
+
       // Generate unique file path with random component to avoid conflicts
-      const fileExt = file.name.split('.').pop();
+      const fileExt = optimizedFile.name.split('.').pop();
       const timestamp = Date.now();
       const randomId = Math.random().toString(36).substring(2, 15);
       const fileName = `${category}_${apartment_id || 'general'}_${timestamp}_${randomId}.${fileExt}`;
       const filePath = `${category}/${fileName}`;
-      
-      
+
       // Try direct upload without checking bucket existence
-      const uploadData = await this.attemptDirectUpload(filePath, file);
+      const uploadData = await this.attemptDirectUpload(filePath, optimizedFile);
       
       // Create database record
       const insertData = {
@@ -156,7 +158,117 @@ export class ImageStorageService {
     const { data } = supabase.storage
       .from('villa-images')
       .getPublicUrl(filePath);
-      
+
     return data.publicUrl;
+  }
+
+  /**
+   * Get optimized image URL with Supabase transformations
+   * Supports resize, quality adjustment, and WebP conversion
+   */
+  getOptimizedImageUrl(
+    filePath: string,
+    options?: {
+      width?: number;
+      height?: number;
+      quality?: number;
+      format?: 'webp' | 'origin';
+    }
+  ): string {
+    const { width, height, quality = 80, format = 'webp' } = options || {};
+
+    // Build transform options
+    const transform: Record<string, any> = {
+      quality,
+      format
+    };
+
+    if (width) transform.width = width;
+    if (height) transform.height = height;
+
+    const { data } = supabase.storage
+      .from('villa-images')
+      .getPublicUrl(filePath, { transform });
+
+    return data.publicUrl;
+  }
+
+  /**
+   * Generate srcSet for responsive images
+   */
+  getResponsiveSrcSet(filePath: string, sizes: number[] = [400, 800, 1200]): string {
+    return sizes
+      .map(width => `${this.getOptimizedImageUrl(filePath, { width })} ${width}w`)
+      .join(', ');
+  }
+
+  /**
+   * Optimize image before upload (resize and compress)
+   */
+  async optimizeImageForUpload(file: File, maxWidth = 1920, quality = 0.85): Promise<File> {
+    return new Promise((resolve, reject) => {
+      // Skip optimization for small files (< 500KB) or non-image files
+      if (file.size < 500 * 1024 || !file.type.startsWith('image/')) {
+        resolve(file);
+        return;
+      }
+
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+
+        // If image is already smaller than maxWidth, just compress
+        const needsResize = img.width > maxWidth;
+        const canvas = document.createElement('canvas');
+
+        if (needsResize) {
+          const ratio = maxWidth / img.width;
+          canvas.width = maxWidth;
+          canvas.height = Math.round(img.height * ratio);
+        } else {
+          canvas.width = img.width;
+          canvas.height = img.height;
+        }
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+
+        // Use better image smoothing
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Convert to blob with compression
+        const outputType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        canvas.toBlob(
+          blob => {
+            if (blob) {
+              const optimizedFile = new File(
+                [blob],
+                file.name,
+                { type: outputType, lastModified: Date.now() }
+              );
+              resolve(optimizedFile);
+            } else {
+              resolve(file);
+            }
+          },
+          outputType,
+          quality
+        );
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve(file); // Return original on error
+      };
+
+      img.src = url;
+    });
   }
 }
