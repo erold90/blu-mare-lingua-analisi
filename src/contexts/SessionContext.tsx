@@ -134,7 +134,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
    */
   const initSession = useCallback(async () => {
     // Skip per area admin
-    if (location.pathname.startsWith('/area-riservata')) return;
+    if (location.pathname.startsWith('/area-riservata') ||
+        location.pathname.startsWith('/admin') ||
+        location.pathname.startsWith('/auth')) return;
 
     // Visitor ID (persistente)
     let visitorId = localStorage.getItem(VISITOR_STORAGE_KEY);
@@ -291,7 +293,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   // Traccia cambio pagina
   useEffect(() => {
     if (!sessionIdRef.current) return;
-    if (location.pathname.startsWith('/area-riservata')) return;
+    if (location.pathname.startsWith('/area-riservata') ||
+        location.pathname.startsWith('/admin') ||
+        location.pathname.startsWith('/auth')) return;
     trackPageView(location.pathname);
   }, [location.pathname, trackPageView]);
 
