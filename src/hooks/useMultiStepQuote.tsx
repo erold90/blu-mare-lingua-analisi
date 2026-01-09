@@ -202,7 +202,7 @@ export const useMultiStepQuote = () => {
             finalPrice: detail.finalPrice
           })),
           servicesTotal: result.extrasTotal,
-          subtotal: result.baseTotal + result.extrasTotal,
+          subtotal: result.apartmentDetails.reduce((sum, d) => sum + d.finalPrice, 0) + result.extrasTotal,
           finalDiscount: result.discountTotal,
           total: result.finalTotal,
           deposit: result.deposit,
