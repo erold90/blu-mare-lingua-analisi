@@ -23,7 +23,6 @@ export function handleLocalStoragePersistence(method: string, endpoint: string, 
         }
       }
     } catch (storageError) {
-      console.error('Errore nel salvare dati persistenti dopo modifica:', storageError);
     }
   }
 }
@@ -33,14 +32,12 @@ export function loadPersistentData<T>(storageKey: string): ApiResponse<T> {
     const storedData = localStorage.getItem(storageKey);
     if (storedData) {
       const data = JSON.parse(storedData);
-      console.log(`Utilizzando dati persistenti da localStorage (${storageKey}):`, data);
       return {
         success: true,
         data: data as unknown as T
       };
     }
   } catch (storageError) {
-    console.error(`Errore nel recuperare dati persistenti (${storageKey}):`, storageError);
   }
   
   return {
@@ -55,16 +52,13 @@ function saveItemToPersistentStorage(storageKey: string, item: any): void {
     let data = storedData ? JSON.parse(storedData) : [];
     data.push(item);
     localStorage.setItem(storageKey, JSON.stringify(data));
-    console.log(`Elemento aggiunto a ${storageKey}`, item);
   } catch (error) {
-    console.error(`Errore nel salvare nuovo elemento in ${storageKey}:`, error);
   }
 }
 
 function updateItemInPersistentStorage(storageKey: string, item: any): void {
   try {
     if (!item.id) {
-      console.error(`Impossibile aggiornare elemento senza id in ${storageKey}`);
       return;
     }
     
@@ -76,10 +70,8 @@ function updateItemInPersistentStorage(storageKey: string, item: any): void {
     if (index >= 0) {
       data[index] = item;
       localStorage.setItem(storageKey, JSON.stringify(data));
-      console.log(`Elemento aggiornato in ${storageKey}`, item);
     }
   } catch (error) {
-    console.error(`Errore nell'aggiornare elemento in ${storageKey}:`, error);
   }
 }
 
@@ -91,8 +83,6 @@ function removeItemFromPersistentStorage(storageKey: string, itemId: string): vo
     let data = JSON.parse(storedData);
     data = data.filter((i: any) => i.id !== itemId);
     localStorage.setItem(storageKey, JSON.stringify(data));
-    console.log(`Elemento rimosso da ${storageKey}`, itemId);
   } catch (error) {
-    console.error(`Errore nel rimuovere elemento da ${storageKey}:`, error);
   }
 }

@@ -15,19 +15,15 @@ export interface SiteVisit {
 
 export const useUnifiedAnalytics = () => {
   const trackQuoteStart = () => {
-    console.log('Quote started');
   };
 
   const trackQuoteComplete = (data: any) => {
-    console.log('Quote completed:', data);
   };
 
   const trackQuoteStep = (step: number) => {
-    console.log('Quote step:', step);
   };
 
   const addQuoteLog = (data: any) => {
-    console.log('Quote log added:', data);
     return Promise.resolve();
   };
 

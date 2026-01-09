@@ -33,7 +33,6 @@ export const ApartmentImageGallery: React.FC = () => {
       const apartmentImages = await imageService.getImagesByCategory('apartment', selectedApartment);
       setImages(apartmentImages);
     } catch (error) {
-      console.error('Error loading images:', error);
       toast.error('Errore nel caricamento delle immagini');
     } finally {
       setLoading(false);
@@ -75,7 +74,6 @@ export const ApartmentImageGallery: React.FC = () => {
         window.dispatchEvent(new CustomEvent('apartmentImagesUpdated'));
       }
     } catch (error) {
-      console.error('Error uploading images:', error);
       toast.error('Errore nel caricamento delle immagini');
     } finally {
       setUploading(false);
@@ -109,7 +107,6 @@ export const ApartmentImageGallery: React.FC = () => {
       // Notify other components about image updates
       window.dispatchEvent(new CustomEvent('apartmentImagesUpdated'));
     } catch (error) {
-      console.error('Error reordering images:', error);
       toast.error('Errore nel riordinamento');
       // Revert local state on error
       await loadImages();
@@ -127,7 +124,6 @@ export const ApartmentImageGallery: React.FC = () => {
       // Notify other components about image updates
       window.dispatchEvent(new CustomEvent('apartmentImagesUpdated'));
     } catch (error) {
-      console.error('Error deleting image:', error);
       toast.error('Errore nell\'eliminazione dell\'immagine');
     }
   };
@@ -141,7 +137,6 @@ export const ApartmentImageGallery: React.FC = () => {
       // Notify other components about image updates
       window.dispatchEvent(new CustomEvent('apartmentImagesUpdated'));
     } catch (error) {
-      console.error('Error setting cover image:', error);
       toast.error('Errore nell\'impostazione dell\'immagine di copertina');
     }
   };

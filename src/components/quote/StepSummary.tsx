@@ -3,13 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { 
-  Receipt, 
-  Calendar, 
-  Users, 
-  Home, 
-  Heart, 
-  Bed, 
+import {
+  Receipt,
+  Calendar,
+  Users,
+  Home,
+  Heart,
+  Bed,
   Euro,
   CreditCard,
   Banknote,
@@ -19,6 +19,7 @@ import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { PricingService } from '@/services/supabase/dynamicPricingService';
+import { APARTMENT_NAMES } from '@/config/apartments';
 
 interface StepSummaryProps {
   formData: QuoteFormData;
@@ -28,18 +29,6 @@ interface StepSummaryProps {
   getBedsNeeded: () => number;
   calculatePrice: () => any;
 }
-
-// Mapping unificato per tutti i formati di ID appartamento
-const apartmentNames: Record<string, string> = {
-  "1": "Appartamento 1 (6 posti)",
-  "2": "Appartamento 2 (8 posti)",
-  "3": "Appartamento 3 (4 posti)",
-  "4": "Appartamento 4 (5 posti)",
-  "appartamento-1": "Appartamento 1 (6 posti)",
-  "appartamento-2": "Appartamento 2 (8 posti)",
-  "appartamento-3": "Appartamento 3 (4 posti)",
-  "appartamento-4": "Appartamento 4 (5 posti)"
-};
 
 export const StepSummary: React.FC<StepSummaryProps> = ({
   formData,
@@ -84,7 +73,6 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
           setSavingQuote(false);
         }
       } catch (err) {
-        console.error('Errore nel calcolo prezzi:', err);
         setError('Non è possibile calcolare il preventivo. Alcune date potrebbero non essere disponibili.');
         setSavingQuote(false);
       } finally {
@@ -146,7 +134,7 @@ Totale posti letto: ${bedsNeeded}
 🏠 *APPARTAMENTI:*
 ${formData.selectedApartments.map(aptId => {
   const apt = priceCalculation.apartmentPrices.find((p: any) => p.apartmentId === aptId);
-  return `• ${apartmentNames[aptId as keyof typeof apartmentNames]} - Occupazione: ${apt?.occupation}`;
+  return `• ${APARTMENT_NAMES[aptId] || `Appartamento ${aptId}`} - Occupazione: ${apt?.occupation}`;
 }).join('\n')}
 
 ${formData.hasPets ? `🐕 *ANIMALE:* Sì - ${formData.petCount || 1} animale${(formData.petCount || 1) > 1 ? 'i' : ''}` : '🐕 *ANIMALE:* No'}

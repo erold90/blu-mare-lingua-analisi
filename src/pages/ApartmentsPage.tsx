@@ -15,7 +15,6 @@ const ApartmentsPage = () => {
   // Listen for image updates from admin panel
   useEffect(() => {
     const handleImageUpdate = () => {
-      console.log("🔄 Received apartmentImagesUpdated event, reloading images...");
       reloadImages();
     };
 
@@ -43,7 +42,6 @@ const ApartmentsPage = () => {
   ];
 
   const handleApartmentDetailsClick = (apartmentId: string) => {
-    console.log(`Details clicked for apartment: ${apartmentId}`);
   };
 
   if (isLoading) {

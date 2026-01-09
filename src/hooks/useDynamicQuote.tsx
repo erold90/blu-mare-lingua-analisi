@@ -12,7 +12,6 @@ export const useDynamicQuote = () => {
       setLoading(true);
       setError(null);
       
-      console.log('Calculating quote with params:', params);
       
       const result = await PricingService.calculateQuote(params);
       setQuoteResult(result);
@@ -37,7 +36,6 @@ export const useDynamicQuote = () => {
     try {
       return await PricingService.checkAvailability(apartmentId, checkin, checkout);
     } catch (err: any) {
-      console.error('Error checking availability:', err);
       return false;
     }
   }, []);
@@ -61,7 +59,6 @@ export const useDynamicQuote = () => {
       }, {} as Record<number, boolean>);
       
     } catch (err: any) {
-      console.error('Error checking multiple availability:', err);
       return {};
     }
   }, []);
@@ -96,7 +93,6 @@ export const useDynamicQuote = () => {
     try {
       return await PricingService.getPriceForPeriod(apartmentId, checkin, checkout);
     } catch (err: any) {
-      console.error('Error getting price for period:', err);
       return null;
     }
   }, []);
@@ -108,7 +104,6 @@ export const useDynamicQuote = () => {
 
   const invalidateCache = useCallback(() => {
     PricingService.invalidateCache();
-    console.log('🔄 Cache prezzi invalidata');
     toast.success('Cache prezzi aggiornata');
   }, []);
 

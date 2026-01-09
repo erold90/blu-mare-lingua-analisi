@@ -119,7 +119,6 @@ export const PricingManagement = () => {
     } catch (error) {
       toast.dismiss();
       toast.error('Errore durante il salvataggio');
-      console.error('Errore batch update:', error);
     }
   };
 

@@ -41,14 +41,11 @@ class ImageCacheService {
             this.imageExistenceCache.set(path, exists as boolean);
           });
           
-          console.log(`Image cache loaded with ${this.imageExistenceCache.size} items`);
         } else {
-          console.log("Image cache expired, will be rebuilt");
           this.clearCache(); // Clear expired cache
         }
       }
     } catch (error) {
-      console.error("Error loading image cache:", error);
     }
   }
 
@@ -74,9 +71,7 @@ class ImageCacheService {
         localStorage.setItem(IMAGE_CACHE_KEY, JSON.stringify(data));
         localStorage.setItem(IMAGE_TIMESTAMP_KEY, String(new Date().getTime()));
         
-        console.log(`Image cache saved with ${Object.keys(data).length} items`);
       } catch (error) {
-        console.error("Error saving image cache:", error);
       }
     }, 1000); // 1 second debounce
   }
@@ -111,7 +106,6 @@ class ImageCacheService {
    * Clear the entire image cache
    */
   clearCache(): void {
-    console.log("Clearing image cache...");
     
     // Clear memory caches
     this.imageExistenceCache.clear();

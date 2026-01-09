@@ -48,7 +48,6 @@ export const StepWhatsApp: React.FC<StepWhatsAppProps> = ({
         const result = await calculatePrice();
         setPriceCalculation(result);
       } catch (error) {
-        console.error('Error loading price calculation:', error);
       } finally {
         setLoading(false);
       }

@@ -74,16 +74,13 @@ class ImageService {
    * Scan for all apartment images - Only use Supabase
    */
   async scanApartmentImages(apartmentId: string, maxImages = 20): Promise<string[]> {
-    console.log(`Scanning images for apartment ${apartmentId} - using only Supabase`);
     
     const supabaseImages = await supabaseImageService.getApartmentImages(apartmentId);
     
     if (supabaseImages.length > 0) {
-      console.log(`Found ${supabaseImages.length} images in Supabase for apartment ${apartmentId}`);
       return supabaseImages;
     }
     
-    console.log(`No images found in Supabase for apartment ${apartmentId}`);
     return [];
   }
   
@@ -118,16 +115,13 @@ class ImageService {
    * Get cover image for apartment - Only use Supabase
    */
   async getCoverImage(apartmentId: string): Promise<string | null> {
-    console.log(`Getting cover image for apartment ${apartmentId} from Supabase only`);
     
     const coverImage = await supabaseImageService.getCoverImage(apartmentId);
     
     if (coverImage) {
-      console.log(`Found cover image in Supabase for apartment ${apartmentId}`);
       return coverImage;
     }
     
-    console.log(`No cover image found in Supabase for apartment ${apartmentId}`);
     return null;
   }
 
@@ -137,7 +131,6 @@ class ImageService {
   updateFavicon(faviconPath: string): void {
     if (!faviconPath) return;
     
-    console.log("Updating favicon to:", faviconPath);
     
     try {
       const timestamp = new Date().getTime();
@@ -147,7 +140,6 @@ class ImageService {
         finalPath = `${finalPath}?v=${timestamp}`;
       }
       
-      console.log("Final favicon path:", finalPath);
       
       const existingFavicons = document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]');
       
@@ -172,7 +164,6 @@ class ImageService {
       }
       
     } catch (error) {
-      console.error("Error updating favicon:", error);
     }
   }
 }

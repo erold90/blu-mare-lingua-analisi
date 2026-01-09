@@ -28,5 +28,4 @@ export const getApiConnectionFailed = () => apiConnectionFailed;
 try {
   offlineMode = localStorage.getItem('offline_mode') === 'true';
 } catch (e) {
-  console.error('Errore nel leggere lo stato della modalità offline:', e);
 }

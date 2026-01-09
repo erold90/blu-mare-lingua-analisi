@@ -26,7 +26,6 @@ const openDatabase = (): Promise<IDBDatabase> => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     
     request.onerror = (event) => {
-      console.error("IndexedDB error:", request.error);
       reject(request.error);
     };
     
@@ -138,7 +137,6 @@ export const saveImage = async (
     onProgress?.(10);
     
     // Optimize the image
-    console.log(`Ottimizzazione immagine ${category}: ${file.name}`);
     const optimizedFile = await optimizeImage(file);
     
     // Report progress after optimization
@@ -178,19 +176,15 @@ export const saveImage = async (
       const request = store.put(imageData);
       
       request.onerror = () => {
-        console.error('Error saving image to IndexedDB:', request.error);
         reject(request.error);
       };
       
       request.onsuccess = () => {
-        console.log(`Immagine ${category} salvata con successo:`, path);
         
         // Also save to cloud storage for cross-device access
         saveImageToCloud(path).then(success => {
           if (success) {
-            console.log(`Immagine ${category} sincronizzata col cloud`);
           } else {
-            console.warn(`Immagine ${category} non sincronizzata col cloud`);
           }
         });
         
@@ -203,7 +197,6 @@ export const saveImage = async (
       };
     });
   } catch (error) {
-    console.error(`Error saving ${category} image:`, error);
     throw error;
   }
 };
@@ -256,13 +249,11 @@ export const getImage = async (path: string): Promise<StoredImage | null> => {
               const saveStore = saveTransaction.objectStore(STORE_NAME);
               saveStore.put(tempImage);
               
-              console.log("Image loaded from cloud and saved to IndexedDB:", path);
               resolve(tempImage);
             } else {
               resolve(null);
             }
           } catch (cloudError) {
-            console.error('Error retrieving image from cloud:', cloudError);
             resolve(null);
           }
         }
@@ -273,7 +264,6 @@ export const getImage = async (path: string): Promise<StoredImage | null> => {
       };
     });
   } catch (error) {
-    console.error('Error retrieving image:', error);
     
     // As a last resort, try to get from cloud storage
     try {
@@ -293,7 +283,6 @@ export const getImage = async (path: string): Promise<StoredImage | null> => {
         return tempImage;
       }
     } catch (cloudError) {
-      console.error('Error retrieving image from cloud as fallback:', cloudError);
     }
     
     return null;
@@ -329,7 +318,6 @@ export const getImagesByCategory = async (category: ImageCategory): Promise<Stor
       };
     });
   } catch (error) {
-    console.error('Error retrieving images by category:', error);
     return [];
   }
 };
@@ -363,7 +351,6 @@ export const deleteImage = async (path: string): Promise<boolean> => {
       };
     });
   } catch (error) {
-    console.error('Error deleting image:', error);
     return false;
   }
 };
@@ -407,11 +394,9 @@ export const pruneOldImages = async (maxImages: number = 200): Promise<void> => 
           await deleteImage(image.path);
         }
         
-        console.log(`Pruned ${toDelete.length} old images`);
       };
     };
   } catch (error) {
-    console.error('Error pruning old images:', error);
   }
 };
 
@@ -442,7 +427,6 @@ export const getStorageSize = async (): Promise<number> => {
       };
     });
   } catch (error) {
-    console.error('Error getting storage size:', error);
     return 0;
   }
 };

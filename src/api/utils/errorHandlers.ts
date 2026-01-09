@@ -15,7 +15,6 @@ export function handleNonJsonResponse<T>(endpoint: string): ApiResponse<T> {
   }
   
   if (endpoint === '/ping/database') {
-    console.log("Test database remoto fallito, verifica che il server sia attivo");
     return {
       success: false,
       error: "Remote database connection failed - check server status"
@@ -68,7 +67,6 @@ export function handleServerUnavailable<T>(endpoint: string, method: string): Ap
           data: JSON.parse(mockData) as unknown as T
         };
       } catch (e) {
-        console.error('Errore nel parsing dei dati degli appartamenti:', e);
       }
     }
   }

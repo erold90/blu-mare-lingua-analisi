@@ -8,7 +8,6 @@ export const useApartmentImages = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const loadApartmentImages = async () => {
-    console.log("🏠 Loading apartment images from Supabase...");
     try {
       const imagesMap: { [key: string]: string[] } = {};
       
@@ -30,21 +29,16 @@ export const useApartmentImages = () => {
             const imageUrls = orderedImages.map(img => imageService.getImageUrl(img.file_path));
             
             imagesMap[apartment.id] = imageUrls;
-            console.log(`📸 Loaded ${imageUrls.length} images for ${apartment.name} from Supabase (cover: ${coverImage ? 'YES' : 'NO'})`);
           } else {
-            console.log(`⚠️ No images found for ${apartment.name} in Supabase, using placeholder`);
             imagesMap[apartment.id] = ["/placeholder.svg"];
           }
         } catch (error) {
-          console.error(`❌ Error loading images for ${apartment.name}:`, error);
           imagesMap[apartment.id] = ["/placeholder.svg"];
         }
       }
       
       setApartmentImages(imagesMap);
-      console.log("✅ All apartment images loaded from Supabase:", imagesMap);
     } catch (error) {
-      console.error("❌ Error loading apartment images:", error);
     } finally {
       setIsLoading(false);
     }
@@ -55,7 +49,6 @@ export const useApartmentImages = () => {
 
     // Listen for image updates
     const handleImageUpdate = () => {
-      console.log("🔄 Images updated, reloading...");
       loadApartmentImages();
     };
 

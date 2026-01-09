@@ -4,12 +4,10 @@ import { useEffect } from 'react';
 export const useOptimizedTracking = () => {
   const trackPageView = (page: string) => {
     // Simple page view tracking
-    console.log('Page view:', page);
   };
 
   const trackEvent = (event: string, data?: any) => {
     // Simple event tracking
-    console.log('Event:', event, data);
   };
 
   useEffect(() => {

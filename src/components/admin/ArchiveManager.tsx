@@ -45,7 +45,6 @@ export function ArchiveManager() {
         toast.success(`${count} prenotazioni del ${year} archiviate con successo! Le statistiche sui ricavi sono state preservate.`);
       }
     } catch (error) {
-      console.error('Error archiving reservations:', error);
       toast.error('Errore durante l\'archiviazione delle prenotazioni');
     } finally {
       setIsArchiving(false);

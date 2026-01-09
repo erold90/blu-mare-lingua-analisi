@@ -46,7 +46,6 @@ const encryptData = (data: string): string => {
     }
     return btoa(encrypted);
   } catch (error) {
-    console.error('Encryption failed:', error);
     return btoa(data); // Fallback to simple base64
   }
 };
@@ -63,7 +62,6 @@ const decryptData = (data: string): string => {
     }
     return decrypted;
   } catch (error) {
-    console.warn('Decryption failed, trying legacy format:', error);
     try {
       return atob(data); // Try legacy base64
     } catch {
@@ -119,7 +117,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       try {
         return JSON.parse(savedSettings);
       } catch (error) {
-        console.error("Failed to parse saved site settings:", error);
         return defaultSiteSettings;
       }
     }
@@ -133,7 +130,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const decryptedSettings = decryptData(savedSettings);
         return JSON.parse(decryptedSettings);
       } catch (error) {
-        console.error("Failed to parse saved admin settings:", error);
         return defaultAdminSettings;
       }
     }
@@ -146,7 +142,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   // Load images on startup and sync with cloud storage
   useEffect(() => {
     const loadImages = async () => {
-      console.log("SettingsProvider: Loading images and syncing with cloud");
       
       // Prune old images first (keep storage manageable)
       await pruneOldImages(200);
@@ -161,10 +156,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         
         // If not found locally but exists in cloud, use cloud version
         if (!heroImage && isImageInCloud(siteSettings.heroImage)) {
-          console.log("Hero image found in cloud storage");
           // The image path is valid, don't reset it
         } else if (!heroImage) {
-          console.warn("Hero image not found in any storage, resetting to default");
           setSiteSettings(prev => ({ ...prev, heroImage: "/placeholder.svg" }));
         }
       }
@@ -190,7 +183,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // Filter out any null values (images not found anywhere)
         const filteredHomeImages = validHomeImages.filter(Boolean) as string[];
         if (filteredHomeImages.length !== siteSettings.homeImages.length) {
-          console.warn("Some home images were not found in any storage, updating list");
           setSiteSettings(prev => ({ ...prev, homeImages: filteredHomeImages }));
         }
       }
@@ -202,10 +194,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         
         // If not found locally but exists in cloud, use cloud version
         if (!socialImage && isImageInCloud(siteSettings.socialImage)) {
-          console.log("Social image found in cloud storage");
           // The image path is valid, don't reset it
         } else if (!socialImage) {
-          console.warn("Social image not found in any storage, resetting to default");
           setSiteSettings(prev => ({ ...prev, socialImage: "/placeholder.svg" }));
         }
       }
@@ -217,10 +207,8 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         
         // If not found locally but exists in cloud, use cloud version
         if (!favicon && isImageInCloud(siteSettings.favicon)) {
-          console.log("Favicon found in cloud storage");
           // The image path is valid, don't reset it
         } else if (!favicon) {
-          console.warn("Favicon not found in any storage, resetting to default");
           setSiteSettings(prev => ({ ...prev, favicon: "/favicon.ico" }));
         }
       }
@@ -234,7 +222,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     try {
       localStorage.setItem("siteSettings", JSON.stringify(siteSettings));
     } catch (error) {
-      console.error("Failed to save site settings to localStorage:", error);
       toast.error("Errore nel salvataggio delle impostazioni");
     }
   }, [siteSettings]);
@@ -244,7 +231,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       const encryptedSettings = encryptData(JSON.stringify(adminSettings));
       localStorage.setItem("adminSettings", encryptedSettings);
     } catch (error) {
-      console.error("Failed to save admin settings to localStorage:", error);
       toast.error("Errore nel salvataggio delle impostazioni admin");
     }
   }, [adminSettings]);
@@ -324,7 +310,6 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       return imagePath;
     } catch (error) {
-      console.error(`Error saving ${category} image:`, error);
       toast.error(`Errore nel salvare l'immagine: ${(error as Error).message}`);
       throw error;
     } finally {

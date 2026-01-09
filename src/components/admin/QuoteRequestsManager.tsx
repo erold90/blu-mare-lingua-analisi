@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -14,13 +14,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { 
-  Receipt, 
-  Calendar, 
-  Users, 
-  Home, 
-  Heart, 
-  Bed, 
+import {
+  Receipt,
+  Calendar,
+  Users,
+  Home,
+  Heart,
+  Bed,
   Euro,
   MessageCircle,
   Filter,
@@ -33,6 +33,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
+import { APARTMENT_NAMES_BY_ID } from '@/config/apartments';
 
 interface QuoteRequest {
   id: number;
@@ -65,13 +66,6 @@ export const QuoteRequestsManager: React.FC = () => {
   const [deleteTarget, setDeleteTarget] = useState<'single' | 'multiple'>('single');
   const [singleDeleteId, setSingleDeleteId] = useState<number | null>(null);
 
-  const apartmentNames = {
-    1: "Appartamento 1 (6 posti)",
-    2: "Appartamento 2 (8 posti)", 
-    3: "Appartamento 3 (4 posti)",
-    4: "Appartamento 4 (5 posti)"
-  };
-
   const loadQuotes = async () => {
     try {
       setLoading(true);
@@ -92,9 +86,7 @@ export const QuoteRequestsManager: React.FC = () => {
       if (error) throw error;
 
       setQuotes(data || []);
-      console.log('📊 Quotes loaded:', data?.length);
     } catch (err: any) {
-      console.error('Error loading quotes:', err);
     } finally {
       setLoading(false);
     }
@@ -182,7 +174,6 @@ export const QuoteRequestsManager: React.FC = () => {
       setShowDeleteDialog(false);
       setSingleDeleteId(null);
     } catch (err: any) {
-      console.error('Errore eliminazione:', err);
       toast({
         title: "Errore",
         description: "Impossibile eliminare i preventivi",
@@ -370,7 +361,7 @@ export const QuoteRequestsManager: React.FC = () => {
                   <div className="space-y-1">
                     {quote.selected_apartments.map(aptId => (
                       <div key={aptId} className="text-xs">
-                        {apartmentNames[aptId as keyof typeof apartmentNames]}
+                        {APARTMENT_NAMES_BY_ID[aptId] || `Appartamento ${aptId}`}
                       </div>
                     ))}
                   </div>

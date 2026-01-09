@@ -66,16 +66,12 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
   // Controlla la disponibilità dinamicamente per tutti gli appartamenti
   useEffect(() => {
     const checkAllAvailability = async () => {
-      console.log('🏠 Controllo disponibilità appartamenti...');
-      console.log('📅 Date:', { checkIn: formData.checkIn, checkOut: formData.checkOut });
       
       if (!formData.checkIn || !formData.checkOut) {
-        console.log('❌ Date mancanti, salto controllo disponibilità');
         return;
       }
       
       // Invalida la cache dei prezzi per ottenere dati aggiornati
-      console.log('🔄 Invalidando cache prezzi per selezione appartamenti...');
       PricingService.invalidateCache();
       
       const newStatus: Record<string, boolean> = {};
@@ -83,10 +79,8 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
       
       for (const apartment of apartments) {
         try {
-          console.log(`🔍 Controllo appartamento ${apartment.id}...`);
           const available = await isApartmentAvailable(apartment.id, formData.checkIn, formData.checkOut);
           newStatus[apartment.id] = available;
-          console.log(`✅ Appartamento ${apartment.id}: ${available ? 'DISPONIBILE' : 'OCCUPATO'}`);
           
           // Calcola il prezzo solo se l'appartamento è disponibile
           if (available) {
@@ -100,17 +94,13 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
               // Applica sconto del 10% (per sconti finali e arrotondamenti)
               const discountedPrice = Math.round(pricePerNight * 0.9);
               newPrices[apartment.id] = discountedPrice;
-              console.log(`💰 Appartamento ${apartment.id}: €${discountedPrice}/notte (scontato dal prezzo base ${pricePerNight})`);
             }
           }
         } catch (error) {
-          console.error(`❌ Errore checking availability for apartment ${apartment.id}:`, error);
           newStatus[apartment.id] = false;
         }
       }
       
-      console.log('📊 Stato finale disponibilità:', newStatus);
-      console.log('💰 Prezzi per notte:', newPrices);
       setAvailabilityStatus(newStatus);
       setApartmentPrices(newPrices);
     };

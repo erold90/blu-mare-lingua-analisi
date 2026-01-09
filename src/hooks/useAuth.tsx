@@ -1,7 +1,11 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+// Timeout sessione: 30 minuti di inattività
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+const ACTIVITY_EVENTS = ['mousedown', 'keydown', 'scroll', 'touchstart'];
 
 interface AuthContextType {
   user: User | null;
@@ -20,64 +24,126 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isCheckingAdmin = useRef(false);
+
+  // Funzione per verificare se l'utente è admin
+  const checkAdminStatus = useCallback(async (userId: string): Promise<boolean> => {
+    if (isCheckingAdmin.current) return isAdmin;
+
+    isCheckingAdmin.current = true;
+    try {
+      const { data: adminProfile, error } = await supabase
+        .from('admin_profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        return false;
+      }
+
+      return !!adminProfile;
+    } catch {
+      return false;
+    } finally {
+      isCheckingAdmin.current = false;
+    }
+  }, [isAdmin]);
+
+  // Reset del timer di inattività
+  const resetActivityTimer = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    if (session) {
+      timeoutRef.current = setTimeout(async () => {
+        toast.warning('Sessione scaduta per inattività');
+        await supabase.auth.signOut();
+      }, SESSION_TIMEOUT_MS);
+    }
+  }, [session]);
+
+  // Gestione eventi di attività utente
+  useEffect(() => {
+    if (!session) return;
+
+    const handleActivity = () => resetActivityTimer();
+
+    ACTIVITY_EVENTS.forEach(event => {
+      window.addEventListener(event, handleActivity, { passive: true });
+    });
+
+    // Avvia il timer iniziale
+    resetActivityTimer();
+
+    return () => {
+      ACTIVITY_EVENTS.forEach(event => {
+        window.removeEventListener(event, handleActivity);
+      });
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [session, resetActivityTimer]);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    let mounted = true;
+
+    // Listener per cambiamenti di stato auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        // Check admin status when session changes
-        if (session?.user) {
-          setTimeout(async () => {
-            try {
-              const { data: adminProfile } = await supabase
-                .from('admin_profiles')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .single();
-              
-              setIsAdmin(!!adminProfile);
-            } catch (error) {
-              setIsAdmin(false);
-            }
-          }, 0);
+      async (event, currentSession) => {
+        if (!mounted) return;
+
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+
+        if (currentSession?.user) {
+          const adminStatus = await checkAdminStatus(currentSession.user.id);
+          if (mounted) {
+            setIsAdmin(adminStatus);
+            setLoading(false);
+          }
         } else {
-          setIsAdmin(false);
+          if (mounted) {
+            setIsAdmin(false);
+            setLoading(false);
+          }
         }
-        
-        setLoading(false);
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        setTimeout(async () => {
-          try {
-            const { data: adminProfile } = await supabase
-              .from('admin_profiles')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .single();
-            
-            setIsAdmin(!!adminProfile);
-          } catch (error) {
-            setIsAdmin(false);
-          }
-          setLoading(false);
-        }, 0);
-      } else {
-        setLoading(false);
-      }
-    });
+    // Verifica sessione esistente
+    const initializeAuth = async () => {
+      try {
+        const { data: { session: existingSession } } = await supabase.auth.getSession();
 
-    return () => subscription.unsubscribe();
-  }, []);
+        if (!mounted) return;
+
+        setSession(existingSession);
+        setUser(existingSession?.user ?? null);
+
+        if (existingSession?.user) {
+          const adminStatus = await checkAdminStatus(existingSession.user.id);
+          if (mounted) {
+            setIsAdmin(adminStatus);
+          }
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    initializeAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, [checkAdminStatus]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -85,12 +151,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
       });
-      
+
       if (error) {
         toast.error(error.message);
         return { error };
       }
-      
+
       toast.success('Accesso effettuato con successo');
       return { error: null };
     } catch (error) {
@@ -102,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
       const redirectUrl = `${window.location.origin}/`;
-      
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -113,7 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       });
-      
+
       if (error) {
         if (error.message.includes('already registered')) {
           toast.error('Questo indirizzo email è già registrato');
@@ -122,7 +188,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return { error };
       }
-      
+
       toast.success('Registrazione completata! Controlla la tua email per confermare l\'account.');
       return { error: null };
     } catch (error) {
@@ -133,6 +199,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
       const { error } = await supabase.auth.signOut();
       if (error) {
         toast.error(error.message);
@@ -140,7 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         toast.success('Logout effettuato');
         setIsAdmin(false);
       }
-    } catch (error) {
+    } catch {
       toast.error('Errore durante il logout');
     }
   };

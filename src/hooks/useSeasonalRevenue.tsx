@@ -142,7 +142,6 @@ export function useSeasonalRevenue() {
       });
       
     } catch (error) {
-      console.error('Error calculating seasonal revenue:', error);
     } finally {
       setLoading(false);
     }

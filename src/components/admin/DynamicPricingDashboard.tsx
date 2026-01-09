@@ -95,7 +95,6 @@ export const DynamicPricingDashboard: React.FC = () => {
         recentQuotes: quotes?.slice(0, 5) || []
       });
     } catch (error: any) {
-      console.error('Errore caricamento analytics:', error);
     }
   };
 

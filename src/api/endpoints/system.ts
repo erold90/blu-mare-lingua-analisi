@@ -21,7 +21,6 @@ export const systemApi = {
       }
       
       // Se l'endpoint unificato fallisce, proviamo con i singoli endpoint
-      console.log('Endpoint unificato fallito, provo con i singoli endpoint');
       const reservationsSync = await syncApi.syncData('reservations');
       const cleaningSync = await syncApi.syncData('cleaning_tasks');
       const apartmentsSync = await syncApi.syncData('apartments');
@@ -35,7 +34,6 @@ export const systemApi = {
         }
       };
     } catch (error) {
-      console.error('Errore durante la sincronizzazione:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Errore durante la sincronizzazione'

@@ -120,7 +120,6 @@ export function advancedSanitize(input: string, context: 'email' | 'text' | 'url
   // Check for security violations
   Object.entries(SECURITY_PATTERNS).forEach(([key, rule]) => {
     if (rule.pattern.test(sanitized)) {
-      console.warn(`Security violation detected (${key}):`, sanitized);
       if (rule.severity === 'error') {
         toast.error(rule.message);
         // Return empty string for dangerous content
@@ -225,7 +224,6 @@ export class SecurityMonitor {
     }
 
     // Log to console for debugging
-    console.warn('Security violation:', { type, data });
   }
 
   static getViolations(): typeof SecurityMonitor.violations {

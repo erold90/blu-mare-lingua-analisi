@@ -23,13 +23,10 @@ const trackGoogleAdsConversion = () => {
           (window as any).gtag('event', 'conversion', {
             'send_to': 'AW-1009072951/hjPlCKOwnJnuAELfJ1GEP'
           });
-          console.log('Google Ads conversion tracked: Form submission');
         }
       } else {
-        console.log('Marketing cookies not accepted - skipping conversion tracking');
       }
     } catch (error) {
-      console.warn('Error checking cookie consent for conversion tracking:', error);
     }
   }
 };
@@ -50,7 +47,6 @@ const ContactsPage = () => {
     setIsSubmitting(true);
 
     try {
-      console.log("Invio email tramite Supabase Edge Function...");
       
       const formData = new FormData(event.currentTarget);
       const contactData = {
@@ -70,7 +66,6 @@ const ContactsPage = () => {
         throw new Error(error.message);
       }
 
-      console.log("Email inviata con successo:", data);
 
       // Traccia la conversione Google Ads SOLO se l'email è stata inviata con successo
       // e solo se l'utente ha acconsentito ai cookie di marketing
@@ -79,7 +74,6 @@ const ContactsPage = () => {
       toast.success("Messaggio inviato con successo! Ti risponderemo al più presto.");
       formRef.current?.reset();
     } catch (error) {
-      console.error("Errore invio email:", error);
       toast.error("Si è verificato un errore. Puoi contattarci direttamente a macchiaforcato@gmail.com o al +39 378 0038730");
     } finally {
       setIsSubmitting(false);

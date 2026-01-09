@@ -20,12 +20,10 @@ class SupabaseImageService {
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('Error fetching apartment images from Supabase:', error);
         return [];
       }
 
       if (!data || data.length === 0) {
-        console.log(`No images found in Supabase for apartment ${apartmentId}`);
         return [];
       }
 
@@ -38,10 +36,8 @@ class SupabaseImageService {
         return urlData.publicUrl;
       });
 
-      console.log(`Found ${imageUrls.length} images in Supabase for apartment ${apartmentId}`);
       return imageUrls;
     } catch (error) {
-      console.error('Error in getApartmentImages:', error);
       return [];
     }
   }
@@ -60,7 +56,6 @@ class SupabaseImageService {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching cover image:', error);
         return null;
       }
 
@@ -76,7 +71,6 @@ class SupabaseImageService {
 
       return urlData.publicUrl;
     } catch (error) {
-      console.error('Error in getCoverImage:', error);
       return null;
     }
   }
@@ -93,13 +87,11 @@ class SupabaseImageService {
         .eq('apartment_id', apartmentId);
 
       if (error) {
-        console.error('Error checking images count:', error);
         return false;
       }
 
       return (count || 0) > 0;
     } catch (error) {
-      console.error('Error in hasImages:', error);
       return false;
     }
   }

@@ -28,7 +28,6 @@ export class ImageDatabaseService {
       
       return (data || []) as ImageRecord[];
     } catch (error) {
-      console.error('Error fetching images:', error);
       return [];
     }
   }
@@ -52,7 +51,6 @@ export class ImageDatabaseService {
       toast.success("Immagine aggiornata");
       return data as ImageRecord;
     } catch (error) {
-      console.error('Error updating image:', error);
       toast.error("Errore nell'aggiornamento dell'immagine");
       return null;
     }
@@ -83,7 +81,6 @@ export class ImageDatabaseService {
       toast.success("Immagine di copertina impostata");
       return true;
     } catch (error) {
-      console.error('Error setting cover image:', error);
       toast.error("Errore nell'impostare l'immagine di copertina");
       return false;
     }
@@ -94,11 +91,9 @@ export class ImageDatabaseService {
    */
   async reorderImages(imageUpdates: { id: string; display_order: number }[]): Promise<boolean> {
     try {
-      console.log('Starting reorder operation with updates:', imageUpdates);
       
       // Update each image's display_order individually to ensure they all succeed
       const updatePromises = imageUpdates.map(async (update) => {
-        console.log(`Updating image ${update.id} to display_order ${update.display_order}`);
         
         const { error } = await supabase
           .from('images')
@@ -109,7 +104,6 @@ export class ImageDatabaseService {
           .eq('id', update.id);
           
         if (error) {
-          console.error(`Error updating image ${update.id}:`, error);
           throw error;
         }
         
@@ -118,11 +112,9 @@ export class ImageDatabaseService {
       
       await Promise.all(updatePromises);
       
-      console.log('All image orders updated successfully');
       toast.success("Ordine immagini aggiornato");
       return true;
     } catch (error) {
-      console.error('Error reordering images:', error);
       toast.error("Errore nel riordinare le immagini");
       return false;
     }
@@ -147,7 +139,6 @@ export class ImageDatabaseService {
       
       return data as ImageRecord || null;
     } catch (error) {
-      console.error('Error fetching cover image:', error);
       return null;
     }
   }

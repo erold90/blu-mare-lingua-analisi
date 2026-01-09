@@ -36,7 +36,6 @@ export const VisitAnalytics: React.FC = () => {
     try {
       setLoading(true);
       
-      console.log('📊 Loading analytics for period:', period);
       
       const { data, error } = await supabase.functions.invoke('get-visit-analytics', {
         body: { period }
@@ -46,12 +45,10 @@ export const VisitAnalytics: React.FC = () => {
 
       if (data?.success) {
         setAnalytics(data.data);
-        console.log('✅ Analytics loaded:', data.data);
       } else {
         throw new Error(data?.error || 'Failed to load analytics');
       }
     } catch (err: any) {
-      console.error('Error loading analytics:', err);
     } finally {
       setLoading(false);
     }

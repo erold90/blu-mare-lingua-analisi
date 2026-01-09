@@ -24,7 +24,6 @@ export const syncImageToServer = async (path: string): Promise<boolean> => {
     // Ottieni l'immagine da IndexedDB
     const image = await getImage(path);
     if (!image || !image.data) {
-      console.error("Immagine non trovata in locale:", path);
       return false;
     }
     
@@ -60,7 +59,6 @@ export const syncImageToServer = async (path: string): Promise<boolean> => {
     const result = await response.json();
     
     if (result.success) {
-      console.log(`Immagine sincronizzata con successo sul server in /${targetFolder}/${serverFileName}`);
       
       // Aggiorna il mapping locale per tenere traccia di dove è stata salvata l'immagine sul server
       await updateLocalPathMapping(path, {
@@ -74,7 +72,6 @@ export const syncImageToServer = async (path: string): Promise<boolean> => {
       throw new Error(result.message || "Errore sconosciuto durante il salvataggio");
     }
   } catch (error) {
-    console.error("Errore durante la sincronizzazione:", error);
     toast.error("Errore nel salvataggio dell'immagine sul server: " + (error as Error).message);
     return false;
   }
@@ -108,26 +105,22 @@ export const deleteImageEverywhere = async (path: string): Promise<boolean> => {
       });
       
       if (!response.ok) {
-        console.error(`Errore nella risposta del server: ${response.status}`);
         return false;
       }
       
       const result = await response.json();
       
       if (result.success) {
-        console.log(`Immagine eliminata con successo dal server: ${mapping.serverPath}`);
         // Rimuovi anche il mapping
         await removePathMapping(path);
         return true;
       } else {
-        console.error(`Errore nell'eliminazione dell'immagine dal server: ${result.message}`);
         return false;
       }
     }
     
     return true;
   } catch (error) {
-    console.error("Errore durante l'eliminazione dell'immagine:", error);
     return false;
   }
 };
@@ -137,7 +130,6 @@ export const deleteImageEverywhere = async (path: string): Promise<boolean> => {
  */
 export const syncAllImagesToServer = async (): Promise<{success: number, failed: number}> => {
   try {
-    console.log("Avvio sincronizzazione completa con il server...");
     
     // Ottieni tutte le immagini da IndexedDB
     const categories: ImageCategory[] = ['hero', 'home', 'social', 'favicon'];
@@ -173,7 +165,6 @@ export const syncAllImagesToServer = async (): Promise<{success: number, failed:
         
         db.close();
       } catch (err) {
-        console.error(`Errore nella sincronizzazione della categoria ${category}:`, err);
       }
     }
     
@@ -187,7 +178,6 @@ export const syncAllImagesToServer = async (): Promise<{success: number, failed:
     
     return { success: successCount, failed: failedCount };
   } catch (error) {
-    console.error("Errore durante la sincronizzazione completa:", error);
     return { success: 0, failed: 0 };
   }
 };
@@ -265,7 +255,6 @@ const updateLocalPathMapping = async (
       transaction.oncomplete = () => db.close();
     });
   } catch (error) {
-    console.error("Errore nell'aggiornare il mapping dei percorsi:", error);
     return false;
   }
 };
@@ -288,7 +277,6 @@ const getPathMapping = async (localPath: string): Promise<PathMapping | null> =>
       transaction.oncomplete = () => db.close();
     });
   } catch (error) {
-    console.error("Errore nell'ottenere il mapping dei percorsi:", error);
     return null;
   }
 };
@@ -311,7 +299,6 @@ const removePathMapping = async (localPath: string): Promise<boolean> => {
       transaction.oncomplete = () => db.close();
     });
   } catch (error) {
-    console.error("Errore nella rimozione del mapping dei percorsi:", error);
     return false;
   }
 };

@@ -58,7 +58,6 @@ export const pricingService = {
   },
 
   updateWeeklyPrice: async (id: string, updates: Partial<WeeklyPrice>) => {
-    console.log('🔄 Service: Aggiornamento prezzo con ID:', id, 'Updates:', updates);
     
     const { data, error } = await supabase
       .from('weekly_prices')
@@ -67,35 +66,24 @@ export const pricingService = {
       .select()
       .single();
     
-    console.log('🔍 Service: Risultato query:', { data, error });
     
     if (error) {
-      console.error('❌ Service: Errore database:', error);
       throw error;
     }
     
-    console.log('✅ Service: Prezzo aggiornato con successo:', data);
     return data;
   },
 
   generateWeeklyPricesForYear: async (targetYear: number, copyFromYear?: number) => {
-    console.log('🔄 Service: Chiamando RPC generate_weekly_prices_for_year con parametri:', {
-      target_year: targetYear,
-      copy_from_year: copyFromYear || null
-    });
-    
     const { data, error } = await supabase.rpc('generate_weekly_prices_for_year', {
       target_year: targetYear,
       copy_from_year: copyFromYear || null
     });
-    
-    console.log('🔍 Service: Risultato RPC:', { data, error });
-    
+
     if (error) {
-      console.error('❌ Service: Errore RPC:', error);
       throw new Error(`Database error: ${error.message} (${error.code})`);
     }
-    
+
     return data;
   },
 

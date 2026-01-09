@@ -56,7 +56,6 @@ export function useArchivedReservations(year?: number) {
       setArchivedReservations(transformedData);
       setError(null);
     } catch (err) {
-      console.error('Error fetching archived reservations:', err);
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
@@ -104,7 +103,6 @@ export function useArchivedReservations(year?: number) {
           : JSON.parse(reservation.apartment_ids as string || '[]')
       }));
     } catch (err) {
-      console.error('Error fetching all reservations:', err);
       return [];
     }
   }, []); // No dependencies - function is stable

@@ -24,7 +24,6 @@ export class ApartmentImageService {
       const storedImages = JSON.parse(storedImagesStr);
       return storedImages[apartmentId] || null;
     } catch (error) {
-      console.error("Error retrieving images from cache:", error);
       return null;
     }
   }
@@ -43,7 +42,6 @@ export class ApartmentImageService {
       // Notify other components about change
       window.dispatchEvent(new CustomEvent("apartmentImagesUpdated"));
     } catch (error) {
-      console.error("Error saving images to cache:", error);
     }
   }
 
@@ -51,12 +49,10 @@ export class ApartmentImageService {
    * Scan for all images for an apartment efficiently
    */
   async scanApartmentImages(apartmentId: string, maxImages = 20): Promise<string[]> {
-    console.log(`Scanning images for apartment ${apartmentId}`);
     
     // Check if we already have images in cache
     const cachedAptImages = this.getApartmentImagesFromCache(apartmentId);
     if (cachedAptImages && cachedAptImages.length > 0) {
-      console.log(`Found ${cachedAptImages.length} cached images for ${apartmentId}`);
       
       // Preload images in background for faster display
       imageLoaderService.preloadImages(cachedAptImages);

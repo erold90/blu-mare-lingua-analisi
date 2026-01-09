@@ -16,7 +16,6 @@ const IntroductionSection = () => {
         const primaryImage = introImages.find(img => img.is_cover) || introImages[0] || null;
         setIntroImage(primaryImage);
       } catch (error) {
-        console.error('Error loading introduction image:', error);
       }
     };
 
@@ -24,7 +23,6 @@ const IntroductionSection = () => {
 
     // Listen for home image updates from admin panel
     const handleHomeImageUpdate = () => {
-      console.log("🔄 Received homeImagesUpdated event, reloading introduction image...");
       loadIntroImage();
     };
 

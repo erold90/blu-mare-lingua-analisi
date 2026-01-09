@@ -73,7 +73,6 @@ export const SecureFormWrapper: React.FC<SecureFormWrapperProps> = ({
 
       await onSubmit(sanitizedData);
     } catch (error) {
-      console.error(`${formType} form submission error:`, error);
       toast.error('Si è verificato un errore. Riprova più tardi.');
     } finally {
       setIsSubmitting(false);

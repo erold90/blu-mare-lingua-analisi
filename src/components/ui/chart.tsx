@@ -94,7 +94,6 @@ const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
           // Validate color format (hex, rgb, rgba, hsl, hsla, or CSS color names)
           const colorPattern = /^(#[0-9a-fA-F]{3,8}|rgba?\([^)]+\)|hsla?\([^)]+\)|[a-zA-Z]+)$/
           if (!colorPattern.test(color)) {
-            console.warn(`Invalid color value: ${color}`)
             return null
           }
           

@@ -46,7 +46,6 @@ export async function fetchApi<T>(
       options.body = JSON.stringify(body);
     }
     
-    console.log(`🌐 API Call: ${method} ${url}`, body ? 'with data' : '');
     
     try {
       const response = await fetch(url, options);
@@ -54,7 +53,6 @@ export async function fetchApi<T>(
       
       // Resettiamo il flag di connessione fallita
       if (apiConnectionFailed) {
-        console.log('✅ Connessione API ripristinata');
         setApiConnectionFailed(false);
         if (!offlineMode) {
           toast.success('Connessione al server ripristinata');
@@ -64,7 +62,6 @@ export async function fetchApi<T>(
       // Prima verifichiamo se la risposta è HTML invece di JSON
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.indexOf("application/json") === -1) {
-        console.warn(`⚠️ Risposta non JSON ricevuta da ${url}. Tipo di contenuto: ${contentType}`);
         return handleNonJsonResponse<T>(endpoint);
       }
       
@@ -91,7 +88,6 @@ export async function fetchApi<T>(
     } catch (fetchError) {
       clearTimeout(timeoutId);
       
-      console.log(`❌ Server remoto ${API_BASE_URL} non raggiungibile`);
       
       if (!apiConnectionFailed) {
         setApiConnectionFailed(true);
@@ -105,14 +101,12 @@ export async function fetchApi<T>(
     }
   } catch (error: any) {
     if (error.name === 'AbortError') {
-      console.error('⏱️ API request timeout:', endpoint);
       return {
         success: false,
         error: 'Request timeout, please try again'
       };
     }
     
-    console.error('🚨 API fetch error:', error);
     return handleServerUnavailable<T>(endpoint, method);
   }
 }

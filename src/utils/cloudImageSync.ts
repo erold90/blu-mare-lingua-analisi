@@ -23,7 +23,6 @@ export const saveImageToCloud = async (path: string): Promise<boolean> => {
     // Get the image from IndexedDB
     const image = await getImage(path);
     if (!image || !image.data) {
-      console.error("Image not found in local storage:", path);
       return false;
     }
     
@@ -48,13 +47,11 @@ export const saveImageToCloud = async (path: string): Promise<boolean> => {
     const result = await response.json();
     
     if (result.success) {
-      console.log("Image successfully synced to cloud storage:", path);
       return true;
     } else {
       throw new Error(result.message || "Unknown error storing image");
     }
   } catch (error) {
-    console.error("Error syncing image to cloud:", error);
     toast.error("Errore nel salvataggio dell'immagine: " + (error as Error).message);
     return false;
   }
@@ -80,13 +77,11 @@ export const loadImageFromCloud = async (path: string): Promise<string | null> =
     const result = await response.json();
     
     if (result.success && result.data) {
-      console.log("Image loaded from cloud storage:", path);
       return result.data;
     }
     
     return null;
   } catch (error) {
-    console.error("Error loading image from cloud:", error);
     return null;
   }
 };
@@ -109,7 +104,6 @@ export const isImageInCloud = async (path: string): Promise<boolean> => {
     const result = await response.json();
     return result.exists === true;
   } catch (error) {
-    console.error("Error checking image in cloud:", error);
     return false;
   }
 };
@@ -137,12 +131,9 @@ export const cleanupOldCloudImages = async (): Promise<void> => {
     const result = await response.json();
     
     if (result.success) {
-      console.log(`Cleaned up ${result.removedCount || 0} old images from cloud storage`);
     } else {
-      console.error("Error during cleanup:", result.message);
     }
   } catch (error) {
-    console.error("Error cleaning up cloud images:", error);
   }
 };
 
@@ -151,7 +142,6 @@ export const cleanupOldCloudImages = async (): Promise<void> => {
  */
 export const syncAllImages = async (): Promise<void> => {
   try {
-    console.log("Starting cloud image synchronization");
     
     // 1. Get all critical images (home, hero, social, favicon)
     const categories = ['home', 'hero', 'social', 'favicon'];
@@ -179,7 +169,6 @@ export const syncAllImages = async (): Promise<void> => {
           }
           
           if (syncCount > 0) {
-            console.log(`Synced ${syncCount} images to cloud storage`);
             toast.success(`Sincronizzate ${syncCount} immagini con il cloud`);
           }
         };
@@ -188,11 +177,9 @@ export const syncAllImages = async (): Promise<void> => {
           db.close();
         };
       } catch (error) {
-        console.error(`Error syncing ${category} images:`, error);
       }
     }
   } catch (error) {
-    console.error("Error syncing images with cloud:", error);
   }
 };
 

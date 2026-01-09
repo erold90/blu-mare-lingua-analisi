@@ -47,9 +47,7 @@ export const usePricing = () => {
 
   const updateWeeklyPrice = async (id: string, updates: Partial<WeeklyPrice>) => {
     try {
-      console.log('🔄 Hook: Aggiornamento prezzo nel database...', { id, updates });
       const updatedPrice = await pricingService.updateWeeklyPrice(id, updates);
-      console.log('✅ Hook: Prezzo aggiornato nel database:', updatedPrice);
       
       // Invalida cache del pricing service per forzare aggiornamento
       const { PricingService } = await import('@/services/supabase/dynamicPricingService');
@@ -65,7 +63,6 @@ export const usePricing = () => {
       toast.success('Prezzo aggiornato con successo');
       return { success: true, error: null };
     } catch (err: any) {
-      console.error('❌ Hook: Errore aggiornamento prezzo:', err);
       toast.error(`Errore nell'aggiornamento del prezzo: ${err.message}`);
       return { success: false, error: err.message };
     }
@@ -74,9 +71,7 @@ export const usePricing = () => {
   const generatePricesForYear = async (targetYear: number, copyFromYear?: number) => {
     try {
       setLoading(true);
-      console.log('🔄 Generando prezzi per anno:', { targetYear, copyFromYear });
       const weeksCreated = await pricingService.generateWeeklyPricesForYear(targetYear, copyFromYear);
-      console.log('✅ Prezzi generati con successo:', weeksCreated);
       
       // Invalida cache del pricing service
       const { PricingService } = await import('@/services/supabase/dynamicPricingService');
@@ -86,7 +81,6 @@ export const usePricing = () => {
       toast.success(`Prezzi generati per ${targetYear}: ${weeksCreated} settimane create`);
       return { success: true, error: null, weeksCreated };
     } catch (err: any) {
-      console.error('❌ Errore nella generazione prezzi:', err);
       toast.error(`Errore nella generazione prezzi: ${err.message || err}`);
       return { success: false, error: err.message, weeksCreated: 0 };
     } finally {
@@ -177,7 +171,6 @@ export const usePricing = () => {
 
       return true; // Available
     } catch (err) {
-      console.error('Error checking availability:', err);
       return false;
     }
   };
@@ -210,7 +203,6 @@ export const usePricing = () => {
 
       return totalPrice;
     } catch (err) {
-      console.error('Error calculating price:', err);
       return 0;
     }
   };

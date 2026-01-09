@@ -45,7 +45,6 @@ export const useImageOptimization = (
   };
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.error('Image failed to load:', src);
     e.currentTarget.src = '/placeholder.svg';
   };
 

@@ -15,19 +15,15 @@ export const useVisitTracker = () => {
           userAgent: navigator.userAgent
         };
 
-        console.log('🔍 Tracking visit:', visitData);
 
         const { data, error } = await supabase.functions.invoke('track-visit', {
           body: visitData
         });
 
         if (error) {
-          console.error('Error tracking visit:', error);
         } else {
-          console.log('✅ Visit tracked successfully:', data);
         }
       } catch (err) {
-        console.error('Error in visit tracking:', err);
       }
     };
 

@@ -13,18 +13,14 @@ export const ConditionalAnalytics: React.FC = () => {
   const { isTrackingAllowed, preferences } = useCookieConsent();
 
   useEffect(() => {
-    console.log('🍪 ConditionalAnalytics check - preferences:', preferences);
-    console.log('🍪 Analytics tracking allowed:', preferences?.analytics || false);
     
     // Se non abbiamo ancora le preferenze, blocca solo servizi esterni
     if (!preferences) {
-      console.log('🍪 No cookie preferences yet, blocking external tracking only');
       return;
     }
 
     // Google Analytics - solo se consentito esplicitamente
     if (preferences?.analytics) {
-      console.log('✅ Analytics tracking enabled');
       
       // Inizializza Google Analytics solo se consentito
       if (typeof window.gtag === 'undefined') {
@@ -46,10 +42,8 @@ export const ConditionalAnalytics: React.FC = () => {
           cookie_flags: 'max-age=7200;secure;samesite=none'
         });
 
-        console.log('📊 Google Analytics initialized');
       }
     } else {
-      console.log('🚫 Analytics tracking blocked by user preference');
       
       // Disabilita Google Analytics se era già caricato
       if (typeof window.gtag !== 'undefined') {
@@ -61,10 +55,8 @@ export const ConditionalAnalytics: React.FC = () => {
 
     // Altri servizi di tracking possono essere aggiunti qui
     if (preferences?.marketing) {
-      console.log('✅ Marketing tracking enabled');
       // Inizializza servizi di marketing/advertising
     } else {
-      console.log('🚫 Marketing tracking blocked by user preference');
     }
 
   }, [preferences, isTrackingAllowed]);

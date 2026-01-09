@@ -35,9 +35,7 @@ export const HomeImageGallery: React.FC = () => {
       setHeroImages(heroImgs);
       setGalleryImages(galleryImgs);
       setIntroImages(introImgs);
-      console.log(`Loaded ${heroImgs.length} hero, ${galleryImgs.length} gallery, and ${introImgs.length} intro images`);
     } catch (error) {
-      console.error('Error loading images:', error);
       toast.error('Errore nel caricamento delle immagini');
     } finally {
       setLoading(false);
@@ -82,7 +80,6 @@ export const HomeImageGallery: React.FC = () => {
         window.dispatchEvent(new CustomEvent('homeImagesUpdated'));
       }
     } catch (error) {
-      console.error('Error uploading images:', error);
       toast.error('Errore nel caricamento delle immagini');
     } finally {
       setUploading(false);
@@ -123,7 +120,6 @@ export const HomeImageGallery: React.FC = () => {
       // Notify other components about image updates
       window.dispatchEvent(new CustomEvent('homeImagesUpdated'));
     } catch (error) {
-      console.error('Error reordering images:', error);
       toast.error('Errore nel riordinamento');
       // Revert local state on error
       await loadImages();
@@ -141,7 +137,6 @@ export const HomeImageGallery: React.FC = () => {
       // Notify other components about image updates
       window.dispatchEvent(new CustomEvent('homeImagesUpdated'));
     } catch (error) {
-      console.error('Error deleting image:', error);
       toast.error('Errore nell\'eliminazione dell\'immagine');
     }
   };
@@ -156,7 +151,6 @@ export const HomeImageGallery: React.FC = () => {
       // Notify other components about image updates
       window.dispatchEvent(new CustomEvent('homeImagesUpdated'));
     } catch (error) {
-      console.error('Error setting cover image:', error);
       toast.error('Errore nell\'impostazione dell\'immagine di copertina');
     }
   };

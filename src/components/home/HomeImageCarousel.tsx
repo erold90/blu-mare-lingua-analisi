@@ -26,7 +26,6 @@ export const HomeImageCarousel = () => {
           imageUtilService.preloadImages(firstTwoImages, 1); // Ridotta concorrenza
         }
       } catch (error) {
-        console.error('Error loading gallery images:', error);
         setImages([]);
       } finally {
         setLoading(false);
@@ -37,7 +36,6 @@ export const HomeImageCarousel = () => {
 
     // Listen for home image updates from admin panel
     const handleHomeImageUpdate = () => {
-      console.log("🔄 Received homeImagesUpdated event, reloading gallery images...");
       loadImages();
     };
 
@@ -132,7 +130,6 @@ export const HomeImageCarousel = () => {
                                contentVisibility: index >= 3 ? 'auto' : 'visible'
                              }}
                              onError={(e) => {
-                               console.error('Gallery image failed to load:', image.file_path);
                                e.currentTarget.src = "/placeholder.svg";
                              }}
                            />

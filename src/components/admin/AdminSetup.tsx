@@ -87,7 +87,6 @@ export const AdminSetup: React.FC = () => {
       }));
 
     } catch (error) {
-      console.error('Errore durante la configurazione admin:', error);
       toast.error('Errore durante la configurazione. Riprova.');
     } finally {
       setIsSubmitting(false);
