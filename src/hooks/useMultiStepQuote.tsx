@@ -127,10 +127,19 @@ export const useMultiStepQuote = () => {
 
   const getNights = useCallback(() => {
     if (!formData.checkIn || !formData.checkOut) return 0;
-    const start = new Date(formData.checkIn);
-    const end = new Date(formData.checkOut);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // Parse date strings as local dates (YYYY-MM-DD format)
+    const [startYear, startMonth, startDay] = formData.checkIn.split('-').map(Number);
+    const [endYear, endMonth, endDay] = formData.checkOut.split('-').map(Number);
+
+    const start = new Date(startYear, startMonth - 1, startDay);
+    const end = new Date(endYear, endMonth - 1, endDay);
+
+    // Validazione: checkout deve essere dopo checkin
+    if (end <= start) return 0;
+
+    const diffTime = end.getTime() - start.getTime();
+    return Math.round(diffTime / (1000 * 60 * 60 * 24));
   }, [formData.checkIn, formData.checkOut]);
 
   const isApartmentAvailable = useCallback(async (apartmentId: string, checkIn: string, checkOut: string) => {
@@ -239,8 +248,12 @@ export const useMultiStepQuote = () => {
 
   // Check if a date is blocked and return block reason
   const getDateBlockInfo = useCallback((date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
-    
+    // Usa formato locale per evitare problemi di timezone con toISOString()
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+
     for (const block of dateBlocks) {
       if (dateStr >= block.start_date && dateStr <= block.end_date) {
         return {
@@ -249,7 +262,7 @@ export const useMultiStepQuote = () => {
         };
       }
     }
-    
+
     return { isBlocked: false, reason: '' };
   }, [dateBlocks]);
 
