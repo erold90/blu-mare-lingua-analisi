@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.resend.com https://*.supabase.co https://fgeeeivbmfrwrieyzhel.supabase.co https://raw.githubusercontent.com https://www.google.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://region1.google-analytics.com; media-src 'self'; object-src 'none'; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://maps.google.com; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://static.cloudflareinsights.com https://cdn.gtranslate.net https://translate.google.com https://translate.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.gtranslate.net https://www.gstatic.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://api.resend.com https://*.supabase.co https://fgeeeivbmfrwrieyzhel.supabase.co https://raw.githubusercontent.com https://www.google.com https://www.google-analytics.com https://analytics.google.com https://stats.g.doubleclick.net https://region1.google-analytics.com https://translate.google.com https://translate.googleapis.com; media-src 'self'; object-src 'none'; frame-src 'self' https://www.google.com https://www.googletagmanager.com https://maps.google.com https://translate.google.com; base-uri 'self'; form-action 'self'; upgrade-insecure-requests" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
     <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
@@ -160,5 +160,20 @@
   <body>
     <div id="root"></div>
     <script type="module" src="./src/main.tsx"></script>
+
+    <!-- GTranslate - Traduzione automatica multilingua -->
+    <script>
+      window.gtranslateSettings = {
+        "default_language": "it",
+        "detect_browser_language": true,
+        "languages": ["it", "en", "de", "fr", "es", "nl", "ru", "pl"],
+        "wrapper_selector": ".gtranslate_wrapper",
+        "flag_size": 24,
+        "horizontal_position": "right",
+        "vertical_position": "bottom",
+        "alt_flags": {"en": "usa"}
+      };
+    </script>
+    <script src="https://cdn.gtranslate.net/widgets/latest/float.js" defer></script>
   </body>
 </html>
