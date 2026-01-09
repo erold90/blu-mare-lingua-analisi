@@ -47,8 +47,9 @@ export function AppHeader() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Non renderizzare l'header nell'area admin
-  if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/area-riservata')) {
+  // Non renderizzare l'header nelle pagine dedicate (admin, preventivo)
+  const hideHeaderPaths = ['/admin', '/area-riservata', '/richiedi-preventivo', '/preventivo'];
+  if (hideHeaderPaths.some(path => location.pathname.startsWith(path))) {
     return null;
   }
 
