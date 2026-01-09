@@ -1,6 +1,5 @@
 
 import * as React from "react";
-import { useEffect } from "react";
 import HeroSection from "@/components/home/HeroSection";
 import IntroductionSection from "@/components/home/IntroductionSection";
 import { LocationSection } from "@/components/home/LocationSection";
@@ -12,11 +11,6 @@ import { getLocalBusinessSchema, getWebsiteSchema } from "@/components/seo/Struc
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
 
 const Index = () => {
-  useEffect(() => {
-    console.log("Index page mounted");
-    console.log("Available routes should include /preventivo");
-  }, []);
-
   const structuredData = [
     getLocalBusinessSchema(),
     getWebsiteSchema()

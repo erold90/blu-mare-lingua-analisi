@@ -9,7 +9,6 @@ import AppLayout from "@/components/layout/AppLayout";
 import Index from "@/pages/Index";
 import ApartmentsPage from "@/pages/ApartmentsPage";
 import { useVisitTracker } from '@/hooks/useVisitTracker';
-import ServicesPage from "@/pages/ServicesPage";
 import ContactsPage from "@/pages/ContactsPage";
 import AboutPage from "@/pages/AboutPage";
 import RequestQuotePage from "@/pages/RequestQuotePage";
@@ -25,7 +24,6 @@ const AppWithRoutes = () => {
     <Routes>
       <Route path="/" element={<AppLayout><Index /></AppLayout>} />
       <Route path="/appartamenti" element={<AppLayout><ApartmentsPage /></AppLayout>} />
-      <Route path="/servizi" element={<AppLayout><ServicesPage /></AppLayout>} />
       <Route path="/contatti" element={<AppLayout><ContactsPage /></AppLayout>} />
       <Route path="/chi-siamo" element={<AppLayout><AboutPage /></AppLayout>} />
       <Route path="/richiedi-preventivo" element={<AppLayout><RequestQuotePage /></AppLayout>} />

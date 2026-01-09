@@ -11,8 +11,6 @@ export const CtaSection = () => {
   const sectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    console.log("🔍 CtaSection rendered with link to /preventivo");
-    
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {

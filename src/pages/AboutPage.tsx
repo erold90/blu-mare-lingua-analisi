@@ -15,17 +15,17 @@ const AboutPage = () => {
   return (
     <div className="container px-4 py-8 md:py-12">
       <SEOHead
-        title="La Villa MareBlu Salento - Storia e Comfort | Villa Fronte Mare Torre Vado Puglia"
+        title="Chi Siamo - Villa MareBlu Salento | Villa Fronte Mare Torre Vado Puglia"
         description="Scopri la storia di Villa MareBlu: villa fronte mare completamente ristrutturata nel 2020, dove dormire in Salento in una delle migliori case vacanze Puglia. Eleganza e tradizione mediterranea."
         keywords={getPageSpecificKeywords('about')}
-        canonicalUrl="/la-villa"
+        canonicalUrl="/chi-siamo"
         structuredData={structuredData}
-        ogTitle="La Villa MareBlu - Storia e Comfort sul Mare del Salento"
+        ogTitle="Chi Siamo - Villa MareBlu Salento"
         ogDescription="Una villa storica completamente rinnovata che unisce tradizione mediterranea e comfort moderni nel cuore del Salento"
       />
       
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold mb-6">La Villa MareBlu Salento</h1>
+        <h1 className="text-3xl md:text-4xl font-bold mb-6">Chi Siamo - Villa MareBlu</h1>
         
         <div className="w-full h-64 md:h-96 bg-blue-200 mb-6 rounded-lg overflow-hidden">
           <div 

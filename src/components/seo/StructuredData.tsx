@@ -51,19 +51,7 @@ export const getLocalBusinessSchema = () => ({
       "value": true
     }
   ],
-  "starRating": {
-    "@type": "Rating",
-    "ratingValue": "5"
-  },
-  "image": [
-    "https://www.villamareblu.it/images/hero/hero.jpg",
-    "https://www.villamareblu.it/images/apartments/appartamento-1/image1.jpg",
-    "https://www.villamareblu.it/images/apartments/appartamento-2/image1.jpg"
-  ],
-  "sameAs": [
-    "https://www.facebook.com/villamareblu",
-    "https://www.instagram.com/villamareblu"
-  ]
+  "image": "https://www.villamareblu.it/images/hero/hero.jpg"
 });
 
 export const getApartmentSchema = (apartment: any) => ({
