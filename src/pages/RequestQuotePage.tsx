@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { useMultiStepQuote } from '@/hooks/useMultiStepQuote';
 import { StepGuests } from '@/components/quote/StepGuests';
@@ -26,6 +26,11 @@ export default function RequestQuotePage() {
     requiresTwoWeeksMinimum,
     prenotazioni
   } = useMultiStepQuote();
+
+  // Scroll to top quando cambia step
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
 
   const steps = [
     'Ospiti', 
