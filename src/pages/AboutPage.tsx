@@ -1,8 +1,8 @@
-
 import * as React from "react";
 import SEOHead from "@/components/seo/SEOHead";
 import { getBreadcrumbSchema } from "@/components/seo/StructuredData";
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
+import { Home, Users, MapPin, Waves } from "lucide-react";
 
 const AboutPage = () => {
   const breadcrumbItems = [
@@ -15,74 +15,146 @@ const AboutPage = () => {
   return (
     <div className="container px-4 py-8 md:py-12">
       <SEOHead
-        title="Chi Siamo - Villa MareBlu Salento | Villa Fronte Mare Torre Vado Puglia"
-        description="Scopri la storia di Villa MareBlu: villa fronte mare completamente ristrutturata nel 2020, dove dormire in Salento in una delle migliori case vacanze Puglia. Eleganza e tradizione mediterranea."
+        title="Chi Siamo - Villa MareBlu Torre Vado | 4 Appartamenti Vista Mare Salento"
+        description="Villa MareBlu a Torre Vado: 4 appartamenti indipendenti con vista mare per 23 ospiti totali. A 100 metri dal mare, tra Pescoluse e Santa Maria di Leuca nel Salento."
         keywords={getPageSpecificKeywords('about')}
         canonicalUrl="/chi-siamo"
         structuredData={structuredData}
-        ogTitle="Chi Siamo - Villa MareBlu Salento"
-        ogDescription="Una villa storica completamente rinnovata che unisce tradizione mediterranea e comfort moderni nel cuore del Salento"
+        ogTitle="Chi Siamo - Villa MareBlu Torre Vado"
+        ogDescription="4 appartamenti vista mare nel cuore del Salento, tra Torre Vado e Santa Maria di Leuca"
       />
-      
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold mb-6">Chi Siamo - Villa MareBlu</h1>
-        
-        <div className="w-full h-64 md:h-96 bg-blue-200 mb-6 rounded-lg overflow-hidden">
+
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl md:text-4xl font-bold mb-6">Villa MareBlu</h1>
+
+        <div className="w-full h-64 md:h-96 bg-blue-200 mb-8 rounded-lg overflow-hidden">
           <div
             className="w-full h-full bg-cover bg-center"
             style={{backgroundImage: "url('/images/hero/hero.jpg')"}}
             role="img"
-            aria-label="Villa MareBlu - Vista esterna della villa fronte mare in Salento"
+            aria-label="Villa MareBlu - Vista della struttura a Torre Vado, Salento"
           />
         </div>
-        
+
         <div className="prose prose-lg max-w-none">
-          <p className="text-lg mb-4">
-            Villa MareBlu è una splendida <strong>villa fronte mare</strong> situata in una delle zone più belle del Salento, Puglia.
-            Con il suo design elegante e le sue ampie terrazze vista mare, offre un'esperienza di soggiorno indimenticabile 
-            per chi cerca <strong>dove dormire in Salento mare</strong> in una delle <strong>migliori case vacanze Puglia</strong>.
-          </p>
-          
-          <h2 className="text-2xl font-semibold mt-8 mb-4">La Storia della Nostra Villa</h2>
-          <p>
-            Costruita negli anni '70 e completamente ristrutturata nel 2020, Villa MareBlu conserva il fascino dell'architettura mediterranea
-            tradizionale, combinato con tutti i comfort moderni che ci si aspetta da una <strong>villa lusso Salento mare</strong>.
-            La nostra <strong>casa vacanze Torre Vado</strong> rappresenta l'equilibrio perfetto tra storia e innovazione.
-          </p>
-          
-          <h2 className="text-2xl font-semibold mt-8 mb-4">Gli Spazi della Villa</h2>
-          <p>
-            La <strong>villa con giardino Salento</strong> si sviluppa su due livelli e può ospitare comodamente fino a 8 persone. 
-            I nostri <strong>appartamenti 4 persone Puglia</strong> sono perfetti per famiglie e gruppi di amici. Dispone di:
-          </p>
-          <ul className="list-disc pl-6 mb-6">
-            <li>4 camere da letto spaziose e luminose con vista mare</li>
-            <li>3 bagni completi con finiture di pregio</li>
-            <li>Ampio soggiorno con vista panoramica sul mare del Salento</li>
-            <li>Cucina completamente attrezzata per <strong>casa vacanze bambini Puglia</strong></li>
-            <li>Terrazza panoramica di 80 mq perfetta per <strong>weekend romantico Salento</strong></li>
-            <li>Giardino mediterraneo di 300 mq con piante autoctone</li>
-            <li>Area barbecue e zona pranzo esterna per <strong>vacanze gruppo amici Salento</strong></li>
-          </ul>
-          
-          <h2 className="text-2xl font-semibold mt-8 mb-4">La Posizione Strategica nel Salento</h2>
-          <p>
-            Villa MareBlu si trova a soli 100 metri dalla spiaggia di Torre Vado, in una tranquilla baia riparata del Salento.
-            La posizione è ideale per chi cerca <strong>casa vacanze vicino spiaggia</strong> e vuole godersi il mare cristallino della Puglia.
-            La nostra <strong>villa fronte mare</strong> è perfetta per esplorare le bellezze naturali e culturali del Salento.
-          </p>
-          <p>
-            A pochi minuti di auto si trovano ristoranti tipici pugliesi, negozi di prodotti locali e le principali attrazioni turistiche del Salento.
-            Santa Maria di Leuca, il punto più meridionale della Puglia, è raggiungibile in soli 15 minuti di auto.
-            La nostra posizione privilegiata rende Villa MareBlu una delle <strong>migliori case vacanze Puglia</strong> per esplorare tutto il territorio.
+          <p className="text-lg mb-6 leading-relaxed">
+            Villa MareBlu è una struttura ricettiva situata a <strong>Torre Vado</strong>, nel comune di Patù,
+            nel cuore del <strong>Salento</strong>. A soli 100 metri dal mare con accesso privato su scogliera bassa,
+            offriamo <strong>4 appartamenti indipendenti</strong> per un totale di <strong>23 posti letto</strong>,
+            ideali per famiglie, gruppi di amici o più nuclei familiari che desiderano trascorrere le vacanze insieme
+            mantenendo la propria privacy.
           </p>
 
-          <h2 className="text-2xl font-semibold mt-8 mb-4">Perché Scegliere Villa MareBlu</h2>
-          <p>
-            Se stai cercando <strong>dove dormire Salento mare</strong> in un ambiente di lusso e comfort, Villa MareBlu rappresenta 
-            la scelta ideale. La nostra <strong>villa fronte mare Puglia</strong> offre privacy, eleganza e tutti i servizi necessari 
-            per una <strong>vacanza famiglia Puglia</strong> indimenticabile o per un <strong>weekend romantico Salento</strong> da sogno.
+          {/* Stats Section */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 my-10 not-prose">
+            <div className="bg-primary/5 p-4 rounded-lg text-center">
+              <Home className="h-8 w-8 text-primary mx-auto mb-2" />
+              <div className="text-2xl font-bold text-primary">4</div>
+              <div className="text-sm text-muted-foreground">Appartamenti</div>
+            </div>
+            <div className="bg-primary/5 p-4 rounded-lg text-center">
+              <Users className="h-8 w-8 text-primary mx-auto mb-2" />
+              <div className="text-2xl font-bold text-primary">23</div>
+              <div className="text-sm text-muted-foreground">Posti letto</div>
+            </div>
+            <div className="bg-primary/5 p-4 rounded-lg text-center">
+              <Waves className="h-8 w-8 text-primary mx-auto mb-2" />
+              <div className="text-2xl font-bold text-primary">100m</div>
+              <div className="text-sm text-muted-foreground">Dal mare</div>
+            </div>
+            <div className="bg-primary/5 p-4 rounded-lg text-center">
+              <MapPin className="h-8 w-8 text-primary mx-auto mb-2" />
+              <div className="text-2xl font-bold text-primary">15 min</div>
+              <div className="text-sm text-muted-foreground">Da Leuca</div>
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-semibold mt-10 mb-4">I Nostri Appartamenti</h2>
+          <p className="mb-4">
+            La struttura si sviluppa su due livelli, con appartamenti al piano terra e al primo piano,
+            ciascuno con ingresso indipendente e spazi esterni privati:
           </p>
+
+          <div className="not-prose space-y-4 mb-8">
+            <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+              <h3 className="font-semibold text-lg mb-2">Appartamento 1 <span className="text-primary">(6 posti)</span></h3>
+              <p className="text-muted-foreground text-sm">
+                Piano terra con ampia veranda coperta. Due camere da letto, soggiorno con angolo cottura,
+                vista mare. Naturalmente fresco grazie alla posizione.
+              </p>
+            </div>
+            <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+              <h3 className="font-semibold text-lg mb-2">Appartamento 2 <span className="text-primary">(8 posti)</span></h3>
+              <p className="text-muted-foreground text-sm">
+                Primo piano con terrazzo panoramico. Tre camere da letto, soggiorno con angolo cottura,
+                aria condizionata, vista mare mozzafiato.
+              </p>
+            </div>
+            <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+              <h3 className="font-semibold text-lg mb-2">Appartamento 3 <span className="text-primary">(4 posti)</span></h3>
+              <p className="text-muted-foreground text-sm">
+                Piano terra con terrazzo vista mare. Una camera da letto, soggiorno con angolo cottura,
+                aria condizionata. Perfetto per coppie o piccole famiglie.
+              </p>
+            </div>
+            <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+              <h3 className="font-semibold text-lg mb-2">Appartamento 4 <span className="text-primary">(5 posti)</span></h3>
+              <p className="text-muted-foreground text-sm">
+                Primo piano con zona esterna privata e tettoia. Due camere da letto, soggiorno con angolo cottura,
+                aria condizionata, vista panoramica.
+              </p>
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-semibold mt-10 mb-4">Servizi Inclusi</h2>
+          <p className="mb-4">
+            Ogni appartamento è dotato di tutto il necessario per un soggiorno confortevole:
+          </p>
+          <ul className="list-disc pl-6 mb-6">
+            <li><strong>Wi-Fi gratuito</strong> ad alta velocità in tutta la struttura</li>
+            <li><strong>Parcheggio privato</strong> gratuito per ogni appartamento</li>
+            <li><strong>Cucina completamente attrezzata</strong> con frigorifero, fornelli, forno e utensili</li>
+            <li><strong>Terrazza o veranda privata</strong> con tavolo, sedie e sdraio</li>
+            <li><strong>Doccia esterna</strong> per rinfrescarsi dopo il mare</li>
+            <li><strong>Area barbecue</strong> condivisa</li>
+            <li><strong>TV</strong> in ogni appartamento</li>
+            <li><strong>Biancheria da letto e bagno</strong> disponibile su richiesta</li>
+          </ul>
+
+          <h2 className="text-2xl font-semibold mt-10 mb-4">La Posizione</h2>
+          <p className="mb-4">
+            Villa MareBlu si trova in <strong>Via Marco Polo 112, Patù (LE)</strong>, in una posizione strategica
+            tra Torre Vado e Santa Maria di Leuca. La costa è raggiungibile in pochi passi attraverso un accesso
+            privato su scogliera bassa, perfetta per tuffi e snorkeling nelle acque cristalline del Mar Ionio.
+          </p>
+          <p className="mb-4">
+            <strong>Nelle vicinanze:</strong>
+          </p>
+          <ul className="list-disc pl-6 mb-6">
+            <li><strong>Torre Vado</strong> - spiaggia attrezzata a 5 minuti di auto</li>
+            <li><strong>Pescoluse</strong> (Maldive del Salento) - 10 minuti di auto</li>
+            <li><strong>Santa Maria di Leuca</strong> - 15 minuti di auto</li>
+            <li><strong>Gallipoli</strong> - 40 minuti di auto</li>
+            <li>Ristoranti, supermercati, farmacia - tutti raggiungibili in pochi minuti</li>
+          </ul>
+
+          <h2 className="text-2xl font-semibold mt-10 mb-4">Perché Scegliere Villa MareBlu</h2>
+          <ul className="list-disc pl-6 mb-6">
+            <li><strong>Prenotazione diretta</strong> - nessuna commissione, miglior prezzo garantito</li>
+            <li><strong>Flessibilità</strong> - possibilità di prenotare da 1 a 4 appartamenti</li>
+            <li><strong>Privacy</strong> - ogni appartamento è completamente indipendente</li>
+            <li><strong>Posizione unica</strong> - mare a 100 metri, tranquillità garantita</li>
+            <li><strong>Assistenza dedicata</strong> - risposta entro 2 ore, supporto durante il soggiorno</li>
+            <li><strong>Animali ammessi</strong> - i vostri amici a quattro zampe sono i benvenuti</li>
+          </ul>
+
+          <div className="bg-primary/5 p-6 rounded-lg mt-8">
+            <p className="text-center mb-0">
+              <strong>Contattaci per un preventivo personalizzato:</strong><br />
+              Tel: <a href="tel:+393780038730" className="text-primary hover:underline">+39 378 0038730</a><br />
+              Email: <a href="mailto:macchiaforcato@gmail.com" className="text-primary hover:underline">macchiaforcato@gmail.com</a>
+            </p>
+          </div>
         </div>
       </div>
     </div>
