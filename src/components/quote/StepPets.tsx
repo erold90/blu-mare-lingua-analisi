@@ -60,22 +60,21 @@ export const StepPets: React.FC<StepPetsProps> = ({
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Checkbox principale */}
-          <div className="flex items-center space-x-3 p-4 border rounded-lg">
+          <div className="flex items-center space-x-2 sm:space-x-3 p-3 border rounded-lg">
             <Checkbox
               id="has_pets"
               checked={formData.hasPets}
               onCheckedChange={handlePetsChange}
             />
             <Label htmlFor="has_pets" className="flex-1 cursor-pointer">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <div className="font-semibold">Viaggio con animali domestici</div>
-                  <div className="text-sm text-muted-foreground">
-                    Cani, gatti e altri animali domestici sono benvenuti
+                  <div className="font-semibold text-sm sm:text-base">Viaggio con animali</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">
+                    Cani, gatti e altri pet benvenuti
                   </div>
                 </div>
-                <Badge variant="outline" className="ml-4">
-                  <Euro className="h-3 w-3 mr-1" />
+                <Badge variant="outline" className="shrink-0 text-xs">
                   €50 cad.
                 </Badge>
               </div>

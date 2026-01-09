@@ -44,23 +44,22 @@ export const StepLinen: React.FC<StepLinenProps> = ({
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Checkbox principale */}
-          <div className="flex items-center space-x-3 p-4 border rounded-lg">
+          <div className="flex items-center space-x-2 sm:space-x-3 p-3 border rounded-lg">
             <Checkbox
               id="request_linen"
               checked={formData.requestLinen}
               onCheckedChange={(checked) => updateFormData({ requestLinen: !!checked })}
             />
             <Label htmlFor="request_linen" className="flex-1 cursor-pointer">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <div>
-                  <div className="font-semibold">Richiedere biancheria da letto e bagno</div>
-                  <div className="text-sm text-muted-foreground">
-                    Lenzuola, federe, asciugamani per tutti gli ospiti
+                  <div className="font-semibold text-sm sm:text-base">Richiedere biancheria</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">
+                    Lenzuola, asciugamani per tutti
                   </div>
                 </div>
-                <Badge variant="outline" className="ml-4">
-                  <Euro className="h-3 w-3 mr-1" />
-                  €15/persona
+                <Badge variant="outline" className="shrink-0 text-xs">
+                  €15/pers
                 </Badge>
               </div>
             </Label>

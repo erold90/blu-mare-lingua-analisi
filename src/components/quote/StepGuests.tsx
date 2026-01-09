@@ -132,16 +132,16 @@ export const StepGuests: React.FC<StepGuestsProps> = ({
               </p>
               
               {Array.from({ length: formData.children }, (_, index) => (
-                <div key={index} className="flex items-center space-x-3">
+                <div key={index} className="flex items-center space-x-2 p-2 border rounded-lg">
                   <Checkbox
                     id={`child-${index}`}
                     checked={formData.childrenWithParents[index] || false}
-                    onCheckedChange={(checked) => 
+                    onCheckedChange={(checked) =>
                       handleChildWithParentsChange(index, !!checked)
                     }
                   />
-                  <Label htmlFor={`child-${index}`} className="flex-1">
-                    Bambino {index + 1} dorme con i genitori/in culla
+                  <Label htmlFor={`child-${index}`} className="flex-1 text-sm cursor-pointer">
+                    Bambino {index + 1} con genitori/culla
                   </Label>
                 </div>
               ))}
