@@ -305,12 +305,12 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
 
   const getServiceIcon = (service: string) => {
     const s = service.toLowerCase();
-    if (s.includes('wifi')) return <Wifi className="w-3 h-3" />;
-    if (s.includes('parcheggio')) return <Car className="w-3 h-3" />;
-    if (s.includes('tv')) return <Tv className="w-3 h-3" />;
-    if (s.includes('aria') || s.includes('condizionata')) return <Wind className="w-3 h-3" />;
-    if (s.includes('veranda') || s.includes('terrazzo')) return <Home className="w-3 h-3" />;
-    return <Building className="w-3 h-3" />;
+    if (s.includes('wifi')) return <Wifi className="w-4 h-4" />;
+    if (s.includes('parcheggio')) return <Car className="w-4 h-4" />;
+    if (s.includes('tv')) return <Tv className="w-4 h-4" />;
+    if (s.includes('aria') || s.includes('condizionata')) return <Wind className="w-4 h-4" />;
+    if (s.includes('veranda') || s.includes('terrazzo')) return <Home className="w-4 h-4" />;
+    return <Building className="w-4 h-4" />;
   };
 
   const handleBookNow = () => {
@@ -376,42 +376,42 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
             />
 
             {/* Quick stats */}
-            <div className="grid grid-cols-4 gap-1 py-2 border-y border-gray-100">
+            <div className="grid grid-cols-4 gap-1 py-3 border-y border-gray-100">
               <div className="text-center py-1">
-                <Users className="w-4 h-4 mx-auto text-primary mb-0.5" />
-                <p className="text-[10px] sm:text-xs text-gray-600">{apartment.capacity} ospiti</p>
+                <Users className="w-5 h-5 mx-auto text-primary mb-1" />
+                <p className="text-xs sm:text-sm text-gray-600">{apartment.capacity} ospiti</p>
               </div>
               <div className="text-center py-1">
-                <Home className="w-4 h-4 mx-auto text-primary mb-0.5" />
-                <p className="text-[10px] sm:text-xs text-gray-600">{apartment.bedrooms} camere</p>
+                <Home className="w-5 h-5 mx-auto text-primary mb-1" />
+                <p className="text-xs sm:text-sm text-gray-600">{apartment.bedrooms} camere</p>
               </div>
               <div className="text-center py-1">
-                <Building className="w-4 h-4 mx-auto text-primary mb-0.5" />
-                <p className="text-[10px] sm:text-xs text-gray-600">{apartment.size}m²</p>
+                <Building className="w-5 h-5 mx-auto text-primary mb-1" />
+                <p className="text-xs sm:text-sm text-gray-600">{apartment.size}m²</p>
               </div>
               <div className="text-center py-1">
-                <Eye className="w-4 h-4 mx-auto text-primary mb-0.5" />
-                <p className="text-[10px] sm:text-xs text-gray-600 capitalize truncate">{apartment.view}</p>
+                <Eye className="w-5 h-5 mx-auto text-primary mb-1" />
+                <p className="text-xs sm:text-sm text-gray-600 capitalize truncate">{apartment.view}</p>
               </div>
             </div>
 
             {/* Description */}
             <div>
-              <h3 className="font-semibold text-sm mb-1.5">Descrizione</h3>
-              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+              <h3 className="font-semibold text-base mb-2">Descrizione</h3>
+              <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
                 {apartment.longDescription || apartment.description}
               </p>
             </div>
 
             {/* Services */}
             <div>
-              <h3 className="font-semibold text-sm mb-1.5">Servizi</h3>
-              <div className="flex flex-wrap gap-1">
+              <h3 className="font-semibold text-base mb-2">Servizi</h3>
+              <div className="flex flex-wrap gap-1.5">
                 {apartment.services.map((service, index) => (
                   <Badge
                     key={index}
                     variant="secondary"
-                    className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] sm:text-xs"
+                    className="flex items-center gap-1.5 px-2 py-1 text-xs sm:text-sm"
                   >
                     {getServiceIcon(service)}
                     <span>{service}</span>
@@ -422,7 +422,7 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
 
             {/* CIN */}
             {apartment.CIN && (
-              <p className="text-[10px] sm:text-xs text-gray-400">
+              <p className="text-xs text-gray-400">
                 CIN: {apartment.CIN}
               </p>
             )}
@@ -432,11 +432,11 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
         {/* Footer */}
         <div className="flex-shrink-0 px-4 py-3 border-t bg-gray-50 sm:bg-white rounded-b-none sm:rounded-b-xl">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] sm:text-xs text-gray-500 flex items-center">
-              <MapPin className="w-3 h-3 mr-0.5" />
+            <span className="text-xs sm:text-sm text-gray-500 flex items-center">
+              <MapPin className="w-4 h-4 mr-1" />
               Piano {apartment.floor}
             </span>
-            <Button onClick={handleBookNow} className="flex-1 h-9 sm:h-10 text-sm">
+            <Button onClick={handleBookNow} className="flex-1 h-10 sm:h-11 text-sm sm:text-base">
               Richiedi Preventivo
             </Button>
           </div>
