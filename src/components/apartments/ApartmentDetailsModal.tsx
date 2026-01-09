@@ -275,14 +275,14 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl w-[95vw] sm:w-full max-h-[80vh] sm:max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-serif text-primary">
+          <DialogTitle className="text-xl sm:text-2xl font-serif text-primary">
             {apartment.name}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Image Gallery */}
           <div className="relative">
             <Carousel className="w-full" setApi={setApi}>
@@ -292,7 +292,7 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
                     <Card className="overflow-hidden border-0 shadow-none">
                       <CardContent className="p-0">
                         <div
-                          className="aspect-[16/9] relative cursor-pointer group"
+                          className="aspect-[4/3] sm:aspect-[16/9] relative cursor-pointer group"
                           onClick={() => openFullscreen(index)}
                         >
                           <img
@@ -319,15 +319,15 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
 
             {/* Dot Indicators */}
             {count > 1 && (
-              <div className="flex justify-center gap-2 mt-4">
+              <div className="flex justify-center gap-1 sm:gap-2 mt-2 sm:mt-4">
                 {Array.from({ length: count }).map((_, index) => (
                   <button
                     key={index}
                     onClick={() => api?.scrollTo(index)}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    className={`h-1.5 sm:h-2 rounded-full transition-all duration-300 ${
                       index === current
-                        ? 'bg-primary w-6'
-                        : 'bg-gray-300 hover:bg-gray-400'
+                        ? 'bg-primary w-4 sm:w-6'
+                        : 'bg-gray-300 hover:bg-gray-400 w-1.5 sm:w-2'
                     }`}
                     aria-label={`Vai all'immagine ${index + 1}`}
                   />
@@ -336,55 +336,55 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
             )}
 
             {/* Image Counter */}
-            <div className="flex justify-center mt-3">
-              <span className="text-sm text-muted-foreground">
+            <div className="flex justify-center mt-1 sm:mt-3">
+              <span className="text-xs sm:text-sm text-muted-foreground">
                 {current + 1} / {count} foto
               </span>
             </div>
           </div>
 
           {/* Apartment Info */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <h3 className="text-lg font-serif font-semibold mb-2">Descrizione</h3>
-                <p className="text-muted-foreground leading-relaxed">
+                <h3 className="text-base sm:text-lg font-serif font-semibold mb-1 sm:mb-2">Descrizione</h3>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                   {apartment.longDescription || apartment.description}
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" />
-                  <span className="text-sm">Fino a {apartment.capacity} ospiti</span>
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  <span className="text-xs sm:text-sm">Fino a {apartment.capacity} ospiti</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Home className="w-5 h-5 text-primary" />
-                  <span className="text-sm">{apartment.bedrooms} camere</span>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Home className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  <span className="text-xs sm:text-sm">{apartment.bedrooms} camere</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Building className="w-5 h-5 text-primary" />
-                  <span className="text-sm">{apartment.size}m²</span>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Building className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  <span className="text-xs sm:text-sm">{apartment.size}m²</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Eye className="w-5 h-5 text-primary" />
-                  <span className="text-sm">Vista {apartment.view}</span>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  <span className="text-xs sm:text-sm">Vista {apartment.view}</span>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div>
-                <h3 className="text-lg font-serif font-semibold mb-3">Servizi</h3>
-                <div className="flex flex-wrap gap-2">
+                <h3 className="text-base sm:text-lg font-serif font-semibold mb-2 sm:mb-3">Servizi</h3>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
                   {apartment.services.map((service, index) => (
                     <Badge
                       key={index}
                       variant="secondary"
-                      className="flex items-center gap-2 px-3 py-2"
+                      className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2"
                     >
                       {getServiceIcon(service)}
-                      <span className="text-xs">{service}</span>
+                      <span className="text-[10px] sm:text-xs">{service}</span>
                     </Badge>
                   ))}
                 </div>
@@ -404,16 +404,16 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
           </div>
 
           {/* Action Button */}
-          <div className="border-t pt-6">
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4 inline mr-1" />
+          <div className="border-t pt-4 sm:pt-6">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0">
+              <div className="text-xs sm:text-sm text-muted-foreground">
+                <MapPin className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
                 Piano {apartment.floor}
               </div>
               <Button
                 onClick={handleBookNow}
-                size="lg"
-                className="px-8"
+                size="default"
+                className="w-full sm:w-auto px-6 sm:px-8"
               >
                 Richiedi Preventivo
               </Button>
