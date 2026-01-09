@@ -88,56 +88,57 @@ const ImageGallery: React.FC<{
           draggable={false}
         />
 
-        {/* Navigation arrows - desktop only */}
+        {/* Navigation arrows - visible on all devices */}
         {images.length > 1 && (
           <>
             <button
               onClick={(e) => { e.stopPropagation(); goPrev(); }}
-              className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white"
+              className="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-black/30 active:bg-black/50 sm:bg-white/90 sm:shadow-md sm:hover:bg-white"
               aria-label="Foto precedente"
             >
-              <ChevronLeft className="w-5 h-5 text-gray-700" />
+              <ChevronLeft className="w-5 h-5 text-white sm:text-gray-700" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); goNext(); }}
-              className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 items-center justify-center rounded-full bg-white/90 shadow-md hover:bg-white"
+              className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-black/30 active:bg-black/50 sm:bg-white/90 sm:shadow-md sm:hover:bg-white"
               aria-label="Foto successiva"
             >
-              <ChevronRight className="w-5 h-5 text-gray-700" />
+              <ChevronRight className="w-5 h-5 text-white sm:text-gray-700" />
             </button>
           </>
         )}
 
+        {/* Photo counter badge */}
+        {images.length > 1 && (
+          <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-black/50 backdrop-blur-sm">
+            <span className="text-white text-xs font-medium">{currentIndex + 1}/{images.length}</span>
+          </div>
+        )}
+
         {/* Expand hint */}
-        <div className="absolute bottom-2 right-2 px-2 py-1 rounded bg-black/50 backdrop-blur-sm pointer-events-none">
+        <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/50 backdrop-blur-sm pointer-events-none">
           <Eye className="w-3 h-3 text-white inline mr-1" />
           <span className="text-white text-[10px]">Tocca per ingrandire</span>
         </div>
       </div>
 
-      {/* Dots + Counter - using inline styles to force small size */}
+      {/* Simple dot indicators */}
       {images.length > 1 && (
-        <div className="flex items-center justify-center gap-1 mt-2">
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
           {images.map((_, index) => (
-            <span
+            <div
               key={index}
               onClick={() => goTo(index)}
               style={{
-                width: index === currentIndex ? '16px' : '6px',
-                height: '6px',
-                borderRadius: '3px',
-                backgroundColor: index === currentIndex ? 'var(--primary, #1e3a5f)' : '#d1d5db',
-                display: 'inline-block',
+                width: index === currentIndex ? '12px' : '5px',
+                height: '5px',
+                borderRadius: '999px',
+                backgroundColor: index === currentIndex ? '#1e3a5f' : '#ccc',
                 cursor: 'pointer',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s ease'
               }}
-              role="button"
-              aria-label={`Foto ${index + 1}`}
             />
           ))}
-          <span className="text-[10px] text-gray-400 ml-2">
-            {currentIndex + 1}/{images.length}
-          </span>
         </div>
       )}
     </div>
