@@ -1,4 +1,6 @@
 import * as React from "react";
+import { useState, useEffect } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSidebar } from "@/components/ui/sidebar";
@@ -9,25 +11,75 @@ export function AppHeader() {
   const isMobile = useIsMobile();
   const { open } = useSidebar();
   const location = useLocation();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  const { scrollY } = useScroll();
+
+  // Track scroll position
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   // Non renderizzare l'header nell'area admin
   if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/area-riservata')) {
     return null;
   }
 
+  // Animated values based on scroll
+  const headerHeight = isMobile ? (isScrolled ? 44 : 48) : (isScrolled ? 52 : 64);
+  const logoScale = isScrolled ? 0.9 : 1;
+
   return (
-    <header className={`sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 ${isMobile ? "h-12" : "h-16"}`}>
-      <div className={`container flex items-center justify-between ${isMobile ? "h-12 px-4" : "h-16 px-6"}`}>
+    <motion.header
+      initial={{ y: -100 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className={`sticky top-0 z-40 w-full border-b transition-all duration-300 ${
+        isScrolled
+          ? "bg-background/98 backdrop-blur-lg shadow-sm border-border"
+          : "bg-background/80 backdrop-blur-md border-transparent"
+      }`}
+      style={{ height: headerHeight }}
+    >
+      <div
+        className={`container flex items-center justify-between h-full transition-all duration-300 ${
+          isMobile ? "px-4" : "px-6"
+        }`}
+      >
         <div className="flex items-center gap-2">
-          <SidebarTrigger />
-          <div className="hidden sm:block">
-            <h1 className="text-lg font-semibold">Villa MareBlu</h1>
-          </div>
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+          >
+            <SidebarTrigger />
+          </motion.div>
+          <motion.div
+            className="hidden sm:block"
+            animate={{ scale: logoScale }}
+            transition={{ duration: 0.3 }}
+          >
+            <h1 className={`font-semibold transition-all duration-300 ${
+              isScrolled ? "text-base" : "text-lg"
+            }`}>
+              Villa MareBlu
+            </h1>
+          </motion.div>
         </div>
-        <div className="flex items-center">
+        <motion.div
+          className="flex items-center"
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
           <LanguageSelector />
-        </div>
+        </motion.div>
       </div>
-    </header>
+    </motion.header>
   );
 }

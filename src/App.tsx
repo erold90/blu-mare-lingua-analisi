@@ -1,9 +1,10 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import { Toaster as UIToaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "next-themes";
 import { HelmetProvider } from 'react-helmet-async';
+import { AnimatePresence, motion } from "framer-motion";
 import PerformanceOptimizer from "@/components/PerformanceOptimizer";
 import AppLayout from "@/components/layout/AppLayout";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -21,30 +22,69 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 const AdminPage = lazy(() => import("@/pages/AdminPage"));
 const AuthPage = lazy(() => import("@/pages/AuthPage"));
 
-// Loading fallback component
+// Loading fallback component with animation
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-  </div>
+  <motion.div
+    className="min-h-screen flex items-center justify-center"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+  >
+    <motion.div
+      className="rounded-full h-10 w-10 border-2 border-primary border-t-transparent"
+      animate={{ rotate: 360 }}
+      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+    />
+  </motion.div>
+);
+
+// Page transition wrapper
+const pageVariants = {
+  initial: { opacity: 0, y: 12 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }
+  },
+  exit: {
+    opacity: 0,
+    y: -8,
+    transition: { duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }
+  },
+};
+
+const PageWrapper = ({ children }: { children: React.ReactNode }) => (
+  <motion.div
+    variants={pageVariants}
+    initial="initial"
+    animate="animate"
+    exit="exit"
+  >
+    {children}
+  </motion.div>
 );
 
 const AppWithRoutes = () => {
+  const location = useLocation();
+
   return (
     <Suspense fallback={<PageLoader />}>
-      <Routes>
-        <Route path="/" element={<AppLayout><Index /></AppLayout>} />
-        <Route path="/appartamenti" element={<AppLayout><ApartmentsPage /></AppLayout>} />
-        <Route path="/contatti" element={<AppLayout><ContactsPage /></AppLayout>} />
-        <Route path="/chi-siamo" element={<AppLayout><AboutPage /></AppLayout>} />
-        <Route path="/richiedi-preventivo" element={<AppLayout><RequestQuotePage /></AppLayout>} />
-        <Route path="/preventivo" element={<Navigate to="/richiedi-preventivo" replace />} />
-        <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicyPage /></AppLayout>} />
-        <Route path="/cookie-policy" element={<AppLayout><CookiePolicyPage /></AppLayout>} />
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="/area-riservata" element={<AdminPage />} />
-        <Route path="*" element={<AppLayout><NotFound /></AppLayout>} />
-      </Routes>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<AppLayout><PageWrapper><Index /></PageWrapper></AppLayout>} />
+          <Route path="/appartamenti" element={<AppLayout><PageWrapper><ApartmentsPage /></PageWrapper></AppLayout>} />
+          <Route path="/contatti" element={<AppLayout><PageWrapper><ContactsPage /></PageWrapper></AppLayout>} />
+          <Route path="/chi-siamo" element={<AppLayout><PageWrapper><AboutPage /></PageWrapper></AppLayout>} />
+          <Route path="/richiedi-preventivo" element={<AppLayout><PageWrapper><RequestQuotePage /></PageWrapper></AppLayout>} />
+          <Route path="/preventivo" element={<Navigate to="/richiedi-preventivo" replace />} />
+          <Route path="/privacy-policy" element={<AppLayout><PageWrapper><PrivacyPolicyPage /></PageWrapper></AppLayout>} />
+          <Route path="/cookie-policy" element={<AppLayout><PageWrapper><CookiePolicyPage /></PageWrapper></AppLayout>} />
+          <Route path="/auth" element={<PageWrapper><AuthPage /></PageWrapper>} />
+          <Route path="/admin" element={<PageWrapper><AdminPage /></PageWrapper>} />
+          <Route path="/area-riservata" element={<PageWrapper><AdminPage /></PageWrapper>} />
+          <Route path="*" element={<AppLayout><PageWrapper><NotFound /></PageWrapper></AppLayout>} />
+        </Routes>
+      </AnimatePresence>
     </Suspense>
   );
 };
