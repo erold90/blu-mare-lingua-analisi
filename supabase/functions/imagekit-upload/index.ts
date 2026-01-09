@@ -1,20 +1,52 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import ImageKit from "npm:imagekit@4.1.4";
-
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Initialize ImageKit with environment variables
-const imagekit = new ImageKit({
-  publicKey: Deno.env.get('IMAGEKIT_PUBLIC_KEY') || '',
-  privateKey: Deno.env.get('IMAGEKIT_PRIVATE_KEY') || '',
-  urlEndpoint: Deno.env.get('IMAGEKIT_URL_ENDPOINT') || ''
-});
+const IMAGEKIT_PRIVATE_KEY = Deno.env.get('IMAGEKIT_PRIVATE_KEY') || '';
+const IMAGEKIT_PUBLIC_KEY = Deno.env.get('IMAGEKIT_PUBLIC_KEY') || '';
 
-serve(async (req) => {
-  // Handle CORS preflight requests
+// Helper to convert ArrayBuffer to hex string
+function bufferToHex(buffer: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+// Generate HMAC-SHA1 signature using Web Crypto API
+async function generateSignature(data: string, key: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(key);
+  const msgData = encoder.encode(data);
+
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-1' },
+    false,
+    ['sign']
+  );
+
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
+  return bufferToHex(signature);
+}
+
+// Generate authentication parameters for client-side upload
+async function getAuthenticationParameters() {
+  const token = crypto.randomUUID();
+  const expire = Math.floor(Date.now() / 1000) + 3600;
+  const signatureString = token + expire;
+  const signature = await generateSignature(signatureString, IMAGEKIT_PRIVATE_KEY);
+
+  return {
+    token,
+    expire,
+    signature,
+    publicKey: IMAGEKIT_PUBLIC_KEY
+  };
+}
+
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -23,19 +55,19 @@ serve(async (req) => {
     const url = new URL(req.url);
     const path = url.pathname.replace('/imagekit-upload', '');
 
-    // GET /auth - Get authentication parameters for client-side upload
-    if (req.method === 'GET' && path === '/auth') {
-      const authParams = imagekit.getAuthenticationParameters();
+    // GET /auth - Get authentication parameters
+    if (req.method === 'GET' && (path === '/auth' || path === '')) {
+      const authParams = await getAuthenticationParameters();
       return new Response(JSON.stringify(authParams), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // POST /upload - Upload image
+    // POST /upload - Upload image to ImageKit
     if (req.method === 'POST' && path === '/upload') {
       const formData = await req.formData();
       const file = formData.get('file') as File;
-      const fileName = formData.get('fileName') as string || file.name;
+      const fileName = formData.get('fileName') as string || file?.name || 'image.jpg';
       const folder = formData.get('folder') as string || '/villa-mareblu';
 
       if (!file) {
@@ -47,26 +79,50 @@ serve(async (req) => {
 
       // Convert file to base64
       const arrayBuffer = await file.arrayBuffer();
-      const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = '';
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
 
       // Upload to ImageKit
-      const result = await imagekit.upload({
-        file: base64,
-        fileName: fileName,
-        folder: folder,
-        useUniqueFileName: true,
-        tags: ['villa-mareblu']
+      const uploadFormData = new FormData();
+      uploadFormData.append('file', base64);
+      uploadFormData.append('fileName', fileName);
+      uploadFormData.append('folder', folder);
+      uploadFormData.append('useUniqueFileName', 'true');
+
+      const authHeader = btoa(`${IMAGEKIT_PRIVATE_KEY}:`);
+
+      const response = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `Basic ${authHeader}` },
+        body: uploadFormData
       });
 
-      return new Response(JSON.stringify(result), {
+      const result = await response.json();
+
+      if (!response.ok) {
+        return new Response(JSON.stringify({ error: result.message || 'Upload failed' }), {
+          status: response.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      return new Response(JSON.stringify({
+        fileId: result.fileId,
+        name: result.name,
+        filePath: result.filePath,
+        url: result.url
+      }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // DELETE /delete/:fileId - Delete image
+    // DELETE /delete/:fileId
     if (req.method === 'DELETE' && path.startsWith('/delete/')) {
       const fileId = path.replace('/delete/', '');
-
       if (!fileId) {
         return new Response(JSON.stringify({ error: 'No fileId provided' }), {
           status: 400,
@@ -74,23 +130,20 @@ serve(async (req) => {
         });
       }
 
-      await imagekit.deleteFile(fileId);
+      const authHeader = btoa(`${IMAGEKIT_PRIVATE_KEY}:`);
+      const response = await fetch(`https://api.imagekit.io/v1/files/${fileId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Basic ${authHeader}` }
+      });
+
+      if (!response.ok && response.status !== 204) {
+        return new Response(JSON.stringify({ error: 'Delete failed' }), {
+          status: response.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
 
       return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
-
-    // GET /list - List images in a folder
-    if (req.method === 'GET' && path === '/list') {
-      const folder = url.searchParams.get('folder') || '/villa-mareblu';
-
-      const files = await imagekit.listFiles({
-        path: folder,
-        limit: 100
-      });
-
-      return new Response(JSON.stringify(files), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -101,7 +154,6 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('ImageKit function error:', error);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
