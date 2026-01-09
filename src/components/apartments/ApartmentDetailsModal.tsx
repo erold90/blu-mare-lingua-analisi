@@ -22,6 +22,7 @@ const ImageGallery: React.FC<{
   const [currentIndex, setCurrentIndex] = useState(0);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [isSwiping, setIsSwiping] = useState(false);
 
   const minSwipeDistance = 50;
 
@@ -37,9 +38,18 @@ const ImageGallery: React.FC<{
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
+    setIsSwiping(false);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    if (touchStart !== null) {
+      const currentX = e.targetTouches[0].clientX;
+      const diff = Math.abs(touchStart - currentX);
+      if (diff > 10) {
+        setIsSwiping(true);
+        e.preventDefault(); // Prevent scroll while swiping images
+      }
+    }
     setTouchEnd(e.targetTouches[0].clientX);
   };
 
@@ -52,13 +62,20 @@ const ImageGallery: React.FC<{
     }
     setTouchStart(null);
     setTouchEnd(null);
+    setIsSwiping(false);
+  };
+
+  const handleClick = () => {
+    if (!isSwiping) {
+      onImageClick(currentIndex);
+    }
   };
 
   return (
     <div className="w-full">
       {/* Image container */}
       <div
-        className="relative w-full aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden"
+        className="relative w-full aspect-[4/3] bg-gray-100 rounded-lg overflow-hidden touch-pan-y"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -66,8 +83,8 @@ const ImageGallery: React.FC<{
         <img
           src={images[currentIndex]}
           alt={`${apartmentName} - Foto ${currentIndex + 1}`}
-          className="w-full h-full object-cover cursor-pointer"
-          onClick={() => onImageClick(currentIndex)}
+          className="w-full h-full object-cover cursor-pointer select-none"
+          onClick={handleClick}
           draggable={false}
         />
 
@@ -98,18 +115,23 @@ const ImageGallery: React.FC<{
         </div>
       </div>
 
-      {/* Dots + Counter */}
+      {/* Dots + Counter - using inline styles to force small size */}
       {images.length > 1 && (
         <div className="flex items-center justify-center gap-1 mt-2">
           {images.map((_, index) => (
-            <button
+            <span
               key={index}
               onClick={() => goTo(index)}
-              className={`rounded-full transition-all ${
-                index === currentIndex
-                  ? 'w-4 h-1.5 bg-primary'
-                  : 'w-1.5 h-1.5 bg-gray-300'
-              }`}
+              style={{
+                width: index === currentIndex ? '16px' : '6px',
+                height: '6px',
+                borderRadius: '3px',
+                backgroundColor: index === currentIndex ? 'var(--primary, #1e3a5f)' : '#d1d5db',
+                display: 'inline-block',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              role="button"
               aria-label={`Foto ${index + 1}`}
             />
           ))}
@@ -320,7 +342,7 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
 
       {/* Modal - Bottom sheet on mobile, centered on desktop */}
       <div
-        className="relative w-full sm:w-auto sm:max-w-xl sm:mx-4 bg-white rounded-t-xl sm:rounded-xl max-h-[85vh] flex flex-col shadow-2xl"
+        className="relative w-full sm:w-auto sm:max-w-xl sm:mx-4 bg-white rounded-t-xl sm:rounded-xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Drag indicator - mobile only */}
@@ -342,8 +364,8 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
           </button>
         </div>
 
-        {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto overscroll-contain min-h-0">
+        {/* Content - Scrollable - only vertical */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain min-h-0">
           <div className="p-4 space-y-4">
             {/* Gallery */}
             <ImageGallery
