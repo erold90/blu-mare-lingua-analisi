@@ -115,11 +115,6 @@ const ImageGallery: React.FC<{
           </div>
         )}
 
-        {/* Expand hint */}
-        <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/50 backdrop-blur-sm pointer-events-none">
-          <Eye className="w-3 h-3 text-white inline mr-1" />
-          <span className="text-white text-[10px]">Tocca per ingrandire</span>
-        </div>
       </div>
 
       {/* Simple dot indicators */}
