@@ -16,158 +16,196 @@ interface ApartmentDetailsModalProps {
   onClose: () => void;
 }
 
-// Fullscreen Gallery Component (rendered via Portal)
+// Fullscreen Gallery Component - completamente isolato
 const FullscreenGallery: React.FC<{
   images: string[];
-  currentIndex: number;
+  initialIndex: number;
   apartmentName: string;
   onClose: () => void;
-  onNext: () => void;
-  onPrev: () => void;
-  onSelectIndex: (index: number) => void;
-}> = ({ images, currentIndex, apartmentName, onClose, onNext, onPrev, onSelectIndex }) => {
+}> = ({ images, initialIndex, apartmentName, onClose }) => {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
-  // Minimum swipe distance
   const minSwipeDistance = 50;
 
-  const onTouchStart = (e: React.TouchEvent) => {
+  const goNext = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % images.length);
+  }, [images.length]);
+
+  const goPrev = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+  }, [images.length]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
 
-  const onTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = (e: React.TouchEvent) => {
     setTouchEnd(e.targetTouches[0].clientX);
   };
 
-  const onTouchEnd = () => {
+  const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
     const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
+    if (distance > minSwipeDistance) goNext();
+    else if (distance < -minSwipeDistance) goPrev();
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
 
-    if (isLeftSwipe) {
-      onNext();
-    } else if (isRightSwipe) {
-      onPrev();
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
     }
   };
 
-  // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
       if (e.key === 'Escape') onClose();
-      if (e.key === 'ArrowRight') onNext();
-      if (e.key === 'ArrowLeft') onPrev();
+      if (e.key === 'ArrowRight') goNext();
+      if (e.key === 'ArrowLeft') goPrev();
     };
 
+    // Blocca lo scroll del body
+    const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = 'hidden';
-    window.addEventListener('keydown', handleKeyDown);
+
+    window.addEventListener('keydown', handleKeyDown, true);
 
     return () => {
-      document.body.style.overflow = '';
-      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalStyle;
+      window.removeEventListener('keydown', handleKeyDown, true);
     };
-  }, [onClose, onNext, onPrev]);
+  }, [onClose, goNext, goPrev]);
 
   return createPortal(
     <div
-      className="fixed inset-0 bg-black flex items-center justify-center"
-      style={{ zIndex: 99999 }}
-      onClick={onClose}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
+      className="fixed inset-0 bg-black/95 flex flex-col items-center justify-center touch-none"
+      style={{ zIndex: 2147483647 }} // Massimo z-index possibile
+      onClick={handleBackdropClick}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
-      {/* Close button */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose();
-        }}
-        className="absolute top-4 right-4 z-10 p-3 rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 transition-colors"
-        aria-label="Chiudi"
-      >
-        <X className="w-7 h-7 text-white" />
-      </button>
-
-      {/* Image counter */}
-      <div className="absolute top-4 left-4 z-10 px-4 py-2 rounded-full bg-black/50 backdrop-blur-sm">
-        <span className="text-white text-sm font-medium">
-          {currentIndex + 1} / {images.length}
-        </span>
+      {/* Header con counter e close */}
+      <div className="absolute top-0 left-0 right-0 flex justify-between items-center p-4 z-20">
+        <div className="px-4 py-2 rounded-full bg-black/70 backdrop-blur-sm">
+          <span className="text-white text-sm font-medium">
+            {currentIndex + 1} / {images.length}
+          </span>
+        </div>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onClose();
+          }}
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onClose();
+          }}
+          className="p-3 rounded-full bg-black/70 backdrop-blur-sm active:bg-white/30"
+          aria-label="Chiudi"
+        >
+          <X className="w-7 h-7 text-white" />
+        </button>
       </div>
 
-      {/* Navigation buttons */}
+      {/* Navigazione laterale */}
       {images.length > 1 && (
         <>
           <button
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
-              onPrev();
+              goPrev();
             }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 transition-colors"
-            aria-label="Immagine precedente"
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              goPrev();
+            }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-20 p-4 rounded-full bg-black/50 active:bg-white/30"
+            aria-label="Precedente"
           >
             <ChevronLeft className="w-8 h-8 text-white" />
           </button>
           <button
             onClick={(e) => {
+              e.preventDefault();
               e.stopPropagation();
-              onNext();
+              goNext();
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 transition-colors"
-            aria-label="Immagine successiva"
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              goNext();
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-20 p-4 rounded-full bg-black/50 active:bg-white/30"
+            aria-label="Successiva"
           >
             <ChevronRight className="w-8 h-8 text-white" />
           </button>
         </>
       )}
 
-      {/* Main image */}
-      <img
-        src={images[currentIndex]}
-        alt={`${apartmentName} - Immagine ${currentIndex + 1}`}
-        className="max-w-[95vw] max-h-[80vh] object-contain select-none"
-        onClick={(e) => e.stopPropagation()}
-        draggable={false}
-      />
+      {/* Immagine principale */}
+      <div className="flex-1 flex items-center justify-center w-full px-4 py-20">
+        <img
+          src={images[currentIndex]}
+          alt={`${apartmentName} - Immagine ${currentIndex + 1}`}
+          className="max-w-full max-h-full object-contain select-none pointer-events-none"
+          draggable={false}
+        />
+      </div>
 
-      {/* Thumbnail strip */}
+      {/* Thumbnails */}
       {images.length > 1 && (
-        <div
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-black/60 backdrop-blur-sm rounded-lg max-w-[95vw] overflow-x-auto"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {images.map((image, index) => (
-            <button
-              key={index}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectIndex(index);
-              }}
-              className={`flex-shrink-0 w-14 h-10 rounded overflow-hidden transition-all ${
-                index === currentIndex
-                  ? 'ring-2 ring-white opacity-100 scale-110'
-                  : 'opacity-50 hover:opacity-75 active:opacity-100'
-              }`}
+        <div className="absolute bottom-4 left-0 right-0 z-20">
+          <div className="flex justify-center">
+            <div
+              className="flex gap-2 p-2 bg-black/70 backdrop-blur-sm rounded-lg overflow-x-auto max-w-[90vw]"
+              onClick={(e) => e.stopPropagation()}
             >
-              <img
-                src={image}
-                alt={`Miniatura ${index + 1}`}
-                className="w-full h-full object-cover"
-                draggable={false}
-              />
-            </button>
-          ))}
+              {images.map((image, index) => (
+                <button
+                  key={index}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setCurrentIndex(index);
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setCurrentIndex(index);
+                  }}
+                  className={`flex-shrink-0 w-14 h-10 rounded overflow-hidden transition-all ${
+                    index === currentIndex
+                      ? 'ring-2 ring-white scale-110'
+                      : 'opacity-50 active:opacity-100'
+                  }`}
+                >
+                  <img
+                    src={image}
+                    alt={`Miniatura ${index + 1}`}
+                    className="w-full h-full object-cover pointer-events-none"
+                    draggable={false}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="text-center text-white/50 text-xs mt-2 md:hidden">
+            Scorri per navigare
+          </p>
         </div>
       )}
-
-      {/* Swipe hint (shown briefly) */}
-      <div className="absolute bottom-20 left-1/2 -translate-x-1/2 text-white/50 text-xs md:hidden">
-        Scorri per navigare
-      </div>
     </div>,
     document.body
   );
@@ -221,184 +259,173 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
     setFullscreenOpen(false);
   };
 
-  const nextFullscreenImage = useCallback(() => {
-    setFullscreenIndex((prev) => (prev + 1) % images.length);
-  }, [images.length]);
-
-  const prevFullscreenImage = useCallback(() => {
-    setFullscreenIndex((prev) => (prev - 1 + images.length) % images.length);
-  }, [images.length]);
-
   if (!apartment) return null;
 
-  return (
-    <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-serif text-primary">
-              {apartment.name}
-            </DialogTitle>
-          </DialogHeader>
+  // Se fullscreen è aperto, mostra SOLO il fullscreen (nasconde il Dialog)
+  if (fullscreenOpen) {
+    return (
+      <FullscreenGallery
+        images={images}
+        initialIndex={fullscreenIndex}
+        apartmentName={apartment.name}
+        onClose={closeFullscreen}
+      />
+    );
+  }
 
-          <div className="space-y-6">
-            {/* Image Gallery */}
-            <div className="relative">
-              <Carousel className="w-full" setApi={setApi}>
-                <CarouselContent>
-                  {images.map((image, index) => (
-                    <CarouselItem key={index}>
-                      <Card className="overflow-hidden border-0 shadow-none">
-                        <CardContent className="p-0">
-                          <div
-                            className="aspect-[16/9] relative cursor-pointer group"
-                            onClick={() => openFullscreen(index)}
-                          >
-                            <img
-                              src={image}
-                              alt={`${apartment.name} - Immagine ${index + 1}`}
-                              className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
-                              onError={(e) => {
-                                e.currentTarget.src = "/placeholder.svg";
-                              }}
-                            />
-                            {/* Hover overlay */}
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 rounded-lg flex items-center justify-center">
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
-                                <span className="text-sm font-medium text-gray-800 flex items-center gap-2">
-                                  <Eye className="w-4 h-4" />
-                                  Clicca per ingrandire
-                                </span>
-                              </div>
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-serif text-primary">
+            {apartment.name}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Image Gallery */}
+          <div className="relative">
+            <Carousel className="w-full" setApi={setApi}>
+              <CarouselContent>
+                {images.map((image, index) => (
+                  <CarouselItem key={index}>
+                    <Card className="overflow-hidden border-0 shadow-none">
+                      <CardContent className="p-0">
+                        <div
+                          className="aspect-[16/9] relative cursor-pointer group"
+                          onClick={() => openFullscreen(index)}
+                        >
+                          <img
+                            src={image}
+                            alt={`${apartment.name} - Immagine ${index + 1}`}
+                            className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-[1.02]"
+                            onError={(e) => {
+                              e.currentTarget.src = "/placeholder.svg";
+                            }}
+                          />
+                          {/* Hover overlay */}
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 rounded-lg flex items-center justify-center">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
+                              <span className="text-sm font-medium text-gray-800 flex items-center gap-2">
+                                <Eye className="w-4 h-4" />
+                                Clicca per ingrandire
+                              </span>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
-                    </CarouselItem>
-                  ))}
-                </CarouselContent>
-                <CarouselPrevious className="left-2 bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg" />
-                <CarouselNext className="right-2 bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg" />
-              </Carousel>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-2 bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg" />
+              <CarouselNext className="right-2 bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg" />
+            </Carousel>
 
-              {/* Dot Indicators */}
-              {count > 1 && (
-                <div className="flex justify-center gap-2 mt-4">
-                  {Array.from({ length: count }).map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => api?.scrollTo(index)}
-                      className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                        index === current
-                          ? 'bg-primary w-6'
-                          : 'bg-gray-300 hover:bg-gray-400'
-                      }`}
-                      aria-label={`Vai all'immagine ${index + 1}`}
-                    />
-                  ))}
-                </div>
-              )}
-
-              {/* Image Counter */}
-              <div className="flex justify-center mt-3">
-                <span className="text-sm text-muted-foreground">
-                  {current + 1} / {count} foto
-                </span>
+            {/* Dot Indicators */}
+            {count > 1 && (
+              <div className="flex justify-center gap-2 mt-4">
+                {Array.from({ length: count }).map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => api?.scrollTo(index)}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      index === current
+                        ? 'bg-primary w-6'
+                        : 'bg-gray-300 hover:bg-gray-400'
+                    }`}
+                    aria-label={`Vai all'immagine ${index + 1}`}
+                  />
+                ))}
               </div>
-            </div>
+            )}
 
-            {/* Apartment Info */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-serif font-semibold mb-2">Descrizione</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {apartment.longDescription || apartment.description}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center gap-2">
-                    <Users className="w-5 h-5 text-primary" />
-                    <span className="text-sm">Fino a {apartment.capacity} ospiti</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Home className="w-5 h-5 text-primary" />
-                    <span className="text-sm">{apartment.bedrooms} camere</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Building className="w-5 h-5 text-primary" />
-                    <span className="text-sm">{apartment.size}m²</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Eye className="w-5 h-5 text-primary" />
-                    <span className="text-sm">Vista {apartment.view}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-serif font-semibold mb-3">Servizi</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {apartment.services.map((service, index) => (
-                      <Badge
-                        key={index}
-                        variant="secondary"
-                        className="flex items-center gap-2 px-3 py-2"
-                      >
-                        {getServiceIcon(service)}
-                        <span className="text-xs">{service}</span>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {apartment.CIN && (
-                  <div>
-                    <h4 className="font-medium text-sm text-muted-foreground mb-1">
-                      Codice Identificativo Nazionale
-                    </h4>
-                    <p className="text-sm font-mono bg-muted px-2 py-1 rounded">
-                      {apartment.CIN}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Action Button */}
-            <div className="border-t pt-6">
-              <div className="flex justify-between items-center">
-                <div className="text-sm text-muted-foreground">
-                  <MapPin className="w-4 h-4 inline mr-1" />
-                  Piano {apartment.floor}
-                </div>
-                <Button
-                  onClick={handleBookNow}
-                  size="lg"
-                  className="px-8"
-                >
-                  Richiedi Preventivo
-                </Button>
-              </div>
+            {/* Image Counter */}
+            <div className="flex justify-center mt-3">
+              <span className="text-sm text-muted-foreground">
+                {current + 1} / {count} foto
+              </span>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
 
-      {/* Fullscreen Gallery (rendered via Portal) */}
-      {fullscreenOpen && apartment && (
-        <FullscreenGallery
-          images={images}
-          currentIndex={fullscreenIndex}
-          apartmentName={apartment.name}
-          onClose={closeFullscreen}
-          onNext={nextFullscreenImage}
-          onPrev={prevFullscreenImage}
-          onSelectIndex={setFullscreenIndex}
-        />
-      )}
-    </>
+          {/* Apartment Info */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-serif font-semibold mb-2">Descrizione</h3>
+                <p className="text-muted-foreground leading-relaxed">
+                  {apartment.longDescription || apartment.description}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-primary" />
+                  <span className="text-sm">Fino a {apartment.capacity} ospiti</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Home className="w-5 h-5 text-primary" />
+                  <span className="text-sm">{apartment.bedrooms} camere</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Building className="w-5 h-5 text-primary" />
+                  <span className="text-sm">{apartment.size}m²</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Eye className="w-5 h-5 text-primary" />
+                  <span className="text-sm">Vista {apartment.view}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-serif font-semibold mb-3">Servizi</h3>
+                <div className="flex flex-wrap gap-2">
+                  {apartment.services.map((service, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="flex items-center gap-2 px-3 py-2"
+                    >
+                      {getServiceIcon(service)}
+                      <span className="text-xs">{service}</span>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {apartment.CIN && (
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground mb-1">
+                    Codice Identificativo Nazionale
+                  </h4>
+                  <p className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                    {apartment.CIN}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <div className="border-t pt-6">
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-muted-foreground">
+                <MapPin className="w-4 h-4 inline mr-1" />
+                Piano {apartment.floor}
+              </div>
+              <Button
+                onClick={handleBookNow}
+                size="lg"
+                className="px-8"
+              >
+                Richiedi Preventivo
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
