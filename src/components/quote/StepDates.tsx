@@ -17,6 +17,7 @@ interface StepDatesProps {
   getNights: () => number;
   isValidDay: (date: Date) => boolean;
   getDateBlockInfo: (date: Date) => { isBlocked: boolean; reason: string };
+  requiresTwoWeeksMinimum: (checkIn: string, checkOut: string) => { required: boolean; message: string };
 }
 
 export const StepDates: React.FC<StepDatesProps> = ({
@@ -26,11 +27,15 @@ export const StepDates: React.FC<StepDatesProps> = ({
   onPrev,
   getNights,
   isValidDay,
-  getDateBlockInfo
+  getDateBlockInfo,
+  requiresTwoWeeksMinimum
 }) => {
 
+  // Verifica requisito minimo 2 settimane per Ferragosto
+  const ferragostoCheck = requiresTwoWeeksMinimum(formData.checkIn, formData.checkOut);
+
   const canProceed = () => {
-    return formData.checkIn && formData.checkOut && getNights() >= 5 && getNights() <= 28;
+    return formData.checkIn && formData.checkOut && getNights() >= 5 && getNights() <= 28 && !ferragostoCheck.required;
   };
 
   const nights = getNights();
@@ -247,10 +252,16 @@ export const StepDates: React.FC<StepDatesProps> = ({
                     <span className="text-sm">Massimo 28 notti consentite</span>
                   </div>
                 )}
-                {nights >= 5 && nights <= 28 && (
+                {nights >= 5 && nights <= 28 && !ferragostoCheck.required && (
                   <div className="flex items-center justify-center gap-2 mt-2 text-green-600">
                     <CheckCircle2 className="h-4 w-4" />
                     <span className="text-sm">Durata valida</span>
+                  </div>
+                )}
+                {ferragostoCheck.required && (
+                  <div className="flex items-center justify-center gap-2 mt-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
+                    <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                    <span className="text-sm text-left">{ferragostoCheck.message}</span>
                   </div>
                 )}
               </div>

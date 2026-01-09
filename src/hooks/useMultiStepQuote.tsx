@@ -207,6 +207,49 @@ export const useMultiStepQuote = () => {
     return day === 0 || day === 1 || day === 6; // sabato, domenica, lunedì
   }, []);
 
+  // Verifica se Ferragosto cade di Sabato per un dato anno
+  const isFerragostoOnSaturday = useCallback((year: number): boolean => {
+    const ferragosto = new Date(year, 7, 15); // 15 Agosto (mese 7 = agosto, 0-indexed)
+    return ferragosto.getDay() === 6; // 6 = Sabato
+  }, []);
+
+  // Verifica se il soggiorno richiede minimo 2 settimane (Ferragosto di sabato)
+  const requiresTwoWeeksMinimum = useCallback((checkIn: string, checkOut: string): { required: boolean; message: string } => {
+    if (!checkIn || !checkOut) return { required: false, message: '' };
+
+    const [startYear, startMonth, startDay] = checkIn.split('-').map(Number);
+    const [endYear, endMonth, endDay] = checkOut.split('-').map(Number);
+
+    const checkInDate = new Date(startYear, startMonth - 1, startDay);
+    const checkOutDate = new Date(endYear, endMonth - 1, endDay);
+
+    // Controlla per entrambi gli anni (caso in cui il soggiorno attraversa il cambio anno)
+    const yearsToCheck = [startYear];
+    if (endYear !== startYear) yearsToCheck.push(endYear);
+
+    for (const year of yearsToCheck) {
+      // Ferragosto cade di Sabato quest'anno?
+      if (!isFerragostoOnSaturday(year)) continue;
+
+      const ferragosto = new Date(year, 7, 15);
+
+      // Il soggiorno include Ferragosto? (check-in <= 15/08 E check-out > 15/08)
+      if (checkInDate <= ferragosto && checkOutDate > ferragosto) {
+        // Calcola le notti
+        const nights = Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (nights < 14) {
+          return {
+            required: true,
+            message: `Per il periodo di Ferragosto ${year} (15 Agosto cade di Sabato) è richiesto un soggiorno minimo di 2 settimane (14 notti). Attualmente hai selezionato ${nights} notti.`
+          };
+        }
+      }
+    }
+
+    return { required: false, message: '' };
+  }, [isFerragostoOnSaturday]);
+
   const calculatePrice = useCallback(async () => {
     if (!formData.selectedApartments.length || !formData.checkIn || !formData.checkOut) {
       return {
@@ -372,6 +415,7 @@ export const useMultiStepQuote = () => {
     calculatePrice,
     saveQuoteToDatabase,
     getDateBlockInfo,
+    requiresTwoWeeksMinimum,
     priceLoading,
     prenotazioni: prenotazioniStatiche
   };
