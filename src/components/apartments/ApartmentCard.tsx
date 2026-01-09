@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,7 +17,7 @@ interface ApartmentCardProps {
   onDetailsClick?: () => void;
 }
 
-export default function ApartmentCard({ apartment, mainImage, onDetailsClick }: ApartmentCardProps) {
+const ApartmentCard = memo(function ApartmentCard({ apartment, mainImage, onDetailsClick }: ApartmentCardProps) {
   return (
     <motion.div
       whileHover={{ y: -8, scale: 1.01 }}
@@ -118,4 +118,6 @@ export default function ApartmentCard({ apartment, mainImage, onDetailsClick }: 
       </Card>
     </motion.div>
   );
-}
+});
+
+export default ApartmentCard;

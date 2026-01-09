@@ -117,6 +117,9 @@ export const optimizeBundleLoading = () => {
 
 // Initialize all optimizations
 export const initPerformanceOptimizations = () => {
+  // Register Service Worker immediately for caching
+  registerServiceWorker();
+
   // Run optimizations after DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {

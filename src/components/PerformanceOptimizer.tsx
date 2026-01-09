@@ -6,13 +6,6 @@ const PerformanceOptimizer = () => {
   useEffect(() => {
     // Initialize all performance optimizations
     initPerformanceOptimizations();
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.href = '/fonts/inter.woff2'; // Adjust based on your font files
-    link.as = 'font';
-    link.type = 'font/woff2';
-    link.crossOrigin = 'anonymous';
-    document.head.appendChild(link);
 
     // Enable passive listeners for better scroll performance
     let ticking = false;
@@ -29,30 +22,27 @@ const PerformanceOptimizer = () => {
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (link.parentNode) {
-        link.parentNode.removeChild(link);
-      }
     };
   }, []);
 
   return (
     <Helmet>
-      {/* DNS prefetch for external domains */}
-      <link rel="dns-prefetch" href="//fgeeeivbmfrwrieyzhel.supabase.co" />
-      <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-      
-      {/* Preconnect to critical origins */}
+      {/* Preconnect to critical origins - fonts */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+
+      {/* Preconnect to Supabase */}
       <link rel="preconnect" href="https://fgeeeivbmfrwrieyzhel.supabase.co" />
-      
+
+      {/* Preconnect to ImageKit CDN */}
+      <link rel="preconnect" href="https://ik.imagekit.io" />
+
       {/* Resource hints for better performance */}
       <meta httpEquiv="x-dns-prefetch-control" content="on" />
-      
+
       {/* Optimize viewport for mobile */}
       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-      
-      {/* Critical CSS inlining hint */}
-      <meta name="critical-css" content="true" />
-      
+
       {/* Browser hints */}
       <meta name="format-detection" content="telephone=no" />
       <meta name="msapplication-tap-highlight" content="no" />
