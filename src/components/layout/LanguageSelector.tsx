@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Globe, Check } from "lucide-react";
 import {
   DropdownMenu,
@@ -28,49 +28,62 @@ const languages: Language[] = [
 
 const STORAGE_KEY = 'villamareblu_language';
 
+// Helper to set cookie on multiple domains for Google Translate
+const setGoogleTranslateCookie = (langCode: string) => {
+  const value = langCode === 'it' ? '' : `/it/${langCode}`;
+  const expires = langCode === 'it'
+    ? 'Thu, 01 Jan 1970 00:00:00 UTC'
+    : new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toUTCString();
+
+  // Clear or set on various paths/domains
+  const domains = ['', window.location.hostname, '.' + window.location.hostname];
+  domains.forEach(domain => {
+    const domainPart = domain ? `; domain=${domain}` : '';
+    if (langCode === 'it') {
+      document.cookie = `googtrans=; expires=${expires}; path=/${domainPart}`;
+    } else {
+      document.cookie = `googtrans=${value}; expires=${expires}; path=/${domainPart}`;
+    }
+  });
+};
+
 export function LanguageSelector() {
   const [currentLang, setCurrentLang] = useState<Language>(languages[0]);
   const [isOpen, setIsOpen] = useState(false);
   const [isTranslateReady, setIsTranslateReady] = useState(false);
 
-  // Detect current language from cookie
-  const detectCurrentLanguage = useCallback(() => {
-    // Check googtrans cookie
+  // Detect current language from cookie or localStorage
+  const detectCurrentLanguage = useCallback((): Language => {
+    // First check localStorage (our preference)
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const found = languages.find(l => l.googleCode === saved);
+      if (found) return found;
+    }
+
+    // Then check googtrans cookie
     const match = document.cookie.match(/googtrans=\/it\/([a-z]{2})/);
     if (match) {
       const langCode = match[1];
       const found = languages.find(l => l.googleCode === langCode);
-      if (found) {
-        return found;
-      }
+      if (found) return found;
     }
+
     return languages[0]; // Default Italian
   }, []);
 
-  // Initialize
+  // Initialize on mount
   useEffect(() => {
+    const detected = detectCurrentLanguage();
+    setCurrentLang(detected);
+
     // Check if Google Translate is ready
     const checkReady = () => {
+      const translateElement = document.getElementById('google_translate_element');
       const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-      if (select) {
+
+      if (translateElement && select) {
         setIsTranslateReady(true);
-
-        // Restore language from localStorage or cookie
-        const saved = localStorage.getItem(STORAGE_KEY);
-        const detected = detectCurrentLanguage();
-
-        if (saved && saved !== 'it') {
-          const found = languages.find(l => l.googleCode === saved);
-          if (found) {
-            setCurrentLang(found);
-            // Apply saved language
-            setTimeout(() => {
-              triggerTranslation(saved);
-            }, 100);
-          }
-        } else {
-          setCurrentLang(detected);
-        }
         return true;
       }
       return false;
@@ -80,19 +93,21 @@ export function LanguageSelector() {
     const handleReady = () => {
       setTimeout(checkReady, 500);
     };
-
     window.addEventListener('googleTranslateReady', handleReady);
 
-    // Also poll for readiness
+    // Also poll for readiness (backup)
     const interval = setInterval(() => {
       if (checkReady()) {
         clearInterval(interval);
       }
-    }, 500);
+    }, 1000);
 
+    // Stop polling after 15 seconds
     const timeout = setTimeout(() => {
       clearInterval(interval);
-    }, 10000);
+      // Even if not ready, we can still use cookie-based translation
+      setIsTranslateReady(true);
+    }, 15000);
 
     return () => {
       window.removeEventListener('googleTranslateReady', handleReady);
@@ -101,44 +116,66 @@ export function LanguageSelector() {
     };
   }, [detectCurrentLanguage]);
 
-  // Trigger translation via Google Translate select
-  const triggerTranslation = (langCode: string) => {
+  // Trigger translation - try DOM method first, then fallback to reload
+  const triggerTranslation = useCallback((langCode: string) => {
+    // Try the DOM method first
     const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-    if (select) {
+    if (select && select.options.length > 0) {
       select.value = langCode;
       select.dispatchEvent(new Event('change', { bubbles: true }));
+
+      // Verify translation was applied after a short delay
+      setTimeout(() => {
+        const translated = document.querySelector('.goog-te-banner-frame') ||
+                          document.querySelector('[lang]')?.getAttribute('lang')?.startsWith(langCode);
+        if (!translated) {
+          // Fallback: reload with cookie
+          setGoogleTranslateCookie(langCode);
+          window.location.reload();
+        }
+      }, 1000);
+    } else {
+      // No select element - use cookie and reload
+      setGoogleTranslateCookie(langCode);
+      window.location.reload();
     }
-  };
+  }, []);
 
   const changeLanguage = useCallback((lang: Language) => {
+    if (lang.googleCode === currentLang.googleCode) {
+      setIsOpen(false);
+      return;
+    }
+
     setCurrentLang(lang);
     setIsOpen(false);
     localStorage.setItem(STORAGE_KEY, lang.googleCode);
 
     if (lang.googleCode === 'it') {
-      // Reset to Italian - need to restore original page
-      // Clear the googtrans cookie and reload
-      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + window.location.hostname;
-      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.' + window.location.hostname;
+      // Reset to Italian
+      setGoogleTranslateCookie('it');
+      localStorage.removeItem(STORAGE_KEY);
 
-      // Try to use Google Translate's reset function
+      // Try to use Google Translate's reset function first
       const select = document.querySelector('.goog-te-combo') as HTMLSelectElement;
       if (select) {
         select.value = '';
         select.dispatchEvent(new Event('change', { bubbles: true }));
       }
 
-      // Reload to ensure clean state
+      // Always reload to ensure clean state for Italian
       setTimeout(() => {
         window.location.reload();
       }, 100);
       return;
     }
 
+    // Set cookie for other languages
+    setGoogleTranslateCookie(lang.googleCode);
+
     // Trigger translation
     triggerTranslation(lang.googleCode);
-  }, []);
+  }, [currentLang.googleCode, triggerTranslation]);
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
