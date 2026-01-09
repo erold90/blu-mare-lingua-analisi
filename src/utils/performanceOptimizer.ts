@@ -106,17 +106,17 @@ export const registerServiceWorker = async () => {
   }
 };
 
-// Optimize bundle loading - disabled in production as paths are different
+// Optimize bundle loading
 export const optimizeBundleLoading = () => {
-  // In production, Vite handles chunk preloading automatically
-  // No manual preloading needed
+  // Preload critical chunks
+  const modulePreload = document.createElement('link');
+  modulePreload.rel = 'modulepreload';
+  modulePreload.href = '/src/main.tsx';
+  document.head.appendChild(modulePreload);
 };
 
 // Initialize all optimizations
 export const initPerformanceOptimizations = () => {
-  // Service Worker temporaneamente disabilitato - da riattivare dopo test
-  // registerServiceWorker();
-
   // Run optimizations after DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
