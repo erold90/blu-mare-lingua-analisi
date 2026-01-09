@@ -1,13 +1,12 @@
 // Service Worker per Villa MareBlu
 // Versione cache - aggiorna per invalidare cache
-const CACHE_VERSION = 'v1.0.0';
+const CACHE_VERSION = 'v1.0.1';
 const CACHE_NAME = `villa-mareblu-${CACHE_VERSION}`;
 
 // Assets da pre-cacheare (shell dell'app)
 const PRECACHE_ASSETS = [
   '/',
-  '/index.html',
-  '/manifest.json'
+  '/index.html'
 ];
 
 // Strategia: Cache First per assets statici

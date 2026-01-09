@@ -106,13 +106,10 @@ export const registerServiceWorker = async () => {
   }
 };
 
-// Optimize bundle loading
+// Optimize bundle loading - disabled in production as paths are different
 export const optimizeBundleLoading = () => {
-  // Preload critical chunks
-  const modulePreload = document.createElement('link');
-  modulePreload.rel = 'modulepreload';
-  modulePreload.href = '/src/main.tsx';
-  document.head.appendChild(modulePreload);
+  // In production, Vite handles chunk preloading automatically
+  // No manual preloading needed
 };
 
 // Initialize all optimizations
