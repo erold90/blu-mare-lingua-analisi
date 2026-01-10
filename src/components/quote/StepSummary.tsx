@@ -52,35 +52,49 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   const [quoteSaved, setQuoteSaved] = useState(false);
   const [savingQuote, setSavingQuote] = useState(false);
 
+  // Usa un ref per tracciare se il calcolo è già stato eseguito
+  const hasCalculated = React.useRef(false);
+  const calculationKey = `${formData.checkIn}-${formData.checkOut}-${formData.selectedApartments.join(',')}`;
+
   useEffect(() => {
+    // Reset quando cambiano i parametri chiave
+    hasCalculated.current = false;
+    setQuoteSaved(false);
+  }, [calculationKey]);
+
+  useEffect(() => {
+    // Evita calcoli duplicati
+    if (hasCalculated.current) return;
+
     const loadPriceCalculation = async () => {
       try {
         setLoading(true);
         setError(null);
-        
-        // Invalida la cache dei prezzi per ottenere dati aggiornati
-        PricingService.invalidateCache();
-        
+
+        hasCalculated.current = true;
         const result = await calculatePrice();
         setPriceCalculation(result);
-        
+
         // Auto-salvataggio del preventivo quando arriva allo step 6
-        if (result && !quoteSaved && !savingQuote) {
+        if (result && !quoteSaved) {
           setSavingQuote(true);
-          await saveQuoteToDatabase(result);
-          setQuoteSaved(true);
-          setSavingQuote(false);
+          try {
+            await saveQuoteToDatabase(result);
+            setQuoteSaved(true);
+          } finally {
+            setSavingQuote(false);
+          }
         }
       } catch (err) {
         setError('Non è possibile calcolare il preventivo. Alcune date potrebbero non essere disponibili.');
-        setSavingQuote(false);
+        hasCalculated.current = false; // Permetti retry su errore
       } finally {
         setLoading(false);
       }
     };
 
     loadPriceCalculation();
-  }, [formData.checkIn, formData.checkOut, formData.selectedApartments]);
+  }, [calculationKey, quoteSaved]);
 
   const saveQuoteToDatabase = async (priceData: any) => {
     try {

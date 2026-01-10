@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -63,25 +63,35 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
   const bedsNeeded = getBedsNeeded();
   const { getPriceForPeriod } = useDynamicQuote();
 
+  // Usa un ref per evitare chiamate duplicate
+  const hasCheckedAvailability = useRef(false);
+  const availabilityKey = `${formData.checkIn}-${formData.checkOut}`;
+
+  // Reset quando cambiano le date
+  useEffect(() => {
+    hasCheckedAvailability.current = false;
+  }, [availabilityKey]);
+
   // Controlla la disponibilità dinamicamente per tutti gli appartamenti
   useEffect(() => {
+    if (!formData.checkIn || !formData.checkOut) {
+      return;
+    }
+
+    // Evita chiamate duplicate
+    if (hasCheckedAvailability.current) return;
+
     const checkAllAvailability = async () => {
-      
-      if (!formData.checkIn || !formData.checkOut) {
-        return;
-      }
-      
-      // Invalida la cache dei prezzi per ottenere dati aggiornati
-      PricingService.invalidateCache();
-      
+      hasCheckedAvailability.current = true;
+
       const newStatus: Record<string, boolean> = {};
       const newPrices: Record<string, number> = {};
-      
+
       for (const apartment of apartments) {
         try {
           const available = await isApartmentAvailable(apartment.id, formData.checkIn, formData.checkOut);
           newStatus[apartment.id] = available;
-          
+
           // Calcola il prezzo solo se l'appartamento è disponibile
           if (available) {
             const price = await getPriceForPeriod(parseInt(apartment.id), formData.checkIn, formData.checkOut);
@@ -100,13 +110,13 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
           newStatus[apartment.id] = false;
         }
       }
-      
+
       setAvailabilityStatus(newStatus);
       setApartmentPrices(newPrices);
     };
 
     checkAllAvailability();
-  }, [formData.checkIn, formData.checkOut, isApartmentAvailable, getPriceForPeriod]);
+  }, [availabilityKey, isApartmentAvailable, getPriceForPeriod]);
   
   const handleApartmentToggle = (apartmentId: string) => {
     const isSelected = formData.selectedApartments.includes(apartmentId);
