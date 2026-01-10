@@ -63,14 +63,10 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
   const bedsNeeded = getBedsNeeded();
   const { getPriceForPeriod } = useDynamicQuote();
 
-  // Usa un ref per evitare chiamate duplicate
+  // Refs per evitare chiamate duplicate
   const hasCheckedAvailability = useRef(false);
+  const lastAvailabilityKey = useRef('');
   const availabilityKey = `${formData.checkIn}-${formData.checkOut}`;
-
-  // Reset quando cambiano le date
-  useEffect(() => {
-    hasCheckedAvailability.current = false;
-  }, [availabilityKey]);
 
   // Controlla la disponibilità dinamicamente per tutti gli appartamenti
   useEffect(() => {
@@ -78,12 +74,17 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
       return;
     }
 
+    // Se la chiave è cambiata, resetta il flag
+    if (lastAvailabilityKey.current !== availabilityKey) {
+      hasCheckedAvailability.current = false;
+      lastAvailabilityKey.current = availabilityKey;
+    }
+
     // Evita chiamate duplicate
     if (hasCheckedAvailability.current) return;
+    hasCheckedAvailability.current = true;
 
     const checkAllAvailability = async () => {
-      hasCheckedAvailability.current = true;
-
       const newStatus: Record<string, boolean> = {};
       const newPrices: Record<string, number> = {};
 
@@ -116,7 +117,8 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
     };
 
     checkAllAvailability();
-  }, [availabilityKey, isApartmentAvailable, getPriceForPeriod]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availabilityKey]); // Solo availabilityKey come dipendenza
   
   const handleApartmentToggle = (apartmentId: string) => {
     const isSelected = formData.selectedApartments.includes(apartmentId);

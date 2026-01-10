@@ -49,41 +49,38 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [quoteSaved, setQuoteSaved] = useState(false);
-  const [savingQuote, setSavingQuote] = useState(false);
 
-  // Usa un ref per tracciare se il calcolo è già stato eseguito
+  // Refs per evitare calcoli e salvataggi duplicati
   const hasCalculated = React.useRef(false);
+  const hasSaved = React.useRef(false);
+  const lastCalculationKey = React.useRef('');
+
   const calculationKey = `${formData.checkIn}-${formData.checkOut}-${formData.selectedApartments.join(',')}`;
 
   useEffect(() => {
-    // Reset quando cambiano i parametri chiave
-    hasCalculated.current = false;
-    setQuoteSaved(false);
-  }, [calculationKey]);
+    // Se la chiave è cambiata, resetta i flag
+    if (lastCalculationKey.current !== calculationKey) {
+      hasCalculated.current = false;
+      hasSaved.current = false;
+      lastCalculationKey.current = calculationKey;
+    }
 
-  useEffect(() => {
     // Evita calcoli duplicati
     if (hasCalculated.current) return;
+    hasCalculated.current = true;
 
     const loadPriceCalculation = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        hasCalculated.current = true;
         const result = await calculatePrice();
         setPriceCalculation(result);
 
-        // Auto-salvataggio del preventivo quando arriva allo step 6
-        if (result && !quoteSaved) {
-          setSavingQuote(true);
-          try {
-            await saveQuoteToDatabase(result);
-            setQuoteSaved(true);
-          } finally {
-            setSavingQuote(false);
-          }
+        // Auto-salvataggio (una sola volta)
+        if (result && !hasSaved.current) {
+          hasSaved.current = true;
+          await saveQuoteToDatabase(result);
         }
       } catch (err) {
         setError('Non è possibile calcolare il preventivo. Alcune date potrebbero non essere disponibili.');
@@ -94,7 +91,7 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
     };
 
     loadPriceCalculation();
-  }, [calculationKey, quoteSaved]);
+  }, [calculationKey]); // Rimosso quoteSaved!
 
   const saveQuoteToDatabase = async (priceData: any) => {
     try {
