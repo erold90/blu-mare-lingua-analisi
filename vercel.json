@@ -3,6 +3,9 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/((?!assets|.*\\.js|.*\\.css|.*\\.ico|.*\\.png|.*\\.jpg|.*\\.svg|.*\\.woff|.*\\.woff2).*)",
+      "destination": "/index.html"
+    }
   ]
 }
