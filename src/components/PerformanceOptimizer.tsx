@@ -6,13 +6,6 @@ const PerformanceOptimizer = () => {
   useEffect(() => {
     // Initialize all performance optimizations
     initPerformanceOptimizations();
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.href = '/fonts/inter.woff2'; // Adjust based on your font files
-    link.as = 'font';
-    link.type = 'font/woff2';
-    link.crossOrigin = 'anonymous';
-    document.head.appendChild(link);
 
     // Enable passive listeners for better scroll performance
     let ticking = false;
@@ -29,9 +22,6 @@ const PerformanceOptimizer = () => {
 
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (link.parentNode) {
-        link.parentNode.removeChild(link);
-      }
     };
   }, []);
 
