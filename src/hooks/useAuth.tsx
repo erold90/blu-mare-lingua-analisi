@@ -27,40 +27,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isCheckingAdmin = useRef(false);
 
-  // Funzione per verificare se l'utente è admin
+  // Funzione per verificare se l'utente è admin usando RPC server-side
   const checkAdminStatus = useCallback(async (userId: string): Promise<boolean> => {
-    console.log('[AUTH] checkAdminStatus chiamato per userId:', userId);
+    console.log('[AUTH] checkAdminStatus per userId:', userId);
 
-    // Evita chiamate multiple, ma aspetta il risultato invece di ritornare false
     if (isCheckingAdmin.current) {
       console.log('[AUTH] Verifica già in corso, aspetto...');
       await new Promise(resolve => setTimeout(resolve, 200));
-      console.log('[AUTH] Ritorno isAdmin corrente:', isAdmin);
       return isAdmin;
     }
 
     isCheckingAdmin.current = true;
     try {
-      console.log('[AUTH] Query admin_profiles per userId:', userId);
+      // Usa la funzione RPC is_admin che bypassa RLS
+      const { data: isAdminResult, error: rpcError } = await supabase
+        .rpc('is_admin', { user_id: userId });
+
+      console.log('[AUTH] RPC is_admin result:', { isAdminResult, rpcError });
+
+      if (!rpcError && isAdminResult !== null) {
+        setIsAdmin(isAdminResult);
+        return isAdminResult;
+      }
+
+      // Fallback: query diretta
+      console.log('[AUTH] Fallback query diretta...');
       const { data: adminProfile, error } = await supabase
         .from('admin_profiles')
-        .select('id, user_id, role')
+        .select('id')
         .eq('user_id', userId)
         .maybeSingle();
 
-      console.log('[AUTH] Risultato query:', { adminProfile, error });
-
-      if (error) {
-        console.error('[AUTH] Errore query admin_profiles:', error);
-        return false;
-      }
+      console.log('[AUTH] Query result:', { adminProfile, error });
 
       const result = !!adminProfile;
-      console.log('[AUTH] isAdmin result:', result);
       setIsAdmin(result);
       return result;
     } catch (err) {
-      console.error('[AUTH] Eccezione in checkAdminStatus:', err);
+      console.error('[AUTH] Errore checkAdminStatus:', err);
       return false;
     } finally {
       isCheckingAdmin.current = false;
