@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -29,6 +29,13 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const { reservations, loading: reservationsLoading } = useReservations();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+
+  // Handler per logout con redirect esplicito
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/auth', { replace: true });
+  };
 
   // Redirect if not authenticated or not admin
   if (loading) {
@@ -56,7 +63,7 @@ export default function AdminPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Button onClick={signOut} variant="outline">
+            <Button onClick={handleLogout} variant="outline">
               Torna al Login
             </Button>
           </CardContent>
@@ -111,7 +118,7 @@ export default function AdminPage() {
                 {user.email}
               </span>
               <Button
-                onClick={signOut}
+                onClick={handleLogout}
                 variant="outline"
                 size={isMobile ? "sm" : "default"}
                 className="flex items-center gap-1 sm:gap-2 touch-manipulation"
