@@ -29,31 +29,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Funzione per verificare se l'utente è admin
   const checkAdminStatus = useCallback(async (userId: string): Promise<boolean> => {
+    console.log('[AUTH] checkAdminStatus chiamato per userId:', userId);
+
     // Evita chiamate multiple, ma aspetta il risultato invece di ritornare false
     if (isCheckingAdmin.current) {
-      // Aspetta che la verifica in corso finisca
-      await new Promise(resolve => setTimeout(resolve, 100));
+      console.log('[AUTH] Verifica già in corso, aspetto...');
+      await new Promise(resolve => setTimeout(resolve, 200));
+      console.log('[AUTH] Ritorno isAdmin corrente:', isAdmin);
       return isAdmin;
     }
 
     isCheckingAdmin.current = true;
     try {
+      console.log('[AUTH] Query admin_profiles per userId:', userId);
       const { data: adminProfile, error } = await supabase
         .from('admin_profiles')
-        .select('id')
+        .select('id, user_id, role')
         .eq('user_id', userId)
         .maybeSingle();
 
+      console.log('[AUTH] Risultato query:', { adminProfile, error });
+
       if (error) {
-        console.error('Errore verifica admin:', error);
+        console.error('[AUTH] Errore query admin_profiles:', error);
         return false;
       }
 
       const result = !!adminProfile;
-      setIsAdmin(result); // Aggiorna subito lo stato
+      console.log('[AUTH] isAdmin result:', result);
+      setIsAdmin(result);
       return result;
     } catch (err) {
-      console.error('Errore verifica admin:', err);
+      console.error('[AUTH] Eccezione in checkAdminStatus:', err);
       return false;
     } finally {
       isCheckingAdmin.current = false;
@@ -125,11 +132,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Verifica sessione esistente con error handling
     const initializeAuth = async () => {
+      console.log('[AUTH] initializeAuth avviato');
       try {
         const { data: { session: existingSession }, error } = await supabase.auth.getSession();
 
+        console.log('[AUTH] getSession result:', {
+          hasSession: !!existingSession,
+          userId: existingSession?.user?.id,
+          email: existingSession?.user?.email,
+          error
+        });
+
         if (error) {
-          console.error('Error getting session:', error);
+          console.error('[AUTH] Error getting session:', error);
           if (mounted) {
             setLoading(false);
           }
@@ -142,16 +157,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(existingSession?.user ?? null);
 
         if (existingSession?.user) {
+          console.log('[AUTH] Utente trovato, verifico admin status...');
           const adminStatus = await checkAdminStatus(existingSession.user.id);
+          console.log('[AUTH] Admin status dopo verifica:', adminStatus);
           if (mounted) {
             setIsAdmin(adminStatus);
           }
+        } else {
+          console.log('[AUTH] Nessuna sessione esistente');
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        console.error('[AUTH] Error initializing auth:', error);
       } finally {
         if (mounted) {
           setLoading(false);
+          console.log('[AUTH] Loading completato');
         }
       }
     };
