@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkInProgressRef = useRef<Promise<boolean> | null>(null);
   const hasInitializedRef = useRef(false);
 
-  // Funzione per verificare se l'utente è admin - SENZA timeout artificiali
+  // Funzione per verificare se l'utente è admin - usa fetch diretto per bypassare problemi JS
   const checkAdminStatus = useCallback(async (userId: string): Promise<boolean> => {
     console.log('[AUTH] checkAdminStatus per:', userId);
 
@@ -50,20 +50,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Crea una nuova promise per questa verifica
     const checkPromise = (async () => {
       try {
-        // Prova RPC is_admin (senza timeout artificiale)
-        console.log('[AUTH] Chiamata RPC is_admin...');
-        const { data: isAdminResult, error: rpcError } = await supabase.rpc('is_admin', { user_id: userId });
+        // Usa fetch diretto per bypassare potenziali problemi con il client Supabase
+        console.log('[AUTH] Chiamata fetch RPC is_admin...');
 
-        if (!rpcError && isAdminResult !== null && isAdminResult !== undefined) {
-          console.log('[AUTH] RPC successo:', isAdminResult);
-          adminStatusRef.current = isAdminResult;
-          setIsAdmin(isAdminResult);
-          return isAdminResult;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
+        try {
+          const response = await fetch('https://fgeeeivbmfrwrieyzhel.supabase.co/rest/v1/rpc/is_admin', {
+            method: 'POST',
+            headers: {
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnZWVlaXZibWZyd3JpZXl6aGVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5OTA4NzcsImV4cCI6MjA2MzU2Njg3N30.8e8Cgw1Butps-HY4GJhngLM3FdCOgGJ314ZODPocNgU',
+              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZnZWVlaXZibWZyd3JpZXl6aGVsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc5OTA4NzcsImV4cCI6MjA2MzU2Njg3N30.8e8Cgw1Butps-HY4GJhngLM3FdCOgGJ314ZODPocNgU',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user_id: userId }),
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('[AUTH] Fetch RPC successo:', result);
+            adminStatusRef.current = result === true;
+            setIsAdmin(result === true);
+            return result === true;
+          }
+
+          console.log('[AUTH] Fetch RPC risposta non ok:', response.status);
+        } catch (fetchError: any) {
+          clearTimeout(timeoutId);
+          if (fetchError.name === 'AbortError') {
+            console.log('[AUTH] Fetch RPC timeout');
+          } else {
+            console.error('[AUTH] Fetch RPC errore:', fetchError);
+          }
         }
 
-        console.log('[AUTH] RPC fallito, provo query diretta...', rpcError?.message);
-
-        // Fallback: query diretta admin_profiles
+        // Fallback: prova con client Supabase
+        console.log('[AUTH] Fallback: query diretta admin_profiles...');
         const { data: adminProfile, error } = await supabase
           .from('admin_profiles')
           .select('id')
