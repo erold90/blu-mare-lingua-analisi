@@ -134,31 +134,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       console.log('[AUTH] initializeAuth avviato');
       try {
-        const { data: { session: existingSession }, error } = await supabase.auth.getSession();
+        // Prima prova a fare refresh della sessione per validare il token
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
 
-        console.log('[AUTH] getSession result:', {
-          hasSession: !!existingSession,
-          userId: existingSession?.user?.id,
-          email: existingSession?.user?.email,
-          error
+        console.log('[AUTH] refreshSession result:', {
+          hasSession: !!refreshData?.session,
+          userId: refreshData?.session?.user?.id,
+          error: refreshError
         });
 
-        if (error) {
-          console.error('[AUTH] Error getting session:', error);
-          if (mounted) {
-            setLoading(false);
+        // Se il refresh fallisce, prova getSession
+        let currentSession = refreshData?.session;
+        if (!currentSession) {
+          const { data: { session: existingSession }, error } = await supabase.auth.getSession();
+          console.log('[AUTH] getSession fallback:', {
+            hasSession: !!existingSession,
+            userId: existingSession?.user?.id,
+            error
+          });
+          currentSession = existingSession;
+
+          if (error) {
+            console.error('[AUTH] Error getting session:', error);
+            if (mounted) {
+              setLoading(false);
+            }
+            return;
           }
-          return;
         }
 
         if (!mounted) return;
 
-        setSession(existingSession);
-        setUser(existingSession?.user ?? null);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
 
-        if (existingSession?.user) {
+        if (currentSession?.user) {
           console.log('[AUTH] Utente trovato, verifico admin status...');
-          const adminStatus = await checkAdminStatus(existingSession.user.id);
+          const adminStatus = await checkAdminStatus(currentSession.user.id);
           console.log('[AUTH] Admin status dopo verifica:', adminStatus);
           if (mounted) {
             setIsAdmin(adminStatus);
