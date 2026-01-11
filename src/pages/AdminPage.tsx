@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -29,12 +29,16 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const { reservations, loading: reservationsLoading } = useReservations();
   const isMobile = useIsMobile();
-  const navigate = useNavigate();
-
-  // Handler per logout con redirect esplicito
+  // Handler per logout con redirect forzato
   const handleLogout = async () => {
-    await signOut();
-    navigate('/auth', { replace: true });
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Errore durante logout:', error);
+    } finally {
+      // Forza redirect con window.location (più affidabile di navigate)
+      window.location.href = '/auth';
+    }
   };
 
   // Redirect if not authenticated or not admin
@@ -63,7 +67,7 @@ export default function AdminPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Button onClick={handleLogout} variant="outline">
+            <Button type="button" onClick={handleLogout} variant="outline">
               Torna al Login
             </Button>
           </CardContent>
@@ -118,6 +122,7 @@ export default function AdminPage() {
                 {user.email}
               </span>
               <Button
+                type="button"
                 onClick={handleLogout}
                 variant="outline"
                 size={isMobile ? "sm" : "default"}
