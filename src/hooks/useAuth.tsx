@@ -29,7 +29,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Funzione per verificare se l'utente è admin
   const checkAdminStatus = useCallback(async (userId: string): Promise<boolean> => {
-    if (isCheckingAdmin.current) return isAdmin;
+    // Evita chiamate multiple, ma aspetta il risultato invece di ritornare false
+    if (isCheckingAdmin.current) {
+      // Aspetta che la verifica in corso finisca
+      await new Promise(resolve => setTimeout(resolve, 100));
+      return isAdmin;
+    }
 
     isCheckingAdmin.current = true;
     try {
@@ -40,11 +45,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (error) {
+        console.error('Errore verifica admin:', error);
         return false;
       }
 
-      return !!adminProfile;
-    } catch {
+      const result = !!adminProfile;
+      setIsAdmin(result); // Aggiorna subito lo stato
+      return result;
+    } catch (err) {
+      console.error('Errore verifica admin:', err);
       return false;
     } finally {
       isCheckingAdmin.current = false;
