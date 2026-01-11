@@ -47,6 +47,79 @@ interface UTMParams {
 }
 
 /**
+ * Lista di bot/crawler noti da escludere dal tracking
+ */
+const BOT_PATTERNS = [
+  // Search engines
+  /googlebot/i,
+  /bingbot/i,
+  /yandexbot/i,
+  /duckduckbot/i,
+  /baiduspider/i,
+  /sogou/i,
+
+  // Social media crawlers
+  /facebookexternalhit/i,
+  /facebot/i,
+  /twitterbot/i,
+  /linkedinbot/i,
+  /pinterest/i,
+  /whatsapp/i,
+  /telegrambot/i,
+
+  // SEO & monitoring tools
+  /semrushbot/i,
+  /ahrefsbot/i,
+  /mj12bot/i,
+  /dotbot/i,
+  /rogerbot/i,
+  /screaming frog/i,
+  /gtmetrix/i,
+  /pingdom/i,
+  /uptimerobot/i,
+
+  // Generic bot patterns
+  /bot/i,
+  /crawler/i,
+  /spider/i,
+  /scraper/i,
+  /headless/i,
+  /phantom/i,
+  /selenium/i,
+  /puppeteer/i,
+  /playwright/i,
+
+  // Preview/fetchers
+  /preview/i,
+  /fetch/i,
+  /curl/i,
+  /wget/i,
+  /python-requests/i,
+  /axios/i,
+  /node-fetch/i,
+  /go-http-client/i,
+
+  // Other known bots
+  /applebot/i,
+  /slurp/i,
+  /ia_archiver/i,
+  /archive\.org/i,
+];
+
+/**
+ * Verifica se lo user agent è un bot
+ */
+function isBot(): boolean {
+  const ua = navigator.userAgent;
+
+  // Se user agent è vuoto o molto corto, probabilmente è un bot
+  if (!ua || ua.length < 20) return true;
+
+  // Controlla se matcha uno dei pattern bot
+  return BOT_PATTERNS.some(pattern => pattern.test(ua));
+}
+
+/**
  * Parse user agent per estrarre info device
  */
 function parseUserAgent(): DeviceInfo {
@@ -150,6 +223,12 @@ export function useSessionTracker() {
    * Inizializza o recupera session_id e visitor_id
    */
   const initSession = useCallback(async () => {
+    // Skip bot tracking
+    if (isBot()) {
+      console.log('[Session] Bot detected, skipping tracking');
+      return null;
+    }
+
     // Visitor ID (persistente, non scade mai)
     let visitorId = localStorage.getItem(VISITOR_STORAGE_KEY);
     if (!visitorId) {
