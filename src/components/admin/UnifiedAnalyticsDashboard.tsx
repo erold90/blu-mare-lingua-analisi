@@ -92,7 +92,7 @@ const FUNNEL_COLORS = ['#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE', '#DBEAFE', '#
 
 export const UnifiedAnalyticsDashboard: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [period, setPeriod] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
+  const [period, setPeriod] = useState<'today' | '7d' | '30d' | '90d' | 'all'>('30d');
   const [sessionStats, setSessionStats] = useState<SessionStats | null>(null);
   const [funnelStats, setFunnelStats] = useState<FunnelStats | null>(null);
   const [conversionStats, setConversionStats] = useState<ConversionStats | null>(null);
@@ -106,6 +106,9 @@ export const UnifiedAnalyticsDashboard: React.FC = () => {
       let startDate = new Date();
 
       switch (period) {
+        case 'today':
+          startDate.setHours(0, 0, 0, 0);
+          break;
         case '7d':
           startDate.setDate(endDate.getDate() - 7);
           break;
@@ -316,6 +319,7 @@ export const UnifiedAnalyticsDashboard: React.FC = () => {
               <SelectValue placeholder="Periodo" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="today">Oggi</SelectItem>
               <SelectItem value="7d">Ultimi 7 giorni</SelectItem>
               <SelectItem value="30d">Ultimi 30 giorni</SelectItem>
               <SelectItem value="90d">Ultimi 90 giorni</SelectItem>
