@@ -4,10 +4,8 @@ import { useMultiStepQuote } from '@/hooks/useMultiStepQuote';
 import { StepGuests } from '@/components/quote/StepGuests';
 import { StepDates } from '@/components/quote/StepDates';
 import StepApartments from '@/components/quote/StepApartments';
-import { StepPets } from '@/components/quote/StepPets';
-import { StepLinen } from '@/components/quote/StepLinen';
+import StepServices from '@/components/quote/StepServices';
 import { StepSummary } from '@/components/quote/StepSummary';
-import { StepWhatsApp } from '@/components/quote/StepWhatsApp';
 import SEOHead from '@/components/seo/SEOHead';
 
 export default function RequestQuotePage() {
@@ -33,13 +31,11 @@ export default function RequestQuotePage() {
   }, [currentStep]);
 
   const steps = [
-    'Ospiti', 
-    'Date', 
-    'Appartamenti', 
-    'Animali', 
-    'Biancheria', 
-    'Riepilogo', 
-    'Invio'
+    'Ospiti',
+    'Date',
+    'Appartamenti',
+    'Servizi Extra',
+    'Riepilogo'
   ];
 
   const renderStepContent = () => {
@@ -80,39 +76,20 @@ export default function RequestQuotePage() {
         );
       case 4:
         return (
-          <StepPets
+          <StepServices
             formData={formData}
             updateFormData={updateFormData}
             onNext={nextStep}
             onPrev={prevStep}
+            getBedsNeeded={getBedsNeeded}
           />
         );
       case 5:
         return (
-          <StepLinen
-            formData={formData}
-            updateFormData={updateFormData}
-            onNext={nextStep}
-            onPrev={prevStep}
-            getBedsNeeded={getBedsNeeded}
-          />
-        );
-      case 6:
-        return (
           <StepSummary
             formData={formData}
-            onNext={nextStep}
-            onPrev={prevStep}
-            getNights={getNights}
-            getBedsNeeded={getBedsNeeded}
-            calculatePrice={calculatePrice}
-          />
-        );
-      case 7:
-        return (
-          <StepWhatsApp
-            formData={formData}
             updateFormData={updateFormData}
+            onNext={nextStep}
             onPrev={prevStep}
             getNights={getNights}
             getBedsNeeded={getBedsNeeded}
