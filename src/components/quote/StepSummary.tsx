@@ -3,8 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Receipt,
   Calendar,
@@ -15,10 +13,7 @@ import {
   Euro,
   CreditCard,
   Banknote,
-  Send,
-  User,
-  Mail,
-  Phone
+  Send
 } from 'lucide-react';
 import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 import { format } from 'date-fns';
@@ -137,7 +132,7 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
   const bedsNeeded = getBedsNeeded();
 
   const canSend = () => {
-    return formData.guestName && formData.email && !isSending && !loading;
+    return !isSending && !loading;
   };
 
   const sendWhatsApp = async () => {
@@ -197,10 +192,7 @@ _Preventivo senza impegno - Valido 7 giorni_`;
       await supabase
         .from('quote_requests')
         .update({
-          whatsapp_sent: true,
-          guest_name: formData.guestName,
-          guest_email: formData.email,
-          guest_phone: formData.phone || null
+          whatsapp_sent: true
         })
         .eq('checkin_date', formData.checkIn)
         .eq('checkout_date', formData.checkOut)
@@ -515,63 +507,6 @@ _Preventivo senza impegno - Valido 7 giorni_`;
               <p>• Il saldo è dovuto il giorno dell'arrivo</p>
               <p>• La cauzione in contanti è a garanzia dell'appartamento</p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Form Contatti */}
-      <Card className="max-w-2xl mx-auto">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            I tuoi dati
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="guestName" className="flex items-center gap-1">
-                Nome e Cognome <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="guestName"
-                value={formData.guestName || ''}
-                onChange={(e) => updateFormData({ guestName: e.target.value })}
-                placeholder="Il tuo nome completo"
-                required
-                className="h-10 sm:h-12"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email" className="flex items-center gap-1">
-                Email <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email || ''}
-                onChange={(e) => updateFormData({ email: e.target.value })}
-                placeholder="tua@email.com"
-                required
-                className="h-10 sm:h-12"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone">Telefono (opzionale)</Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={formData.phone || ''}
-              onChange={(e) => updateFormData({ phone: e.target.value })}
-              placeholder="+39 123 456 7890"
-              className="h-10 sm:h-12"
-            />
-          </div>
-
-          <div className="text-xs text-muted-foreground">
-            <p>I tuoi dati saranno utilizzati solo per inviarti il preventivo e comunicazioni relative alla prenotazione.</p>
           </div>
         </CardContent>
       </Card>
