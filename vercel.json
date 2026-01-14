@@ -4,14 +4,14 @@
   "framework": "vite",
   "redirects": [
     {
-      "source": "/:path*",
+      "source": "/(.*)",
       "has": [
         {
           "type": "host",
           "value": "villamareblu.it"
         }
       ],
-      "destination": "https://www.villamareblu.it/:path*",
+      "destination": "https://www.villamareblu.it/$1",
       "permanent": true
     }
   ],
