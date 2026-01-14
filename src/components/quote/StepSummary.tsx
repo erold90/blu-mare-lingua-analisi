@@ -145,7 +145,7 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
       servicesLines.push(`🐕 Animali: ${formData.petCount || 1}`);
     }
     if (formData.requestLinen) {
-      servicesLines.push(`🛏️ Biancheria: ${bedsNeeded} ospiti`);
+      servicesLines.push(`🛏 Biancheria: ${bedsNeeded} ospiti`);
     }
 
     const cauzioneTotal = formData.selectedApartments.length * 200;
@@ -153,7 +153,7 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
       ? `€${cauzioneTotal} (€200 × ${formData.selectedApartments.length})`
       : `€200`;
 
-    const message = `🏖️ *RICHIESTA PREVENTIVO VILLA MAREBLU*
+    const message = `🏖 *RICHIESTA PREVENTIVO VILLA MAREBLU*
 
 📅 *SOGGIORNO:*
 Check-in: ${format(new Date(formData.checkIn), 'dd/MM/yyyy (EEEE)', { locale: it })}
