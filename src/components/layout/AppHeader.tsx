@@ -48,7 +48,7 @@ export function AppHeader() {
   }, []);
 
   // Non renderizzare l'header nelle pagine dedicate (admin, preventivo)
-  const hideHeaderPaths = ['/admin', '/area-riservata', '/richiedi-preventivo', '/preventivo'];
+  const hideHeaderPaths = ['/admin', '/area-riservata', '/preventivo'];
   if (hideHeaderPaths.some(path => location.pathname.startsWith(path))) {
     return null;
   }

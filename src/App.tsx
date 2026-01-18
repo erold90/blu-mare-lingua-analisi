@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "r
 import { Toaster } from "@/components/ui/sonner";
 import { Toaster as UIToaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "next-themes";
-import { HelmetProvider } from 'react-helmet-async';
 import { AnimatePresence, motion } from "framer-motion";
 import PerformanceOptimizer from "@/components/PerformanceOptimizer";
 import AppLayout from "@/components/layout/AppLayout";
@@ -75,8 +74,8 @@ const AppWithRoutes = () => {
           <Route path="/appartamenti" element={<AppLayout><PageWrapper><ApartmentsPage /></PageWrapper></AppLayout>} />
           <Route path="/contatti" element={<AppLayout><PageWrapper><ContactsPage /></PageWrapper></AppLayout>} />
           <Route path="/chi-siamo" element={<AppLayout><PageWrapper><AboutPage /></PageWrapper></AppLayout>} />
-          <Route path="/richiedi-preventivo" element={<AppLayout><PageWrapper><RequestQuotePage /></PageWrapper></AppLayout>} />
-          <Route path="/preventivo" element={<Navigate to="/richiedi-preventivo" replace />} />
+          <Route path="/preventivo" element={<AppLayout><PageWrapper><RequestQuotePage /></PageWrapper></AppLayout>} />
+          <Route path="/richiedi-preventivo" element={<Navigate to="/preventivo" replace />} />
           <Route path="/privacy-policy" element={<AppLayout><PageWrapper><PrivacyPolicyPage /></PageWrapper></AppLayout>} />
           <Route path="/cookie-policy" element={<AppLayout><PageWrapper><CookiePolicyPage /></PageWrapper></AppLayout>} />
           <Route path="/auth" element={<PageWrapper><AuthPage /></PageWrapper>} />
@@ -91,20 +90,18 @@ const AppWithRoutes = () => {
 
 function App() {
   return (
-    <HelmetProvider>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-        <AuthProvider>
-          <PerformanceOptimizer />
-          <Router>
-            <SessionProvider>
-              <AppWithRoutes />
-              <Toaster />
-              <UIToaster />
-            </SessionProvider>
-          </Router>
-        </AuthProvider>
-      </ThemeProvider>
-    </HelmetProvider>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+      <AuthProvider>
+        <PerformanceOptimizer />
+        <Router>
+          <SessionProvider>
+            <AppWithRoutes />
+            <Toaster />
+            <UIToaster />
+          </SessionProvider>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

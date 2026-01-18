@@ -62,7 +62,7 @@ export const CtaSection = () => {
                   className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-none py-3 transition-all duration-300"
                   asChild
                 >
-                  <Link to="/richiedi-preventivo" className="font-light tracking-wide">
+                  <Link to="/preventivo" className="font-light tracking-wide">
                     Calcola Preventivo
                   </Link>
                 </Button>

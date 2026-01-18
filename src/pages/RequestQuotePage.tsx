@@ -7,6 +7,9 @@ import StepApartments from '@/components/quote/StepApartments';
 import StepServices from '@/components/quote/StepServices';
 import { StepSummary } from '@/components/quote/StepSummary';
 import SEOHead from '@/components/seo/SEOHead';
+import { getFAQSchemaForPage } from '@/components/seo/StructuredData';
+import FAQSection from '@/components/faq/FAQSection';
+import { quoteFAQs } from '@/data/faqData';
 
 export default function RequestQuotePage() {
   const {
@@ -104,11 +107,12 @@ export default function RequestQuotePage() {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Preventivo Casa Vacanze Torre Vado | Calcola Prezzo Appartamento Salento | Villa MareBlu"
-        description="Calcola il preventivo per la tua vacanza a Torre Vado, Salento. Appartamenti vista mare da 4 a 8 posti. Vicino Pescoluse e Leuca. Prezzi trasparenti, prenota diretto!"
-        canonicalUrl="/richiedi-preventivo"
+        title="Preventivo Vacanze Torre Vado Senza Commissioni | Prenota Diretto Salento | Villa MareBlu"
+        description="Calcola il preventivo e prenota diretto senza commissioni! Casa vacanze Torre Vado, appartamenti 4-8 posti, vicino Pescoluse e Leuca. Prezzi migliori di Airbnb, risparmia fino al 15%!"
+        canonicalUrl="/preventivo"
         ogTitle="Calcola Preventivo Vacanza Salento | Villa MareBlu Torre Vado"
         ogDescription="Preventivo istantaneo per appartamenti vacanza a Torre Vado. Vista mare, vicino Pescoluse. Prezzi chiari!"
+        structuredData={[getFAQSchemaForPage('quote')]}
       />
 
       {/* Sticky Progress Bar - Mobile Optimized */}
@@ -128,17 +132,37 @@ export default function RequestQuotePage() {
 
       <div className="container mx-auto px-4 py-4 sm:py-8">
         <div className="max-w-6xl mx-auto">
-          {/* Header - Responsive */}
-          <div className="text-center mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">
-              Richiedi il tuo preventivo
-            </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Sistema intelligente di preventivazione
-            </p>
-          </div>
+          {/* Header - Solo primo step */}
+          {currentStep === 1 && (
+            <div className="text-center mb-6 sm:mb-8">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-serif font-semibold text-primary tracking-wide">
+                Villa MareBlu
+              </h1>
+              <div className="mt-3 mb-4 sm:mb-6 flex items-center justify-center gap-3">
+                <div className="h-px w-12 sm:w-16 bg-gradient-to-r from-transparent to-primary/50"></div>
+                <div className="h-1.5 w-1.5 rounded-full bg-primary/60"></div>
+                <div className="h-px w-12 sm:w-16 bg-gradient-to-l from-transparent to-primary/50"></div>
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">
+                Richiedi il tuo preventivo
+              </h2>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Sistema intelligente di preventivazione
+              </p>
+            </div>
+          )}
 
           {renderStepContent()}
+
+          {/* FAQ Section - Mostrata solo nel primo step per non interferire con il form */}
+          {currentStep === 1 && (
+            <FAQSection
+              faqs={quoteFAQs}
+              title="Domande su Prenotazioni e Prezzi"
+              subtitle="Informazioni utili per la tua prenotazione diretta"
+              className="mt-8"
+            />
+          )}
         </div>
       </div>
     </div>

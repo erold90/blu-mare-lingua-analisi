@@ -227,124 +227,201 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
       </Card>
 
       {/* Apartments Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 max-w-6xl mx-auto">
         {apartments.map(apartment => {
           // Usa la disponibilità dinamica dal database
           const isAvailable = availabilityStatus[apartment.id] ?? true;
-          
+
           const isSelected = formData.selectedApartments.includes(apartment.id);
           const bookingInfo = getBookingInfo(apartment.id);
 
           return (
-            <Card 
+            <Card
               key={apartment.id}
               className={`relative transition-all duration-200 ${
-                !isAvailable 
-                  ? 'opacity-50 grayscale' 
-                  : isSelected 
-                    ? 'ring-2 ring-primary shadow-lg' 
+                !isAvailable
+                  ? 'opacity-50 grayscale'
+                  : isSelected
+                    ? 'ring-2 ring-primary shadow-lg'
                     : 'hover:shadow-md cursor-pointer'
               }`}
               onClick={() => isAvailable && handleApartmentToggle(apartment.id)}
             >
-              {!isAvailable && (
-                <div className="absolute top-4 right-4 z-10">
-                  <Badge variant="destructive" className="font-bold">
-                    PRENOTATO
-                  </Badge>
+              {/* === LAYOUT MOBILE (compatto orizzontale) === */}
+              <div className="flex sm:hidden p-3 gap-3">
+                {/* Thumbnail */}
+                <div className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden">
+                  <img
+                    src={apartment.image}
+                    alt={apartment.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {!isAvailable && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5">
+                        PRENOTATO
+                      </Badge>
+                    </div>
+                  )}
+                  {isSelected && isAvailable && (
+                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                      <CheckCircle2 className="h-8 w-8 text-primary" />
+                    </div>
+                  )}
                 </div>
-              )}
 
-              <div className="aspect-video relative overflow-hidden rounded-t-lg">
-                <img 
-                  src={apartment.image}
-                  alt={apartment.name}
-                  className="w-full h-full object-cover"
-                />
-                {isSelected && (
-                  <div className="absolute top-4 left-4">
-                    <Badge className="bg-primary text-primary-foreground">
-                      <CheckCircle2 className="h-4 w-4 mr-1" />
-                      Selezionato
-                    </Badge>
+                {/* Info */}
+                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      {isAvailable && (
+                        <Checkbox
+                          checked={isSelected}
+                          onChange={() => {}}
+                          className="h-5 w-5"
+                        />
+                      )}
+                      <span className="font-semibold text-sm truncate">{apartment.name}</span>
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 ml-auto flex-shrink-0">
+                        {apartment.capacity} posti letto
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs mb-2">
+                      {isAvailable ? (
+                        <>
+                          <span className="text-green-600 font-medium flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Disponibile
+                          </span>
+                          {apartmentPrices[apartment.id] && (
+                            <span className="text-primary font-bold">
+                              €{apartmentPrices[apartment.id]}/notte
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-destructive font-medium flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          Non disponibile
+                        </span>
+                      )}
+                    </div>
                   </div>
-                )}
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 text-xs w-full"
+                    onClick={(e) => openApartmentDetails(apartment.id, e)}
+                  >
+                    <Images className="h-3 w-3 mr-1" />
+                    Dettagli e foto
+                  </Button>
+                </div>
               </div>
 
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {isAvailable ? (
-                      <Checkbox 
-                        checked={isSelected}
-                        onChange={() => {}} // Controlled by card click
-                      />
-                    ) : (
-                      <div className="w-4 h-4" />
-                    )}
-                    {apartment.name}
-                  </div>
-                  <Badge variant="outline">
-                    <Users className="h-3 w-3 mr-1" />
-                    {apartment.capacity} posti
-                  </Badge>
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent className="space-y-3">
-                <p className="text-muted-foreground">{apartment.description}</p>
-                
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    {apartment.floor}
-                  </Badge>
-                  {apartment.features.map(feature => (
-                    <Badge key={feature} variant="outline">
-                      <Eye className="h-3 w-3 mr-1" />
-                      {feature}
+              {/* === LAYOUT DESKTOP (originale) === */}
+              <div className="hidden sm:block">
+                {!isAvailable && (
+                  <div className="absolute top-4 right-4 z-10">
+                    <Badge variant="destructive" className="font-bold">
+                      PRENOTATO
                     </Badge>
-                  ))}
+                  </div>
+                )}
+
+                <div className="aspect-video relative overflow-hidden rounded-t-lg">
+                  <img
+                    src={apartment.image}
+                    alt={apartment.name}
+                    className="w-full h-full object-cover"
+                  />
+                  {isSelected && (
+                    <div className="absolute top-4 left-4">
+                      <Badge className="bg-primary text-primary-foreground">
+                        <CheckCircle2 className="h-4 w-4 mr-1" />
+                        Selezionato
+                      </Badge>
+                    </div>
+                  )}
                 </div>
 
-                {!isAvailable && bookingInfo && (
-                  <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-                    <div className="flex items-center gap-2 text-destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <span className="font-semibold">Non disponibile</span>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {isAvailable ? (
+                        <Checkbox
+                          checked={isSelected}
+                          onChange={() => {}}
+                        />
+                      ) : (
+                        <div className="w-4 h-4" />
+                      )}
+                      {apartment.name}
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Dal {bookingInfo.checkin} al {bookingInfo.checkout}
-                    </p>
-                  </div>
-                )}
+                    <Badge variant="outline">
+                      <Users className="h-3 w-3 mr-1" />
+                      {apartment.capacity} posti
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
 
-                {isAvailable && (
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-green-600">
-                      <CheckCircle2 className="h-4 w-4" />
-                      <span className="text-sm font-medium">Disponibile</span>
-                    </div>
-                    {apartmentPrices[apartment.id] && (
-                      <div className="flex items-center gap-1 text-primary font-semibold">
-                        <Euro className="h-4 w-4" />
-                        <span>{apartmentPrices[apartment.id]}/notte</span>
+                <CardContent className="space-y-3">
+                  <p className="text-muted-foreground">{apartment.description}</p>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline">
+                      <MapPin className="h-3 w-3 mr-1" />
+                      {apartment.floor}
+                    </Badge>
+                    {apartment.features.map(feature => (
+                      <Badge key={feature} variant="outline">
+                        <Eye className="h-3 w-3 mr-1" />
+                        {feature}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  {!isAvailable && bookingInfo && (
+                    <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                      <div className="flex items-center gap-2 text-destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <span className="font-semibold">Non disponibile</span>
                       </div>
-                    )}
-                  </div>
-                )}
+                      <p className="text-xs text-muted-foreground">
+                        Dal {bookingInfo.checkin} al {bookingInfo.checkout}
+                      </p>
+                    </div>
+                  )}
 
-                {/* Bottone Vedi Dettagli */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full mt-3"
-                  onClick={(e) => openApartmentDetails(apartment.id, e)}
-                >
-                  <Images className="h-4 w-4 mr-2" />
-                  Vedi dettagli e foto
-                </Button>
-              </CardContent>
+                  {isAvailable && (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-green-600">
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span className="text-sm font-medium">Disponibile</span>
+                      </div>
+                      {apartmentPrices[apartment.id] && (
+                        <div className="flex items-center gap-1 text-primary font-semibold">
+                          <Euro className="h-4 w-4" />
+                          <span>{apartmentPrices[apartment.id]}/notte</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Bottone Vedi Dettagli */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full mt-3"
+                    onClick={(e) => openApartmentDetails(apartment.id, e)}
+                  >
+                    <Images className="h-4 w-4 mr-2" />
+                    Vedi dettagli e foto
+                  </Button>
+                </CardContent>
+              </div>
             </Card>
           );
         })}

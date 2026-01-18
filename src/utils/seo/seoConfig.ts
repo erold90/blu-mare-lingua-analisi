@@ -3,10 +3,12 @@ export const seoKeywords = {
   // Keywords primarie per località specifiche
   primary: [
     "villa mareblu",
+    "villa mareblu torre vado",
     "villa salento mare",
     "appartamenti vacanze puglia",
     "casa vacanza vista mare salento",
-    "affitto vacanze salento"
+    "affitto vacanze salento",
+    "prenota diretto salento"
   ],
   // Keywords località specifiche (MOLTO IMPORTANTE per local SEO)
   local: [
@@ -73,15 +75,51 @@ export const seoKeywords = {
     "appartamento con vista mare salento",
     "affitto breve salento estate"
   ],
+  // KEYWORDS SPECIFICHE dove Airbnb NON compete
+  amenitySpecific: [
+    // Servizi specifici (Airbnb non ottimizza per questi)
+    "casa vacanze con parcheggio privato salento",
+    "appartamento aria condizionata torre vado",
+    "villa con giardino privato pescoluse",
+    "casa vacanze terrazza vista mare salento",
+    "appartamento wifi gratuito torre vado",
+    "villa con barbecue salento mare",
+    "casa vacanze doccia esterna salento",
+    "appartamento cucina attrezzata torre vado",
+    "villa animali ammessi salento",
+    "casa vacanze pet friendly torre vado"
+  ],
+  // Capacità specifica (ricerche molto targeted)
+  capacitySpecific: [
+    "appartamento 4 persone torre vado",
+    "casa vacanze 5 posti pescoluse",
+    "appartamento 6 persone vista mare salento",
+    "villa 8 persone vicino leuca",
+    "casa vacanze famiglie numerose salento",
+    "appartamento coppia romantico salento",
+    "villa grande gruppi torre vado"
+  ],
+  // Ultra-local (distanze specifiche)
+  ultraLocal: [
+    "casa vacanze 100 metri dal mare salento",
+    "appartamento 5 minuti maldive del salento",
+    "villa vicino spiaggia pescoluse",
+    "casa vacanze a piedi dal mare torre vado",
+    "appartamento vicino santa maria di leuca",
+    "villa tra pescoluse e leuca",
+    "casa vacanze baia torre vado"
+  ],
   seasonal: [
-    "vacanze estate salento 2025",
-    "casa vacanze agosto salento",
+    "vacanze estate salento 2026",
+    "casa vacanze agosto salento 2026",
     "weekend romantico salento",
-    "vacanze pasqua puglia",
+    "vacanze pasqua puglia 2026",
     "ferragosto salento appartamenti",
     "vacanze ponte maggio salento",
     "settembre salento mare",
-    "vacanze giugno salento"
+    "vacanze giugno salento",
+    "estate 2026 torre vado",
+    "agosto 2026 pescoluse"
   ],
   experiences: [
     "vacanze mare cristallino salento",
@@ -96,7 +134,12 @@ export const seoKeywords = {
     "alternativa airbnb salento",
     "alternativa booking salento",
     "prenota diretto villa salento",
-    "miglior prezzo casa vacanze salento"
+    "miglior prezzo casa vacanze salento",
+    "casa vacanze senza commissioni salento",
+    "affitto diretto proprietario torre vado",
+    "prenotazione diretta salento risparmia",
+    "meglio di airbnb salento",
+    "casa vacanze no booking fee"
   ],
   // Titoli Google Ads ottimizzati
   adTitles: [
@@ -128,15 +171,19 @@ export const getPageSpecificKeywords = (page: string): string => {
 
   switch (page) {
     case 'home':
-      return [...baseKeywords, ...seoKeywords.secondary, ...seoKeywords.experiences].join(", ");
+      // Homepage: focus su amenity + ultra-local + experiences (keyword dove Airbnb non compete)
+      return [...baseKeywords, ...seoKeywords.amenitySpecific, ...seoKeywords.ultraLocal, ...seoKeywords.experiences].join(", ");
     case 'apartments':
-      return [...baseKeywords, ...seoKeywords.longTail.filter(k => k.includes('appartament') || k.includes('persone'))].join(", ");
+      // Appartamenti: focus su capacità + amenity specifici
+      return [...baseKeywords, ...seoKeywords.capacitySpecific, ...seoKeywords.amenitySpecific, ...seoKeywords.longTail.filter(k => k.includes('appartament') || k.includes('persone'))].join(", ");
     case 'about':
-      return [...baseKeywords, ...seoKeywords.local.filter(k => k.includes('salento') || k.includes('puglia'))].join(", ");
+      return [...baseKeywords, ...seoKeywords.ultraLocal, ...seoKeywords.local.filter(k => k.includes('salento') || k.includes('puglia'))].join(", ");
     case 'contact':
-      return [...baseKeywords, "prenota diretto villa salento", "contatti villa mareblu", "prenotazione diretta salento"].join(", ");
+      // Contatti: focus su prenotazione diretta (anti-Airbnb)
+      return [...baseKeywords, ...seoKeywords.competitive, "contatti villa mareblu", "prenotazione diretta salento"].join(", ");
     case 'quote':
-      return [...baseKeywords, ...seoKeywords.competitive, ...seoKeywords.seasonal].join(", ");
+      // Preventivo: focus su competitive + seasonal (chi cerca prezzi diretti)
+      return [...baseKeywords, ...seoKeywords.competitive, ...seoKeywords.seasonal, ...seoKeywords.amenitySpecific.slice(0, 5)].join(", ");
     default:
       return baseKeywords.join(", ");
   }

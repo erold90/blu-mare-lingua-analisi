@@ -1,25 +1,25 @@
 
 import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import App from "./App.tsx";
 import "./index.css";
 
-// Rimosso provider Supabase non necessario
-
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1, // Reduce retries to prevent timeout loops
-      staleTime: 5 * 60 * 1000, // 5 minutes cache
-      gcTime: 10 * 60 * 1000, // 10 minutes garbage collection
+      retry: 1,
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
     },
   },
 });
 
-createRoot(document.getElementById("root")!).render(
+const rootElement = document.getElementById("root")!;
+
+const AppWithProviders = (
   <StrictMode>
     <HelmetProvider>
       <QueryClientProvider client={queryClient}>
@@ -28,5 +28,15 @@ createRoot(document.getElementById("root")!).render(
         </TooltipProvider>
       </QueryClientProvider>
     </HelmetProvider>
-  </StrictMode>,
+  </StrictMode>
 );
+
+// Hydrate se pre-renderizzato da react-snap, altrimenti render normale
+if (rootElement.hasChildNodes()) {
+  hydrateRoot(rootElement, AppWithProviders);
+} else {
+  createRoot(rootElement).render(AppWithProviders);
+}
+
+// Signal prerender is ready (used by prerenderer for timing)
+document.dispatchEvent(new Event("render-event"));

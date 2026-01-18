@@ -318,7 +318,7 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
     } else {
       // Modalità pagina appartamenti: naviga al preventivo
       onClose();
-      navigate('/richiedi-preventivo');
+      navigate('/preventivo');
     }
   };
 

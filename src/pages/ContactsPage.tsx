@@ -8,8 +8,10 @@ import { toast } from "sonner";
 import { MapPin, Mail, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/seo/SEOHead";
-import { getBreadcrumbSchema } from "@/components/seo/StructuredData";
+import { getBreadcrumbSchema, getFAQSchemaForPage } from "@/components/seo/StructuredData";
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
+import FAQSection from "@/components/faq/FAQSection";
+import { contactsFAQs } from "@/data/faqData";
 
 // Funzione per tracciare conversioni Google Ads solo se autorizzato
 const trackGoogleAdsConversion = () => {
@@ -40,7 +42,7 @@ const ContactsPage = () => {
     { name: "Contatti", url: "/contatti" }
   ];
 
-  const structuredData = [getBreadcrumbSchema(breadcrumbItems)];
+  const structuredData = [getBreadcrumbSchema(breadcrumbItems), getFAQSchemaForPage('contacts')];
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -83,8 +85,8 @@ const ContactsPage = () => {
   return (
     <div className="container px-4 py-8 md:py-12">
       <SEOHead
-        title="Contatti Villa MareBlu Torre Vado | Prenota Casa Vacanze Salento | Tel +39 378 0038730"
-        description="Contatta Villa MareBlu per prenotare la tua vacanza a Torre Vado, Salento. Vicino Pescoluse e Leuca. Tel: +39 378 0038730. Risposta garantita entro 2 ore. Prenota diretto e risparmia!"
+        title="Contatti Villa MareBlu | Prenota Diretto Senza Commissioni Torre Vado | Tel +39 378 0038730"
+        description="Prenota diretto con il proprietario e risparmia! Villa MareBlu Torre Vado, vicino Pescoluse e Leuca. Tel: +39 378 0038730, WhatsApp attivo. Risposta entro 2 ore. Nessuna commissione, miglior prezzo garantito!"
         keywords={getPageSpecificKeywords('contact')}
         canonicalUrl="/contatti"
         structuredData={structuredData}
@@ -284,6 +286,12 @@ const ContactsPage = () => {
           </div>
         </div>
       </div>
+
+      <FAQSection
+        faqs={contactsFAQs}
+        title="Domande su Come Raggiungerci"
+        subtitle="Informazioni pratiche per il tuo arrivo a Villa MareBlu"
+      />
     </div>
   );
 };

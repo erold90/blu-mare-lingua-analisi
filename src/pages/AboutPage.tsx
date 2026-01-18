@@ -1,8 +1,10 @@
 import * as React from "react";
 import SEOHead from "@/components/seo/SEOHead";
-import { getBreadcrumbSchema } from "@/components/seo/StructuredData";
+import { getBreadcrumbSchema, getFAQSchemaForPage } from "@/components/seo/StructuredData";
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
 import { Home, Users, MapPin, Waves } from "lucide-react";
+import FAQSection from "@/components/faq/FAQSection";
+import { aboutFAQs } from "@/data/faqData";
 
 const AboutPage = () => {
   const breadcrumbItems = [
@@ -10,13 +12,13 @@ const AboutPage = () => {
     { name: "Chi Siamo", url: "/chi-siamo" }
   ];
 
-  const structuredData = [getBreadcrumbSchema(breadcrumbItems)];
+  const structuredData = [getBreadcrumbSchema(breadcrumbItems), getFAQSchemaForPage('about')];
 
   return (
     <div className="container px-4 py-8 md:py-12">
       <SEOHead
-        title="Chi Siamo - Villa MareBlu Torre Vado | 4 Appartamenti Vista Mare Salento"
-        description="Villa MareBlu a Torre Vado: 4 appartamenti indipendenti con vista mare per 23 ospiti totali. A 100 metri dal mare, tra Pescoluse e Santa Maria di Leuca nel Salento."
+        title="Chi Siamo - Villa MareBlu | Casa Vacanze 100m dal Mare Torre Vado | Tra Pescoluse e Leuca"
+        description="Villa MareBlu Torre Vado: 4 appartamenti vista mare per 23 ospiti, a 100 metri dal mare. Tra Pescoluse (Maldive del Salento) e Santa Maria di Leuca. Parcheggio privato, giardino, animali ammessi."
         keywords={getPageSpecificKeywords('about')}
         canonicalUrl="/chi-siamo"
         structuredData={structuredData}
@@ -157,6 +159,12 @@ const AboutPage = () => {
           </div>
         </div>
       </div>
+
+      <FAQSection
+        faqs={aboutFAQs}
+        title="Scopri il Salento"
+        subtitle="Informazioni su Torre Vado, le spiagge e il territorio"
+      />
     </div>
   );
 };

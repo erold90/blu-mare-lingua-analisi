@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Apartment } from '@/data/apartments';
+import { homeFAQs, apartmentsFAQs, quoteFAQs, contactsFAQs, aboutFAQs } from '@/data/faqData';
+import type { FAQItem } from '@/types/faq';
 
 // Schema LodgingBusiness principale per Villa MareBlu
 export const getLocalBusinessSchema = () => ({
@@ -90,7 +92,7 @@ export const getLocalBusinessSchema = () => ({
   "checkoutTime": "10:00",
   "petsAllowed": true,
   "smokingAllowed": false,
-  "tourBookingPage": "https://www.villamareblu.it/richiedi-preventivo"
+  "tourBookingPage": "https://www.villamareblu.it/preventivo"
 });
 
 // Schema VacationRental per singolo appartamento (Google Vacation Rentals)
@@ -112,7 +114,7 @@ export const getVacationRentalSchema = (apartment: Apartment) => ({
     "unitCode": "MTK"
   },
   "petsAllowed": true,
-  "tourBookingPage": "https://www.villamareblu.it/richiedi-preventivo",
+  "tourBookingPage": "https://www.villamareblu.it/preventivo",
   "checkinTime": "15:00",
   "checkoutTime": "10:00",
   "address": {
@@ -149,7 +151,7 @@ export const getVacationRentalSchema = (apartment: Apartment) => ({
     "@type": "ReserveAction",
     "target": {
       "@type": "EntryPoint",
-      "urlTemplate": "https://www.villamareblu.it/richiedi-preventivo",
+      "urlTemplate": "https://www.villamareblu.it/preventivo",
       "actionPlatform": [
         "http://schema.org/DesktopWebPlatform",
         "http://schema.org/MobileWebPlatform"
@@ -232,67 +234,46 @@ export const getWebsiteSchema = () => ({
     "@type": "SearchAction",
     "target": {
       "@type": "EntryPoint",
-      "urlTemplate": "https://www.villamareblu.it/richiedi-preventivo"
+      "urlTemplate": "https://www.villamareblu.it/preventivo"
     },
     "query-input": "required name=search_term_string"
   }
 });
 
-// Schema FAQPage per domande frequenti
-export const getFAQSchema = () => ({
+// Tipo per le pagine con FAQ
+export type FAQPageType = 'home' | 'apartments' | 'quote' | 'contacts' | 'about';
+
+// Mappa FAQ per pagina
+const faqsByPage: Record<FAQPageType, FAQItem[]> = {
+  home: homeFAQs,
+  apartments: apartmentsFAQs,
+  quote: quoteFAQs,
+  contacts: contactsFAQs,
+  about: aboutFAQs
+};
+
+// Schema FAQPage generico che accetta una lista di FAQ
+export const getFAQSchemaFromItems = (faqs: FAQItem[]) => ({
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "Dove si trova Villa MareBlu?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Villa MareBlu si trova a Torre Vado, nel comune di Patù (LE), nel cuore del Salento. Siamo a soli 100 metri dal mare e a pochi minuti dalle famose spiagge di Pescoluse (Maldive del Salento) e Santa Maria di Leuca."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Quanti appartamenti ci sono a Villa MareBlu?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Villa MareBlu dispone di 4 appartamenti indipendenti: due da 4-5 posti letto, uno da 6 posti letto e uno da 8 posti letto. Tutti con vista mare, terrazza o veranda panoramica."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "A che distanza è la spiaggia?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "La spiaggia più vicina è a soli 100 metri dalla villa, raggiungibile a piedi in 2 minuti. Le famose spiagge di Pescoluse (Maldive del Salento) sono a 5 minuti in auto."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Gli animali sono ammessi?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Sì, a Villa MareBlu gli animali domestici sono benvenuti. È previsto un piccolo supplemento per la pulizia finale."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Quali sono gli orari di check-in e check-out?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Il check-in è dalle ore 15:00 e il check-out entro le ore 10:00. Orari flessibili possono essere concordati in base alla disponibilità."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Come posso prenotare?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Puoi prenotare direttamente dal nostro sito usando il calcolatore preventivo, oppure contattandoci via WhatsApp al +39 378 0038730 o email a macchiaforcato@gmail.com."
-      }
+  "mainEntity": faqs.map(faq => ({
+    "@type": "Question",
+    "name": faq.question,
+    "acceptedAnswer": {
+      "@type": "Answer",
+      "text": faq.answer
     }
-  ]
+  }))
 });
+
+// Schema FAQPage per pagina specifica
+export const getFAQSchemaForPage = (page: FAQPageType) => {
+  const faqs = faqsByPage[page];
+  return getFAQSchemaFromItems(faqs);
+};
+
+// Schema FAQPage per homepage (backwards compatible)
+export const getFAQSchema = () => getFAQSchemaForPage('home');
 
 // Schema Place per località turistiche vicine
 export const getNearbyPlacesSchema = () => ({

@@ -55,7 +55,7 @@ const HeroSection = () => {
   }, []);
 
   const handleQuoteClick = () => {
-    navigate("/richiedi-preventivo");
+    navigate("/preventivo");
   };
 
   // Priority: database image > cached URL (no fallback - tutto gestito da admin)
