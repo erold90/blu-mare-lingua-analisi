@@ -7,9 +7,17 @@ Allow: /
 # Pagine principali - priorità crawling
 Allow: /
 Allow: /appartamenti
-Allow: /richiedi-preventivo
+Allow: /preventivo
 Allow: /chi-siamo
 Allow: /contatti
+
+# Guide turistiche - contenuti SEO
+Allow: /guide
+Allow: /guide/spiagge-torre-vado
+Allow: /guide/cosa-fare-torre-vado
+Allow: /guide/ristoranti-salento
+Allow: /guide/come-arrivare-torre-vado
+Allow: /guide/itinerario-7-giorni-salento
 
 # Blocca pagine admin e autenticazione
 Disallow: /admin
