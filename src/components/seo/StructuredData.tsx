@@ -142,11 +142,47 @@ export const getVacationRentalSchema = (apartment: Apartment) => ({
     { "@type": "LocationFeatureSpecification", "name": "Terrazza", "value": apartment.hasTerrace },
     { "@type": "LocationFeatureSpecification", "name": "Veranda", "value": apartment.hasVeranda }
   ],
-  "image": `https://www.villamareblu.it/images/apartments/${apartment.id}/image1.jpg`,
+  // Array di 8+ immagini come richiesto da Google
+  "image": [
+    `https://www.villamareblu.it/images/apartments/${apartment.id}/image1.jpg`,
+    `https://www.villamareblu.it/images/apartments/${apartment.id}/image2.jpg`,
+    `https://www.villamareblu.it/images/apartments/${apartment.id}/image3.jpg`,
+    `https://www.villamareblu.it/images/apartments/${apartment.id}/image4.jpg`,
+    `https://www.villamareblu.it/images/apartments/${apartment.id}/image5.jpg`,
+    `https://www.villamareblu.it/images/apartments/${apartment.id}/image6.jpg`,
+    `https://www.villamareblu.it/images/apartments/${apartment.id}/image7.jpg`,
+    `https://www.villamareblu.it/images/apartments/${apartment.id}/image8.jpg`
+  ],
+  // containsPlace richiesto da Google - indica le stanze contenute
+  "containsPlace": [
+    {
+      "@type": "Room",
+      "name": "Camera da letto",
+      "numberOfRooms": apartment.bedrooms
+    },
+    {
+      "@type": "Room",
+      "name": "Bagno",
+      "numberOfRooms": 1
+    },
+    {
+      "@type": "Room",
+      "name": "Soggiorno con angolo cottura",
+      "numberOfRooms": 1
+    }
+  ],
   "containedInPlace": {
     "@type": "LodgingBusiness",
     "@id": "https://www.villamareblu.it/#lodgingbusiness",
-    "name": "Villa MareBlu"
+    "name": "Villa MareBlu",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Via Marco Polo 112",
+      "addressLocality": "Patù",
+      "addressRegion": "Puglia",
+      "postalCode": "73053",
+      "addressCountry": "IT"
+    }
   },
   "potentialAction": {
     "@type": "ReserveAction",
