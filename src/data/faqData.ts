@@ -92,7 +92,7 @@ export const contactsFAQs: FAQItem[] = [
   },
   {
     question: "Qual è l'indirizzo esatto di Villa MareBlu a Torre Vado?",
-    answer: "L'indirizzo completo è: Via Marco Polo 112, 73053 Patù (LE), Puglia, Italia. La villa si trova nella frazione di Torre Vado, facilmente raggiungibile con il navigatore. All'arrivo troverete indicazioni per il parcheggio privato e riceverete le istruzioni dettagliate per il check-in."
+    answer: "L'indirizzo completo è: Via Marco Polo 112, 73053 Patù (LE), Puglia, Italia. La villa si trova nel comune di Patù, a pochi passi da Torre Vado, facilmente raggiungibile con il navigatore. All'arrivo troverete indicazioni per il parcheggio privato e riceverete le istruzioni dettagliate per il check-in."
   },
   {
     question: "Come raggiungo Villa MareBlu in auto?",
