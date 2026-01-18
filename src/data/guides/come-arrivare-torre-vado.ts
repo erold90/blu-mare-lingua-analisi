@@ -30,8 +30,8 @@ export const guideComeArrivare: GuideInfo = {
       title: 'Da Aeroporto di Brindisi (BDS)',
       content: `
         <p>L'<strong>Aeroporto del Salento di Brindisi</strong> è lo scalo più comodo per raggiungere Torre Vado e Villa MareBlu.</p>
-        <p><strong>Distanza:</strong> circa 120 km<br>
-        <strong>Tempo:</strong> 1 ora e 20 minuti in auto</p>
+        <p><strong>Distanza:</strong> circa 110-120 km<br>
+        <strong>Tempo:</strong> 1 ora e 30-40 minuti in auto</p>
         <p><strong>Percorso consigliato:</strong></p>
         <ol>
           <li>Dall'aeroporto, prendi la SS613 direzione Lecce</li>
@@ -44,7 +44,7 @@ export const guideComeArrivare: GuideInfo = {
         <p><strong>Costo noleggio:</strong> da €25-40/giorno per utilitaria in bassa stagione, €50-80/giorno in agosto.</p>
       `,
       highlights: [
-        'Distanza: 120 km (1h20 in auto)',
+        'Distanza: 110-120 km (1h30-40 in auto)',
         'Aeroporto più comodo per il Salento sud',
         'Noleggio auto consigliato',
         'Prenotare auto in anticipo per agosto'
@@ -55,8 +55,8 @@ export const guideComeArrivare: GuideInfo = {
       title: 'Da Aeroporto di Bari (BRI)',
       content: `
         <p>L'<strong>Aeroporto di Bari Karol Wojtyła</strong> è più grande e con più collegamenti internazionali, ma più distante.</p>
-        <p><strong>Distanza:</strong> circa 200 km<br>
-        <strong>Tempo:</strong> 2 ore e 15 minuti in auto</p>
+        <p><strong>Distanza:</strong> circa 240 km<br>
+        <strong>Tempo:</strong> 2 ore e 30-40 minuti in auto</p>
         <p><strong>Percorso:</strong></p>
         <ol>
           <li>Dall'aeroporto, prendi SS16 o A14 direzione Bari Sud</li>
@@ -68,7 +68,7 @@ export const guideComeArrivare: GuideInfo = {
         <p><strong>Consiglio:</strong> se i voli per Brindisi sono più cari di €50+ rispetto a Bari, considera Bari. Altrimenti Brindisi è molto più comodo.</p>
       `,
       highlights: [
-        'Distanza: 200 km (2h15 in auto)',
+        'Distanza: 240 km (2h30-40 in auto)',
         'Più voli internazionali disponibili',
         'Valuta differenza prezzo con Brindisi',
         'A14 fino a Bari poi statali'
@@ -79,19 +79,19 @@ export const guideComeArrivare: GuideInfo = {
       title: 'In Auto dal Nord Italia',
       content: `
         <p>Arrivare nel Salento <strong>in auto</strong> è un viaggio lungo ma panoramico. Ecco le indicazioni:</p>
-        <p><strong>Da Milano:</strong> circa 950 km (9-10 ore)<br>
+        <p><strong>Da Milano:</strong> circa 1.100 km (10-11 ore)<br>
         A1 → A14 → uscita Bari Nord → SS16/E55 → Lecce → SS274 → Torre Vado</p>
-        <p><strong>Da Roma:</strong> circa 600 km (6-7 ore)<br>
+        <p><strong>Da Roma:</strong> circa 700-730 km (7-8 ore)<br>
         A1 → A16 Napoli-Canosa → A14 → Bari → SS16 → Lecce → Torre Vado</p>
-        <p><strong>Da Napoli:</strong> circa 400 km (4-5 ore)<br>
+        <p><strong>Da Napoli:</strong> circa 480-500 km (4-5 ore)<br>
         A16 → A14 → Bari → SS16 → Lecce → Torre Vado</p>
-        <p><strong>Pedaggi autostradali:</strong> circa €40-60 da Roma, €80-100 da Milano.</p>
+        <p><strong>Pedaggi autostradali:</strong> circa €50-70 da Roma, €90-110 da Milano.</p>
         <p><strong>Consiglio:</strong> se partite dal Nord, valutate di fermarvi una notte a metà strada (Marche o Abruzzo) per non arrivare stanchi.</p>
       `,
       highlights: [
-        'Milano-Torre Vado: 950 km (9-10h)',
-        'Roma-Torre Vado: 600 km (6-7h)',
-        'Pedaggi: €40-100 a seconda della partenza',
+        'Milano-Torre Vado: 1.100 km (10-11h)',
+        'Roma-Torre Vado: 700-730 km (7-8h)',
+        'Pedaggi: €50-110 a seconda della partenza',
         'Considera sosta intermedia'
       ]
     },

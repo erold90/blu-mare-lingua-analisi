@@ -99,7 +99,7 @@ export const guideItinerario: GuideInfo = {
         <p><strong>Seconda tappa:</strong> <strong>Presicce</strong> (15 min da Specchia) - la "Città degli Ipogei". Se possibile, visita guidata ai frantoi sotterranei (esperienza unica!).</p>
         <p><strong>Pranzo:</strong> In una masseria dell'entroterra. Cucina contadina genuina con prodotti locali.</p>
         <p><strong>Pomeriggio:</strong> Tornate al mare! Spiaggia di Torre Pali (la torre nel mare) o relax a Pescoluse.</p>
-        <p><strong>Sera:</strong> Cena a Patù (il nostro comune!) visitando la Centopietre, misterioso monumento megalitico.</p>
+        <p><strong>Sera:</strong> Cena a Patù (il nostro comune!) visitando la Centopietre, misterioso monumento funerario del IX secolo costruito con 100 blocchi di pietra messapica, e la Chiesa di San Giovanni con affreschi bizantini.</p>
       `,
       highlights: [
         'Specchia: Borgo più Bello d\'Italia',

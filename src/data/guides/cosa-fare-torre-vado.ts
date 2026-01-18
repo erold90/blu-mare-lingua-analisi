@@ -74,7 +74,7 @@ export const guideCosaFare: GuideInfo = {
         <p>Il Salento è costellato di <strong>borghi storici</strong> che meritano una visita. Ecco quelli raggiungibili facilmente da Villa MareBlu:</p>
         <p><strong>Specchia</strong> (20 min) - Uno dei "Borghi più belli d'Italia", con centro storico medievale perfettamente conservato e palazzi nobiliari.</p>
         <p><strong>Presicce</strong> (15 min) - La "Città degli Ipogei", con frantoi sotterranei scavati nella roccia. Visita guidata ai frantoi ipogei: esperienza unica!</p>
-        <p><strong>Patù</strong> (5 min) - Il nostro comune! Visitate la misteriosa Centopietre, monumento megalitico unico, e la Chiesa di San Giovanni.</p>
+        <p><strong>Patù</strong> (5 min) - Il nostro comune! Visitate la misteriosa Centopietre, monumento funerario del IX secolo costruito con esattamente 100 blocchi di pietra messapica (monumento nazionale dal 1873), e la Chiesa di San Giovanni con affreschi bizantini.</p>
         <p><strong>Gallipoli</strong> (40 min) - La "Perla dello Ionio" con centro storico su un'isola, cattedrale barocca, spiagge e vita notturna.</p>
         <p><strong>Otranto</strong> (50 min) - Porta d'Oriente, patrimonio UNESCO. Il mosaico del pavimento della Cattedrale è straordinario.</p>
       `,

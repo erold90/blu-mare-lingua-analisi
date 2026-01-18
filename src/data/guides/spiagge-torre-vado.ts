@@ -90,14 +90,14 @@ export const guideSpiagge: GuideInfo = {
       id: 'marina-san-gregorio',
       title: '5. Marina di San Gregorio',
       content: `
-        <p><strong>Marina di San Gregorio</strong> offre una spiaggia tranquilla con sabbia dorata e acque turchesi. Meno affollata di Pescoluse, è perfetta per chi cerca relax. Si trova a <strong>15 minuti da Villa MareBlu</strong>.</p>
-        <p>Il borgo conserva un fascino antico con le casette dei pescatori e il piccolo porto. Ottimi ristoranti di pesce fresco direttamente sul mare.</p>
+        <p><strong>Marina di San Gregorio</strong> è un antico porto messapico con oltre 2.500 anni di storia. La costa alterna <strong>scogliere basse e calette di sabbia fine</strong>, con acque cristalline dai colori che vanno dal verde smeraldo al blu intenso. Si trova a <strong>10 minuti da Villa MareBlu</strong>.</p>
+        <p>Il borgo conserva un fascino autentico con le casette dei pescatori e il piccolo porto. Meno affollata di Pescoluse, è perfetta per chi cerca tranquillità e ottimi ristoranti di pesce fresco direttamente sul mare.</p>
       `,
       highlights: [
-        'Distanza da Villa MareBlu: 15 minuti in auto',
-        'Meno affollata, più tranquilla',
-        'Borgo autentico con ristoranti di pesce',
-        'Sabbia dorata e mare turchese'
+        'Distanza da Villa MareBlu: 10 minuti in auto',
+        'Antico porto messapico (2.500 anni)',
+        'Scogliere e calette di sabbia fine',
+        'Ristoranti di pesce sul mare'
       ]
     },
     {
@@ -147,14 +147,14 @@ export const guideSpiagge: GuideInfo = {
       id: 'felloniche',
       title: '9. Marina di Felloniche',
       content: `
-        <p><strong>Marina di Felloniche</strong> è un piccolo paradiso tra Torre Vado e Torre Pali. Spiaggia di sabbia bianca con dune naturali e macchia mediterranea alle spalle. A <strong>8 minuti da Villa MareBlu</strong>.</p>
-        <p>Ambiente naturale preservato, ideale per chi ama la natura incontaminata.</p>
+        <p><strong>Marina di Felloniche</strong> è un tratto di costa selvaggio tra San Gregorio e Santa Maria di Leuca. La costa è caratterizzata da <strong>scogliere e falesie</strong> alternate a piccole calette di sabbia e ciottoli. A <strong>8 minuti da Villa MareBlu</strong>.</p>
+        <p>Qui si trovano la <strong>Grotta del Drago</strong> e nelle vicinanze la Grotta del Diavolo. Il Lido Marinelli, con le sue iconiche cabine colorate anni '80, è un tuffo nel passato. Ideale per chi cerca un ambiente naturale e poco turistico.</p>
       `,
       highlights: [
         'Distanza da Villa MareBlu: 8 minuti in auto',
-        'Dune naturali e macchia mediterranea',
-        'Ambiente preservato',
-        'Sabbia bianca finissima'
+        'Scogliere con calette nascoste',
+        'Grotta del Drago da esplorare',
+        'Lido Marinelli: atmosfera retrò'
       ]
     },
     {
