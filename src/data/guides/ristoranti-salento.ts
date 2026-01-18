@@ -13,6 +13,9 @@ export const guideRistoranti: GuideInfo = {
   keywords: [
     'ristoranti torre vado',
     'dove mangiare salento',
+    'friggitoria pesce torre vado',
+    'pesce fritto torre vado',
+    'street food salento',
     'ristoranti pescoluse',
     'trattorie salento',
     'pesce fresco torre vado',
@@ -20,11 +23,32 @@ export const guideRistoranti: GuideInfo = {
     'ristoranti leuca',
     'mangiare bene salento sud',
     'pizzerie torre vado',
-    'gelaterie salento'
+    'gelaterie salento',
+    'area servizi torre vado'
   ],
   relatedGuides: ['cosa-fare-torre-vado', 'spiagge-torre-vado', 'itinerario-7-giorni-salento'],
   ctaText: 'Soggiorna vicino ai migliori ristoranti del Salento',
   sections: [
+    {
+      id: 'street-food',
+      title: 'Street Food e Friggitorie: Il Meglio del Pesce Fritto',
+      content: `
+        <p>Per una cena informale ma gustosissima, la <strong>frittura di pesce</strong> salentina è un'esperienza imperdibile. Ecco il nostro consiglio:</p>
+        <p><strong>⭐ Friggitoria Pesce</strong> - Nell'<strong>Area Servizi di Torre Vado</strong> sul Lungomare Cristoforo Colombo, questa friggitoria è un must assoluto per gli amanti del pesce fritto. Valutata 4.5/5 su TripAdvisor e 4.7 su Google, offre fritture croccanti e leggere di altissima qualità.</p>
+        <p><strong>Specialità della casa:</strong> il <em>"Piatto TorreVado"</em> - un assaggio completo di tutte le fritture per chi vuole provare un po' di tutto. Da non perdere anche la frittura di totani e calamari e il panino al polpo.</p>
+        <p><strong>Orari:</strong> aperto solo la sera, dalle 19:00 alle 23:30.<br>
+        <strong>Prezzo:</strong> €10-20 a persona - porzioni generose a prezzi onesti.<br>
+        <strong>Servizi:</strong> tavoli all'aperto per mangiare comodamente, servizio veloce e cordiale, accetta carte di credito, accessibile ai disabili. Anche asporto.</p>
+        <p><strong>L'Area Servizi di Torre Vado</strong> è il cuore della vita serale estiva: mercatini serali (lunedì e venerdì), mercatini dell'artigianato (martedì), mercato contadino "Campagna Amica" (giovedì), eventi e spettacoli di pizzica, concerti, teatro all'aperto, attività per bambini e tanto altro. Il posto perfetto per una serata in famiglia!</p>
+        <p><strong>Esclusiva ospiti Villa MareBlu:</strong> presentandovi come ospiti dei nostri appartamenti riceverete uno sconto speciale sulla vostra ordinazione!</p>
+      `,
+      highlights: [
+        'Friggitoria Pesce: 4.7 Google, 4.5 TripAdvisor',
+        'Piatto TorreVado: la specialità da provare',
+        'Area Servizi: eventi e mercatini serali',
+        'Aperto sera 19:00-23:30, €10-20/persona'
+      ]
+    },
     {
       id: 'cucina-tipica',
       title: 'La Cucina Tipica Salentina: Cosa Ordinare',

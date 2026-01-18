@@ -239,7 +239,7 @@ export const GuideTemplate: React.FC<GuideTemplateProps> = ({ guide }) => {
                 {guide.ctaText || 'Prenota la tua vacanza a Torre Vado'}
               </h3>
               <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-                Villa MareBlu offre 4 appartamenti vista mare a soli 150 metri dalla spiaggia.
+                Villa MareBlu offre 4 appartamenti vista mare a soli 150 metri dal mare, con accesso privato su scogliera.
                 Prenota direttamente e risparmia fino al 15% rispetto alle piattaforme.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

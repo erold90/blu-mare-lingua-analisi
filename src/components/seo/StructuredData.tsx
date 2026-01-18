@@ -600,7 +600,7 @@ export const getNearbyPlacesSchema = () => ({
     {
       "@type": "Beach",
       "name": "Spiaggia di Torre Vado",
-      "description": "Spiaggia di sabbia fine a 150 metri da Villa MareBlu"
+      "description": "Spiaggia di sabbia fine a 5 minuti in auto da Villa MareBlu"
     },
     {
       "@type": "Beach",
