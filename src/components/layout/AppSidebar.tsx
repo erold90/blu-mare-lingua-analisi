@@ -1,7 +1,7 @@
 
 import * as React from "react";
 import { Link } from "react-router-dom";
-import { Home, User, Calculator, Building, Mail, Shield, Cookie, Info } from "lucide-react";
+import { Home, User, Calculator, Building, Mail, Shield, Cookie, Info, BookOpen } from "lucide-react";
 import { 
   Sidebar, 
   SidebarContent, 
@@ -80,6 +80,14 @@ export function AppSidebar() {
                   <Link to="/chi-siamo" onClick={handleLinkClick} className="flex items-center">
                     <Info className="shrink-0 text-sidebar-primary" />
                     <span className="ml-2">Chi Siamo</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <Link to="/guide" onClick={handleLinkClick} className="flex items-center">
+                    <BookOpen className="shrink-0 text-sidebar-primary" />
+                    <span className="ml-2">Guide Salento</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

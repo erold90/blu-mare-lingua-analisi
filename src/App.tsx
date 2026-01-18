@@ -20,6 +20,8 @@ const CookiePolicyPage = lazy(() => import("@/pages/CookiePolicyPage"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const AdminPage = lazy(() => import("@/pages/AdminPage"));
 const AuthPage = lazy(() => import("@/pages/AuthPage"));
+const GuidesIndexPage = lazy(() => import("@/pages/GuidesIndexPage"));
+const GuidePage = lazy(() => import("@/pages/GuidePage"));
 
 // Loading fallback component with animation
 const PageLoader = () => (
@@ -78,6 +80,8 @@ const AppWithRoutes = () => {
           <Route path="/richiedi-preventivo" element={<Navigate to="/preventivo" replace />} />
           <Route path="/privacy-policy" element={<AppLayout><PageWrapper><PrivacyPolicyPage /></PageWrapper></AppLayout>} />
           <Route path="/cookie-policy" element={<AppLayout><PageWrapper><CookiePolicyPage /></PageWrapper></AppLayout>} />
+          <Route path="/guide" element={<AppLayout><PageWrapper><GuidesIndexPage /></PageWrapper></AppLayout>} />
+          <Route path="/guide/:slug" element={<AppLayout><PageWrapper><GuidePage /></PageWrapper></AppLayout>} />
           <Route path="/auth" element={<PageWrapper><AuthPage /></PageWrapper>} />
           <Route path="/admin" element={<PageWrapper><AdminPage /></PageWrapper>} />
           <Route path="/area-riservata" element={<PageWrapper><AdminPage /></PageWrapper>} />

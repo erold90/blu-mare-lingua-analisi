@@ -3,6 +3,7 @@ import React from 'react';
 import { Apartment } from '@/data/apartments';
 import { homeFAQs, apartmentsFAQs, quoteFAQs, contactsFAQs, aboutFAQs } from '@/data/faqData';
 import type { FAQItem } from '@/types/faq';
+import type { GuideInfo } from '@/types/guide';
 
 // Schema LodgingBusiness principale per Villa MareBlu
 export const getLocalBusinessSchema = () => ({
@@ -308,6 +309,84 @@ export const getNearbyPlacesSchema = () => ({
       "description": "Porta d'Oriente, patrimonio UNESCO. A 45 minuti in auto"
     }
   ]
+});
+
+// Schema Article per le guide turistiche (ottimizzato per Google Discover e News)
+export const getArticleSchema = (guide: GuideInfo) => ({
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "@id": `https://www.villamareblu.it/guide/${guide.slug}#article`,
+  "headline": guide.title,
+  "description": guide.description,
+  "image": {
+    "@type": "ImageObject",
+    "url": guide.heroImage.startsWith('http') ? guide.heroImage : `https://www.villamareblu.it${guide.heroImage}`,
+    "width": 1200,
+    "height": 630
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Villa MareBlu",
+    "url": "https://www.villamareblu.it"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Villa MareBlu",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://www.villamareblu.it/images/logo.png",
+      "width": 200,
+      "height": 60
+    }
+  },
+  "datePublished": guide.lastUpdated,
+  "dateModified": guide.lastUpdated,
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": `https://www.villamareblu.it/guide/${guide.slug}`
+  },
+  "keywords": guide.keywords.join(", "),
+  "articleSection": guide.category,
+  "wordCount": guide.sections.reduce((acc, s) => acc + s.content.split(' ').length, 0),
+  "inLanguage": "it-IT",
+  "isPartOf": {
+    "@type": "WebSite",
+    "@id": "https://www.villamareblu.it/#website"
+  },
+  "about": {
+    "@type": "Place",
+    "name": "Torre Vado, Salento, Puglia",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Torre Vado",
+      "addressRegion": "Puglia",
+      "addressCountry": "IT"
+    }
+  },
+  "speakable": {
+    "@type": "SpeakableSpecification",
+    "cssSelector": ["h1", "h2", ".prose p:first-of-type"]
+  }
+});
+
+// Schema ItemList per la pagina indice delle guide
+export const getGuidesListSchema = (guides: GuideInfo[]) => ({
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "Guide Turistiche Salento - Villa MareBlu",
+  "description": "Guide complete per la tua vacanza nel Salento: spiagge, ristoranti, cosa fare e come arrivare a Torre Vado",
+  "numberOfItems": guides.length,
+  "itemListElement": guides.map((guide, index) => ({
+    "@type": "ListItem",
+    "position": index + 1,
+    "item": {
+      "@type": "Article",
+      "@id": `https://www.villamareblu.it/guide/${guide.slug}`,
+      "name": guide.title,
+      "description": guide.description,
+      "url": `https://www.villamareblu.it/guide/${guide.slug}`
+    }
+  }))
 });
 
 // Esporta tutti gli schema combinati per la homepage
