@@ -11,6 +11,7 @@ interface ApartmentDetailsModalProps {
   images: string[];
   isOpen: boolean;
   onClose: () => void;
+  onSelect?: (apartmentId: string) => void; // Optional: quando presente, mostra "Seleziona" invece di "Richiedi Preventivo"
 }
 
 // Simple swipeable image gallery - no complex carousel
@@ -271,7 +272,8 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
   apartment,
   images,
   isOpen,
-  onClose
+  onClose,
+  onSelect
 }) => {
   const navigate = useNavigate();
   const [fullscreenOpen, setFullscreenOpen] = useState(false);
@@ -309,8 +311,15 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
   };
 
   const handleBookNow = () => {
-    onClose();
-    navigate('/richiedi-preventivo');
+    if (onSelect && apartment) {
+      // Modalità wizard: seleziona l'appartamento e chiudi
+      onSelect(apartment.id);
+      onClose();
+    } else {
+      // Modalità pagina appartamenti: naviga al preventivo
+      onClose();
+      navigate('/richiedi-preventivo');
+    }
   };
 
   const openFullscreen = (index: number) => {
@@ -432,7 +441,7 @@ export const ApartmentDetailsModal: React.FC<ApartmentDetailsModalProps> = ({
               Piano {apartment.floor}
             </span>
             <Button onClick={handleBookNow} className="flex-1 h-10 sm:h-11 text-sm sm:text-base">
-              Richiedi Preventivo
+              {onSelect ? 'Seleziona Appartamento' : 'Richiedi Preventivo'}
             </Button>
           </div>
         </div>

@@ -3,10 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Home, Users, MapPin, Eye, AlertCircle, CheckCircle2, Euro } from 'lucide-react';
+import { Home, Users, MapPin, Eye, AlertCircle, CheckCircle2, Euro, Images } from 'lucide-react';
 import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 import { useDynamicQuote } from '@/hooks/useDynamicQuote';
 import { PricingService } from '@/services/supabase/dynamicPricingService';
+import { ApartmentDetailsModal } from '@/components/apartments/ApartmentDetailsModal';
+import { apartments as apartmentsData, Apartment } from '@/data/apartments';
+import { useApartmentImages } from '@/hooks/apartments/useApartmentImages';
 
 interface StepApartmentsProps {
   formData: QuoteFormData;
@@ -57,11 +60,18 @@ const apartments = [
   }
 ];
 
+// Funzioni di mappatura ID
+const toFullId = (shortId: string) => `appartamento-${shortId}`;
+const toShortId = (fullId: string) => fullId.replace('appartamento-', '');
+
 export default function StepApartments({ formData, updateFormData, onNext, onPrev, getBedsNeeded, isApartmentAvailable, prenotazioni }: StepApartmentsProps) {
   const [availabilityStatus, setAvailabilityStatus] = useState<Record<string, boolean>>({});
   const [apartmentPrices, setApartmentPrices] = useState<Record<string, number>>({});
+  const [selectedApartmentForDetails, setSelectedApartmentForDetails] = useState<Apartment | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const bedsNeeded = getBedsNeeded();
   const { getPriceForPeriod } = useDynamicQuote();
+  const { apartmentImages } = useApartmentImages();
 
   // Refs per evitare chiamate duplicate
   const hasCheckedAvailability = useRef(false);
@@ -123,14 +133,37 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
   const handleApartmentToggle = (apartmentId: string) => {
     const isSelected = formData.selectedApartments.includes(apartmentId);
     let newSelection;
-    
+
     if (isSelected) {
       newSelection = formData.selectedApartments.filter(id => id !== apartmentId);
     } else {
       newSelection = [...formData.selectedApartments, apartmentId];
     }
-    
+
     updateFormData({ selectedApartments: newSelection });
+  };
+
+  // Apri modale dettagli appartamento
+  const openApartmentDetails = (apartmentId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Evita di attivare il toggle della card
+    const fullId = toFullId(apartmentId);
+    const apartment = apartmentsData.find(apt => apt.id === fullId);
+    if (apartment) {
+      setSelectedApartmentForDetails(apartment);
+      setIsModalOpen(true);
+    }
+  };
+
+  // Gestisci selezione dalla modale
+  const handleSelectFromModal = (fullApartmentId: string) => {
+    const shortId = toShortId(fullApartmentId);
+    // Verifica disponibilità prima di selezionare
+    if (availabilityStatus[shortId] !== false) {
+      const isAlreadySelected = formData.selectedApartments.includes(shortId);
+      if (!isAlreadySelected) {
+        updateFormData({ selectedApartments: [...formData.selectedApartments, shortId] });
+      }
+    }
   };
 
   const getTotalCapacity = () => {
@@ -300,6 +333,17 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
                     )}
                   </div>
                 )}
+
+                {/* Bottone Vedi Dettagli */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full mt-3"
+                  onClick={(e) => openApartmentDetails(apartment.id, e)}
+                >
+                  <Images className="h-4 w-4 mr-2" />
+                  Vedi dettagli e foto
+                </Button>
               </CardContent>
             </Card>
           );
@@ -336,6 +380,18 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
           Continua
         </Button>
       </div>
+
+      {/* Modale Dettagli Appartamento */}
+      <ApartmentDetailsModal
+        apartment={selectedApartmentForDetails}
+        images={selectedApartmentForDetails ? apartmentImages[selectedApartmentForDetails.id] || ['/placeholder.svg'] : []}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedApartmentForDetails(null);
+        }}
+        onSelect={handleSelectFromModal}
+      />
     </div>
   );
 };
