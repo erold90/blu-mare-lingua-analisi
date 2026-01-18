@@ -10,8 +10,10 @@ import {
   Clock,
   Calendar,
   ChevronRight,
+  ChevronLeft,
   MapPin,
   ArrowRight,
+  ArrowLeft,
   List,
   Home
 } from 'lucide-react';
@@ -138,6 +140,16 @@ export const GuideTemplate: React.FC<GuideTemplateProps> = ({ guide }) => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-12">
+        {/* Back Button */}
+        <div className="mb-8">
+          <Button asChild variant="outline" size="sm" className="gap-2">
+            <Link to="/guide">
+              <ArrowLeft className="h-4 w-4" />
+              Tutte le Guide
+            </Link>
+          </Button>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
 
           {/* Table of Contents - Sticky Sidebar */}
