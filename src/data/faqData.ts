@@ -4,15 +4,15 @@ import { FAQItem } from '@/types/faq';
 export const homeFAQs: FAQItem[] = [
   {
     question: "Dove si trova Villa MareBlu a Torre Vado?",
-    answer: "Villa MareBlu si trova in Via Marco Polo 112 a Torre Vado, nel comune di Patù (LE), nel cuore del Salento. La struttura è posizionata a soli 100 metri dal mare, con accesso privato su scogliera bassa. Siamo strategicamente situati tra le famose spiagge di Pescoluse (conosciute come 'Maldive del Salento') a 5 minuti in auto e Santa Maria di Leuca, il punto più a sud della Puglia, a 15 minuti in auto."
+    answer: "Villa MareBlu si trova in Via Marco Polo 112 a Torre Vado, nel comune di Patù (LE), nel cuore del Salento. La struttura è posizionata a soli 150 metri dal mare, con accesso privato su scogliera bassa. Siamo strategicamente situati tra le famose spiagge di Pescoluse (conosciute come 'Maldive del Salento') a 5 minuti in auto e Santa Maria di Leuca, il punto più a sud della Puglia, a 15 minuti in auto."
   },
   {
     question: "Quanti appartamenti ha Villa MareBlu e quante persone può ospitare?",
-    answer: "Villa MareBlu dispone di 4 appartamenti indipendenti per un totale di 23 posti letto. L'Appartamento 1 ha 6 posti letto al piano terra con veranda; l'Appartamento 2, il più grande, ha 8 posti al primo piano con terrazzo panoramico; l'Appartamento 3 ha 4 posti ideale per coppie; l'Appartamento 4 ha 5 posti con zona esterna privata. Tutti gli appartamenti hanno vista mare e ingresso indipendente."
+    answer: "Villa MareBlu dispone di 4 appartamenti indipendenti per un totale di 23 posti letto. L'Appartamento 1 ha 6 posti letto al piano terra con veranda; l'Appartamento 2, il più grande, ha 8 posti al primo piano con terrazzo panoramico; l'Appartamento 3 ha 4 posti al primo piano con terrazza vista mare, ideale per coppie; l'Appartamento 4 ha 5 posti con zona esterna privata. Tutti gli appartamenti hanno vista mare e ingresso indipendente."
   },
   {
     question: "A che distanza è la spiaggia da Villa MareBlu?",
-    answer: "La spiaggia più vicina è a soli 100 metri dalla villa, raggiungibile a piedi in 2 minuti attraverso un accesso privato su scogliera bassa, perfetto per tuffi e snorkeling. Le famose spiagge di sabbia bianca di Pescoluse (Maldive del Salento) distano 5 minuti in auto, mentre Torre Vado centro con stabilimenti balneari attrezzati è a 5 minuti di auto."
+    answer: "La spiaggia più vicina è a soli 150 metri dalla villa, raggiungibile a piedi in 2 minuti attraverso un accesso privato su scogliera bassa, perfetto per tuffi e snorkeling. Le famose spiagge di sabbia bianca di Pescoluse (Maldive del Salento) distano 5 minuti in auto, mentre Torre Vado centro con stabilimenti balneari attrezzati è a 5 minuti di auto."
   },
   {
     question: "Gli animali domestici sono ammessi a Villa MareBlu?",
@@ -24,7 +24,7 @@ export const homeFAQs: FAQItem[] = [
   },
   {
     question: "Quali sono i servizi inclusi negli appartamenti di Villa MareBlu?",
-    answer: "Tutti gli appartamenti includono: Wi-Fi gratuito ad alta velocità, parcheggio privato gratuito, cucina completamente attrezzata (frigorifero, fornelli, forno, utensili), terrazza o veranda privata con tavolo e sedie, doccia esterna per rinfrescarsi dopo il mare, TV, accesso all'area barbecue condivisa. Biancheria da letto e bagno disponibile su richiesta. Alcuni appartamenti hanno anche l'aria condizionata."
+    answer: "Tutti gli appartamenti includono: Wi-Fi gratuito ad alta velocità, parcheggio in comune (ampio, all'interno del residence), cucina completamente attrezzata con piano cottura a gas (frigorifero, forno, stoviglie complete, pentole e utensili), terrazza o veranda privata con tavolo e sedie, doccia esterna per rinfrescarsi dopo il mare, TV, lavatrice in comune. L'Appartamento 1 dispone anche di barbecue e forno a legna. Biancheria da letto e bagno disponibile su richiesta. Alcuni appartamenti hanno anche l'aria condizionata."
   }
 ];
 
@@ -44,15 +44,15 @@ export const apartmentsFAQs: FAQItem[] = [
   },
   {
     question: "Quali elettrodomestici hanno le cucine degli appartamenti?",
-    answer: "Ogni cucina è completamente attrezzata con: frigorifero, piano cottura a gas, forno (elettrico o a gas), bollitore, caffettiera moka, stoviglie complete (piatti, bicchieri, posate), pentole e padelle, taglieri e utensili da cucina. Tutto il necessario per preparare i vostri pasti durante la vacanza nel Salento!"
+    answer: "Ogni cucina è completamente attrezzata con: frigorifero, piano cottura a gas, forno, stoviglie complete (piatti, bicchieri, posate), pentole e padelle, taglieri e utensili da cucina. Tutto il necessario per preparare i vostri pasti durante la vacanza nel Salento!"
   },
   {
     question: "Gli appartamenti hanno vista mare?",
-    answer: "Sì, tutti e 4 gli appartamenti offrono vista mare! L'Appartamento 2 al primo piano ha la vista più panoramica con terrazzo mozzafiato sul Mar Ionio. Gli appartamenti al piano terra hanno vista mare dalla veranda e dal giardino. La posizione privilegiata a 100 metri dalla costa garantisce scorci spettacolari da ogni unità."
+    answer: "Sì, tutti e 4 gli appartamenti offrono vista mare! L'Appartamento 2 al primo piano ha la vista più panoramica con terrazzo mozzafiato sul Mar Ionio. Gli appartamenti al piano terra hanno vista mare dalla veranda e dal giardino. La posizione privilegiata a 150 metri dalla costa garantisce scorci spettacolari da ogni unità."
   },
   {
-    question: "C'è parcheggio privato per ogni appartamento?",
-    answer: "Sì, Villa MareBlu offre parcheggio privato gratuito per tutti gli ospiti. Ogni appartamento ha il proprio posto auto all'interno della proprietà, in un'area recintata e sicura. Non dovrai mai preoccuparti di cercare parcheggio, un vantaggio enorme durante l'alta stagione estiva nel Salento!"
+    question: "C'è parcheggio per gli ospiti?",
+    answer: "Sì, Villa MareBlu offre parcheggio gratuito per tutti gli ospiti. Il parcheggio è in comune, ampio e con posti sufficienti per tutti gli appartamenti. Si trova all'interno del residence, lontano dalla strada e poco visibile, in un'area parzialmente recintata e sicura. Non dovrai mai preoccuparti di cercare parcheggio, un vantaggio enorme durante l'alta stagione estiva nel Salento!"
   }
 ];
 
@@ -96,7 +96,7 @@ export const contactsFAQs: FAQItem[] = [
   },
   {
     question: "Come raggiungo Villa MareBlu in auto?",
-    answer: "Da Nord: autostrada A14 fino a Bari, poi SS16 o E55 verso Lecce, quindi seguire per Santa Maria di Leuca/Torre Vado. Da Lecce sono circa 60 km (50 minuti). Da Brindisi aeroporto: circa 120 km (1h30). Il parcheggio privato gratuito è incluso per ogni appartamento."
+    answer: "Da Nord: autostrada A14 fino a Bari, poi SS16 o E55 verso Lecce, quindi seguire per Santa Maria di Leuca/Torre Vado. Da Lecce sono circa 60 km (50 minuti). Da Brindisi aeroporto: circa 120 km (1h30). Il parcheggio gratuito in comune è incluso per tutti gli ospiti."
   },
   {
     question: "Qual è l'aeroporto più vicino a Torre Vado?",

@@ -66,8 +66,8 @@ export const ServicesSection = () => {
     },
     {
       icon: <Car className="h-8 w-8 text-blue-600" />,
-      title: "Parcheggio Privato",
-      description: "Parcheggio privato e sicuro incluso per ogni appartamento, con accesso diretto alla struttura."
+      title: "Parcheggio Gratuito",
+      description: "Parcheggio in comune, ampio e sicuro all'interno del residence, lontano dalla strada."
     },
     {
       icon: <Coffee className="h-8 w-8 text-blue-600" />,

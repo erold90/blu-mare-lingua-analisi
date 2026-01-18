@@ -80,8 +80,8 @@ const IntroductionSection = () => {
   };
 
   return (
-    <section id="introduction-section" className="py-32 bg-white overflow-hidden">
-      <div className="container mx-auto px-8">
+    <section id="introduction-section" className="py-32 bg-white overflow-hidden max-w-full">
+      <div className="container mx-auto px-4 md:px-8 max-w-full">
 
         {/* Section header */}
         <motion.div
@@ -165,7 +165,7 @@ const IntroductionSection = () => {
               {[
                 {
                   title: "Posizione privilegiata",
-                  text: "A soli 100 metri dalla costa ionica, Villa MareBlu gode di una posizione unica che permette di raggiungere il mare in pochi passi, immersi nella quiete del paesaggio salentino."
+                  text: "A soli 150 metri dalla costa ionica, Villa MareBlu gode di una posizione unica che permette di raggiungere il mare in pochi passi, immersi nella quiete del paesaggio salentino."
                 },
                 {
                   title: "Comfort e tranquillità",

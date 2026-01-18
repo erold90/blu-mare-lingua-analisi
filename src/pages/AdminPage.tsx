@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, Home, BarChart, Euro, LogOut, UserCog, Shield } from 'lucide-react';
+import { Calendar, Users, Home, BarChart, Euro, LogOut, UserCog, Shield, Star, ArrowLeft } from 'lucide-react';
 import { useReservations } from '@/hooks/useReservations';
 import { apartments } from '@/data/apartments';
 import { format } from 'date-fns';
@@ -21,10 +21,12 @@ import { ApartmentImageGallery } from '@/components/admin/ApartmentImageGallery'
 import { HomeImageGallery } from '@/components/admin/HomeImageGallery';
 import { SeasonalRevenueAnalytics } from '@/components/admin/SeasonalRevenueAnalytics';
 import { SecurityDashboard } from '@/components/admin/SecurityDashboard';
+import { ReviewsManager } from '@/components/admin/ReviewsManager';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 export default function AdminPage() {
+  const navigate = useNavigate();
   const { user, isAdmin, loading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const { reservations, loading: reservationsLoading } = useReservations();
@@ -100,6 +102,7 @@ export default function AdminPage() {
     { value: 'quotes', label: 'Preventivi', icon: Euro },
     { value: 'revenue', label: 'Ricavi', icon: BarChart },
     { value: 'pricing', label: 'Prezzi', icon: Euro },
+    { value: 'reviews', label: 'Recensioni', icon: Star },
     { value: 'analytics', label: 'Analisi', icon: BarChart },
     { value: 'security', label: 'Sicurezza', icon: Shield },
     { value: 'gallery', label: 'Gallerie', icon: Home },
@@ -112,6 +115,15 @@ export default function AdminPage() {
         <div className="container mx-auto px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/')}
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-primary flex-shrink-0"
+                title="Torna alla Home"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
               <UserCog className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
               <h1 className="text-lg sm:text-2xl font-bold truncate">
                 {isMobile ? 'Admin' : 'Area Amministrativa'}
@@ -164,7 +176,7 @@ export default function AdminPage() {
             </div>
           ) : (
             /* Desktop Tabs */
-            <TabsList className="grid w-full grid-cols-9">
+            <TabsList className="grid w-full grid-cols-10">
               <TabsTrigger value="dashboard" className="flex items-center gap-2">
                 <Home className="h-4 w-4" />
                 Dashboard
@@ -188,6 +200,10 @@ export default function AdminPage() {
               <TabsTrigger value="pricing" className="flex items-center gap-2">
                 <Euro className="h-4 w-4" />
                 Prezzi
+              </TabsTrigger>
+              <TabsTrigger value="reviews" className="flex items-center gap-2">
+                <Star className="h-4 w-4" />
+                Recensioni
               </TabsTrigger>
               <TabsTrigger value="analytics" className="flex items-center gap-2">
                 <BarChart className="h-4 w-4" />
@@ -315,6 +331,11 @@ export default function AdminPage() {
           {/* Pricing Management */}
           <TabsContent value="pricing">
             <PricingManagement />
+          </TabsContent>
+
+          {/* Reviews Management */}
+          <TabsContent value="reviews">
+            <ReviewsManager />
           </TabsContent>
 
           {/* Analytics */}

@@ -136,7 +136,7 @@ const GuidesIndexPage: React.FC = () => {
             Pronto per la tua vacanza nel Salento?
           </h2>
           <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-            Villa MareBlu ti aspetta a Torre Vado, a 100 metri dal mare.
+            Villa MareBlu ti aspetta a Torre Vado, a 150 metri dal mare.
             4 appartamenti vista mare, prenota direttamente e risparmia.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

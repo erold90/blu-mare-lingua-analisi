@@ -43,6 +43,10 @@ const SEOHead: React.FC<SEOHeadProps> = ({
       {/* Canonical URL */}
       <link rel="canonical" href={fullCanonicalUrl} />
 
+      {/* Hreflang for international SEO */}
+      <link rel="alternate" hrefLang="it" href={fullCanonicalUrl} />
+      <link rel="alternate" hrefLang="x-default" href={fullCanonicalUrl} />
+
       {/* Open Graph / Facebook */}
       <meta property="og:type" content="business.business" />
       <meta property="og:title" content={ogTitle || title} />

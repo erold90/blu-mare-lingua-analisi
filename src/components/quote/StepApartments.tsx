@@ -42,9 +42,9 @@ const apartments = [
   },
   {
     id: "3",
-    name: "Appartamento 3", 
+    name: "Appartamento 3",
     capacity: 4,
-    floor: "piano terra",
+    floor: "primo piano",
     features: ["terrazza vista mare"],
     description: "Una camera con letto matrimoniale e letto a castello",
     image: "/images/apartments/appartamento-3/image1.jpg"

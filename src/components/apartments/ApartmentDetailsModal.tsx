@@ -257,7 +257,7 @@ const FullscreenGallery: React.FC<{
                   index === currentIndex ? 'ring-2 ring-white' : 'opacity-50'
                 }`}
               >
-                <img src={img} alt="" className="w-full h-full object-cover" draggable={false} />
+                <img src={img} alt={`${apartmentName} - Miniatura ${index + 1}`} className="w-full h-full object-cover" draggable={false} />
               </button>
             ))}
           </div>

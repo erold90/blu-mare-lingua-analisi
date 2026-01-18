@@ -54,7 +54,7 @@ export const guideCosaFare: GuideInfo = {
         <p>Le acque cristalline del Salento sono un paradiso per lo <strong>snorkeling</strong>. Anche senza attrezzatura professionale, basta maschera e boccaglio per esplorare fondali ricchi di pesci colorati.</p>
         <p><strong>Migliori spot vicino Villa MareBlu:</strong></p>
         <ul>
-          <li><strong>Scogliera di Villa MareBlu</strong> (100m) - Accesso privato, pesci e ricci</li>
+          <li><strong>Scogliera di Villa MareBlu</strong> (150m) - Accesso privato, pesci e ricci</li>
           <li><strong>Punta Ristola</strong> (15 min) - Fondali profondi e grotte</li>
           <li><strong>Castro Marina</strong> (30 min) - Acque limpidissime, grotte accessibili</li>
         </ul>
@@ -145,14 +145,14 @@ export const guideCosaFare: GuideInfo = {
       title: 'Attività per Famiglie con Bambini',
       content: `
         <p>Il Salento è perfetto per le <strong>vacanze in famiglia</strong>. Attività adatte ai bambini:</p>
-        <p><strong>Zoo Safari di Fasano</strong> (1h30) - Il più grande parco faunistico d'Italia, con safari in auto e area pedonale.</p>
-        <p><strong>Acquapark Splash</strong> (Gallipoli, 40 min) - Parco acquatico con scivoli per tutte le età.</p>
+        <p><strong>Zoo Safari di Fasano</strong> (2 ore, 160 km) - Il secondo parco faunistico più grande d'Europa, con safari in auto tra animali in libertà, area pedonale Fasanolandia e Sea Lion Aquarium. Biglietti: €34 adulti, €26 bambini (4-10 anni), gratis sotto 4 anni.</p>
+        <p><strong>Acquapark Splash</strong> (Gallipoli, 40 min) - Parco acquatico con scivoli per tutte le età: Kamikaze, Rainbow Cannon, Caribbean River (300m). Aperto metà giugno-fine settembre. Biglietti: €15-20. Ristoranti e animazione inclusi.</p>
         <p><strong>Spiagge con fondali bassi</strong> - Pescoluse e Torre Pali hanno fondali che digradano dolcemente, perfetti per i più piccoli.</p>
         <p><strong>Giro in barca</strong> - I bambini adorano le escursioni in barca alle grotte!</p>
         <p><strong>Gelaterie artigianali</strong> - Il gelato salentino è eccezionale. A Torre Vado ce ne sono diverse da provare.</p>
       `,
       highlights: [
-        'Zoo Safari di Fasano: 1h30',
+        'Zoo Safari di Fasano: 2 ore',
         'Acquapark Splash a Gallipoli',
         'Spiagge con fondali bassi',
         'Gelaterie artigianali'

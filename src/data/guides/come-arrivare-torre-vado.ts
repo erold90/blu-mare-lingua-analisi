@@ -181,7 +181,7 @@ export const guideComeArrivare: GuideInfo = {
         'Via Marco Polo 112, Patù (LE)',
         'Coordinate: 39.823534, 18.292820',
         'Cerca "Villa MareBlu" su Maps',
-        'Parcheggio privato in struttura'
+        'Parcheggio gratuito in struttura'
       ]
     },
     {
@@ -192,14 +192,14 @@ export const guideComeArrivare: GuideInfo = {
         <p><strong>Strade:</strong> le strade salentine sono in buone condizioni ma spesso strette e tortuose. Guidate con calma e godetevi il paesaggio!</p>
         <p><strong>Limiti di velocità:</strong> 130 km/h autostrada, 90-110 superstrada, 50 km/h centri abitati. Autovelox frequenti.</p>
         <p><strong>ZTL:</strong> alcuni centri storici (Gallipoli, Otranto, Lecce) hanno Zone a Traffico Limitato. Verificate prima di entrare.</p>
-        <p><strong>Parcheggio a Villa MareBlu:</strong> avete parcheggio privato gratuito incluso nel soggiorno. Non dovrete mai cercare parcheggio!</p>
+        <p><strong>Parcheggio a Villa MareBlu:</strong> avete parcheggio gratuito incluso nel soggiorno, in comune per tutti gli appartamenti. Non dovrete mai cercare parcheggio!</p>
         <p><strong>Checklist arrivo:</strong> comunicate l'orario di arrivo almeno il giorno prima. Check-in dalle 15:00, ma siamo flessibili se possibile.</p>
       `,
       highlights: [
         'Fate benzina prima di Torre Vado',
         'Strade panoramiche, guidate con calma',
         'Attenzione ZTL nei centri storici',
-        'Parcheggio privato incluso'
+        'Parcheggio gratuito incluso'
       ]
     }
   ]

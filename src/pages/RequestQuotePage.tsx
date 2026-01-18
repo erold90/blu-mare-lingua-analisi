@@ -1,5 +1,8 @@
 import React, { useEffect } from 'react';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Home } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useMultiStepQuote } from '@/hooks/useMultiStepQuote';
 import { StepGuests } from '@/components/quote/StepGuests';
 import { StepDates } from '@/components/quote/StepDates';
@@ -12,6 +15,7 @@ import FAQSection from '@/components/faq/FAQSection';
 import { quoteFAQs } from '@/data/faqData';
 
 export default function RequestQuotePage() {
+  const navigate = useNavigate();
   const {
     currentStep,
     formData,
@@ -120,9 +124,20 @@ export default function RequestQuotePage() {
         <div className="container mx-auto px-4 py-3">
           <div className="max-w-6xl mx-auto">
             <div className="flex items-center justify-between text-xs sm:text-sm text-muted-foreground mb-2">
-              <span className="font-medium">
-                <span className="hidden sm:inline">Step </span>{currentStep}/{steps.length}: {steps[currentStep - 1]}
-              </span>
+              <div className="flex items-center gap-2 sm:gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/')}
+                  className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+                  title="Torna alla Home"
+                >
+                  <Home className="h-4 w-4" />
+                </Button>
+                <span className="font-medium">
+                  <span className="hidden sm:inline">Step </span>{currentStep}/{steps.length}: {steps[currentStep - 1]}
+                </span>
+              </div>
               <span className="tabular-nums">{Math.round((currentStep / steps.length) * 100)}%</span>
             </div>
             <Progress value={(currentStep / steps.length) * 100} className="h-1.5 sm:h-2" />

@@ -28,8 +28,8 @@ export const CtaSection = () => {
   }, []);
   
   return (
-    <section className="py-24 bg-gray-50">
-      <div ref={sectionRef} className="container mx-auto px-8">
+    <section className="py-24 bg-gray-50 overflow-hidden max-w-full">
+      <div ref={sectionRef} className="container mx-auto px-4 md:px-8 max-w-full">
         <div className={`max-w-5xl mx-auto text-center transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           
           {/* Header */}

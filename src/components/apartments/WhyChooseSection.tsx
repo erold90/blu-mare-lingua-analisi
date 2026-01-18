@@ -12,7 +12,7 @@ export const WhyChooseSection: React.FC = () => {
           <div className="text-4xl mb-4">🏖️</div>
           <h3 className="text-xl font-semibold mb-3">Posizione Privilegiata</h3>
           <p className="text-muted-foreground">
-            A soli 100 metri dalle splendide spiagge di Torre Vado, nel cuore del Salento
+            A soli 150 metri dalle splendide spiagge di Torre Vado, nel cuore del Salento
           </p>
         </div>
         <div className="text-center">

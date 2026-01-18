@@ -30,8 +30,8 @@ export const guideItinerario: GuideInfo = {
       title: 'Giorno 1: Arrivo e Relax a Torre Vado',
       content: `
         <p><strong>Arrivo a Villa MareBlu</strong> - Check-in dalle 15:00. Sistematevi nel vostro appartamento e prendete confidenza con gli spazi: terrazza, cucina, accesso al mare.</p>
-        <p><strong>Pomeriggio:</strong> Primo tuffo! Scendete alla scogliera a 100 metri o andate alla spiaggia di Torre Vado (5 min). Niente stress, solo relax.</p>
-        <p><strong>Sera:</strong> Passeggiata sul lungomare di Torre Vado. Aperitivo al tramonto e cena in uno dei ristoranti locali. Consigliamo pesce fresco al Ristorante Il Porto.</p>
+        <p><strong>Pomeriggio:</strong> Primo tuffo! Scendete alla scogliera a 150 metri o andate alla spiaggia di Torre Vado (5 min). Niente stress, solo relax.</p>
+        <p><strong>Sera:</strong> Passeggiata sul lungomare di Torre Vado. Aperitivo al tramonto e cena in uno dei ristoranti locali. Consigliamo pesce fresco al Ristorante Al Porticciolo o da Profumo di Mare.</p>
         <p><strong>Consiglio:</strong> comprate l'essenziale al supermercato per colazioni e spuntini. A Torre Vado trovate tutto.</p>
       `,
       highlights: [
@@ -80,7 +80,7 @@ export const guideItinerario: GuideInfo = {
       content: `
         <p><strong>Mattina:</strong> Giornata a <strong>Gallipoli</strong> (40 min). Partite dopo colazione. Parcheggiate fuori dal centro storico (parcheggi a pagamento) e attraversate il ponte verso l'isola.</p>
         <p><strong>Centro storico:</strong> Perdetevi nei vicoli del borgo antico. Visitate la Cattedrale di Sant'Agata, il Frantoio Ipogeo, le chiese barocche. Affacciatevi sui bastioni per viste mozzafiato.</p>
-        <p><strong>Pranzo:</strong> Trattoria La Puritate - istituzione locale per il pesce.</p>
+        <p><strong>Pranzo:</strong> Trattoria La Puritate - istituzione locale per il pesce. Prenotate in anticipo!</p>
         <p><strong>Pomeriggio:</strong> Spiaggia della Purità (in centro) o spiagge di Baia Verde (fuori città). Mare bellissimo!</p>
         <p><strong>Sera:</strong> Aperitivo sui bastioni al tramonto, poi cena a Gallipoli o rientro a Torre Vado. Se amate la vita notturna, Gallipoli è il posto giusto!</p>
       `,

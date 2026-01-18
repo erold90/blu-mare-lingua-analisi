@@ -73,7 +73,7 @@ const HeroSection = () => {
   const hasHeroImage = heroImageUrl !== null;
 
   return (
-    <section className="hero-section relative h-screen flex items-center justify-center overflow-hidden">
+    <section className="hero-section relative h-screen flex items-center justify-center overflow-hidden max-w-full">
       {/* Preload hero image for faster LCP */}
       {hasHeroImage && (
         <link

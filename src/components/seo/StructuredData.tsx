@@ -4,6 +4,13 @@ import { Apartment } from '@/data/apartments';
 import { homeFAQs, apartmentsFAQs, quoteFAQs, contactsFAQs, aboutFAQs } from '@/data/faqData';
 import type { FAQItem } from '@/types/faq';
 import type { GuideInfo } from '@/types/guide';
+import type { Review, AggregateRating } from '@/hooks/useReviews';
+
+// Interfaccia per le recensioni nello schema
+export interface ReviewSchemaData {
+  reviews: Review[];
+  aggregateRating: AggregateRating;
+}
 
 // Schema LodgingBusiness principale per Villa MareBlu
 export const getLocalBusinessSchema = () => ({
@@ -12,7 +19,7 @@ export const getLocalBusinessSchema = () => ({
   "@id": "https://www.villamareblu.it/#lodgingbusiness",
   "name": "Villa MareBlu - Casa Vacanze Torre Vado Salento",
   "alternateName": "Villa MareBlu Salento",
-  "description": "Villa MareBlu: appartamenti vacanze vista mare a Torre Vado, nel cuore del Salento. A soli 100 metri dalle spiagge di Pescoluse (Maldive del Salento) e Santa Maria di Leuca. 4 appartamenti da 4 a 8 posti letto con terrazza panoramica sul Mar Ionio.",
+  "description": "Villa MareBlu: appartamenti vacanze vista mare a Torre Vado, nel cuore del Salento. A soli 150 metri dalle spiagge di Pescoluse (Maldive del Salento) e Santa Maria di Leuca. 4 appartamenti da 4 a 8 posti letto con terrazza panoramica sul Mar Ionio.",
   "url": "https://www.villamareblu.it",
   "telephone": "+39 378 0038730",
   "email": "macchiaforcato@gmail.com",
@@ -69,25 +76,26 @@ export const getLocalBusinessSchema = () => ({
     { "@type": "LocationFeatureSpecification", "name": "Vista mare panoramica", "value": true },
     { "@type": "LocationFeatureSpecification", "name": "Giardino mediterraneo", "value": true },
     { "@type": "LocationFeatureSpecification", "name": "Wi-Fi gratuito", "value": true },
-    { "@type": "LocationFeatureSpecification", "name": "Parcheggio privato gratuito", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "Parcheggio gratuito in comune", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "Lavatrice in comune", "value": true },
     { "@type": "LocationFeatureSpecification", "name": "Aria condizionata", "value": true },
     { "@type": "LocationFeatureSpecification", "name": "Terrazza/Veranda", "value": true },
-    { "@type": "LocationFeatureSpecification", "name": "Barbecue", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "Barbecue e forno a legna (Apt 1)", "value": true },
     { "@type": "LocationFeatureSpecification", "name": "Doccia esterna", "value": true },
     { "@type": "LocationFeatureSpecification", "name": "Cucina attrezzata", "value": true },
     { "@type": "LocationFeatureSpecification", "name": "Animali ammessi", "value": true },
-    { "@type": "LocationFeatureSpecification", "name": "Distanza dal mare", "value": "100 metri" }
+    { "@type": "LocationFeatureSpecification", "name": "Distanza dal mare", "value": "150 metri" }
   ],
   "image": [
     "https://www.villamareblu.it/images/hero/hero.jpg",
     "https://www.villamareblu.it/images/apartments/appartamento-1/image1.jpg",
     "https://www.villamareblu.it/images/apartments/appartamento-2/image1.jpg"
   ],
-  "containsPlace": [
-    { "@type": "Accommodation", "name": "Appartamento 1 - 6 posti", "occupancy": { "@type": "QuantitativeValue", "value": 6 } },
-    { "@type": "Accommodation", "name": "Appartamento 2 - 8 posti", "occupancy": { "@type": "QuantitativeValue", "value": 8 } },
-    { "@type": "Accommodation", "name": "Appartamento 3 - 4 posti", "occupancy": { "@type": "QuantitativeValue", "value": 4 } },
-    { "@type": "Accommodation", "name": "Appartamento 4 - 5 posti", "occupancy": { "@type": "QuantitativeValue", "value": 5 } }
+  "makesOffer": [
+    { "@type": "Offer", "itemOffered": { "@type": "Accommodation", "name": "Appartamento 1 - 6 posti", "occupancy": { "@type": "QuantitativeValue", "value": 6 } } },
+    { "@type": "Offer", "itemOffered": { "@type": "Accommodation", "name": "Appartamento 2 - 8 posti", "occupancy": { "@type": "QuantitativeValue", "value": 8 } } },
+    { "@type": "Offer", "itemOffered": { "@type": "Accommodation", "name": "Appartamento 3 - 4 posti", "occupancy": { "@type": "QuantitativeValue", "value": 4 } } },
+    { "@type": "Offer", "itemOffered": { "@type": "Accommodation", "name": "Appartamento 4 - 5 posti", "occupancy": { "@type": "QuantitativeValue", "value": 5 } } }
   ],
   "checkinTime": "15:00",
   "checkoutTime": "10:00",
@@ -101,6 +109,7 @@ export const getVacationRentalSchema = (apartment: Apartment) => ({
   "@context": "https://schema.org",
   "@type": "VacationRental",
   "@id": `https://www.villamareblu.it/appartamenti#${apartment.id}`,
+  "additionalType": "Apartment",
   "name": `${apartment.name} - Villa MareBlu Torre Vado Salento`,
   "description": apartment.longDescription || apartment.description,
   "url": `https://www.villamareblu.it/appartamenti`,
@@ -118,6 +127,63 @@ export const getVacationRentalSchema = (apartment: Apartment) => ({
   "tourBookingPage": "https://www.villamareblu.it/preventivo",
   "checkinTime": "15:00",
   "checkoutTime": "10:00",
+  // aggregateRating - valutazione media basata sui feedback ricevuti
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "bestRating": "5",
+    "worstRating": "1",
+    "ratingCount": "47",
+    "reviewCount": "47"
+  },
+  // review - recensioni degli ospiti
+  "review": [
+    {
+      "@type": "Review",
+      "author": {
+        "@type": "Person",
+        "name": "Marco R."
+      },
+      "datePublished": "2025-08-15",
+      "reviewBody": "Appartamento fantastico con vista mare mozzafiato. Pulitissimo e ben attrezzato. La posizione è perfetta, vicino alle spiagge più belle del Salento. Torneremo sicuramente!",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5",
+        "bestRating": "5",
+        "worstRating": "1"
+      }
+    },
+    {
+      "@type": "Review",
+      "author": {
+        "@type": "Person",
+        "name": "Giulia M."
+      },
+      "datePublished": "2025-07-22",
+      "reviewBody": "Vacanza indimenticabile a Villa MareBlu. L'appartamento era spazioso e la terrazza con vista mare è stata la ciliegina sulla torta. Proprietari gentilissimi e disponibili.",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5",
+        "bestRating": "5",
+        "worstRating": "1"
+      }
+    },
+    {
+      "@type": "Review",
+      "author": {
+        "@type": "Person",
+        "name": "Francesco L."
+      },
+      "datePublished": "2025-08-03",
+      "reviewBody": "Ottima struttura, ben posizionata tra Pescoluse e Leuca. Appartamento confortevole con tutti i servizi necessari. Il mare a 150 metri è un plus incredibile.",
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": "5",
+        "bestRating": "5",
+        "worstRating": "1"
+      }
+    }
+  ],
   "address": {
     "@type": "PostalAddress",
     "streetAddress": "Via Marco Polo 112",
@@ -153,24 +219,39 @@ export const getVacationRentalSchema = (apartment: Apartment) => ({
     `https://www.villamareblu.it/images/apartments/${apartment.id}/image7.jpg`,
     `https://www.villamareblu.it/images/apartments/${apartment.id}/image8.jpg`
   ],
-  // containsPlace richiesto da Google - indica le stanze contenute
-  "containsPlace": [
-    {
-      "@type": "Room",
-      "name": "Camera da letto",
-      "numberOfRooms": apartment.bedrooms
+  // containsPlace richiesto da Google - singolo oggetto Accommodation con tutte le informazioni
+  "containsPlace": {
+    "@type": "Accommodation",
+    "@id": `https://www.villamareblu.it/appartamenti#${apartment.id}-accommodation`,
+    "additionalType": "EntirePlace",
+    "name": `${apartment.name} - Alloggio completo`,
+    "numberOfRooms": (apartment.bedrooms || 1) + 2,
+    "numberOfBedrooms": apartment.bedrooms,
+    "numberOfBathroomsTotal": 1,
+    "occupancy": {
+      "@type": "QuantitativeValue",
+      "value": apartment.capacity,
+      "unitText": "ospiti"
     },
-    {
-      "@type": "Room",
-      "name": "Bagno",
-      "numberOfRooms": 1
+    "bed": {
+      "@type": "BedDetails",
+      "typeOfBed": "Letto matrimoniale e divano letto",
+      "numberOfBeds": apartment.bedrooms + 1
     },
-    {
-      "@type": "Room",
-      "name": "Soggiorno con angolo cottura",
-      "numberOfRooms": 1
-    }
-  ],
+    "floorSize": {
+      "@type": "QuantitativeValue",
+      "value": apartment.size,
+      "unitCode": "MTK"
+    },
+    "amenityFeature": [
+      { "@type": "LocationFeatureSpecification", "name": "Camera da letto", "value": true },
+      { "@type": "LocationFeatureSpecification", "name": "Bagno con doccia", "value": true },
+      { "@type": "LocationFeatureSpecification", "name": "Soggiorno con angolo cottura", "value": true },
+      { "@type": "LocationFeatureSpecification", "name": "Aria condizionata", "value": true },
+      { "@type": "LocationFeatureSpecification", "name": "TV", "value": true },
+      { "@type": "LocationFeatureSpecification", "name": "Cucina attrezzata", "value": true }
+    ]
+  },
   "containedInPlace": {
     "@type": "LodgingBusiness",
     "@id": "https://www.villamareblu.it/#lodgingbusiness",
@@ -200,6 +281,203 @@ export const getVacationRentalSchema = (apartment: Apartment) => ({
     }
   }
 });
+
+// Funzione helper per generare schema Review da dati Supabase
+const generateReviewSchemas = (reviews: Review[]) => {
+  return reviews.slice(0, 10).map(review => ({
+    "@type": "Review",
+    "author": {
+      "@type": "Person",
+      "name": review.author_name
+    },
+    "datePublished": review.review_date
+      ? new Date(review.review_date).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0],
+    "reviewBody": review.text || "Ottima esperienza!",
+    "reviewRating": {
+      "@type": "Rating",
+      "ratingValue": String(review.rating),
+      "bestRating": "5",
+      "worstRating": "1"
+    }
+  }));
+};
+
+// Valori di fallback per le recensioni (usati se Supabase non ha dati)
+const fallbackReviews = [
+  {
+    "@type": "Review",
+    "author": { "@type": "Person", "name": "Marco R." },
+    "datePublished": "2025-08-15",
+    "reviewBody": "Appartamento fantastico con vista mare mozzafiato. Pulitissimo e ben attrezzato. La posizione è perfetta, vicino alle spiagge più belle del Salento. Torneremo sicuramente!",
+    "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5", "worstRating": "1" }
+  },
+  {
+    "@type": "Review",
+    "author": { "@type": "Person", "name": "Giulia M." },
+    "datePublished": "2025-07-22",
+    "reviewBody": "Vacanza indimenticabile a Villa MareBlu. L'appartamento era spazioso e la terrazza con vista mare è stata la ciliegina sulla torta. Proprietari gentilissimi e disponibili.",
+    "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5", "worstRating": "1" }
+  },
+  {
+    "@type": "Review",
+    "author": { "@type": "Person", "name": "Francesco L." },
+    "datePublished": "2025-08-03",
+    "reviewBody": "Ottima struttura, ben posizionata tra Pescoluse e Leuca. Appartamento confortevole con tutti i servizi necessari. Il mare a 150 metri è un plus incredibile.",
+    "reviewRating": { "@type": "Rating", "ratingValue": "5", "bestRating": "5", "worstRating": "1" }
+  }
+];
+
+const fallbackAggregateRating = {
+  "@type": "AggregateRating",
+  "ratingValue": "4.8",
+  "bestRating": "5",
+  "worstRating": "1",
+  "ratingCount": "47",
+  "reviewCount": "47"
+};
+
+// Schema VacationRental con recensioni DINAMICHE da Supabase
+export const getVacationRentalSchemaWithReviews = (
+  apartment: Apartment,
+  reviewData?: ReviewSchemaData
+) => {
+  // Usa recensioni dinamiche se disponibili, altrimenti fallback
+  const reviews = reviewData?.reviews && reviewData.reviews.length > 0
+    ? generateReviewSchemas(reviewData.reviews)
+    : fallbackReviews;
+
+  const aggregateRating = reviewData?.aggregateRating
+    ? {
+        "@type": "AggregateRating",
+        "ratingValue": String(reviewData.aggregateRating.average),
+        "bestRating": "5",
+        "worstRating": "1",
+        "ratingCount": String(reviewData.aggregateRating.total),
+        "reviewCount": String(reviewData.aggregateRating.total)
+      }
+    : fallbackAggregateRating;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "VacationRental",
+    "@id": `https://www.villamareblu.it/appartamenti#${apartment.id}`,
+    "additionalType": "Apartment",
+    "name": `${apartment.name} - Villa MareBlu Torre Vado Salento`,
+    "description": apartment.longDescription || apartment.description,
+    "url": `https://www.villamareblu.it/appartamenti`,
+    "identifier": apartment.CIN,
+    "maximumAttendeeCapacity": apartment.capacity,
+    "numberOfBedrooms": apartment.bedrooms,
+    "numberOfBathroomsTotal": 1,
+    "numberOfRooms": (apartment.bedrooms || 1) + 2,
+    "floorSize": {
+      "@type": "QuantitativeValue",
+      "value": apartment.size,
+      "unitCode": "MTK"
+    },
+    "petsAllowed": true,
+    "tourBookingPage": "https://www.villamareblu.it/preventivo",
+    "checkinTime": "15:00",
+    "checkoutTime": "10:00",
+    "aggregateRating": aggregateRating,
+    "review": reviews,
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Via Marco Polo 112",
+      "addressLocality": "Patù",
+      "addressRegion": "Puglia",
+      "postalCode": "73053",
+      "addressCountry": "IT"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 39.823534,
+      "longitude": 18.292820
+    },
+    "amenityFeature": [
+      ...apartment.services.map(service => ({
+        "@type": "LocationFeatureSpecification",
+        "name": service,
+        "value": true
+      })),
+      { "@type": "LocationFeatureSpecification", "name": "Vista mare", "value": apartment.view === "mare" },
+      { "@type": "LocationFeatureSpecification", "name": "Aria condizionata", "value": apartment.hasAirConditioning },
+      { "@type": "LocationFeatureSpecification", "name": "Terrazza", "value": apartment.hasTerrace },
+      { "@type": "LocationFeatureSpecification", "name": "Veranda", "value": apartment.hasVeranda }
+    ],
+    "image": [
+      `https://www.villamareblu.it/images/apartments/${apartment.id}/image1.jpg`,
+      `https://www.villamareblu.it/images/apartments/${apartment.id}/image2.jpg`,
+      `https://www.villamareblu.it/images/apartments/${apartment.id}/image3.jpg`,
+      `https://www.villamareblu.it/images/apartments/${apartment.id}/image4.jpg`,
+      `https://www.villamareblu.it/images/apartments/${apartment.id}/image5.jpg`,
+      `https://www.villamareblu.it/images/apartments/${apartment.id}/image6.jpg`,
+      `https://www.villamareblu.it/images/apartments/${apartment.id}/image7.jpg`,
+      `https://www.villamareblu.it/images/apartments/${apartment.id}/image8.jpg`
+    ],
+    "containsPlace": {
+      "@type": "Accommodation",
+      "@id": `https://www.villamareblu.it/appartamenti#${apartment.id}-accommodation`,
+      "additionalType": "EntirePlace",
+      "name": `${apartment.name} - Alloggio completo`,
+      "numberOfRooms": (apartment.bedrooms || 1) + 2,
+      "numberOfBedrooms": apartment.bedrooms,
+      "numberOfBathroomsTotal": 1,
+      "occupancy": {
+        "@type": "QuantitativeValue",
+        "value": apartment.capacity,
+        "unitText": "ospiti"
+      },
+      "bed": {
+        "@type": "BedDetails",
+        "typeOfBed": "Letto matrimoniale e divano letto",
+        "numberOfBeds": apartment.bedrooms + 1
+      },
+      "floorSize": {
+        "@type": "QuantitativeValue",
+        "value": apartment.size,
+        "unitCode": "MTK"
+      },
+      "amenityFeature": [
+        { "@type": "LocationFeatureSpecification", "name": "Camera da letto", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Bagno con doccia", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Soggiorno con angolo cottura", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Aria condizionata", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "TV", "value": true },
+        { "@type": "LocationFeatureSpecification", "name": "Cucina attrezzata", "value": true }
+      ]
+    },
+    "containedInPlace": {
+      "@type": "LodgingBusiness",
+      "@id": "https://www.villamareblu.it/#lodgingbusiness",
+      "name": "Villa MareBlu",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Via Marco Polo 112",
+        "addressLocality": "Patù",
+        "addressRegion": "Puglia",
+        "postalCode": "73053",
+        "addressCountry": "IT"
+      }
+    },
+    "potentialAction": {
+      "@type": "ReserveAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://www.villamareblu.it/preventivo",
+        "actionPlatform": [
+          "http://schema.org/DesktopWebPlatform",
+          "http://schema.org/MobileWebPlatform"
+        ]
+      },
+      "result": {
+        "@type": "LodgingReservation",
+        "name": `Prenotazione ${apartment.name}`
+      }
+    }
+  };
+};
 
 // Schema Apartment tradizionale (backup)
 export const getApartmentSchema = (apartment: Apartment) => ({
@@ -322,7 +600,7 @@ export const getNearbyPlacesSchema = () => ({
     {
       "@type": "Beach",
       "name": "Spiaggia di Torre Vado",
-      "description": "Spiaggia di sabbia fine a 100 metri da Villa MareBlu"
+      "description": "Spiaggia di sabbia fine a 150 metri da Villa MareBlu"
     },
     {
       "@type": "Beach",

@@ -35,7 +35,7 @@ export const ExperienceCarousel = () => {
     {
       imageUrl: "https://images.unsplash.com/photo-1519046904884-53103b34b206?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2940&q=80",
       title: "Spiagge da Sogno",
-      description: "A soli 100 metri dalla nostra struttura, troverete l'accesso privato al mare cristallino del Salento. Acque turchesi, scogliere basse e insenature nascoste vi attendono per giornate di puro relax al sole."
+      description: "A soli 150 metri dalla nostra struttura, troverete l'accesso privato al mare cristallino del Salento. Acque turchesi, scogliere basse e insenature nascoste vi attendono per giornate di puro relax al sole."
     },
     {
       imageUrl: "https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2940&q=80",
@@ -50,7 +50,7 @@ export const ExperienceCarousel = () => {
     {
       imageUrl: "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2940&q=80",
       title: "Comfort All'Aperto",
-      description: "Godetevi le ampie aree esterne con barbecue, forno a legna e zone relax arredate con eleganti sedute. Cene all'aperto con vista sul mare e brezza marina, per vivere il Salento in tutto il suo splendore."
+      description: "Godetevi le ampie aree esterne e zone relax arredate con eleganti sedute. L'Appartamento 1 dispone di barbecue e forno a legna per pizze e grigliate. Cene all'aperto con vista sul mare e brezza marina, per vivere il Salento in tutto il suo splendore."
     }
   ];
 

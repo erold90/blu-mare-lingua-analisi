@@ -17,8 +17,8 @@ const AboutPage = () => {
   return (
     <div className="container px-4 py-8 md:py-12">
       <SEOHead
-        title="Chi Siamo - Villa MareBlu | Casa Vacanze 100m dal Mare Torre Vado | Tra Pescoluse e Leuca"
-        description="Villa MareBlu Torre Vado: 4 appartamenti vista mare per 23 ospiti, a 100 metri dal mare. Tra Pescoluse (Maldive del Salento) e Santa Maria di Leuca. Parcheggio privato, giardino, animali ammessi."
+        title="Chi Siamo - Villa MareBlu | Casa Vacanze 150m dal Mare Torre Vado | Tra Pescoluse e Leuca"
+        description="Villa MareBlu Torre Vado: 4 appartamenti vista mare per 23 ospiti, a 150 metri dal mare. Tra Pescoluse (Maldive del Salento) e Santa Maria di Leuca. Parcheggio privato, giardino, animali ammessi."
         keywords={getPageSpecificKeywords('about')}
         canonicalUrl="/chi-siamo"
         structuredData={structuredData}
@@ -41,7 +41,7 @@ const AboutPage = () => {
         <div className="prose prose-lg max-w-none">
           <p className="text-lg mb-6 leading-relaxed">
             Villa MareBlu è una struttura ricettiva situata a <strong>Torre Vado</strong>, nel comune di Patù,
-            nel cuore del <strong>Salento</strong>. A soli 100 metri dal mare con accesso privato su scogliera bassa,
+            nel cuore del <strong>Salento</strong>. A soli 150 metri dal mare con accesso privato su scogliera bassa,
             offriamo <strong>4 appartamenti indipendenti</strong> per un totale di <strong>23 posti letto</strong>,
             ideali per famiglie, gruppi di amici o più nuclei familiari che desiderano trascorrere le vacanze insieme
             mantenendo la propria privacy.
@@ -61,7 +61,7 @@ const AboutPage = () => {
             </div>
             <div className="bg-primary/5 p-4 rounded-lg text-center">
               <Waves className="h-8 w-8 text-primary mx-auto mb-2" />
-              <div className="text-2xl font-bold text-primary">100m</div>
+              <div className="text-2xl font-bold text-primary">150m</div>
               <div className="text-sm text-muted-foreground">Dal mare</div>
             </div>
             <div className="bg-primary/5 p-4 rounded-lg text-center">
@@ -95,7 +95,7 @@ const AboutPage = () => {
             <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
               <h3 className="font-semibold text-lg mb-2">Appartamento 3 <span className="text-primary">(4 posti)</span></h3>
               <p className="text-muted-foreground text-sm">
-                Piano terra con terrazzo vista mare. Una camera da letto, soggiorno con angolo cottura,
+                Primo piano con terrazzo vista mare. Una camera da letto, soggiorno con angolo cottura,
                 aria condizionata. Perfetto per coppie o piccole famiglie.
               </p>
             </div>
@@ -114,12 +114,13 @@ const AboutPage = () => {
           </p>
           <ul className="list-disc pl-6 mb-6">
             <li><strong>Wi-Fi gratuito</strong> ad alta velocità in tutta la struttura</li>
-            <li><strong>Parcheggio privato</strong> gratuito per ogni appartamento</li>
-            <li><strong>Cucina completamente attrezzata</strong> con frigorifero, fornelli, forno e utensili</li>
+            <li><strong>Parcheggio</strong> in comune, ampio e sicuro all'interno del residence</li>
+            <li><strong>Cucina completamente attrezzata</strong> con piano cottura a gas, frigorifero, forno, stoviglie e utensili</li>
             <li><strong>Terrazza o veranda privata</strong> con tavolo, sedie e sdraio</li>
             <li><strong>Doccia esterna</strong> per rinfrescarsi dopo il mare</li>
-            <li><strong>Area barbecue</strong> condivisa</li>
+            <li><strong>Lavatrice</strong> in comune</li>
             <li><strong>TV</strong> in ogni appartamento</li>
+            <li><strong>Barbecue e forno a legna</strong> (solo Appartamento 1)</li>
             <li><strong>Biancheria da letto e bagno</strong> disponibile su richiesta</li>
           </ul>
 
@@ -145,7 +146,7 @@ const AboutPage = () => {
             <li><strong>Prenotazione diretta</strong> - nessuna commissione, miglior prezzo garantito</li>
             <li><strong>Flessibilità</strong> - possibilità di prenotare da 1 a 4 appartamenti</li>
             <li><strong>Privacy</strong> - ogni appartamento è completamente indipendente</li>
-            <li><strong>Posizione unica</strong> - mare a 100 metri, tranquillità garantita</li>
+            <li><strong>Posizione unica</strong> - mare a 150 metri, tranquillità garantita</li>
             <li><strong>Assistenza dedicata</strong> - risposta entro 2 ore, supporto durante il soggiorno</li>
             <li><strong>Animali ammessi</strong> - i vostri amici a quattro zampe sono i benvenuti</li>
           </ul>

@@ -39,11 +39,11 @@ const AppLayout = ({ children }: AppLayoutProps) => {
     <CookieProvider>
       <AnalyticsProvider>
         <SidebarProvider defaultOpen={false}>
-          <div className="min-h-screen bg-background flex w-full">
+          <div className="min-h-screen bg-background flex w-full overflow-x-hidden max-w-full">
             <AppSidebar />
-            <SidebarInset className="flex-1">
+            <SidebarInset className="flex-1 overflow-x-hidden max-w-full">
               <AppHeader />
-              <main className="flex-1 p-4">
+              <main className="flex-1 p-4 overflow-x-hidden max-w-full">
                 {children}
               </main>
             </SidebarInset>

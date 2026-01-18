@@ -16,7 +16,7 @@ export const LocationSection = () => {
                 <div className="flex items-start space-x-2 mb-4">
                   <MapPin className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                   <p className="text-muted-foreground">
-                    Via Marco Polo 112, Patù (LE), Salento, Puglia - A soli 100 metri dal mare con accesso privato su scogliera bassa.
+                    Via Marco Polo 112, Patù (LE), Salento, Puglia - A soli 150 metri dal mare con accesso privato su scogliera bassa.
                   </p>
                 </div>
                 <p className="text-muted-foreground mb-4">

@@ -11,15 +11,16 @@ import { getAllHomeSchemas } from "@/components/seo/StructuredData";
 import { getPageSpecificKeywords } from "@/utils/seo/seoConfig";
 import FAQSection from "@/components/faq/FAQSection";
 import { homeFAQs } from "@/data/faqData";
+import ReviewsSection from "@/components/home/ReviewsSection";
 
 const Index = () => {
   const structuredData = getAllHomeSchemas();
 
   return (
-    <div className="flex flex-col relative overflow-hidden">
+    <div className="flex flex-col relative overflow-x-hidden max-w-full w-full">
       <SEOHead
-        title="Villa MareBlu Torre Vado | Casa Vacanze 100m dal Mare Salento | Appartamenti Pescoluse Leuca"
-        description="Villa MareBlu Torre Vado: 4 appartamenti vacanze a 100 metri dal mare, vicino Pescoluse (Maldive del Salento) e Leuca. Da 4 a 8 posti, terrazza vista mare, parcheggio privato, WiFi, animali ammessi. Prenota diretto e risparmia!"
+        title="Villa MareBlu Torre Vado | Casa Vacanze 150m dal Mare Salento | Appartamenti Pescoluse Leuca"
+        description="Villa MareBlu Torre Vado: 4 appartamenti vacanze a 150 metri dal mare, vicino Pescoluse (Maldive del Salento) e Leuca. Da 4 a 8 posti, terrazza vista mare, parcheggio privato, WiFi, animali ammessi. Prenota diretto e risparmia!"
         keywords={getPageSpecificKeywords('home')}
         canonicalUrl="/"
         structuredData={structuredData}
@@ -55,6 +56,10 @@ const Index = () => {
             title="Domande Frequenti su Villa MareBlu"
             subtitle="Tutto quello che devi sapere per la tua vacanza nel Salento"
           />
+        </div>
+
+        <div className="animate-fade-in animation-delay-750">
+          <ReviewsSection />
         </div>
 
         <div className="animate-fade-in animation-delay-800">

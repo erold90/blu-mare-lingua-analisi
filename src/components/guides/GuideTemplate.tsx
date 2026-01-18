@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { GuideInfo, guideCategories } from '@/types/guide';
 import SEOHead from '@/components/seo/SEOHead';
 import { getArticleSchema, getBreadcrumbSchema } from '@/components/seo/StructuredData';
+import { getGuideKeywords } from '@/utils/seo/seoConfig';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -68,7 +69,7 @@ export const GuideTemplate: React.FC<GuideTemplateProps> = ({ guide }) => {
       <SEOHead
         title={`${guide.title} | Guida Salento | Villa MareBlu Torre Vado`}
         description={guide.description}
-        keywords={guide.keywords.join(', ')}
+        keywords={`${guide.keywords.join(', ')}, ${getGuideKeywords(guide.slug)}`}
         canonicalUrl={`/guide/${guide.slug}`}
         structuredData={structuredData}
         ogTitle={guide.title}
@@ -226,7 +227,7 @@ export const GuideTemplate: React.FC<GuideTemplateProps> = ({ guide }) => {
                 {guide.ctaText || 'Prenota la tua vacanza a Torre Vado'}
               </h3>
               <p className="text-muted-foreground mb-6 max-w-xl mx-auto">
-                Villa MareBlu offre 4 appartamenti vista mare a soli 100 metri dalla spiaggia.
+                Villa MareBlu offre 4 appartamenti vista mare a soli 150 metri dalla spiaggia.
                 Prenota direttamente e risparmia fino al 15% rispetto alle piattaforme.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

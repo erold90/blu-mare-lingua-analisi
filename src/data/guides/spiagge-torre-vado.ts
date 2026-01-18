@@ -23,7 +23,7 @@ export const guideSpiagge: GuideInfo = {
     'dove fare il bagno torre vado'
   ],
   relatedGuides: ['cosa-fare-torre-vado', 'ristoranti-salento', 'come-arrivare-torre-vado'],
-  ctaText: 'Prenota il tuo soggiorno a 100 metri dal mare',
+  ctaText: 'Prenota il tuo soggiorno a 150 metri dal mare',
   sections: [
     {
       id: 'pescoluse',
@@ -61,12 +61,12 @@ export const guideSpiagge: GuideInfo = {
       id: 'scogliera-villa',
       title: '3. Scogliera privata Villa MareBlu',
       content: `
-        <p>A soli <strong>100 metri da Villa MareBlu</strong> c'è un accesso privato su <strong>scogliera bassa</strong>, perfetto per chi ama tuffarsi direttamente in un mare limpidissimo. L'acqua è profonda e cristallina, ideale per <strong>snorkeling</strong> tra i pesci colorati.</p>
+        <p>A soli <strong>150 metri da Villa MareBlu</strong> c'è un accesso privato su <strong>scogliera bassa</strong>, perfetto per chi ama tuffarsi direttamente in un mare limpidissimo. L'acqua è profonda e cristallina, ideale per <strong>snorkeling</strong> tra i pesci colorati.</p>
         <p>Questa è la soluzione perfetta per chi vuole evitare la folla delle spiagge di sabbia e godersi il mare in totale tranquillità. Portate maschera e boccaglio: i fondali sono ricchi di vita marina!</p>
         <p><strong>Consiglio:</strong> perfetta per il bagno mattutino prima di colazione o al tramonto quando i colori sono magici.</p>
       `,
       highlights: [
-        'Distanza da Villa MareBlu: 2 minuti a piedi (100m)',
+        'Distanza da Villa MareBlu: 2 minuti a piedi (150m)',
         'Accesso riservato agli ospiti',
         'Ideale per snorkeling e tuffi',
         'Zero folla, massima privacy'
@@ -163,8 +163,8 @@ export const guideSpiagge: GuideInfo = {
       content: `
         <p><strong>Quando andare:</strong> giugno e settembre sono i mesi ideali - mare caldo, meno folla, prezzi migliori. Agosto è molto affollato, arrivate presto la mattina.</p>
         <p><strong>Cosa portare:</strong> crema solare alta protezione (il sole del Salento è forte!), maschera e boccaglio per lo snorkeling, scarpe da scoglio per le calette rocciose.</p>
-        <p><strong>Parcheggio:</strong> in alta stagione i parcheggi vicino alle spiagge sono a pagamento (€3-5 al giorno). Villa MareBlu offre parcheggio privato gratuito da cui potete partire per le spiagge.</p>
-        <p><strong>Da Villa MareBlu:</strong> con il parcheggio privato e la posizione centrale, potete raggiungere tutte queste spiagge in pochi minuti. La sera tornate a casa, fate una doccia esterna rinfrescante e godetevi l'aperitivo in terrazza!</p>
+        <p><strong>Parcheggio:</strong> in alta stagione i parcheggi vicino alle spiagge sono a pagamento (€3-5 al giorno). Villa MareBlu offre parcheggio gratuito da cui potete partire per le spiagge.</p>
+        <p><strong>Da Villa MareBlu:</strong> con il parcheggio gratuito e la posizione centrale, potete raggiungere tutte queste spiagge in pochi minuti. La sera tornate a casa, fate una doccia esterna rinfrescante e godetevi l'aperitivo in terrazza!</p>
       `,
       highlights: [
         'Giugno e settembre: mesi ideali',

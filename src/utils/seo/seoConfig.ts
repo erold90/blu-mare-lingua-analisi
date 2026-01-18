@@ -101,7 +101,7 @@ export const seoKeywords = {
   ],
   // Ultra-local (distanze specifiche)
   ultraLocal: [
-    "casa vacanze 100 metri dal mare salento",
+    "casa vacanze 150 metri dal mare salento",
     "appartamento 5 minuti maldive del salento",
     "villa vicino spiaggia pescoluse",
     "casa vacanze a piedi dal mare torre vado",
@@ -155,11 +155,89 @@ export const seoKeywords = {
     "Affitto Villa Leuca"
   ],
   adDescriptions: [
-    "Villa MareBlu: appartamenti vista mare a Torre Vado. A 100m dalle Maldive del Salento. Prenota ora!",
+    "Villa MareBlu: appartamenti vista mare a Torre Vado. A 150m dalle Maldive del Salento. Prenota ora!",
     "Casa vacanze fronte mare nel Salento. Vista panoramica, giardino, parcheggio. Prenota diretto!",
     "Vacanze da sogno vicino Pescoluse e Leuca. Appartamenti 4-8 persone con terrazza sul mare.",
     "La tua villa sul mare a Torre Vado. Spiagge cristalline del Salento a 2 minuti a piedi!"
-  ]
+  ],
+  // Keywords specifiche per le guide turistiche
+  guides: {
+    spiagge: [
+      "spiagge torre vado",
+      "spiagge pescoluse maldive salento",
+      "mare cristallino puglia",
+      "spiagge sabbia bianca salento",
+      "migliori spiagge salento",
+      "spiagge vicino leuca",
+      "spiaggia marina di pescoluse",
+      "baia torre vado spiaggia",
+      "spiagge bambini salento",
+      "spiagge libere torre vado",
+      "mare più bello puglia",
+      "acque cristalline salento"
+    ],
+    ristoranti: [
+      "dove mangiare torre vado",
+      "ristoranti tipici salento",
+      "cucina salentina",
+      "ristoranti pesce fresco leuca",
+      "trattorie pugliesi",
+      "migliori ristoranti pescoluse",
+      "mangiare bene salento",
+      "piatti tipici puglia",
+      "orecchiette salento",
+      "friselle pugliesi",
+      "pasticciotto leccese",
+      "vino primitivo salento"
+    ],
+    cosaFare: [
+      "cosa fare torre vado",
+      "escursioni salento",
+      "attività torre vado",
+      "gite in barca leuca",
+      "grotte marine salento",
+      "borghi da visitare puglia",
+      "itinerari salento",
+      "sport acquatici pescoluse",
+      "snorkeling torre vado",
+      "kayak salento",
+      "visitare otranto",
+      "visitare gallipoli"
+    ],
+    comeArrivare: [
+      "come arrivare torre vado",
+      "aeroporto brindisi salento",
+      "aeroporto bari puglia",
+      "treno lecce salento",
+      "noleggio auto puglia",
+      "indicazioni torre vado",
+      "distanza brindisi torre vado",
+      "come raggiungere pescoluse",
+      "trasporti salento",
+      "bus torre vado",
+      "taxi aeroporto brindisi"
+    ],
+    itinerario: [
+      "itinerario salento 7 giorni",
+      "vacanza puglia una settimana",
+      "cosa vedere salento",
+      "tour salento completo",
+      "programma vacanza puglia",
+      "salento in 7 giorni",
+      "viaggio salento itinerario",
+      "guida completa salento",
+      "vacanza perfetta puglia",
+      "organizzare viaggio salento"
+    ],
+    index: [
+      "guida turistica salento",
+      "informazioni torre vado",
+      "guida vacanze puglia",
+      "consigli viaggio salento",
+      "tutto su torre vado",
+      "guida completa pescoluse leuca"
+    ]
+  }
 };
 
 export const getAllKeywords = (): string => {
@@ -224,3 +302,24 @@ export const getLocationKeywords = (location: string): string => {
 
 export const getGoogleAdsTitles = (): string[] => seoKeywords.adTitles;
 export const getGoogleAdsDescriptions = (): string[] => seoKeywords.adDescriptions;
+
+// Keywords specifiche per le guide turistiche
+export const getGuideKeywords = (guideSlug: string): string => {
+  const baseKeywords = [...seoKeywords.primary.slice(0, 3), ...seoKeywords.local.slice(0, 5)];
+
+  const guideMap: Record<string, keyof typeof seoKeywords.guides> = {
+    'spiagge-torre-vado': 'spiagge',
+    'ristoranti-salento': 'ristoranti',
+    'cosa-fare-torre-vado': 'cosaFare',
+    'come-arrivare-torre-vado': 'comeArrivare',
+    'itinerario-7-giorni-salento': 'itinerario'
+  };
+
+  const guideKey = guideMap[guideSlug];
+  if (guideKey && seoKeywords.guides[guideKey]) {
+    return [...baseKeywords, ...seoKeywords.guides[guideKey]].join(", ");
+  }
+
+  // Default per indice guide
+  return [...baseKeywords, ...seoKeywords.guides.index].join(", ");
+};
