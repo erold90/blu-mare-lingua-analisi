@@ -259,37 +259,30 @@ export const useMultiStepQuote = () => {
     return { required: false, message: '' };
   }, [isFerragostoOnSaturday]);
 
-  const calculatePrice = useCallback(async () => {
+  const calculatePrice = useCallback(async (retryCount = 0): Promise<any> => {
+    const MAX_RETRIES = 2;
+
     if (!formData.selectedApartments.length || !formData.checkIn || !formData.checkOut) {
-      return {
-        apartmentPrices: [],
-        servicesTotal: 0,
-        subtotal: 0,
-        finalDiscount: 0,
-        discountType: 'none' as const,
-        total: 0,
-        deposit: 0,
-        balance: 0
-      };
+      throw new Error('Dati mancanti per il calcolo del preventivo');
     }
 
-    try {
-      const params = {
-        apartments: formData.selectedApartments.map(id => parseInt(id)),
-        checkin: formData.checkIn,
-        checkout: formData.checkOut,
-        adults: formData.adults,
-        children: formData.children,
-        childrenNoBed: formData.childrenWithParents.filter(Boolean).length,
-        hasPet: formData.hasPets,
-        petApartment: undefined,
-        petCount: formData.petCount || 1,
-        needsLinen: formData.requestLinen
-      };
+    const params = {
+      apartments: formData.selectedApartments.map(id => parseInt(id)),
+      checkin: formData.checkIn,
+      checkout: formData.checkOut,
+      adults: formData.adults,
+      children: formData.children,
+      childrenNoBed: formData.childrenWithParents.filter(Boolean).length,
+      hasPet: formData.hasPets,
+      petApartment: undefined,
+      petCount: formData.petCount || 1,
+      needsLinen: formData.requestLinen
+    };
 
+    try {
       const result = await calculateQuote(params);
-      
-      if (result) {
+
+      if (result && result.finalTotal > 0) {
         return {
           apartmentPrices: result.apartmentDetails.map(detail => ({
             apartmentId: detail.apartmentId.toString(),
@@ -311,20 +304,21 @@ export const useMultiStepQuote = () => {
           balance: result.balance
         };
       }
-    } catch (error) {
-      // Handle error silently
-    }
 
-    return {
-      apartmentPrices: [],
-      servicesTotal: 0,
-      subtotal: 0,
-      finalDiscount: 0,
-      discountType: 'none' as const,
-      total: 0,
-      deposit: 0,
-      balance: 0
-    };
+      // Se il risultato è null o total è 0, considera come errore
+      throw new Error('Impossibile calcolare il prezzo per il periodo selezionato');
+
+    } catch (error) {
+      // Retry automatico
+      if (retryCount < MAX_RETRIES) {
+        // Attendi un po' prima di riprovare (500ms, 1000ms)
+        await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 500));
+        return calculatePrice(retryCount + 1);
+      }
+
+      // Dopo MAX_RETRIES, lancia l'errore
+      throw error;
+    }
   }, [formData, calculateQuote]);
 
   const saveQuoteToDatabase = useCallback(async () => {
