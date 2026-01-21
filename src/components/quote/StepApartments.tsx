@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Home, Users, MapPin, Eye, AlertCircle, CheckCircle2, Euro, Images } from 'lucide-react';
+import { Home, Users, MapPin, Eye, AlertCircle, CheckCircle2, Euro, Images, Loader2 } from 'lucide-react';
 import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 import { useDynamicQuote } from '@/hooks/useDynamicQuote';
 import { PricingService } from '@/services/supabase/dynamicPricingService';
@@ -67,6 +67,7 @@ const toShortId = (fullId: string) => fullId.replace('appartamento-', '');
 export default function StepApartments({ formData, updateFormData, onNext, onPrev, getBedsNeeded, isApartmentAvailable, prenotazioni }: StepApartmentsProps) {
   const [availabilityStatus, setAvailabilityStatus] = useState<Record<string, boolean>>({});
   const [apartmentPrices, setApartmentPrices] = useState<Record<string, number>>({});
+  const [isCheckingAvailability, setIsCheckingAvailability] = useState(true); // Inizia in loading
   const [selectedApartmentForDetails, setSelectedApartmentForDetails] = useState<Apartment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const bedsNeeded = getBedsNeeded();
@@ -78,16 +79,18 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
   const lastAvailabilityKey = useRef('');
   const availabilityKey = `${formData.checkIn}-${formData.checkOut}`;
 
-  // Controlla la disponibilità dinamicamente per tutti gli appartamenti
+  // Controlla la disponibilità dinamicamente per tutti gli appartamenti - IN PARALLELO
   useEffect(() => {
     if (!formData.checkIn || !formData.checkOut) {
       return;
     }
 
-    // Se la chiave è cambiata, resetta il flag
+    // Se la chiave è cambiata, resetta il flag e lo stato
     if (lastAvailabilityKey.current !== availabilityKey) {
       hasCheckedAvailability.current = false;
       lastAvailabilityKey.current = availabilityKey;
+      setIsCheckingAvailability(true); // Resetta loading quando cambiano le date
+      setAvailabilityStatus({}); // Resetta lo stato
     }
 
     // Evita chiamate duplicate
@@ -95,35 +98,61 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
     hasCheckedAvailability.current = true;
 
     const checkAllAvailability = async () => {
-      const newStatus: Record<string, boolean> = {};
-      const newPrices: Record<string, number> = {};
+      setIsCheckingAvailability(true);
 
-      for (const apartment of apartments) {
-        try {
-          const available = await isApartmentAvailable(apartment.id, formData.checkIn, formData.checkOut);
-          newStatus[apartment.id] = available;
-
-          // Calcola il prezzo solo se l'appartamento è disponibile
-          if (available) {
-            const price = await getPriceForPeriod(parseInt(apartment.id), formData.checkIn, formData.checkOut);
-            if (price) {
-              // Calcola prezzo per notte
-              const checkIn = new Date(formData.checkIn);
-              const checkOut = new Date(formData.checkOut);
-              const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-              const pricePerNight = Math.round(price / nights);
-              // Applica sconto del 10% (per sconti finali e arrotondamenti)
-              const discountedPrice = Math.round(pricePerNight * 0.9);
-              newPrices[apartment.id] = discountedPrice;
-            }
+      try {
+        // Esegui TUTTI i controlli in PARALLELO invece che sequenzialmente
+        const availabilityPromises = apartments.map(async (apartment) => {
+          try {
+            const available = await isApartmentAvailable(apartment.id, formData.checkIn, formData.checkOut);
+            return { id: apartment.id, available };
+          } catch {
+            return { id: apartment.id, available: false };
           }
-        } catch (error) {
-          newStatus[apartment.id] = false;
-        }
-      }
+        });
 
-      setAvailabilityStatus(newStatus);
-      setApartmentPrices(newPrices);
+        const availabilityResults = await Promise.all(availabilityPromises);
+
+        // Costruisci lo stato disponibilità
+        const newStatus: Record<string, boolean> = {};
+        availabilityResults.forEach(result => {
+          newStatus[result.id] = result.available;
+        });
+
+        // Aggiorna subito lo stato disponibilità (ISTANTANEO)
+        setAvailabilityStatus(newStatus);
+        setIsCheckingAvailability(false);
+
+        // Poi calcola i prezzi in background (non blocca la UI)
+        const pricePromises = apartments
+          .filter(apt => newStatus[apt.id]) // Solo appartamenti disponibili
+          .map(async (apartment) => {
+            try {
+              const price = await getPriceForPeriod(parseInt(apartment.id), formData.checkIn, formData.checkOut);
+              if (price) {
+                const checkIn = new Date(formData.checkIn);
+                const checkOut = new Date(formData.checkOut);
+                const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+                const pricePerNight = Math.round(price / nights);
+                const discountedPrice = Math.round(pricePerNight * 0.9);
+                return { id: apartment.id, price: discountedPrice };
+              }
+            } catch {
+              // Ignora errori prezzi
+            }
+            return null;
+          });
+
+        const priceResults = await Promise.all(pricePromises);
+        const newPrices: Record<string, number> = {};
+        priceResults.forEach(result => {
+          if (result) newPrices[result.id] = result.price;
+        });
+        setApartmentPrices(newPrices);
+
+      } catch {
+        setIsCheckingAvailability(false);
+      }
     };
 
     checkAllAvailability();
@@ -229,8 +258,9 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
       {/* Apartments Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 max-w-6xl mx-auto">
         {apartments.map(apartment => {
-          // Usa la disponibilità dinamica dal database
-          const isAvailable = availabilityStatus[apartment.id] ?? true;
+          // Stato: loading, disponibile, o non disponibile
+          const isLoading = isCheckingAvailability && availabilityStatus[apartment.id] === undefined;
+          const isAvailable = !isLoading && (availabilityStatus[apartment.id] ?? false); // Default FALSE durante loading
 
           const isSelected = formData.selectedApartments.includes(apartment.id);
           const bookingInfo = getBookingInfo(apartment.id);
@@ -239,13 +269,15 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
             <Card
               key={apartment.id}
               className={`relative transition-all duration-200 ${
-                !isAvailable
-                  ? 'opacity-50 grayscale'
-                  : isSelected
-                    ? 'ring-2 ring-primary shadow-lg'
-                    : 'hover:shadow-md cursor-pointer'
+                isLoading
+                  ? 'opacity-70'
+                  : !isAvailable
+                    ? 'opacity-50 grayscale'
+                    : isSelected
+                      ? 'ring-2 ring-primary shadow-lg'
+                      : 'hover:shadow-md cursor-pointer'
               }`}
-              onClick={() => isAvailable && handleApartmentToggle(apartment.id)}
+              onClick={() => !isLoading && isAvailable && handleApartmentToggle(apartment.id)}
             >
               {/* === LAYOUT MOBILE (compatto orizzontale) === */}
               <div className="flex sm:hidden p-3 gap-3">
@@ -256,14 +288,19 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
                     alt={apartment.name}
                     className="w-full h-full object-cover"
                   />
-                  {!isAvailable && (
+                  {isLoading && (
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 text-white animate-spin" />
+                    </div>
+                  )}
+                  {!isLoading && !isAvailable && (
                     <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                       <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5">
                         PRENOTATO
                       </Badge>
                     </div>
                   )}
-                  {isSelected && isAvailable && (
+                  {!isLoading && isSelected && isAvailable && (
                     <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
                       <CheckCircle2 className="h-8 w-8 text-primary" />
                     </div>
@@ -274,13 +311,15 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
                 <div className="flex-1 min-w-0 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      {isAvailable && (
+                      {isLoading ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      ) : isAvailable ? (
                         <Checkbox
                           checked={isSelected}
                           onChange={() => {}}
                           className="h-5 w-5"
                         />
-                      )}
+                      ) : null}
                       <span className="font-semibold text-sm truncate">{apartment.name}</span>
                       <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 ml-auto flex-shrink-0">
                         {apartment.capacity} posti letto
@@ -288,7 +327,12 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
                     </div>
 
                     <div className="flex items-center justify-between text-xs mb-2">
-                      {isAvailable ? (
+                      {isLoading ? (
+                        <span className="text-muted-foreground font-medium flex items-center gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Verifica...
+                        </span>
+                      ) : isAvailable ? (
                         <>
                           <span className="text-green-600 font-medium flex items-center gap-1">
                             <CheckCircle2 className="h-3 w-3" />
@@ -323,7 +367,15 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
 
               {/* === LAYOUT DESKTOP (originale) === */}
               <div className="hidden sm:block">
-                {!isAvailable && (
+                {isLoading && (
+                  <div className="absolute top-4 right-4 z-10">
+                    <Badge variant="secondary" className="font-bold">
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      Verifica...
+                    </Badge>
+                  </div>
+                )}
+                {!isLoading && !isAvailable && (
                   <div className="absolute top-4 right-4 z-10">
                     <Badge variant="destructive" className="font-bold">
                       PRENOTATO
@@ -350,7 +402,9 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      {isAvailable ? (
+                      {isLoading ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      ) : isAvailable ? (
                         <Checkbox
                           checked={isSelected}
                           onChange={() => {}}
@@ -383,19 +437,28 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
                     ))}
                   </div>
 
-                  {!isAvailable && bookingInfo && (
+                  {isLoading && (
+                    <div className="flex items-center justify-center p-3 bg-muted/50 rounded-lg">
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">Verifica disponibilità...</span>
+                    </div>
+                  )}
+
+                  {!isLoading && !isAvailable && (
                     <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
                       <div className="flex items-center gap-2 text-destructive">
                         <AlertCircle className="h-4 w-4" />
                         <span className="font-semibold">Non disponibile</span>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Dal {bookingInfo.checkin} al {bookingInfo.checkout}
-                      </p>
+                      {bookingInfo && (
+                        <p className="text-xs text-muted-foreground">
+                          Dal {bookingInfo.checkin} al {bookingInfo.checkout}
+                        </p>
+                      )}
                     </div>
                   )}
 
-                  {isAvailable && (
+                  {!isLoading && isAvailable && (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 text-green-600">
                         <CheckCircle2 className="h-4 w-4" />
