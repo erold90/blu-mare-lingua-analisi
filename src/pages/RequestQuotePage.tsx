@@ -25,10 +25,10 @@ export default function RequestQuotePage() {
     getBedsNeeded,
     getNights,
     isApartmentAvailable,
+    isApartmentAvailableDetailed,
     isValidDay,
     calculatePrice,
     getDateBlockInfo,
-    requiresTwoWeeksMinimum,
     prenotazioni
   } = useMultiStepQuote();
 
@@ -66,7 +66,6 @@ export default function RequestQuotePage() {
             getNights={getNights}
             isValidDay={isValidDay}
             getDateBlockInfo={getDateBlockInfo}
-            requiresTwoWeeksMinimum={requiresTwoWeeksMinimum}
           />
         );
       case 3:
@@ -78,6 +77,7 @@ export default function RequestQuotePage() {
             onPrev={prevStep}
             getBedsNeeded={getBedsNeeded}
             isApartmentAvailable={isApartmentAvailable}
+            isApartmentAvailableDetailed={isApartmentAvailableDetailed}
             prenotazioni={prenotazioni}
           />
         );
@@ -159,10 +159,10 @@ export default function RequestQuotePage() {
                 <div className="h-px w-12 sm:w-16 bg-gradient-to-l from-transparent to-primary/50"></div>
               </div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">
-                Richiedi il tuo preventivo
+                Calcola il tuo preventivo
               </h2>
               <p className="text-sm sm:text-base text-muted-foreground">
-                Sistema intelligente di preventivazione
+                Semplice, veloce, senza impegno
               </p>
             </div>
           )}

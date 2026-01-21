@@ -80,7 +80,7 @@ export const quoteFAQs: FAQItem[] = [
   },
   {
     question: "Qual è il soggiorno minimo a Villa MareBlu?",
-    answer: "Il soggiorno minimo è di 7 notti durante l'alta stagione (luglio e agosto), con arrivo e partenza sempre di sabato. Durante la bassa e media stagione (maggio, giugno, settembre, ottobre) accettiamo soggiorni più brevi, minimo 3-4 notti. Contattaci per verificare la disponibilità per il tuo periodo."
+    answer: "Il soggiorno minimo è di 5 notti, con check-in e check-out possibili il sabato, domenica o lunedì. Il soggiorno massimo consentito è di 28 notti."
   }
 ];
 
