@@ -4,6 +4,11 @@
   "framework": "vite",
   "redirects": [
     {
+      "source": "/en/:path*",
+      "destination": "/",
+      "permanent": true
+    },
+    {
       "source": "/richiedi-preventivo",
       "destination": "/preventivo",
       "permanent": true
