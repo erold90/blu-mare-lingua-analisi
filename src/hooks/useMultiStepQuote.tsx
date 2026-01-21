@@ -108,9 +108,10 @@ export const useMultiStepQuote = () => {
   }, [trackFunnelEvent, getSessionId]);
 
   // Hook per gestione dinamica prezzi
-  const { 
-    calculateQuote, 
-    checkAvailability, 
+  const {
+    calculateQuote,
+    checkAvailability,
+    checkAvailabilityDetailed,
     checkMultipleAvailability,
     quoteResult,
     loading: priceLoading,
@@ -192,7 +193,7 @@ export const useMultiStepQuote = () => {
 
   const isApartmentAvailable = useCallback(async (apartmentId: string, checkIn: string, checkOut: string) => {
     if (!checkIn || !checkOut) return true;
-    
+
     try {
       // Converte ID appartamento da stringa a numero
       const numericId = parseInt(apartmentId);
@@ -201,6 +202,20 @@ export const useMultiStepQuote = () => {
       return false;
     }
   }, [checkAvailability]);
+
+  // Versione dettagliata che ritorna anche date conflitto e suggerimenti
+  const isApartmentAvailableDetailed = useCallback(async (apartmentId: string, checkIn: string, checkOut: string) => {
+    if (!checkIn || !checkOut) {
+      return { available: true, conflicts: [], suggestion: null };
+    }
+
+    try {
+      const numericId = parseInt(apartmentId);
+      return await checkAvailabilityDetailed(numericId, checkIn, checkOut);
+    } catch (error) {
+      return { available: false, conflicts: [], suggestion: null };
+    }
+  }, [checkAvailabilityDetailed]);
 
   const isValidDay = useCallback((date: Date) => {
     const day = date.getDay(); // 0 = domenica, 6 = sabato, 1 = lunedì
@@ -414,6 +429,7 @@ export const useMultiStepQuote = () => {
     getBedsNeeded,
     getNights,
     isApartmentAvailable,
+    isApartmentAvailableDetailed,
     isValidDay,
     calculatePrice,
     saveQuoteToDatabase,

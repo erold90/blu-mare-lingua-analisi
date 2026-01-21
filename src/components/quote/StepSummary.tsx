@@ -142,7 +142,9 @@ export const StepSummary: React.FC<StepSummaryProps> = ({
     // Costruisci sezioni opzionali
     const servicesLines = [];
     if (formData.hasPets) {
-      servicesLines.push(`🐕 Animali: ${formData.petCount || 1}`);
+      const petCount = formData.petCount || 1;
+      const petCost = petCount * 50;
+      servicesLines.push(`🐕 Animali: ${petCount} (${petCost}€)`);
     }
     if (formData.requestLinen) {
       servicesLines.push(`🛏 Biancheria: ${bedsNeeded} ospiti`);
@@ -162,7 +164,7 @@ Durata: ${nights} notti
 
 👥 *OSPITI:*
 Adulti: ${formData.adults}
-Bambini: ${formData.children}${formData.children > 0 ? ` (${formData.childrenWithParents.filter(Boolean).length} con genitori)` : ''}
+Bambini: ${formData.children}${formData.children > 0 ? ` (${formData.childrenWithParents.filter(Boolean).length} con genitori/culla)` : ''}
 Posti letto: ${bedsNeeded}
 
 🏠 *APPARTAMENTI:*

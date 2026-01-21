@@ -3,10 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Home, Users, MapPin, Eye, AlertCircle, CheckCircle2, Euro, Images, Loader2 } from 'lucide-react';
+import { Home, Users, MapPin, Eye, AlertCircle, CheckCircle2, Euro, Images, Loader2, Lightbulb } from 'lucide-react';
 import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 import { useDynamicQuote } from '@/hooks/useDynamicQuote';
-import { PricingService } from '@/services/supabase/dynamicPricingService';
+import { PricingService, AvailabilityResult } from '@/services/supabase/dynamicPricingService';
 import { ApartmentDetailsModal } from '@/components/apartments/ApartmentDetailsModal';
 import { apartments as apartmentsData, Apartment } from '@/data/apartments';
 import { useApartmentImages } from '@/hooks/apartments/useApartmentImages';
@@ -18,6 +18,7 @@ interface StepApartmentsProps {
   onPrev: () => void;
   getBedsNeeded: () => number;
   isApartmentAvailable: (apartmentId: string, checkIn: string, checkOut: string) => Promise<boolean>;
+  isApartmentAvailableDetailed: (apartmentId: string, checkIn: string, checkOut: string) => Promise<AvailabilityResult>;
   prenotazioni: any[];
 }
 
@@ -64,8 +65,8 @@ const apartments = [
 const toFullId = (shortId: string) => `appartamento-${shortId}`;
 const toShortId = (fullId: string) => fullId.replace('appartamento-', '');
 
-export default function StepApartments({ formData, updateFormData, onNext, onPrev, getBedsNeeded, isApartmentAvailable, prenotazioni }: StepApartmentsProps) {
-  const [availabilityStatus, setAvailabilityStatus] = useState<Record<string, boolean>>({});
+export default function StepApartments({ formData, updateFormData, onNext, onPrev, getBedsNeeded, isApartmentAvailable, isApartmentAvailableDetailed, prenotazioni }: StepApartmentsProps) {
+  const [availabilityStatus, setAvailabilityStatus] = useState<Record<string, AvailabilityResult>>({});
   const [apartmentPrices, setApartmentPrices] = useState<Record<string, number>>({});
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(true); // Inizia in loading
   const [selectedApartmentForDetails, setSelectedApartmentForDetails] = useState<Apartment | null>(null);
@@ -101,22 +102,22 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
       setIsCheckingAvailability(true);
 
       try {
-        // Esegui TUTTI i controlli in PARALLELO invece che sequenzialmente
+        // Esegui TUTTI i controlli in PARALLELO con dettagli
         const availabilityPromises = apartments.map(async (apartment) => {
           try {
-            const available = await isApartmentAvailable(apartment.id, formData.checkIn, formData.checkOut);
-            return { id: apartment.id, available };
+            const result = await isApartmentAvailableDetailed(apartment.id, formData.checkIn, formData.checkOut);
+            return { id: apartment.id, result };
           } catch {
-            return { id: apartment.id, available: false };
+            return { id: apartment.id, result: { available: false, conflicts: [], suggestion: null } };
           }
         });
 
         const availabilityResults = await Promise.all(availabilityPromises);
 
-        // Costruisci lo stato disponibilità
-        const newStatus: Record<string, boolean> = {};
-        availabilityResults.forEach(result => {
-          newStatus[result.id] = result.available;
+        // Costruisci lo stato disponibilità con dettagli
+        const newStatus: Record<string, AvailabilityResult> = {};
+        availabilityResults.forEach(item => {
+          newStatus[item.id] = item.result;
         });
 
         // Aggiorna subito lo stato disponibilità (ISTANTANEO)
@@ -125,7 +126,7 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
 
         // Poi calcola i prezzi in background (non blocca la UI)
         const pricePromises = apartments
-          .filter(apt => newStatus[apt.id]) // Solo appartamenti disponibili
+          .filter(apt => newStatus[apt.id]?.available) // Solo appartamenti disponibili
           .map(async (apartment) => {
             try {
               const price = await getPriceForPeriod(parseInt(apartment.id), formData.checkIn, formData.checkOut);
@@ -259,8 +260,21 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 max-w-6xl mx-auto">
         {apartments.map(apartment => {
           // Stato: loading, disponibile, o non disponibile
-          const isLoading = isCheckingAvailability && availabilityStatus[apartment.id] === undefined;
-          const isAvailable = !isLoading && (availabilityStatus[apartment.id] ?? false); // Default FALSE durante loading
+          const aptStatus = availabilityStatus[apartment.id];
+          const isLoading = isCheckingAvailability && aptStatus === undefined;
+          const isAvailable = !isLoading && (aptStatus?.available ?? false); // Default FALSE durante loading
+          const conflicts = aptStatus?.conflicts || [];
+          const suggestion = aptStatus?.suggestion || null;
+
+          // Helper per formattare date conflitto
+          const formatConflictDates = () => {
+            if (conflicts.length === 0) return null;
+            const conflict = conflicts[0];
+            const startDate = new Date(conflict.start_date);
+            const endDate = new Date(conflict.end_date);
+            const formatDate = (d: Date) => d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' });
+            return `Occupato dal ${formatDate(startDate)} al ${formatDate(endDate)}`;
+          };
 
           const isSelected = formData.selectedApartments.includes(apartment.id);
           const bookingInfo = getBookingInfo(apartment.id);
@@ -326,14 +340,14 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
                       </Badge>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs mb-2">
+                    <div className="text-xs mb-2">
                       {isLoading ? (
                         <span className="text-muted-foreground font-medium flex items-center gap-1">
                           <Loader2 className="h-3 w-3 animate-spin" />
                           Verifica...
                         </span>
                       ) : isAvailable ? (
-                        <>
+                        <div className="flex items-center justify-between">
                           <span className="text-green-600 font-medium flex items-center gap-1">
                             <CheckCircle2 className="h-3 w-3" />
                             Disponibile
@@ -343,12 +357,25 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
                               €{apartmentPrices[apartment.id]}/notte
                             </span>
                           )}
-                        </>
+                        </div>
                       ) : (
-                        <span className="text-destructive font-medium flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          Non disponibile
-                        </span>
+                        <div className="space-y-1">
+                          <span className="text-destructive font-medium flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />
+                            Non disponibile
+                          </span>
+                          {formatConflictDates() && (
+                            <p className="text-[10px] text-muted-foreground pl-4">
+                              {formatConflictDates()}
+                            </p>
+                          )}
+                          {suggestion && (
+                            <p className="text-[10px] text-amber-600 pl-4 flex items-start gap-1">
+                              <Lightbulb className="h-3 w-3 flex-shrink-0 mt-0.5" />
+                              <span>{suggestion}</span>
+                            </p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -445,15 +472,21 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
                   )}
 
                   {!isLoading && !isAvailable && (
-                    <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                    <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg space-y-2">
                       <div className="flex items-center gap-2 text-destructive">
                         <AlertCircle className="h-4 w-4" />
                         <span className="font-semibold">Non disponibile</span>
                       </div>
-                      {bookingInfo && (
+                      {formatConflictDates() && (
                         <p className="text-xs text-muted-foreground">
-                          Dal {bookingInfo.checkin} al {bookingInfo.checkout}
+                          {formatConflictDates()}
                         </p>
+                      )}
+                      {suggestion && (
+                        <div className="flex items-start gap-2 p-2 bg-amber-50 border border-amber-200 rounded text-amber-700">
+                          <Lightbulb className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                          <span className="text-xs">{suggestion}</span>
+                        </div>
                       )}
                     </div>
                   )}

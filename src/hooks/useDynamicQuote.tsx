@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { PricingService, QuoteParams, QuoteResult } from '@/services/supabase/dynamicPricingService';
+import { PricingService, QuoteParams, QuoteResult, AvailabilityResult } from '@/services/supabase/dynamicPricingService';
 import { toast } from 'sonner';
 
 export const useDynamicQuote = () => {
@@ -29,14 +29,26 @@ export const useDynamicQuote = () => {
   }, []);
 
   const checkAvailability = useCallback(async (
-    apartmentId: number, 
-    checkin: string, 
+    apartmentId: number,
+    checkin: string,
     checkout: string
   ): Promise<boolean> => {
     try {
       return await PricingService.checkAvailability(apartmentId, checkin, checkout);
     } catch (err: any) {
       return false;
+    }
+  }, []);
+
+  const checkAvailabilityDetailed = useCallback(async (
+    apartmentId: number,
+    checkin: string,
+    checkout: string
+  ): Promise<AvailabilityResult> => {
+    try {
+      return await PricingService.checkAvailabilityDetailed(apartmentId, checkin, checkout);
+    } catch (err: any) {
+      return { available: false, conflicts: [], suggestion: null };
     }
   }, []);
 
@@ -113,6 +125,7 @@ export const useDynamicQuote = () => {
     quoteResult,
     calculateQuote,
     checkAvailability,
+    checkAvailabilityDetailed,
     checkMultipleAvailability,
     saveQuote,
     getPriceForPeriod,

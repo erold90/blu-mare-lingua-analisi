@@ -81,6 +81,20 @@ const pages = [
     description: 'Scopri Villa MareBlu: la nostra storia, la posizione privilegiata a 100 metri dal mare, e perché scegliere noi per le tue vacanze nel Salento.',
     canonical: 'https://www.villamareblu.it/chi-siamo',
     ogImage: 'https://www.villamareblu.it/images/hero/hero.jpg'
+  },
+  {
+    path: 'privacy-policy',
+    title: 'Privacy Policy | Villa MareBlu Torre Vado - Informativa sulla Privacy',
+    description: 'Informativa sulla privacy di Villa MareBlu. Scopri come trattiamo i tuoi dati personali in conformità al GDPR per la tua vacanza nel Salento.',
+    canonical: 'https://www.villamareblu.it/privacy-policy',
+    ogImage: 'https://www.villamareblu.it/images/hero/hero.jpg'
+  },
+  {
+    path: 'cookie-policy',
+    title: 'Cookie Policy | Villa MareBlu Torre Vado - Politica sui Cookie',
+    description: 'Cookie policy di Villa MareBlu. Informazioni sui cookie utilizzati sul nostro sito per casa vacanze a Torre Vado, Salento.',
+    canonical: 'https://www.villamareblu.it/cookie-policy',
+    ogImage: 'https://www.villamareblu.it/images/hero/hero.jpg'
   }
 ];
 

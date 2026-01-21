@@ -33,6 +33,19 @@ export interface QuoteResult {
   balance: number;
 }
 
+// Interfacce per disponibilità dettagliata
+export interface AvailabilityConflict {
+  start_date: string;
+  end_date: string;
+  guest_name?: string;
+}
+
+export interface AvailabilityResult {
+  available: boolean;
+  conflicts: AvailabilityConflict[];
+  suggestion: string | null;
+}
+
 export interface ApartmentQuoteDetail {
   apartmentId: number;
   apartment: Apartment;
@@ -237,6 +250,136 @@ class PricingService {
       const hasConflicts = (conflicts && conflicts.length > 0) || (dateBlocks && dateBlocks.length > 0);
       return !hasConflicts;
     });
+  }
+
+  // Verifica disponibilità dettagliata con date conflitto e suggerimenti
+  static async checkAvailabilityDetailed(
+    apartmentId: number,
+    checkin: string,
+    checkout: string
+  ): Promise<AvailabilityResult> {
+    // Verifica conflitti con prenotazioni esistenti
+    const { data: conflicts, error } = await supabase
+      .from('reservations')
+      .select('id, guest_name, start_date, end_date, apartment_ids')
+      .filter('apartment_ids', 'cs', JSON.stringify([`appartamento-${apartmentId}`]))
+      .lt('start_date', checkout)
+      .gt('end_date', checkin);
+
+    // Verifica anche i blocchi date
+    const apartmentStringIdForBlocks = `appartamento-${apartmentId}`;
+    const { data: dateBlocks } = await supabase
+      .from('date_blocks')
+      .select('id, start_date, end_date, block_reason')
+      .eq('is_active', true)
+      .or(`apartment_id.eq.${apartmentStringIdForBlocks},apartment_id.is.null`)
+      .lte('start_date', checkout)
+      .gte('end_date', checkin);
+
+    if (error) {
+      // In caso di errore, assumiamo disponibile
+      return { available: true, conflicts: [], suggestion: null };
+    }
+
+    // Combina conflitti da prenotazioni e blocchi
+    const allConflicts: AvailabilityConflict[] = [];
+
+    if (conflicts && conflicts.length > 0) {
+      conflicts.forEach(c => {
+        allConflicts.push({
+          start_date: c.start_date,
+          end_date: c.end_date,
+          guest_name: c.guest_name
+        });
+      });
+    }
+
+    if (dateBlocks && dateBlocks.length > 0) {
+      dateBlocks.forEach(b => {
+        allConflicts.push({
+          start_date: b.start_date,
+          end_date: b.end_date
+        });
+      });
+    }
+
+    if (allConflicts.length === 0) {
+      return { available: true, conflicts: [], suggestion: null };
+    }
+
+    // Genera suggerimento intelligente
+    const suggestion = this.generateAvailabilitySuggestion(checkin, checkout, allConflicts);
+
+    return {
+      available: false,
+      conflicts: allConflicts,
+      suggestion
+    };
+  }
+
+  // Genera suggerimento intelligente basato sul tipo di conflitto
+  private static generateAvailabilitySuggestion(
+    checkin: string,
+    checkout: string,
+    conflicts: AvailabilityConflict[]
+  ): string | null {
+    // Se ci sono più conflitti, non suggerire (troppo complesso)
+    if (conflicts.length > 1) {
+      return null;
+    }
+
+    const conflict = conflicts[0];
+    const checkinDate = new Date(checkin);
+    const checkoutDate = new Date(checkout);
+    const conflictStart = new Date(conflict.start_date);
+    const conflictEnd = new Date(conflict.end_date);
+
+    // Formattatore date italiano
+    const formatDate = (date: Date): string => {
+      return date.toLocaleDateString('it-IT', { day: 'numeric', month: 'long' });
+    };
+
+    // Caso 1: Conflitto inizia DURANTE il soggiorno (check-in ok, check-out no)
+    // Cliente vuole: 2-10, Prenotazione: 9-16
+    // conflictStart > checkinDate && conflictStart < checkoutDate && conflictEnd >= checkoutDate
+    if (conflictStart > checkinDate && conflictStart < checkoutDate) {
+      // Verifica che il suggerimento abbia senso (almeno 3 notti)
+      const nightsIfEarlierCheckout = Math.ceil((conflictStart.getTime() - checkinDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (nightsIfEarlierCheckout >= 3) {
+        return `Disponibile se check-out entro il ${formatDate(conflictStart)}`;
+      }
+    }
+
+    // Caso 2: Conflitto finisce DURANTE il soggiorno (check-in no, check-out ok)
+    // Cliente vuole: 10-20, Prenotazione: 5-12
+    // conflictEnd > checkinDate && conflictEnd < checkoutDate && conflictStart <= checkinDate
+    if (conflictEnd > checkinDate && conflictEnd < checkoutDate) {
+      // Verifica che il suggerimento abbia senso (almeno 3 notti)
+      const nightsIfLaterCheckin = Math.ceil((checkoutDate.getTime() - conflictEnd.getTime()) / (1000 * 60 * 60 * 24));
+      if (nightsIfLaterCheckin >= 3) {
+        return `Disponibile se check-in dal ${formatDate(conflictEnd)}`;
+      }
+    }
+
+    // Caso 3: Prenotazione è nel MEZZO del soggiorno richiesto
+    // Cliente vuole: 1-30, Prenotazione: 10-15
+    // conflictStart > checkinDate && conflictEnd < checkoutDate
+    if (conflictStart > checkinDate && conflictEnd < checkoutDate) {
+      const nightsBefore = Math.ceil((conflictStart.getTime() - checkinDate.getTime()) / (1000 * 60 * 60 * 24));
+      const nightsAfter = Math.ceil((checkoutDate.getTime() - conflictEnd.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (nightsBefore >= 3 && nightsAfter >= 3) {
+        return `Disponibile dal ${formatDate(checkinDate)} al ${formatDate(conflictStart)} oppure dal ${formatDate(conflictEnd)} al ${formatDate(checkoutDate)}`;
+      } else if (nightsBefore >= 3) {
+        return `Disponibile se check-out entro il ${formatDate(conflictStart)}`;
+      } else if (nightsAfter >= 3) {
+        return `Disponibile se check-in dal ${formatDate(conflictEnd)}`;
+      }
+    }
+
+    // Caso 4: Soggiorno richiesto è DENTRO la prenotazione esistente
+    // Nessun suggerimento utile possibile
+    return null;
   }
 
   // Calcolo sconto per occupazione (sconti ridotti per bassa occupazione)

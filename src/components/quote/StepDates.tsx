@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -9,6 +9,35 @@ import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 
+// Calcola il mese iniziale del calendario in base alla stagione
+// - Giugno-Ottobre (stagione): mostra il mese corrente
+// - Novembre-Maggio (fuori stagione): mostra Giugno (anno prossimo se dopo Ottobre)
+const getDefaultCalendarMonth = (checkInDate?: string): Date => {
+  // Se c'è già una data selezionata, mostra quel mese
+  if (checkInDate) {
+    return new Date(checkInDate);
+  }
+
+  const today = new Date();
+  const currentMonth = today.getMonth(); // 0-11
+  const currentYear = today.getFullYear();
+
+  // Mesi della stagione: Giugno (5) - Ottobre (9)
+  const JUNE = 5;
+  const OCTOBER = 9;
+
+  if (currentMonth >= JUNE && currentMonth <= OCTOBER) {
+    // Siamo in stagione: mostra il mese corrente
+    return today;
+  } else if (currentMonth > OCTOBER) {
+    // Novembre-Dicembre: mostra Giugno dell'anno prossimo
+    return new Date(currentYear + 1, JUNE, 1);
+  } else {
+    // Gennaio-Maggio: mostra Giugno dell'anno corrente
+    return new Date(currentYear, JUNE, 1);
+  }
+};
+
 interface StepDatesProps {
   formData: QuoteFormData;
   updateFormData: (data: Partial<QuoteFormData>) => void;
@@ -17,7 +46,6 @@ interface StepDatesProps {
   getNights: () => number;
   isValidDay: (date: Date) => boolean;
   getDateBlockInfo: (date: Date) => { isBlocked: boolean; reason: string };
-  requiresTwoWeeksMinimum: (checkIn: string, checkOut: string) => { required: boolean; message: string };
 }
 
 export const StepDates: React.FC<StepDatesProps> = ({
@@ -27,20 +55,48 @@ export const StepDates: React.FC<StepDatesProps> = ({
   onPrev,
   getNights,
   isValidDay,
-  getDateBlockInfo,
-  requiresTwoWeeksMinimum
+  getDateBlockInfo
 }) => {
+  // State per mostrare avviso Ferragosto quando l'utente clicca sul 15 agosto
+  const [showFerragostoWarning, setShowFerragostoWarning] = useState(false);
 
-  // Verifica requisito minimo 2 settimane per Ferragosto
-  const ferragostoCheck = requiresTwoWeeksMinimum(formData.checkIn, formData.checkOut);
+  // Ref per il pulsante di navigazione (per scroll automatico su mobile)
+  const navigationRef = useRef<HTMLDivElement>(null);
+
+  // Scroll automatico al pulsante "Continua" su mobile quando entrambe le date sono selezionate
+  useEffect(() => {
+    if (formData.checkIn && formData.checkOut && navigationRef.current) {
+      // Solo su mobile (< 768px)
+      if (window.innerWidth < 768) {
+        // Piccolo delay per permettere al DOM di aggiornarsi
+        setTimeout(() => {
+          navigationRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        }, 300);
+      }
+    }
+  }, [formData.checkIn, formData.checkOut]);
+
+  // Calcola il mese iniziale del calendario
+  // Se ci sono date selezionate, mostra quel mese; altrimenti usa la logica stagionale
+  const defaultMonth = useMemo(() => {
+    return getDefaultCalendarMonth(formData.checkIn);
+  }, [formData.checkIn]);
 
   const canProceed = () => {
-    return formData.checkIn && formData.checkOut && getNights() >= 5 && getNights() <= 28 && !ferragostoCheck.required;
+    return formData.checkIn && formData.checkOut && getNights() >= 5 && getNights() <= 28;
   };
 
   const nights = getNights();
   const checkInDate = formData.checkIn ? new Date(formData.checkIn) : undefined;
   const checkOutDate = formData.checkOut ? new Date(formData.checkOut) : undefined;
+
+  // Verifica se una data è il 15 agosto e cade di sabato
+  const isFerragostoSaturday = (date: Date) => {
+    return date.getMonth() === 7 && date.getDate() === 15 && date.getDay() === 6;
+  };
 
   // Funzione per disabilitare le date non valide
   const isDateDisabled = (date: Date) => {
@@ -53,6 +109,8 @@ export const StepDates: React.FC<StepDatesProps> = ({
     const compareDate = new Date(date);
     compareDate.setHours(0, 0, 0, 0);
     if (compareDate < today) return true;
+
+    // NON blocchiamo qui il 15 agosto - lo gestiamo nel onSelect per mostrare l'avviso
 
     // Controllo se la data è bloccata
     const blockInfo = getDateBlockInfo(date);
@@ -111,6 +169,7 @@ export const StepDates: React.FC<StepDatesProps> = ({
               <div className="space-y-4">
                 <Calendar
                   mode="range"
+                  defaultMonth={defaultMonth}
                   selected={
                     formData.checkIn && formData.checkOut 
                       ? { from: new Date(formData.checkIn), to: new Date(formData.checkOut) }
@@ -120,7 +179,7 @@ export const StepDates: React.FC<StepDatesProps> = ({
                   }
                   onSelect={(range) => {
                     if (!range?.from) return;
-                    
+
                     const formatDateToISO = (date: Date) => {
                       const year = date.getFullYear();
                       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -128,10 +187,19 @@ export const StepDates: React.FC<StepDatesProps> = ({
                       return `${year}-${month}-${day}`;
                     };
 
+                    // Controlla se l'utente ha selezionato il 15 agosto (sabato)
+                    if (isFerragostoSaturday(range.from) || (range.to && isFerragostoSaturday(range.to))) {
+                      setShowFerragostoWarning(true);
+                      return; // Non selezionare la data
+                    }
+
+                    // Nascondi l'avviso se la selezione è valida
+                    setShowFerragostoWarning(false);
+
                     const checkInISO = formatDateToISO(range.from);
                     const checkOutISO = range.to ? formatDateToISO(range.to) : '';
 
-                    updateFormData({ 
+                    updateFormData({
                       checkIn: checkInISO,
                       checkOut: checkOutISO
                     });
@@ -177,6 +245,14 @@ export const StepDates: React.FC<StepDatesProps> = ({
                  <p className="text-xs text-muted-foreground">
                    Giorni disponibili: Sabato, Domenica, Lunedì
                  </p>
+                 {/* Avviso Ferragosto - mostrato sotto il calendario */}
+                 {showFerragostoWarning && (
+                   <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
+                     <p className="text-sm text-amber-700">
+                       ⚠️ Il 15 agosto non è disponibile come giorno di check-in o check-out.
+                     </p>
+                   </div>
+                 )}
                 </div>
               </div>
             </TooltipProvider>
@@ -252,16 +328,10 @@ export const StepDates: React.FC<StepDatesProps> = ({
                     <span className="text-sm">Massimo 28 notti consentite</span>
                   </div>
                 )}
-                {nights >= 5 && nights <= 28 && !ferragostoCheck.required && (
+                {nights >= 5 && nights <= 28 && (
                   <div className="flex items-center justify-center gap-2 mt-2 text-green-600">
                     <CheckCircle2 className="h-4 w-4" />
                     <span className="text-sm">Durata valida</span>
-                  </div>
-                )}
-                {ferragostoCheck.required && (
-                  <div className="flex items-center justify-center gap-2 mt-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
-                    <AlertCircle className="h-5 w-5 flex-shrink-0" />
-                    <span className="text-sm text-left">{ferragostoCheck.message}</span>
                   </div>
                 )}
               </div>
@@ -280,7 +350,7 @@ export const StepDates: React.FC<StepDatesProps> = ({
       </div>
 
       {/* Navigation - Mobile optimized */}
-      <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pb-4 sm:pb-0">
+      <div ref={navigationRef} className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 pb-4 sm:pb-0">
         <Button
           variant="outline"
           onClick={onPrev}

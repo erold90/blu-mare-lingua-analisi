@@ -81,7 +81,7 @@ Durata: ${nights} notti
 
 👥 *OSPITI:*
 Adulti: ${formData.adults}
-Bambini: ${formData.children}${formData.children > 0 ? ` (di cui ${formData.childrenWithParents.filter(Boolean).length} non occupano posto letto)` : ''}
+Bambini: ${formData.children}${formData.children > 0 ? ` (${formData.childrenWithParents.filter(Boolean).length} con genitori/culla)` : ''}
 Totale posti letto: ${bedsNeeded}
 
 🏠 *APPARTAMENTI:*
@@ -90,7 +90,7 @@ ${formData.selectedApartments.map(aptId => {
   return `• ${apartmentNames[aptId as keyof typeof apartmentNames]} - Occupazione: ${apt?.occupation}`;
 }).join('\n')}
 
-${formData.hasPets ? `🐕 *ANIMALE:* Sì - ${formData.petCount || 1} animale${(formData.petCount || 1) > 1 ? 'i' : ''}` : '🐕 *ANIMALE:* No'}
+${formData.hasPets ? `🐕 *ANIMALE:* Sì - ${formData.petCount || 1} (${(formData.petCount || 1) * 50}€)` : '🐕 *ANIMALE:* No'}
 ${formData.requestLinen ? `🛏️ *BIANCHERIA:* Sì - ${bedsNeeded} ospiti` : '🛏️ *BIANCHERIA:* No'}
 
 💰 *PREVENTIVO:*
