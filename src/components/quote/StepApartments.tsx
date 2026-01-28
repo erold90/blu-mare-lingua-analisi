@@ -286,7 +286,7 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
                 isLoading
                   ? 'opacity-70'
                   : !isAvailable
-                    ? 'opacity-50 grayscale'
+                    ? 'opacity-60'
                     : isSelected
                       ? 'ring-2 ring-primary shadow-lg'
                       : 'hover:shadow-md cursor-pointer'
