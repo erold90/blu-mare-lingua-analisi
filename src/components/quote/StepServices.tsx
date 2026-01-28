@@ -225,7 +225,6 @@ export default function StepServices({
                 <li>Lenzuola per tutti i letti</li>
                 <li>Federe per i cuscini</li>
                 <li>Asciugamani (viso e doccia)</li>
-                <li>Teli mare (opzionale)</li>
               </ul>
               <p className="text-amber-600 font-medium">
                 Sei sicuro di voler procedere senza biancheria?
