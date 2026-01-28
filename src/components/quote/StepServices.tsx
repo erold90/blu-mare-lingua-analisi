@@ -33,6 +33,7 @@ export default function StepServices({
 }: StepServicesProps) {
   const bedsNeeded = getBedsNeeded();
   const [showLinenConfirmDialog, setShowLinenConfirmDialog] = useState(false);
+  const [showPetsConfirmDialog, setShowPetsConfirmDialog] = useState(false);
 
   // Calcolo costi
   const petCost = formData.hasPets ? (formData.petCount || 1) * 50 : 0;
@@ -53,6 +54,22 @@ export default function StepServices({
   const confirmRemoveLinen = () => {
     updateFormData({ requestLinen: false });
     setShowLinenConfirmDialog(false);
+  };
+
+  // Gestione checkbox animali con conferma
+  const handlePetsChange = (checked: boolean) => {
+    if (checked) {
+      // Se seleziona, mostra dialog informativo
+      setShowPetsConfirmDialog(true);
+    } else {
+      // Se deseleziona, aggiorna direttamente
+      updateFormData({ hasPets: false, petCount: 0 });
+    }
+  };
+
+  const confirmPets = () => {
+    updateFormData({ hasPets: true, petCount: 1 });
+    setShowPetsConfirmDialog(false);
   };
 
   return (
@@ -79,12 +96,7 @@ export default function StepServices({
             <Checkbox
               id="hasPets"
               checked={formData.hasPets}
-              onCheckedChange={(checked) =>
-                updateFormData({
-                  hasPets: checked as boolean,
-                  petCount: checked ? 1 : 0
-                })
-              }
+              onCheckedChange={(checked) => handlePetsChange(checked as boolean)}
             />
             <div className="flex-1">
               <label htmlFor="hasPets" className="font-medium cursor-pointer block">
@@ -235,6 +247,40 @@ export default function StepServices({
             <AlertDialogCancel>Annulla</AlertDialogCancel>
             <AlertDialogAction onClick={confirmRemoveLinen}>
               Confermo, porto la mia
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Modal info animali domestici */}
+      <AlertDialog open={showPetsConfirmDialog} onOpenChange={setShowPetsConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <PawPrint className="h-5 w-5 text-primary" />
+              Animali Domestici
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-left space-y-3">
+              <p>
+                Accettiamo <strong>solo animali di piccola taglia</strong>:
+              </p>
+              <ul className="space-y-1 text-sm">
+                <li className="flex items-center gap-2">
+                  <span className="text-green-600">✓</span> Cani di piccola taglia (max 10kg)
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-green-600">✓</span> Gatti
+                </li>
+              </ul>
+              <p className="flex items-center gap-2 text-red-600 font-medium">
+                <span>✗</span> Non sono ammessi cani di media/grossa taglia
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPets}>
+              Ho capito, confermo
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
