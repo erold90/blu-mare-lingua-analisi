@@ -219,6 +219,20 @@ export const useMultiStepQuote = () => {
 
   const isValidDay = useCallback((date: Date) => {
     const day = date.getDay(); // 0 = domenica, 6 = sabato, 1 = lunedì
+
+    // Blocca i lunedì di agosto 2026 (3, 10, 17, 24)
+    if (day === 1 && date.getFullYear() === 2026 && date.getMonth() === 7) {
+      const dayOfMonth = date.getDate();
+      if (dayOfMonth === 3 || dayOfMonth === 10 || dayOfMonth === 17 || dayOfMonth === 24) {
+        return false;
+      }
+    }
+
+    // Blocca il 15 agosto quando cade di sabato (Ferragosto)
+    if (date.getMonth() === 7 && date.getDate() === 15 && day === 6) {
+      return false;
+    }
+
     return day === 0 || day === 1 || day === 6; // sabato, domenica, lunedì
   }, []);
 

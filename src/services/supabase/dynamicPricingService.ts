@@ -394,8 +394,8 @@ class PricingService {
 
   // Distribuzione intelligente ospiti tra appartamenti
   static distributeGuestsAcrossApartments(
-    totalGuests: number, 
-    selectedApartments: number[], 
+    totalGuests: number,
+    selectedApartments: number[],
     targetApartmentId?: number
   ): number {
     if (targetApartmentId) {
@@ -407,17 +407,44 @@ class PricingService {
         3: 4,  // appartamento-3
         4: 5   // appartamento-4
       };
-      
-      const totalCapacity = selectedApartments.reduce((sum, id) => 
+
+      const totalCapacity = selectedApartments.reduce((sum, id) =>
         sum + apartmentCapacities[id as keyof typeof apartmentCapacities], 0
       );
-      
-      const apartmentCapacity = apartmentCapacities[targetApartmentId as keyof typeof apartmentCapacities];
-      const proportion = apartmentCapacity / totalCapacity;
-      
-      return Math.min(Math.ceil(totalGuests * proportion), apartmentCapacity);
+
+      // Calcola distribuzione per TUTTI gli appartamenti per garantire totale corretto
+      const distributions: { id: number; guests: number; decimal: number }[] = [];
+      let totalAssigned = 0;
+
+      for (const id of selectedApartments) {
+        const capacity = apartmentCapacities[id as keyof typeof apartmentCapacities];
+        const proportion = capacity / totalCapacity;
+        const exactValue = totalGuests * proportion;
+        const base = Math.min(Math.floor(exactValue), capacity);
+        const decimal = exactValue - Math.floor(exactValue);
+
+        distributions.push({ id, guests: base, decimal });
+        totalAssigned += base;
+      }
+
+      // Distribuisci il resto a chi ha la parte decimale più alta
+      let remainder = totalGuests - totalAssigned;
+      const sortedByDecimal = [...distributions].sort((a, b) => b.decimal - a.decimal);
+
+      for (const dist of sortedByDecimal) {
+        if (remainder <= 0) break;
+        const capacity = apartmentCapacities[dist.id as keyof typeof apartmentCapacities];
+        if (dist.guests < capacity) {
+          dist.guests += 1;
+          remainder -= 1;
+        }
+      }
+
+      // Restituisci il valore per l'appartamento richiesto
+      const targetDist = distributions.find(d => d.id === targetApartmentId);
+      return targetDist ? targetDist.guests : 0;
     }
-    
+
     // Distribuzione ottimale per massimizzare sconti
     return Math.ceil(totalGuests / selectedApartments.length);
   }

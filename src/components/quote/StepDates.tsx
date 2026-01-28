@@ -57,9 +57,6 @@ export const StepDates: React.FC<StepDatesProps> = ({
   isValidDay,
   getDateBlockInfo
 }) => {
-  // State per mostrare avviso Ferragosto quando l'utente clicca sul 15 agosto
-  const [showFerragostoWarning, setShowFerragostoWarning] = useState(false);
-
   // Ref per il pulsante di navigazione (per scroll automatico su mobile)
   const navigationRef = useRef<HTMLDivElement>(null);
 
@@ -92,11 +89,6 @@ export const StepDates: React.FC<StepDatesProps> = ({
   const nights = getNights();
   const checkInDate = formData.checkIn ? new Date(formData.checkIn) : undefined;
   const checkOutDate = formData.checkOut ? new Date(formData.checkOut) : undefined;
-
-  // Verifica se una data è il 15 agosto e cade di sabato
-  const isFerragostoSaturday = (date: Date) => {
-    return date.getMonth() === 7 && date.getDate() === 15 && date.getDay() === 6;
-  };
 
   // Funzione per disabilitare le date non valide
   const isDateDisabled = (date: Date) => {
@@ -187,15 +179,6 @@ export const StepDates: React.FC<StepDatesProps> = ({
                       return `${year}-${month}-${day}`;
                     };
 
-                    // Controlla se l'utente ha selezionato il 15 agosto (sabato)
-                    if (isFerragostoSaturday(range.from) || (range.to && isFerragostoSaturday(range.to))) {
-                      setShowFerragostoWarning(true);
-                      return; // Non selezionare la data
-                    }
-
-                    // Nascondi l'avviso se la selezione è valida
-                    setShowFerragostoWarning(false);
-
                     const checkInISO = formatDateToISO(range.from);
                     const checkOutISO = range.to ? formatDateToISO(range.to) : '';
 
@@ -245,14 +228,6 @@ export const StepDates: React.FC<StepDatesProps> = ({
                  <p className="text-xs text-muted-foreground">
                    Giorni disponibili: Sabato, Domenica, Lunedì
                  </p>
-                 {/* Avviso Ferragosto - mostrato sotto il calendario */}
-                 {showFerragostoWarning && (
-                   <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
-                     <p className="text-sm text-amber-700">
-                       ⚠️ Il 15 agosto non è disponibile come giorno di check-in o check-out.
-                     </p>
-                   </div>
-                 )}
                 </div>
               </div>
             </TooltipProvider>

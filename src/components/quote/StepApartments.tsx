@@ -221,7 +221,7 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
     <div className="space-y-6">
       <div className="text-center mb-8">
         <Home className="h-12 w-12 text-primary mx-auto mb-4" />
-        <h2 className="text-3xl font-bold mb-2">Scegli i tuoi appartamenti</h2>
+        <h2 className="text-3xl font-bold mb-2">TEST DEPLOY - Scegli i tuoi appartamenti</h2>
         <p className="text-muted-foreground">
           Periodo: {formData.checkIn} - {formData.checkOut}
         </p>
