@@ -365,7 +365,7 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
                             Non disponibile
                           </span>
                           {formatConflictDates() && (
-                            <p className="text-[10px] text-muted-foreground pl-4">
+                            <p className="text-xs text-destructive font-semibold pl-4">
                               {formatConflictDates()}
                             </p>
                           )}
@@ -472,13 +472,13 @@ export default function StepApartments({ formData, updateFormData, onNext, onPre
                   )}
 
                   {!isLoading && !isAvailable && (
-                    <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg space-y-2">
+                    <div className="p-3 bg-destructive/10 border-2 border-destructive/50 rounded-lg space-y-2">
                       <div className="flex items-center gap-2 text-destructive">
                         <AlertCircle className="h-4 w-4" />
                         <span className="font-semibold">Non disponibile</span>
                       </div>
                       {formatConflictDates() && (
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-sm text-destructive font-semibold">
                           {formatConflictDates()}
                         </p>
                       )}
