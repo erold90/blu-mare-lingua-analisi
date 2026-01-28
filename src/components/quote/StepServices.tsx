@@ -1,8 +1,19 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { PawPrint, Bed, Euro, Sparkles } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { PawPrint, Bed, Euro, Sparkles, AlertTriangle } from 'lucide-react';
 import { QuoteFormData } from '@/hooks/useMultiStepQuote';
 
 interface StepServicesProps {
@@ -21,11 +32,28 @@ export default function StepServices({
   getBedsNeeded
 }: StepServicesProps) {
   const bedsNeeded = getBedsNeeded();
+  const [showLinenConfirmDialog, setShowLinenConfirmDialog] = useState(false);
 
   // Calcolo costi
   const petCost = formData.hasPets ? (formData.petCount || 1) * 50 : 0;
   const linenCost = formData.requestLinen ? bedsNeeded * 15 : 0;
   const totalServicesCost = petCost + linenCost;
+
+  // Gestione checkbox biancheria con conferma
+  const handleLinenChange = (checked: boolean) => {
+    if (checked) {
+      // Se seleziona, aggiorna direttamente
+      updateFormData({ requestLinen: true });
+    } else {
+      // Se deseleziona, mostra dialog di conferma
+      setShowLinenConfirmDialog(true);
+    }
+  };
+
+  const confirmRemoveLinen = () => {
+    updateFormData({ requestLinen: false });
+    setShowLinenConfirmDialog(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -122,9 +150,7 @@ export default function StepServices({
             <Checkbox
               id="requestLinen"
               checked={formData.requestLinen}
-              onCheckedChange={(checked) =>
-                updateFormData({ requestLinen: checked as boolean })
-              }
+              onCheckedChange={(checked) => handleLinenChange(checked as boolean)}
             />
             <div className="flex-1">
               <label htmlFor="requestLinen" className="font-medium cursor-pointer block">
@@ -182,6 +208,38 @@ export default function StepServices({
           Continua al Riepilogo
         </Button>
       </div>
+
+      {/* Modal conferma rimozione biancheria */}
+      <AlertDialog open={showLinenConfirmDialog} onOpenChange={setShowLinenConfirmDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Conferma rimozione biancheria
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-left space-y-3">
+              <p>
+                Senza il servizio biancheria dovrai portare <strong>da casa</strong>:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>Lenzuola per tutti i letti</li>
+                <li>Federe per i cuscini</li>
+                <li>Asciugamani (viso e doccia)</li>
+                <li>Teli mare (opzionale)</li>
+              </ul>
+              <p className="text-amber-600 font-medium">
+                Sei sicuro di voler procedere senza biancheria?
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRemoveLinen}>
+              Confermo, porto la mia
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

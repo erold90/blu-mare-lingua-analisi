@@ -75,7 +75,7 @@ export const useMultiStepQuote = () => {
     checkOut: '',
     selectedApartments: [],
     hasPets: false,
-    requestLinen: false,
+    requestLinen: true, // Default: biancheria pre-selezionata
     guestName: '',
     email: '',
     phone: ''
@@ -161,7 +161,7 @@ export const useMultiStepQuote = () => {
       checkOut: '',
       selectedApartments: [],
       hasPets: false,
-      requestLinen: false,
+      requestLinen: true, // Default: biancheria pre-selezionata
       guestName: '',
       email: '',
       phone: ''
